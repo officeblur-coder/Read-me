@@ -1,0 +1,1416 @@
+<title>Lyra Comenzi</title>
+<meta name="description" content="Simulare platformă de comenzi Restaurant Lyra: aplicația clientului și consola de recepție, sincronizate live.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Manrope:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: brand bar on top; a two-pane stage — the client app in a phone frame (left) and the reception console (right).
+   Either pane can go full-screen. Visual world: the menu's forest green + brass gold, one deliberate dark look. */
+:root{
+  --forest:#0a1d14; --forest-2:#10291c; --forest-3:#163523; --forest-4:#1e452f;
+  --line:rgba(233,183,112,.15); --line-2:rgba(233,183,112,.34);
+  --gold:#e9b770; --gold-2:#f6d9a6; --cream:#f3ead9; --paper:#f7f0e1; --ink:#13241a;
+  --muted:#a3b6a7; --dim:#6f8a77;
+  --ember:#ff7a3d; --ok:#5fd39a; --warn:#f4c04e; --bad:#f2675a;
+  --f-display:"Marcellus","Cormorant Garamond",Georgia,serif;
+  --f-body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"DM Mono",ui-monospace,Menlo,Consolas,monospace;
+  --r:16px;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--forest);color:var(--cream);font:15px/1.5 var(--f-body);-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(1200px 600px at 10% -10%,rgba(46,110,64,.35),transparent 60%),radial-gradient(900px 600px at 110% 20%,rgba(30,80,50,.4),transparent 60%);background-attachment:fixed}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+input,textarea,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+img{max-width:100%;display:block}
+.num{font-variant-numeric:tabular-nums}
+h1,h2,h3,h4{text-wrap:balance;margin:0;font-weight:400}
+
+/* ---------- top bar ---------- */
+.top{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:14px 24px;border-bottom:1px solid var(--line);position:sticky;top:env(safe-area-inset-top,0px);z-index:50;background:rgba(10,29,20,.88);backdrop-filter:blur(12px)}
+.brand{display:flex;align-items:center;gap:10px;margin-right:auto}
+.brand svg{width:34px;height:34px}
+.brand b{font-family:var(--f-display);font-size:24px;letter-spacing:.32em;font-weight:400;color:var(--gold-2)}
+.brand small{display:block;font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);margin-top:-3px}
+.seg{display:inline-flex;padding:4px;border:1px solid var(--line-2);border-radius:999px;background:var(--forest-2)}
+.seg button{padding:7px 16px;border-radius:999px;font-size:13px;font-weight:600;color:var(--muted);letter-spacing:.02em}
+.seg button[aria-pressed="true"]{background:var(--gold);color:var(--ink)}
+.live{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 0 rgba(95,211,154,.6);animation:pulse 2s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 8px rgba(95,211,154,0)}100%{box-shadow:0 0 0 0 rgba(95,211,154,0)}}
+
+/* ---------- stage ---------- */
+.stage{display:grid;grid-template-columns:auto minmax(0,1fr);gap:28px;padding-inline:24px;padding-block:22px 40px;align-items:start;max-width:1720px;margin:0 auto}
+.stage.only-client{grid-template-columns:minmax(0,1fr);justify-items:center}
+.stage.only-rx{grid-template-columns:minmax(0,1fr)}
+.stage.only-client #rx-wrap,.stage.only-rx #client-wrap{display:none}
+.pane-label{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim);margin:0 0 10px 6px;display:flex;gap:10px;align-items:center}
+.pane-label b{color:var(--gold);font-weight:600}
+
+/* ---------- phone ---------- */
+.phone{position:relative;width:400px;max-width:100%;height:min(840px,calc(100dvh - 130px));min-height:620px;border-radius:44px;padding:10px;background:linear-gradient(160deg,#2a2f2a,#0d0f0d 40%,#22261f);box-shadow:0 40px 80px -20px rgba(0,0,0,.7),0 0 0 1px rgba(233,183,112,.25)}
+.screen{position:relative;height:100%;border-radius:36px;overflow:hidden;background:var(--forest);isolation:isolate}
+.notch{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:110px;height:28px;border-radius:20px;background:#000;z-index:40}
+.ph-scroll{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding-bottom:150px;scrollbar-width:none}
+.ph-scroll::-webkit-scrollbar{display:none}
+@media (max-width:560px){
+  .stage{padding-inline:0;padding-block:0}
+  .phone{width:100%;height:calc(100dvh - 120px);min-height:560px;border-radius:0;padding:0;box-shadow:none}
+  .screen{border-radius:0}.notch{display:none}
+  .pane-label{margin-left:16px;margin-top:10px}
+  .top{padding:12px 16px}.live{display:none}
+}
+
+/* ---------- client: header ---------- */
+.c-head{position:relative;z-index:20;padding:44px 18px 12px}
+.c-row{display:flex;align-items:center;gap:10px}
+.c-logo{display:flex;align-items:center;gap:8px;margin-right:auto}
+.c-logo svg{width:28px;height:28px}
+.c-logo b{font-family:var(--f-display);letter-spacing:.3em;font-size:20px;font-weight:400;color:var(--gold-2)}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:999px;border:1px solid var(--line-2);font-size:12.5px;font-weight:700;color:var(--gold-2);background:rgba(233,183,112,.07)}
+.pill svg{width:14px;height:14px}
+.lang{font-size:12px;font-weight:700;letter-spacing:.08em;padding:6px 10px;border-radius:999px;border:1px solid var(--line)}
+.mode{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:12px;padding:4px;border-radius:14px;background:var(--forest-2);border:1px solid var(--line)}
+.mode button{padding:8px;border-radius:10px;font-size:13px;font-weight:700;color:var(--muted);display:flex;flex-direction:column;align-items:center;line-height:1.2}
+.mode button small{font-weight:500;font-size:11px;opacity:.8}
+.mode button[aria-pressed="true"]{background:var(--forest-4);color:var(--cream);box-shadow:inset 0 0 0 1px var(--line-2)}
+.c-body{padding:0 18px}
+.hello{margin:6px 0 2px;font-family:var(--f-display);font-size:26px;line-height:1.15;color:var(--cream)}
+.hello em{font-style:normal;color:var(--gold)}
+.sub{color:var(--muted);font-size:13px;margin:0}
+
+/* moods */
+.moods{display:flex;gap:8px;overflow-x:auto;padding:14px 18px 4px;margin:0 -18px;scrollbar-width:none}
+.moods::-webkit-scrollbar{display:none}
+.mood{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:8px 14px 8px 8px;border-radius:999px;border:1px solid var(--line);background:var(--forest-2);font-size:13px;font-weight:600;white-space:nowrap}
+.mood img{width:30px;height:30px;border-radius:50%;object-fit:cover}
+.mood[aria-pressed="true"]{border-color:var(--gold);background:rgba(233,183,112,.12);color:var(--gold-2)}
+.recs{display:flex;gap:12px;overflow-x:auto;margin:12px -18px 0;padding:0 18px 6px;scrollbar-width:none}
+.recs::-webkit-scrollbar{display:none}
+.rec{flex:0 0 150px;border-radius:16px;overflow:hidden;background:var(--forest-2);border:1px solid var(--line);text-align:left}
+.rec img{width:100%;height:100px;object-fit:cover}
+.rec div{padding:8px 10px 10px}
+.rec b{display:block;font-size:13px;line-height:1.25;font-weight:700;min-height:2.5em}
+.rec span{font-size:12.5px;color:var(--gold);font-weight:700}
+
+/* hero */
+.hero{position:relative;margin:16px 0 4px;border-radius:22px;overflow:hidden;background:#0c0c0b;border:1px solid var(--line-2);min-height:178px;display:grid;grid-template-columns:1.1fr 1fr;align-items:center;text-align:left;width:100%}
+.hero img.h-photo{position:absolute;right:-28px;bottom:-14px;width:62%;height:auto;mask-image:radial-gradient(closest-side,#000 70%,transparent);-webkit-mask-image:radial-gradient(closest-side,#000 72%,transparent)}
+.hero .h-txt{position:relative;padding:18px;z-index:1}
+.hero .k{font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--ember);font-weight:800}
+.hero h3{font-family:"Oswald",Impact,"Arial Narrow",sans-serif;font-weight:700;font-size:28px;line-height:.98;color:#f2b33d;text-transform:uppercase;letter-spacing:.01em;margin:6px 0}
+.hero p{margin:0 0 10px;font-size:12.5px;color:#d7cbb5}
+.hero .cta{display:inline-flex;gap:6px;align-items:center;font-size:12.5px;font-weight:800;color:var(--ink);background:#f2b33d;border-radius:999px;padding:7px 13px}
+.hero .logo{width:52px;height:52px;border-radius:50%;margin-bottom:6px}
+
+/* tools */
+.tools{display:flex;gap:8px;margin-top:16px}
+.search{flex:1;display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--forest-2);border-radius:14px;padding:0 12px;min-width:0}
+.search svg{width:16px;height:16px;color:var(--dim);flex:none}
+.search input{flex:1;min-width:0;background:none;border:0;padding:11px 0;outline:none;font-size:14px}
+.search input::placeholder{color:var(--dim)}
+.tbtn{display:flex;align-items:center;gap:6px;padding:0 12px;border-radius:14px;border:1px solid var(--line);background:var(--forest-2);font-size:12.5px;font-weight:700;color:var(--muted);white-space:nowrap}
+.tbtn[aria-pressed="true"]{border-color:var(--bad);color:#ffb3a9;background:rgba(242,103,90,.1)}
+.tbtn svg{width:15px;height:15px}
+
+.cats{position:sticky;top:0;z-index:15;display:flex;gap:6px;overflow-x:auto;padding:44px 18px 10px;margin:8px -18px 0;background:linear-gradient(var(--forest) 80%,rgba(10,29,20,0));scrollbar-width:none}
+.cats::-webkit-scrollbar{display:none}
+.cat{flex:0 0 auto;padding:7px 13px;border-radius:999px;font-size:12.5px;font-weight:700;color:var(--muted);border:1px solid transparent;white-space:nowrap}
+.cat[aria-current="true"]{color:var(--ink);background:var(--gold)}
+.sec{scroll-margin-top:190px;padding-top:10px}
+.sec-h{display:flex;align-items:baseline;gap:10px;margin:14px 0 10px}
+.sec-h h2{font-family:var(--f-display);font-size:21px;color:var(--gold-2)}
+.sec-h span{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);font-style:italic}
+.sec-note{font-size:12px;color:var(--muted);margin:-6px 0 10px}
+
+/* item */
+.it{display:grid;grid-template-columns:104px minmax(0,1fr);gap:12px;padding:12px 0;border-bottom:1px solid var(--line);position:relative}
+.it.noimg{grid-template-columns:minmax(0,1fr)}
+.it-img{position:relative;width:104px;height:104px;border-radius:16px;overflow:hidden;background:var(--forest-3)}
+.it-img img{width:100%;height:100%;object-fit:cover;transition:transform .5s}
+.it:hover .it-img img{transform:scale(1.06)}
+.flame{position:absolute;left:6px;top:6px;width:24px;height:24px;border-radius:50%;background:rgba(10,29,20,.75);display:grid;place-items:center;color:var(--ember)}
+.flame svg{width:14px;height:14px}
+.it-body{min-width:0;display:flex;flex-direction:column;gap:3px}
+.it-open{text-align:left;display:flex;flex-direction:column;gap:3px;min-width:0}
+.it-t{display:flex;gap:6px;align-items:baseline}
+.it-no{font-family:var(--f-mono);font-size:10.5px;color:var(--gold);opacity:.8}
+.it h4{font-size:14.5px;font-weight:700;line-height:1.25;color:var(--cream)}
+.it p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.it-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:2px}
+.gr{font-family:var(--f-mono);font-size:10.5px;color:var(--dim)}
+.al{display:inline-flex;gap:3px}
+.al i{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;background:rgba(233,183,112,.1);color:var(--gold)}
+.al i svg{width:11px;height:11px}
+.al i.warn{background:rgba(242,103,90,.22);color:#ffb3a9}
+.tag{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:6px;background:rgba(233,183,112,.12);color:var(--gold-2)}
+.tag.green{background:rgba(95,211,154,.12);color:#9be8c0}
+.tag.red{background:rgba(242,103,90,.16);color:#ffb3a9}
+.it-foot{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:4px}
+.price{font-weight:800;font-size:15px;color:var(--gold-2)}
+.price s{color:var(--dim);font-weight:500;font-size:12px;margin-left:6px}
+.add{width:34px;height:34px;border-radius:12px;background:var(--gold);color:var(--ink);display:grid;place-items:center;font-size:20px;font-weight:700;transition:transform .15s}
+.add:active{transform:scale(.9)}
+.step{display:inline-flex;align-items:center;gap:2px;border-radius:12px;background:var(--forest-3);border:1px solid var(--line-2)}
+.step button{width:32px;height:32px;font-size:18px;font-weight:700;color:var(--gold-2)}
+.step b{min-width:20px;text-align:center;font-size:14px}
+.it.out{opacity:.45}
+.it.out .add{background:var(--forest-4);color:var(--dim);cursor:not-allowed}
+.it.blocked .it-img{filter:grayscale(.7)}
+
+/* bottom nav + fab */
+.c-nav{position:absolute;left:0;right:0;bottom:0;z-index:30;display:grid;grid-template-columns:repeat(3,1fr);padding:8px 10px calc(14px + env(safe-area-inset-bottom,0px));background:rgba(12,32,22,.94);backdrop-filter:blur(14px);border-top:1px solid var(--line)}
+.c-nav button{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:700;color:var(--dim);padding:4px;position:relative}
+.c-nav button svg{width:22px;height:22px}
+.c-nav button[aria-current="true"]{color:var(--gold)}
+.c-nav .badge{position:absolute;top:0;right:calc(50% - 22px);min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--ember);color:#fff;font-size:10px;display:grid;place-items:center}
+.fab{position:absolute;left:14px;right:14px;bottom:82px;z-index:29;display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:18px;background:linear-gradient(135deg,#f0c27f,#d99b4e);color:var(--ink);box-shadow:0 14px 30px -10px rgba(0,0,0,.7);font-weight:800;animation:rise .35s ease}
+.fab .q{width:28px;height:28px;border-radius:9px;background:var(--ink);color:var(--gold-2);display:grid;place-items:center;font-size:13px}
+.fab span{margin-right:auto}
+@keyframes rise{from{transform:translateY(20px);opacity:0}}
+
+/* sheet */
+.veil{position:absolute;inset:0;z-index:60;background:rgba(3,10,6,.6);backdrop-filter:blur(3px);animation:fade .2s}
+@keyframes fade{from{opacity:0}}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:61;max-height:92%;overflow-y:auto;background:var(--forest-2);border-radius:28px 28px 0 0;border-top:1px solid var(--line-2);animation:up .3s cubic-bezier(.2,.9,.3,1);scrollbar-width:none}
+.sheet::-webkit-scrollbar{display:none}
+@keyframes up{from{transform:translateY(40%);opacity:.3}}
+.grab{width:40px;height:4px;border-radius:2px;background:var(--line-2);margin:10px auto}
+.sh-pad{padding:6px 20px 24px}
+.sh-close{position:absolute;right:14px;top:14px;z-index:3;width:34px;height:34px;border-radius:50%;background:rgba(10,29,20,.75);display:grid;place-items:center;font-size:18px}
+.d-img{position:relative;height:250px}
+.d-img img{width:100%;height:100%;object-fit:cover}
+.d-img::after{content:"";position:absolute;inset:0;background:linear-gradient(transparent 55%,var(--forest-2))}
+.d-name{font-family:var(--f-display);font-size:26px;line-height:1.12;color:var(--cream);margin-top:-8px}
+.d-hu{font-style:italic;color:#9fd4a8;font-size:13px;letter-spacing:.04em;text-transform:uppercase;margin:4px 0 10px}
+.d-desc{color:var(--muted);font-size:14px;margin:0 0 12px}
+.facts{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.fact{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:5px 10px;border-radius:999px;border:1px solid var(--line);color:var(--cream)}
+.fact svg{width:13px;height:13px;color:var(--gold)}
+.fact.hot svg{color:var(--ember)}
+.fact.warn{border-color:rgba(242,103,90,.5);color:#ffb3a9}
+.wine{display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:14px;background:linear-gradient(120deg,rgba(120,30,50,.35),rgba(233,183,112,.08));border:1px solid rgba(233,183,112,.2);margin-bottom:14px;font-size:13px}
+.wine svg{width:24px;height:24px;color:#e7a3b1;flex:none}
+.wine b{color:var(--gold-2)}
+.lbl{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin:16px 0 8px;font-weight:700}
+.opt{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:12px;border:1px solid var(--line);margin-bottom:6px;font-size:14px;cursor:pointer}
+.opt input{accent-color:var(--gold);width:18px;height:18px}
+.opt span{margin-right:auto}
+.opt b{color:var(--gold-2);font-size:13px}
+textarea,.in{width:100%;background:var(--forest);border:1px solid var(--line);border-radius:12px;padding:11px 12px;font-size:14px;outline:none;resize:none}
+textarea:focus,.in:focus{border-color:var(--gold)}
+.big{display:flex;justify-content:center;align-items:center;gap:10px;width:100%;padding:15px;border-radius:16px;background:var(--gold);color:var(--ink);font-weight:800;font-size:15px}
+.big:disabled{opacity:.45;cursor:not-allowed}
+.big.ghost{background:transparent;color:var(--gold-2);border:1px solid var(--line-2)}
+.row-btw{display:flex;align-items:center;justify-content:space-between;gap:12px}
+
+/* cart */
+.cl{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.cl img,.cl .ph{width:52px;height:52px;border-radius:12px;object-fit:cover;background:var(--forest-3)}
+.cl b{font-size:13.5px;display:block;line-height:1.25}
+.cl small{display:block;color:var(--dim);font-size:11.5px}
+.cl .p{font-size:13px;color:var(--gold-2);font-weight:700}
+.ups{display:flex;gap:8px;overflow-x:auto;margin:0 -20px;padding:0 20px 4px;scrollbar-width:none}
+.ups::-webkit-scrollbar{display:none}
+.up{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border-radius:14px;border:1px dashed var(--line-2);font-size:12.5px;font-weight:600}
+.up img,.up .ph{width:36px;height:36px;border-radius:10px;object-fit:cover;background:var(--forest-3)}
+.up em{font-style:normal;color:var(--gold)}
+.prog{height:6px;border-radius:3px;background:var(--forest);overflow:hidden;margin-top:6px}
+.prog i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--ok));border-radius:3px;transition:width .4s}
+.note-ok{font-size:12.5px;color:var(--muted)}
+.note-ok b{color:var(--gold-2)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:8px 12px;border-radius:12px;border:1px solid var(--line);font-size:13px;font-weight:600;color:var(--muted)}
+.chip[aria-pressed="true"]{border-color:var(--gold);color:var(--gold-2);background:rgba(233,183,112,.1)}
+.sum{display:grid;gap:6px;font-size:13.5px;margin:14px 0}
+.sum div{display:flex;justify-content:space-between}
+.sum .tot{font-size:17px;font-weight:800;color:var(--gold-2);padding-top:8px;border-top:1px solid var(--line)}
+.sum .neg{color:var(--ok)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ptsbox{display:flex;align-items:center;gap:12px;padding:12px;border-radius:14px;background:linear-gradient(120deg,rgba(233,183,112,.14),rgba(233,183,112,.03));border:1px solid var(--line-2)}
+.ptsbox .t{flex:1;font-size:13px}
+.ptsbox .t b{display:block;color:var(--gold-2)}
+.switch{position:relative;width:46px;height:26px;border-radius:13px;background:var(--forest-4);flex:none;transition:background .2s}
+.switch::after{content:"";position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:var(--cream);transition:transform .2s}
+.switch[aria-checked="true"]{background:var(--ok)}
+.switch[aria-checked="true"]::after{transform:translateX(20px)}
+
+/* tracking */
+.track{margin-top:10px;padding:18px;border-radius:24px;background:linear-gradient(170deg,var(--forest-3),var(--forest-2));border:1px solid var(--line-2);text-align:center}
+.ring{position:relative;width:184px;height:184px;margin:6px auto 10px}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .c{position:absolute;inset:0;display:grid;place-content:center}
+.ring .c b{font-family:var(--f-display);font-size:46px;line-height:1;color:var(--gold-2)}
+.ring .c small{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.ring.wait svg{animation:spin 2.4s linear infinite}
+@keyframes spin{to{transform:rotate(270deg)}}
+.t-title{font-family:var(--f-display);font-size:20px}
+.t-sub{color:var(--muted);font-size:13px;margin:4px 0 0}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:18px 0 6px;text-align:center}
+.steps div{font-size:10.5px;color:var(--dim);font-weight:700;display:flex;flex-direction:column;align-items:center;gap:6px;line-height:1.2}
+.steps i{width:100%;height:4px;border-radius:2px;background:var(--forest)}
+.steps .done i{background:var(--gold)}.steps .done{color:var(--gold-2)}
+.steps .now i{background:linear-gradient(90deg,var(--gold),var(--forest));background-size:200% 100%;animation:shim 1.4s linear infinite}
+.steps .now{color:var(--cream)}
+@keyframes shim{from{background-position:100% 0}to{background-position:-100% 0}}
+.msgs{display:grid;gap:8px;margin-top:14px;text-align:left}
+.msg{padding:10px 12px;border-radius:14px 14px 14px 4px;background:var(--forest);border:1px solid var(--line);font-size:13px}
+.msg small{display:block;color:var(--dim);font-size:10.5px;margin-top:2px}
+.stars{display:flex;justify-content:center;gap:6px;margin:10px 0}
+.stars button svg{width:32px;height:32px;color:var(--forest-4)}
+.stars button.on svg{color:var(--gold)}
+.hist{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.hist .imgs{display:flex}
+.hist .imgs img{width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid var(--forest);margin-left:-12px}
+.hist .imgs img:first-child{margin-left:0}
+.hist div.t{flex:1;min-width:0;font-size:13px}
+.hist div.t b{display:block}
+.hist div.t small{color:var(--dim)}
+.mini{padding:7px 12px;border-radius:10px;border:1px solid var(--line-2);font-size:12px;font-weight:700;color:var(--gold-2)}
+.empty{padding:40px 10px;text-align:center;color:var(--muted)}
+.empty svg{width:56px;height:56px;color:var(--gold);opacity:.6;margin:0 auto 10px}
+
+/* club */
+.card{position:relative;margin-top:12px;border-radius:22px;padding:20px;overflow:hidden;min-height:196px;color:#1a1408;display:flex;flex-direction:column;
+  background:linear-gradient(135deg,#f7e2b5 0%,#d9a75b 38%,#f3d394 55%,#b98236 100%);box-shadow:0 20px 40px -18px rgba(0,0,0,.8),inset 0 1px 0 rgba(255,255,255,.6)}
+.card.silver{background:linear-gradient(135deg,#f1f3f1 0%,#b7bfba 38%,#e9ecea 55%,#8d9893 100%)}
+.card.bronze{background:linear-gradient(135deg,#f1c9a5 0%,#b8774a 38%,#e7b48a 55%,#8c5530 100%)}
+.card::before{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.45) 48%,transparent 60%);background-size:250% 100%;animation:sheen 5s ease-in-out infinite}
+@keyframes sheen{0%,60%{background-position:130% 0}100%{background-position:-60% 0}}
+.card .ct{display:flex;justify-content:space-between;align-items:flex-start;position:relative}
+.card .ct b{font-family:var(--f-display);letter-spacing:.3em;font-size:18px;font-weight:400}
+.card .ct span{font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;font-weight:800}
+.card .cp{position:relative;margin-top:auto}
+.card .cp b{font-family:var(--f-display);font-size:40px;line-height:1;font-weight:400}
+.card .cp small{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;opacity:.75}
+.card .cn{position:relative;display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:12px;margin-top:10px;opacity:.85}
+.card svg.cons{position:absolute;right:-10px;top:30px;width:150px;height:150px;opacity:.22}
+.tierbar{margin-top:14px;font-size:12.5px;color:var(--muted)}
+.tierbar b{color:var(--gold-2)}
+.const{margin-top:16px;padding:16px;border-radius:20px;background:radial-gradient(circle at 60% 30%,#163a2a,#08160f 70%);border:1px solid var(--line-2);display:grid;grid-template-columns:150px minmax(0,1fr);gap:14px;align-items:center}
+.const svg{width:150px;height:150px}
+.const h3{font-family:var(--f-display);font-size:19px;color:var(--gold-2)}
+.const p{font-size:12.5px;color:var(--muted);margin:6px 0 0}
+.star-on{fill:#ffe7b0;filter:drop-shadow(0 0 6px rgba(255,214,140,.9))}
+.star-off{fill:#2d4a3a}
+.rw{display:flex;gap:12px;align-items:center;padding:10px;border-radius:16px;border:1px solid var(--line);margin-bottom:8px}
+.rw img{width:52px;height:52px;border-radius:12px;object-fit:cover}
+.rw div{flex:1;min-width:0;font-size:13px}
+.rw div b{display:block}
+.rw div small{color:var(--gold)}
+.code{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;border:1px dashed var(--line-2);font-family:var(--f-mono);font-size:15px;color:var(--gold-2)}
+.code span{margin-right:auto}
+
+/* promo popup */
+.pop{position:absolute;inset:0;z-index:80;display:grid;place-items:center;padding:22px;background:rgba(3,10,6,.7);backdrop-filter:blur(6px);animation:fade .25s}
+.pop-card{position:relative;width:100%;border-radius:26px;overflow:hidden;background:var(--forest-2);border:1px solid var(--gold);box-shadow:0 30px 60px -10px rgba(0,0,0,.8),0 0 60px -10px rgba(233,183,112,.35);animation:popin .45s cubic-bezier(.2,1.4,.4,1)}
+@keyframes popin{from{transform:scale(.85) translateY(20px);opacity:0}}
+.pop-card .pi{position:relative;height:210px}
+.pop-card .pi img{width:100%;height:100%;object-fit:cover}
+.pop-card .pi::after{content:"";position:absolute;inset:0;background:linear-gradient(transparent 50%,var(--forest-2))}
+.pop-card .ribbon{position:absolute;left:14px;top:14px;z-index:2;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;font-weight:800;color:var(--ink);background:var(--gold);padding:5px 10px;border-radius:999px}
+.pop-card .pb{padding:4px 20px 20px;text-align:center}
+.pop-card h3{font-family:var(--f-display);font-size:27px;line-height:1.1;color:var(--gold-2)}
+.pop-card p{color:var(--muted);font-size:13.5px;margin:8px 0 12px}
+.pop-card .pp{font-size:28px;font-weight:800;color:var(--cream)}
+.pop-card .pp s{font-size:15px;color:var(--dim);font-weight:500;margin-left:8px}
+.pop-card .cd{font-family:var(--f-mono);font-size:12px;color:var(--ember);margin:4px 0 14px}
+.pop-card .codebox{display:inline-block;font-family:var(--f-mono);font-size:18px;letter-spacing:.14em;padding:8px 16px;border:1px dashed var(--gold);border-radius:12px;color:var(--gold-2);margin-bottom:14px}
+.later{display:block;margin:10px auto 0;font-size:13px;color:var(--muted)}
+
+/* toast */
+.toast-host{position:absolute;left:12px;right:12px;top:48px;z-index:90;display:grid;gap:8px;pointer-events:none}
+.toast{pointer-events:auto;display:flex;gap:10px;align-items:center;padding:12px 14px;border-radius:16px;background:rgba(246,217,166,.97);color:var(--ink);font-size:13px;font-weight:600;box-shadow:0 14px 30px -10px rgba(0,0,0,.6);animation:drop .35s cubic-bezier(.2,1.3,.4,1)}
+.toast svg{width:20px;height:20px;flex:none}
+@keyframes drop{from{transform:translateY(-20px);opacity:0}}
+
+/* ======================= RECEPTION ======================= */
+.rx{position:relative;border-radius:24px;border:1px solid var(--line-2);background:rgba(13,36,24,.82);min-height:min(840px,calc(100dvh - 130px));overflow:hidden;display:grid;grid-template-columns:200px minmax(0,1fr)}
+.rx-side{border-right:1px solid var(--line);padding:18px 12px;display:flex;flex-direction:column;gap:4px;background:rgba(8,24,16,.6)}
+.rx-side .rb{display:flex;align-items:center;gap:8px;padding:0 6px 16px;border-bottom:1px solid var(--line);margin-bottom:10px}
+.rx-side .rb svg{width:28px;height:28px}
+.rx-side .rb b{font-family:var(--f-display);letter-spacing:.28em;font-size:18px;font-weight:400;color:var(--gold-2)}
+.rx-side .rb small{display:block;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim)}
+.rnav{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;font-weight:700;font-size:13.5px;color:var(--muted);text-align:left}
+.rnav svg{width:18px;height:18px}
+.rnav[aria-current="true"]{background:var(--forest-4);color:var(--cream);box-shadow:inset 0 0 0 1px var(--line-2)}
+.rnav .n{margin-left:auto;min-width:22px;height:22px;padding:0 6px;border-radius:11px;background:var(--ember);color:#fff;font-size:11px;display:grid;place-items:center}
+.openbox{margin-top:auto;padding:12px;border-radius:14px;border:1px solid var(--line);font-size:12.5px;display:grid;gap:8px}
+.openbox .row-btw b{font-size:13px}
+.rx-main{min-width:0;display:flex;flex-direction:column;max-height:min(840px,calc(100dvh - 130px));overflow:auto}
+.rx-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:16px 22px;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5;background:rgba(13,36,24,.96);backdrop-filter:blur(8px)}
+.rx-top h2{font-family:var(--f-display);font-size:24px;color:var(--cream);margin-right:auto}
+.rx-top h2 small{display:block;font-family:var(--f-body);font-size:12px;color:var(--dim);letter-spacing:.04em}
+.clock{font-family:var(--f-mono);font-size:20px;color:var(--gold-2)}
+.rbtn{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:12px;border:1px solid var(--line-2);font-size:13px;font-weight:700;color:var(--gold-2);white-space:nowrap}
+.rbtn svg{width:16px;height:16px}
+.rbtn.solid{background:var(--gold);color:var(--ink);border-color:var(--gold)}
+.rbtn.on{background:rgba(95,211,154,.12);border-color:rgba(95,211,154,.5);color:#9be8c0}
+.rx-body{padding:18px 22px 28px;display:grid;gap:18px}
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.kpi{padding:12px 14px;border-radius:16px;background:var(--forest-2);border:1px solid var(--line)}
+.kpi small{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);font-weight:700}
+.kpi b{display:block;font-family:var(--f-display);font-size:26px;line-height:1.2;color:var(--cream);font-weight:400}
+.kpi em{font-style:normal;font-size:11.5px;color:var(--muted)}
+.load{height:6px;border-radius:3px;background:var(--forest);overflow:hidden;margin-top:6px}
+.load i{display:block;height:100%;border-radius:3px;transition:width .5s}
+
+/* incoming */
+.incoming{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:0;border-radius:22px;overflow:hidden;border:1px solid var(--gold);box-shadow:0 0 0 0 rgba(233,183,112,.5);animation:ringglow 1.6s infinite}
+@keyframes ringglow{0%{box-shadow:0 0 0 0 rgba(233,183,112,.55)}70%{box-shadow:0 0 0 16px rgba(233,183,112,0)}100%{box-shadow:0 0 0 0 rgba(233,183,112,0)}}
+.inc-h{grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:12px 18px;background:var(--gold);color:var(--ink)}
+.inc-h b{font-size:15px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.inc-h .bell{width:22px;height:22px;animation:shake 1s infinite}
+@keyframes shake{0%,50%,100%{transform:rotate(0)}10%,30%{transform:rotate(-14deg)}20%,40%{transform:rotate(14deg)}}
+.inc-h span{margin-left:auto;font-family:var(--f-mono);font-size:13px}
+.ticket{background:var(--paper);color:var(--ink);padding:18px 20px 22px;font-family:var(--f-mono);font-size:13.5px;position:relative;
+  -webkit-mask:radial-gradient(circle 7px at 100% 50%,transparent 98%,#000) 0 0/100% 22px;mask:radial-gradient(circle 7px at 100% 50%,transparent 98%,#000) 0 0/100% 22px}
+.ticket .tno{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px dashed rgba(19,36,26,.35);padding-bottom:10px;margin-bottom:10px}
+.ticket .tno b{font-size:26px;font-family:var(--f-display);font-weight:400}
+.ticket .tl{display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:8px;padding:5px 0;align-items:baseline}
+.ticket .tl .q{font-size:20px;font-weight:500}
+.ticket .tl b{font-family:var(--f-body);font-weight:800;font-size:15px}
+.ticket .tl small{display:block;color:#5d6b60;font-size:12px}
+.ticket .tl .x{color:#a0491d;font-size:12px;display:block}
+.ticket .tot{display:flex;justify-content:space-between;border-top:2px dashed rgba(19,36,26,.35);margin-top:10px;padding-top:10px;font-size:16px;font-weight:500}
+.ticket .alert{margin:10px 0;padding:8px 10px;border-radius:8px;background:#f2675a;color:#fff;font-family:var(--f-body);font-weight:800;font-size:13px;display:flex;gap:8px;align-items:center}
+.ticket .alert svg{width:18px;height:18px;flex:none}
+.ticket .gift{margin:10px 0;padding:8px 10px;border-radius:8px;background:#13241a;color:var(--gold-2);font-family:var(--f-body);font-weight:700;font-size:12.5px;display:flex;gap:8px;align-items:center}
+.ticket .gift svg{width:18px;height:18px;flex:none}
+.ticket .tn{background:#fff3c9;border-left:4px solid #e0a43d;padding:6px 10px;margin:8px 0;font-family:var(--f-body);font-size:13px}
+.decide{background:var(--forest-2);padding:18px 20px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.who{display:flex;gap:12px;align-items:center}
+.avatar{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-display);font-size:18px;color:var(--ink);flex:none}
+.who b{display:block;font-size:15px}
+.who small{color:var(--muted);font-size:12.5px}
+.insight{font-size:12.5px;color:var(--muted);padding:10px 12px;border-radius:12px;background:var(--forest);border:1px solid var(--line);display:grid;gap:4px}
+.insight b{color:var(--gold-2)}
+.etas{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.eta{position:relative;padding:14px 6px;border-radius:14px;border:1px solid var(--line-2);text-align:center;font-family:var(--f-display);font-size:24px;line-height:1;color:var(--cream)}
+.eta small{display:block;font-family:var(--f-body);font-size:10.5px;color:var(--dim);margin-top:4px;letter-spacing:.06em}
+.eta[aria-pressed="true"]{background:var(--gold);color:var(--ink);border-color:var(--gold)}
+.eta[aria-pressed="true"] small{color:var(--ink)}
+.eta .rec{position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-family:var(--f-body);font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:2px 7px;border-radius:6px;background:var(--ok);color:var(--ink);white-space:nowrap}
+.accept{display:flex;justify-content:center;align-items:center;gap:10px;width:100%;padding:16px;border-radius:16px;background:var(--ok);color:#06240f;font-weight:800;font-size:16px}
+.reject{font-size:13px;color:#ffb3a9;font-weight:700;padding:6px}
+.rsn{display:flex;flex-wrap:wrap;gap:6px}
+.rsn button{padding:7px 10px;border-radius:10px;border:1px solid rgba(242,103,90,.4);font-size:12px;color:#ffb3a9}
+.queue{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--muted)}
+.queue button{padding:6px 10px;border-radius:10px;border:1px solid var(--line-2);font-family:var(--f-mono);font-size:12px;color:var(--gold-2)}
+.queue button[aria-current="true"]{background:var(--gold);color:var(--ink)}
+
+/* board */
+.board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.col{border-radius:18px;background:rgba(8,24,16,.5);border:1px solid var(--line);padding:12px;min-height:200px;display:flex;flex-direction:column;gap:10px}
+.col-h{display:flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:800;color:var(--muted);padding:2px 4px}
+.col-h i{width:8px;height:8px;border-radius:50%}
+.col-h span{margin-left:auto;font-family:var(--f-mono);color:var(--gold-2)}
+.oc{display:grid;gap:8px;padding:12px;border-radius:14px;background:var(--forest-2);border:1px solid var(--line);text-align:left;width:100%;transition:border-color .2s,transform .2s}
+.oc:hover{border-color:var(--line-2);transform:translateY(-1px)}
+.oc .h{display:flex;align-items:center;gap:8px}
+.oc .h b{font-family:var(--f-mono);font-size:14px;color:var(--gold-2)}
+.oc .h .tm{margin-left:auto;font-family:var(--f-mono);font-size:13px;font-weight:500;padding:2px 8px;border-radius:8px}
+.tm.ok{background:rgba(95,211,154,.14);color:#9be8c0}.tm.warn{background:rgba(244,192,78,.16);color:#ffe09a}.tm.bad{background:rgba(242,103,90,.2);color:#ffb3a9}
+.oc .who2{font-size:13px;font-weight:700}
+.oc .its{font-size:12.5px;color:var(--muted);line-height:1.4}
+.oc .bar{height:4px;border-radius:2px;background:var(--forest);overflow:hidden}
+.oc .bar i{display:block;height:100%;border-radius:2px}
+.oc .ft{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.oc .ft .tag{font-size:9.5px}
+.oc .ft .go{margin-left:auto}
+.go{padding:7px 11px;border-radius:10px;background:var(--gold);color:var(--ink);font-size:12px;font-weight:800}
+.colempty{font-size:12.5px;color:var(--dim);text-align:center;padding:20px 8px;border:1px dashed var(--line);border-radius:12px}
+
+/* drawer */
+.drawer-veil{position:absolute;inset:0;z-index:60;background:rgba(3,10,6,.55);animation:fade .2s}
+.drawer{position:absolute;right:0;top:0;bottom:0;z-index:61;width:min(460px,100%);background:var(--forest-2);border-left:1px solid var(--line-2);overflow-y:auto;animation:slide .3s cubic-bezier(.2,.9,.3,1);padding:20px}
+@keyframes slide{from{transform:translateX(30%);opacity:.3}}
+.drawer h3{font-family:var(--f-display);font-size:24px}
+.tl2{display:grid;gap:0;margin:10px 0}
+.tl2 div{display:grid;grid-template-columns:16px minmax(0,1fr) auto;gap:10px;font-size:13px;padding:6px 0;color:var(--muted)}
+.tl2 div i{width:10px;height:10px;border-radius:50%;margin-top:5px;background:var(--forest-4)}
+.tl2 div.done{color:var(--cream)}.tl2 div.done i{background:var(--gold)}
+.tl2 div span{font-family:var(--f-mono);font-size:12px;color:var(--dim)}
+.qr{display:flex;flex-wrap:wrap;gap:6px}
+.qr button{padding:8px 11px;border-radius:10px;border:1px solid var(--line);font-size:12.5px;text-align:left}
+.qr button:hover{border-color:var(--gold)}
+
+/* promos */
+.pgrid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:18px;align-items:start}
+.pc{display:grid;grid-template-columns:120px minmax(0,1fr);gap:14px;padding:12px;border-radius:18px;background:var(--forest-2);border:1px solid var(--line);margin-bottom:10px}
+.pc img{width:120px;height:100px;border-radius:12px;object-fit:cover}
+.pc h4{font-family:var(--f-display);font-size:18px;color:var(--gold-2)}
+.pc p{margin:4px 0 8px;font-size:12.5px;color:var(--muted)}
+.pc .ft{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.form{padding:16px;border-radius:20px;background:var(--forest-2);border:1px solid var(--line-2);display:grid;gap:10px}
+.form label{display:grid;gap:5px;font-size:12px;font-weight:700;color:var(--muted)}
+.form select{width:100%;background:var(--forest);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:14px}
+.prev{border-radius:18px;overflow:hidden;border:1px solid var(--gold);background:var(--forest);margin-top:4px}
+.prev img{width:100%;height:120px;object-fit:cover}
+.prev div{padding:10px 14px 14px;text-align:center}
+.prev b{font-family:var(--f-display);font-size:19px;color:var(--gold-2);display:block;font-weight:400}
+.prev small{color:var(--muted);font-size:12px}
+
+/* tables */
+.tbl-wrap{overflow-x:auto;border-radius:18px;border:1px solid var(--line)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);text-align:left;padding:12px 14px;background:rgba(8,24,16,.6);font-weight:700}
+td{padding:11px 14px;border-top:1px solid var(--line);vertical-align:middle}
+td.n{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.tier{font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:6px;color:var(--ink)}
+.tier.Aur{background:linear-gradient(135deg,#f7e2b5,#d9a75b)}.tier.Argint{background:linear-gradient(135deg,#f1f3f1,#aab3ae)}.tier.Bronz{background:linear-gradient(135deg,#f1c9a5,#b8774a)}
+.rules{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.rule{padding:14px;border-radius:16px;background:var(--forest-2);border:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+.rule b{display:block;font-family:var(--f-display);font-size:20px;color:var(--gold-2);font-weight:400}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.mi{display:grid;grid-template-columns:54px minmax(0,1fr);gap:10px;align-items:center;padding:10px;border-radius:14px;background:var(--forest-2);border:1px solid var(--line)}
+.mi img,.mi .ph{width:54px;height:54px;border-radius:10px;object-fit:cover;background:var(--forest-3)}
+.mi b{font-size:12.5px;display:block;line-height:1.25}
+.mi .row-btw{margin-top:4px;font-size:12px;color:var(--gold-2)}
+.mi.off{opacity:.55}
+.mi .switch{width:40px;height:22px}.mi .switch::after{width:16px;height:16px}.mi .switch[aria-checked="true"]::after{transform:translateX(18px)}
+.h3{font-family:var(--f-display);font-size:20px;color:var(--gold-2);margin-bottom:10px}
+.muted{color:var(--muted);font-size:13px}
+
+@media (max-width:1380px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.rules{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:1180px){.stage{grid-template-columns:minmax(0,1fr);justify-items:stretch}.stage #client-wrap{justify-self:center}.board{grid-template-columns:minmax(0,1fr)}.incoming{grid-template-columns:minmax(0,1fr)}.pgrid{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:760px){.rx{grid-template-columns:minmax(0,1fr)}.rx-side{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line);padding:10px}.rx-side .rb,.openbox{display:none}.rnav{white-space:nowrap}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.rx-top,.rx-body{padding-inline:16px}.pc{grid-template-columns:minmax(0,1fr)}.pc img{width:100%;height:140px}.etas{grid-template-columns:repeat(3,1fr)}}
+
+.big svg,.accept svg{width:20px;height:20px;flex:none}
+.mini svg{width:15px;height:15px;vertical-align:-3px}
+.oc>*,.col{min-width:0}
+.oc .h{flex-wrap:wrap}
+.ph{background:radial-gradient(circle at 35% 35%,#f6d9a6,#c98a3d 60%,#7a4f1d)!important}
+td:first-child{min-width:150px}
+.stage.only-client #client-wrap{width:100%}
+.phone{margin-inline:auto}
+@media (max-width:1180px){.stage #client-wrap{width:100%}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&display=swap" rel="stylesheet">
+
+<header class="top">
+  <div class="brand">
+    <svg viewBox="0 0 40 40" aria-hidden="true" id="logo-src"><g stroke="#e9b770" stroke-width="1" fill="none" opacity=".7"><path d="M14 9 L19 17 L27 19 L24 31 L13 28 L19 17"/><path d="M14 9 L22 6"/></g><g fill="#f6d9a6"><circle cx="14" cy="9" r="3.2"/><circle cx="22" cy="6" r="1.3"/><circle cx="19" cy="17" r="1.5"/><circle cx="27" cy="19" r="1.5"/><circle cx="24" cy="31" r="1.6"/><circle cx="13" cy="28" r="1.6"/></g></svg>
+    <div><b>LYRA</b><small>Restaurant · comenzi</small></div>
+  </div>
+  <div class="live"><span class="dot"></span>Demo live: o comandă trimisă din aplicație apare instant la recepție</div>
+  <div class="seg" role="group" aria-label="Interfață">
+    <button data-view="both" aria-pressed="true">Ambele</button>
+    <button data-view="client" aria-pressed="false">Client</button>
+    <button data-view="rx" aria-pressed="false">Recepție</button>
+  </div>
+</header>
+
+<main class="stage" id="stage">
+  <section id="client-wrap">
+    <p class="pane-label"><b>Aplicația clientului</b> lyra.ro/comanda</p>
+    <div class="phone"><div class="screen" id="screen">
+      <div class="notch"></div>
+      <div class="ph-scroll" id="c-scroll"><div id="c-main"></div></div>
+      <div id="c-fab"></div>
+      <nav class="c-nav" id="c-nav"></nav>
+      <div id="c-sheet"></div>
+      <div id="c-pop"></div>
+      <div class="toast-host" id="c-toasts"></div>
+    </div></div>
+  </section>
+  <section id="rx-wrap">
+    <p class="pane-label"><b>Consola recepție</b> tabletă / PC la casă</p>
+    <div class="rx" id="rx">
+      <aside class="rx-side" id="rx-side"></aside>
+      <div class="rx-main" id="rx-main"></div>
+      <div id="rx-drawer"></div>
+    </div>
+  </section>
+</main>
+
+<script>
+/* ================= DATA ================= */
+const IMG = k => "img/" + k + ".jpg";
+const ICON = {
+  gluten:'<path d="M12 22V7M12 7c-1.6-.8-2.6-2.4-2.6-4.4 1.7.2 2.6 2 2.6 4.4zm0 0c1.6-.8 2.6-2.4 2.6-4.4-1.7.2-2.6 2-2.6 4.4zM12 12.5c-2-.6-3.4-2-3.6-4 2 .2 3.4 1.6 3.6 4zm0 0c2-.6 3.4-2 3.6-4-2 .2-3.4 1.6-3.6 4zM12 17.5c-2-.6-3.4-2-3.6-4 2 .2 3.4 1.6 3.6 4zm0 0c2-.6 3.4-2 3.6-4-2 .2-3.4 1.6-3.6 4z"/>',
+  ou:'<path d="M12 3c-3.6 0-6.2 5.6-6.2 10.2a6.2 6.2 0 0 0 12.4 0C18.2 8.6 15.6 3 12 3z"/>',
+  lactoza:'<path d="M10 2.5h4v3l2.2 3.2V20a1.8 1.8 0 0 1-1.8 1.8H9.6A1.8 1.8 0 0 1 7.8 20V8.7L10 5.5zM7.8 12h8.4"/>',
+  telina:'<path d="M12 22V10M8.5 22v-9M15.5 22v-9M12 10C11 7 9 5.5 6.5 5.5c1 2.4 3 3.8 5.5 4.5zm0 0c1-3 3-4.5 5.5-4.5-1 2.4-3 3.8-5.5 4.5z"/>',
+  mustar:'<path d="M11 2h2v3h1.2l1.3 3.2V20a1.8 1.8 0 0 1-1.8 1.8h-3.4A1.8 1.8 0 0 1 8.5 20V8.2L9.8 5H11z"/>',
+  soia:'<path d="M5.5 18.5c-2.2-2.2-1-6 2-8.3l6-4.8c3-2.3 6.3.2 4.8 3.3l-4.6 6.8c-2.2 3.3-6 5.2-8.2 3z"/><circle cx="9" cy="14.2" r="1.2"/><circle cx="12.2" cy="11" r="1.2"/><circle cx="15.3" cy="7.9" r="1.2"/>',
+  seminte:'<ellipse cx="8" cy="9" rx="2.2" ry="3.4"/><ellipse cx="15.5" cy="8" rx="2.2" ry="3.4"/><ellipse cx="11.5" cy="16.5" rx="2.2" ry="3.4"/>',
+  ciuperci:'<path d="M3.5 12.5a8.5 7.5 0 0 1 17 0zM9.8 12.5v6.3a2.2 2.2 0 0 0 4.4 0v-6.3"/>'
+};
+const AL = {gluten:["Gluten","Glutén"],ou:["Ou","Tojás"],lactoza:["Lactoză","Laktóz"],telina:["Țelină","Zeller"],mustar:["Muștar","Mustár"],soia:["Soia","Szója"],seminte:["Semințe","Magvak"],ciuperci:["Ciuperci","Gomba"]};
+const MEAT = {porc:["Porc","Sertés"],vita:["Vită","Marha"],pui:["Pui","Csirke"]};
+const svg = (p, extra="") => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" ${extra}>${p}</svg>`;
+const UI = {
+  flame:'<path d="M12 22c4 0 7-3 7-7.2 0-3.8-2.6-6-3.8-9.8-1.9 1.8-2.9 3.8-3 5.9-1-.9-1.8-2.2-2-4-2.9 2-5.2 5-5.2 8C5 19 8 22 12 22z" fill="currentColor" stroke="none"/>',
+  search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  shield:'<path d="M12 3 4.5 6v6c0 4.4 3.2 8.2 7.5 9 4.3-.8 7.5-4.6 7.5-9V6z"/><path d="m9 12 2 2 4-4"/>',
+  menu:'<path d="M4 6h16M4 12h16M4 18h10"/>',
+  bag:'<path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/>',
+  star:'<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z" fill="currentColor" stroke="none"/>',
+  starO:'<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>',
+  wine:'<path d="M8 2h8l-.5 6a3.5 3.5 0 0 1-7 0zM12 11.5V20M8.5 21h7"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  check:'<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+  bell:'<path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0"/>',
+  gift:'<rect x="3.5" y="8.5" width="17" height="4" rx="1"/><path d="M5 12.5v7.5h14v-7.5M12 8.5V20M12 8.5c-1.5-3.5-5.5-4-5.5-1.5 0 1.5 2.5 1.5 5.5 1.5zm0 0c1.5-3.5 5.5-4 5.5-1.5 0 1.5-2.5 1.5-5.5 1.5z"/>',
+  alert:'<path d="M12 3 2.5 20h19z"/><path d="M12 10v4M12 17.2v.3"/>',
+  orders:'<rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/>',
+  promo:'<path d="M3.5 10.5v3l11 5V5.5zM14.5 8h2.5a3 3 0 0 1 0 8h-2.5M6.5 14.5l1 5h3l-1-4"/>',
+  users:'<circle cx="9" cy="8.5" r="3.5"/><path d="M2.8 20c.6-3.5 3.2-5.5 6.2-5.5s5.6 2 6.2 5.5"/><circle cx="17" cy="9.5" r="2.6"/><path d="M16.5 14.6c2.4.2 4.1 1.9 4.7 4.6"/>',
+  dish:'<path d="M3 16h18M5 16a7 7 0 0 1 14 0M12 9V7.5M10.5 7.5h3M4 19h16"/>',
+  sound:'<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/>',
+  mute:'<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="m16 9.5 5 5M21 9.5l-5 5"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  send:'<path d="m4 12 16-8-6 16-2.5-6.5z"/>',
+  bike:'<circle cx="6" cy="17" r="3.2"/><circle cx="18" cy="17" r="3.2"/><path d="M6 17l4-7h5l3 7M10 10 8.5 6.5H6.5M14 6.5h2.5"/>',
+  copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8"/>'
+};
+const I = (k, cls="") => svg(UI[k], cls ? `class="${cls}"` : "");
+
+const CATS = [
+  {id:"nou",ro:"Noutăți",hu:"Új fogás"},
+  {id:"smash",ro:"Smash Burgers",hu:"Smash burgerek",note:["Nou: burgeri smash pe chiflă artizanală","Új: smash burgerek kézműves zsemlében"]},
+  {id:"burger",ro:"Lyra's Burger",hu:"Lyra's Burger",note:["Preparate la foc pe cărbune · chiflă artizanală, producție proprie","Faszénen készítve · saját készítésű kézműves zsemle"]},
+  {id:"casa",ro:"Specialitățile casei",hu:"A ház különlegességei"},
+  {id:"ardeal",ro:"Bucătăria transilvăneană",hu:"Erdélyi konyha"},
+  {id:"pui",ro:"Preparate din pui",hu:"Csirke ételek"},
+  {id:"dejun",ro:"Mic dejun",hu:"Reggeli",note:["Spanacul cu ochiuri se servește între 08:00–22:00","A spenótfőzelék 08:00–22:00 között kapható"]},
+  {id:"paste",ro:"Paste",hu:"Tészták"},
+  {id:"salate",ro:"Salate",hu:"Saláták"},
+  {id:"post",ro:"Preparate de post",hu:"Böjti ételek"},
+  {id:"garnituri",ro:"Salate & murături",hu:"Saláták, savanyúságok"},
+  {id:"sosuri",ro:"Sosuri",hu:"Szószok"},
+  {id:"desert",ro:"Desert",hu:"Desszert"}
+];
+const FS="Fetească Regală Pivnița Savu";
+const M = [
+ {id:"antricot",n:11,c:"nou",ro:"Antricot de vită la grătar",hu:"Grillezett marha hátszín (entrecôte)",d:"Alături de cartofi copți în coajă și rozmarin",dh:"Héjában sült burgonyával és rozmaringgal",p:145,g:"200/250 gr",al:["lactoza"],m:"vita",hot:1,img:"antricot",t:["garn"]},
+ {id:"muschi",n:12,c:"nou",ro:"Mușchi de vită cu sos de piper",hu:"Marhabélszín borsmártással",d:"Piper murat, frișcă de gătit și piure de cartofi",dh:"Savanyított borssal, főzőtejszínnel és burgonyapürével",p:165,g:"160/150/100 gr",al:["lactoza"],m:"vita",img:"muschi",t:["garn"]},
+ {id:"tocanita",n:13,c:"nou",ro:"Tocăniță de vițel cu găluște",hu:"Borjúpörkölt galuskával",d:"Pulpă de vită Black Angus, legume, paste",dh:"Black Angus marhapecsenye, zöldségek, tészta",p:66,g:"250/150 gr",al:["gluten","ou","telina"],m:"vita",hot:1,img:"tocanita",t:["angus"]},
+
+ {id:"double-smash",c:"smash",ro:"Double Smash",hu:"Double Smash",d:"2 × 60 g carne de vită, castraveți murați, brânză cheddar, sos burger, ceapă, unt, salată iceberg",dh:"2 × 60 g marhahús, csemegeuborka, cheddar, burger szósz, hagyma, vaj, jégsaláta",p:35,g:"2 × 60 g vită",al:["gluten","lactoza"],m:"vita",img:"double-smash",t:["new"]},
+ {id:"spicy-smash",c:"smash",ro:"Spicy Smash",hu:"Spicy Smash",d:"2 × 60 g carne de vită, castraveți murați, brânză cheddar, sos Vifon, jalapeño, unt, ceapă, salată iceberg",dh:"2 × 60 g marhahús, csemegeuborka, cheddar, Vifon szósz, jalapeño, vaj, hagyma, jégsaláta",p:35,g:"2 × 60 g vită",al:["gluten","lactoza"],m:"vita",img:"spicy-smash",t:["new","spicy"]},
+ {id:"smash",c:"smash",ro:"Smash Burger",hu:"Smash Burger",d:"1 × 60 g carne de vită, brânză cheddar, castraveți murați, sos burger, ceapă, unt, salată iceberg",dh:"1 × 60 g marhahús, cheddar, csemegeuborka, burger szósz, hagyma, vaj, jégsaláta",p:25,g:"1 × 60 g vită",al:["gluten","lactoza"],m:"vita",img:"smash",t:["new"]},
+ {id:"special-fries",c:"smash",ro:"Special Fries",hu:"Special Fries",d:"Cartofi pai, brânză cheddar, bacon crocant, sos burger, chives (arpagic verde)",dh:"Hasábburgonya, cheddar, ropogós bacon, burger szósz, metélőhagyma",p:21,g:"200 gr",al:["lactoza"],m:"porc",img:"special-fries"},
+ {id:"cartofi",c:"smash",ro:"Cartofi prăjiți",hu:"Hasábburgonya",d:"Porție de cartofi prăjiți",dh:"Egy adag hasábburgonya",p:15,g:"150 gr",al:[],img:"cartofi",t:["veg"]},
+
+ {id:"chicken-burger",n:25,c:"burger",ro:"Meniu Chicken Burger",hu:"Chicken Burger menü",d:"Chiflă, dulceață de ceapă, salată iceberg, chiftea din pui 80%, slănină de porc 20%, brânză cheddar, sos burger, cartofi prăjiți și sosul casei, parmezan",p:56,g:"80/120/90/150/40 gr",al:["gluten","lactoza"],m:"pui",img:"chicken-burger"},
+ {id:"ozn-pulled",n:26,c:"burger",ro:"Meniu OZN Pulled Pork",hu:"OZN Pulled Pork menü",d:"Chiflă, spată de porc, cașcaval, salată coleslaw, sos BBQ, cartofi prăjiți și sosul casei, parmezan",p:49.5,g:"80/120/120/150/40 gr",al:["mustar","gluten","lactoza"],m:"porc",img:"ozn-pulled"},
+ {id:"crispy-burger",n:27,c:"burger",ro:"Meniu Crispy Burger",hu:"Crispy Burger menü",d:"Crispy de pui de casă, cașcaval, salată, sos burger, cartofi prăjiți și sosul casei, parmezan",p:48.5,g:"80/100/90/150/40 gr",al:["gluten","lactoza"],m:"pui",img:"crispy-burger"},
+ {id:"eleven-burger",n:28,c:"burger",ro:"Meniu Eleven Burger",hu:"Eleven Burger menü",d:"Chiflă, dulceață de ceapă, salată iceberg, chiftea din vită Black Angus, brânză cheddar, bacon, sos burger, cartofi prăjiți și sosul casei, parmezan",p:64.5,g:"80/100/90/150/40 gr",al:["gluten","lactoza"],m:"vita",img:"eleven-burger",t:["angus"]},
+ {id:"burger-ozn",n:29,c:"burger",ro:"Burger OZN",hu:"OZN Burger",d:"Chiftea Black Angus, salată iceberg, roșii, ceapă, sos burger, parmezan, cartofi, sos brânzeturi",p:60,g:"80/100/70/150/100 gr",al:["gluten","lactoza"],m:"vita",img:"burger-ozn",t:["angus"]},
+ {id:"veggie-ozn",n:30,c:"burger",ro:"Meniu Veggie Burger OZN",hu:"Veggie OZN Burger menü",d:"Chiflă, brânză cheddar, salată iceberg, ceapă caramelizată, legume, chiftea veggie, ciuperci, cartofi prăjiți și sosul casei, parmezan",p:64,g:"80/100/90/150/40 gr",al:["mustar","gluten","lactoza"],img:"veggie-ozn",t:["veg"],w:"Sauvignon Blanc Pivnița Savu"},
+
+ {id:"ciolan-varza",n:15,c:"casa",ro:"Ciolan fraged pe pat de varză roșie călită",hu:"Puha csülök vöröskáposzta ágyon",d:"Ciolan, varză, frișcă de gătit",dh:"Csülök, káposzta, főzőtejszín",p:85,g:"600/250/100 gr",al:["lactoza","seminte"],m:"porc",img:"ciolan-varza"},
+ {id:"iahnie-ciolan",n:16,c:"casa",ro:"Iahnie de fasole cu ciolan afumat",hu:"Babfőzelék füstölt csülökkel",d:"Și ardei iute",dh:"És csípős paprikával",p:69,g:"350/200 gr",al:["gluten"],m:"porc",hot:1,img:"iahnie-ciolan"},
+ {id:"costite",n:21,c:"casa",ro:"Costițe Lyra fragede afumate cu sos BBQ",hu:"Lyra omlós, füstölt sertésoldalas BBQ szósszal",d:"Cu cartofi copți cu usturoi",dh:"Fokhagymás sült burgonyával",p:79,g:"300/150/100/40 gr",al:["gluten"],m:"porc",hot:1,img:"costite",t:["garn","casa"]},
+ {id:"ceafa-afumata",n:22,c:"casa",ro:"Felie de ceafă afumată",hu:"Füstölt tarjaszeletek",d:"Gătită lent la temperatură joasă pentru păstrarea frăgezimii, cu piure de cartofi și sos brun",dh:"Alacsony hőmérsékleten, lassan főzve; krumplipüré, barna szósz",p:57,g:"180/150/50 gr",al:["telina","ou","lactoza"],m:"porc",hot:1,img:"ceafa-afumata",t:["garn","casa"]},
+ {id:"ciolan-lyra",n:41,c:"casa",ro:"Ciolan à la Lyra cu cartofi petală și cașcaval",hu:"Csülök Lyra módra",d:"Servit pe pat de cartofi cu cașcaval, sos de hrean cu usturoi, cremă de gătit, smântână",dh:"Sajtos burgonyaágyon tálalva, fokhagymás tormamártással, főzőtejszínnel és tejföllel",p:55,g:"180/110/50 gr",al:["gluten","mustar","soia","ou","lactoza","telina"],m:"porc",hot:1,img:"ciolan-lyra",t:["garn","casa"]},
+ {id:"ceafa-tiganeasca",n:42,c:"casa",ro:"Ceafă țigănească fragedă și cartofi Lyra",hu:"Omlós cigánypecsenye tarja és Lyra burgonya",d:"Ceafă de porc, mujdeiul casei, boia, slănină prăjită, cartofi cu usturoi și cașcaval",dh:"Sertéstarja házi fokhagymamártással, pirospaprikával, sült szalonnával, fokhagymás-sajtos burgonyával",p:68,g:"170/250/45/75 gr",al:["lactoza"],m:"porc",hot:1,img:"ceafa-tiganeasca",t:["coal"]},
+ {id:"snitel-lyra",n:48,c:"casa",ro:"Șnițel Lyra din cotlet",hu:"Lyra karaj szelet",d:"Cotlet de porc, sos ciuperci, cașcaval, cheddar, șuncă, smântână vegetală, ou",dh:"Sertéstarja, gombás szósz, cheddar, sajt, sonka, növényi tejszín",p:57,g:"350 gr",al:["lactoza","ciuperci","ou"],m:"porc",hot:1,img:"snitel-lyra",w:"Chardonnay Barique Pivnița Savu"},
+
+ {id:"fasole-batuta",n:46,c:"ardeal",ro:"Fasole bătută cu cârnați de casă",hu:"Tört bab házi kolbásszal",d:"Prăjiți în untură și ceapă călită",dh:"Zsírban sütve, pirított hagymával",p:59,g:"250/150 gr",al:["gluten","soia","lactoza"],m:"porc",hot:1,img:"fasole-batuta"},
+ {id:"papricas",n:47,c:"ardeal",ro:"Papricaș de pui cu mămăliguță prăjită",hu:"Csirkepaprikás puliszkával",d:"Pulpă de pui, ceapă, ardei, cremă vegetală pentru gătit",dh:"Csirkecomb, hagyma, paprika, főzéshez növényi krém",p:45,g:"300/130 gr",al:["gluten","ou","telina"],m:"pui",hot:1,img:"papricas"},
+ {id:"ficatei",n:49,c:"ardeal",ro:"Ficăței la tigaie rumeniți cu dulceață de ceapă",hu:"Serpenyőben pirított csirkemáj hagymalekvárral",d:"Ficăței de pui rumeniți la tigaie, cu dulceață de ceapă",dh:"Serpenyőben pirított csirkemáj hagymalekvárral",p:47,g:"250/130 gr",al:["gluten"],m:"pui",hot:1,img:"ficatei"},
+
+ {id:"piept-lyra",n:50,c:"pui",ro:"Piept de pui à la Lyra",hu:"Csirkemell Lyra módra",d:"Piept de pui la grătar, ciuperci, șuncă de pui, cașcaval cheddar, cremă de gătit",dh:"Csirkemell, gomba, sonka, sajt, cheddar, főzőkrém",p:39,g:"80/100/40/40 gr",al:["gluten","mustar","soia","lactoza","telina"],m:"pui",hot:1,img:"piept-lyra",w:FS,t:["nogarn"]},
+ {id:"borzas",n:51,c:"pui",ro:"Borzaș",hu:"Borzás",d:"Piept de pui, cartofi răzuiți, ou, usturoi, smântână, sos de usturoi",dh:"Csirkemell, reszelt burgonya, tojás, fokhagyma, tejföl, fokhagymás szósz",p:49,g:"300 gr",al:["ou","lactoza","telina"],m:"pui",img:"borzas",w:FS},
+ {id:"borzas-medie",c:"pui",ro:"Borzaș · porție medie",hu:"Borzás – közepes adag",d:"Piept de pui, cartofi răzuiți, ou, usturoi, smântână, sos de usturoi",dh:"Csirkemell, reszelt burgonya, tojás, fokhagyma, tejföl, fokhagymás szósz",p:32,g:"200 gr",al:["ou","lactoza","telina"],m:"pui",img:"borzas-medie"},
+ {id:"cordon-bleu",n:52,c:"pui",ro:"Cordon bleu cu cartofi à la Lyra",hu:"Cordon bleu burgonyával à la Lyra",d:"Șuncă de pui, cașcaval, cartofi cu usturoi, ou",dh:"Sajt, sonka, fokhagymás burgonya és sajt",p:49,g:"150/250 gr",al:["ou","soia","mustar","gluten","lactoza","telina"],m:"pui",hot:1,img:"cordon-bleu",w:FS,t:["garn"]},
+ {id:"salata-pui",n:53,c:"pui",ro:"Salată cu piept de pui",hu:"Csirkemell saláta",d:"Mix salată, sparanghel, conopidă crocantă, rodie, cremă de avocado, dressing miere, piept de pui",dh:"Salátakeverék, spárga, ropogós karfiol, gránátalma, avokádókrém, mézes öntet, csirkemell",p:52,g:"150/80/30 gr",al:["soia","ou","seminte"],m:"pui",img:"salata-pui",w:FS},
+
+ {id:"bruschete",n:6,c:"dejun",ro:"Bruschete țărănești",hu:"Paraszti bruschetta",d:"Cu ou ochi, cartofi prăjiți și telemea, brânză de burduf, slănină, ceapă",dh:"Tükörtojással, sült burgonyával és juhtúróval",p:45,g:"100/30/150 gr",al:["gluten","ou"],hot:1,img:"bruschete"},
+ {id:"english",n:7,c:"dejun",ro:"Mic dejun englezesc",hu:"Angol reggeli",d:"Cârnăciori cu cașcaval, ochiuri, guanciale, fasole în sos tomat, focaccia făcută în casă",dh:"Kolbászkák sajttal, tükörtojás, guanciale, babos paradicsomszósz, focaccia",p:47,g:"50/100/100/100/50 gr",al:["gluten","ou"],m:"porc",hot:1,img:"english"},
+ {id:"omleta",n:8,c:"dejun",ro:"Omletă cu șuncă și cașcaval",hu:"Sonkával és sajttal rántotta",d:"Ouă, șuncă, cașcaval",dh:"Tojás, sonka, sajt",p:35,g:"300 gr",al:["lactoza","ou"],hot:1,img:"omleta"},
+ {id:"spanac",n:9,c:"dejun",ro:"Spanac cu ochiuri",hu:"Spenótfőzelék tükörtojással",d:"Ouă, spanac, usturoi, cremă de gătit vegetală",dh:"Tojás, spenót, fokhagyma, növényi főzőkrém",p:38,g:"200/100 gr",al:["ou"],hot:1,img:"spanac",t:["veg"]},
+ {id:"oua-posate",n:10,c:"dejun",ro:"Ouă poșate cu salată",hu:"Posírozott tojás salátával",d:"Mix salată, cremă de avocado, conopidă, rodie, sparanghel, dressing miere",dh:"Salátamix, avokádókrém, karfiol, gránátalma, spárga, mézes öntet",p:43,g:"300 gr",al:["lactoza","ou"],img:"oua-posate",t:["veg"]},
+ {id:"paine-ou",c:"dejun",ro:"Pâine cu ou",hu:"Bundás kenyér",d:"Felii de pâine prăjite în ou",dh:"Tojásba mártott, sült kenyérszeletek",p:35,g:"300 gr",al:["lactoza","ou"],img:"paine-ou",t:["veg"]},
+
+ {id:"carbonara",n:60,c:"paste",ro:"Penne Carbonara",hu:"Karbonara penne",d:"Guanciale, ou, parmezan, cremă de gătit",dh:"Guanciale, tojás, főzőtejszín, parmezán",p:46,g:"250/50/50/30 gr",al:["gluten","ou","telina"],m:"porc",img:"carbonara"},
+ {id:"bolognese",n:61,c:"paste",ro:"Penne Bolognese",hu:"Bolognai penne",d:"Carne de vită tocată, legume, parmezan",dh:"Darált marhahús, zöldség, parmezán",p:46,g:"250/120/30 gr",al:["gluten","ou","telina"],m:"vita",img:"bolognese"},
+
+ {id:"halloumi",n:62,c:"salate",ro:"Salată Halloumi",hu:"Halloumi saláta",d:"Mix salată, sparanghel, conopidă crocantă, rodie, cremă de avocado, dressing miere, halloumi",dh:"Salátakeverék, spárga, ropogós karfiol, gránátalma, avokádókrém, mézes öntet, halloumi",p:47,g:"400 gr",al:["ou","telina","lactoza"],img:"halloumi",t:["veg"]},
+ {id:"camembert",n:63,c:"salate",ro:"Camembert pane cu gem de afine și salată de sezon",hu:"Rántott camembert áfonyalekvárral és salátával",d:"Mix salată, sparanghel, conopidă crocantă, rodie, cremă de avocado, dressing miere, camembert",dh:"Salátakeverék, spárga, ropogós karfiol, gránátalma, avokádókrém, mézes öntet, camembert",p:62,g:"170/100/50 gr",al:["lactoza"],img:"camembert",t:["veg"]},
+
+ {id:"ciorba-legume",n:71,c:"post",ro:"Ciorbă de legume",hu:"Zöldségleves",d:"Ciorbă de post cu legume de sezon",dh:"Böjti zöldségleves",p:29,g:"400 gr",al:["telina"],img:"ciorba-legume",t:["post"]},
+ {id:"ciorba-fasole",n:72,c:"post",ro:"Ciorbă de fasole",hu:"Bableves",d:"Ciorbă de fasole de post",dh:"Böjti bableves",p:29,g:"400 gr",al:[],img:"ciorba-fasole",t:["post"]},
+ {id:"ciorba-pita",n:73,c:"post",ro:"Ciorbă de fasole în pită prăjită",hu:"Bableves pirított kenyércipóban",d:"Servită în pită prăjită, cu ceapă roșie",dh:"Pirított kenyércipóban, vöröshagymával",p:37,g:"270/400/50 gr",al:["gluten"],img:"ciorba-pita",t:["post"]},
+ {id:"iahnie-soia",n:74,c:"post",ro:"Iahnie de fasole cu șnițel soia",hu:"Babpörkölt szójaszelettel",d:"Iahnie de fasole cu șnițel de soia și ardei iute",dh:"Babpörkölt szójaszelettel és csípős paprikával",p:52,g:"250/130 gr",al:["lactoza"],img:"iahnie-soia",t:["post"]},
+
+ {id:"varza-murata",n:88,c:"garnituri",ro:"Varză murată",hu:"Savanyúkáposzta",d:"Rețetă tradițională · de sezon",dh:"Hagyományos recept · idényjellegű",p:15,g:"130 gr",al:[],img:"varza-murata",t:["post"]},
+ {id:"muraturi",n:89,c:"garnituri",ro:"Murături asortate",hu:"Vegyes savanyúság",d:"Varză murată, castraveți, gogoșari",dh:"Savanyúkáposzta, uborka, paprika",p:16,g:"130 gr",al:[],img:"muraturi",t:["post"]},
+ {id:"sfecla",n:90,c:"garnituri",ro:"Salată de sfeclă roșie",hu:"Céklasaláta",d:"Rețetă tradițională",dh:"Hagyományos recept",p:16,g:"130 gr",al:[],img:"sfecla",t:["post"]},
+ {id:"ardei-copti",n:91,c:"garnituri",ro:"Ardei copți",hu:"Sült paprika",d:"Ardei copți, cu ulei și usturoi",dh:"Sült paprika",p:15,g:"130 gr",al:[],img:"ardei-copti",t:["post"]},
+ {id:"salata-varza",n:92,c:"garnituri",ro:"Salată de varză",hu:"Káposztasaláta",d:"Varză albă proaspătă",dh:"Friss fejes káposzta",p:13,g:"130 gr",al:[],img:"salata-varza",t:["post"]},
+ {id:"salata-asortata",n:93,c:"garnituri",ro:"Salată asortată",hu:"Vegyes saláta",d:"Varză, roșii, castraveți",dh:"Káposzta, paradicsom, uborka",p:15,g:"130 gr",al:[],img:"salata-asortata",t:["post"]},
+ {id:"ardei-iute",n:94,c:"garnituri",ro:"Ardei iute murat sau proaspăt",hu:"Ecetes csípős paprika vagy friss",d:"La alegere: murat sau proaspăt",dh:"Választható: ecetes vagy friss",p:4.5,g:"1 buc",al:[],img:"ardei-iute",t:["post"]},
+ {id:"ceapa",n:95,c:"garnituri",ro:"Ceapă roșie",hu:"Vöröshagyma",d:"Ceapă roșie feliată",dh:"Szeletelt vöröshagyma",p:5,g:"50 gr",al:[],img:"ceapa",t:["post"]},
+
+ {id:"sos-usturoi",n:96,c:"sosuri",ro:"Sos de usturoi",hu:"Fokhagymás szósz",d:"Rețeta casei: usturoi, iaurt, lămâie",dh:"Házi recept: fokhagyma, joghurt, citrom",p:10,g:"90 gr",al:["lactoza"]},
+ {id:"mujdei",n:97,c:"sosuri",ro:"Mujdeiul casei",hu:"Házi mujdei",d:"Rețeta casei: usturoi, boia, ulei, sare, zeamă de lămâie",dh:"Házi recept: fokhagyma, paprika, olaj, só, citromlé",p:10,g:"90 gr",al:[],t:["post"]},
+ {id:"sosul-casei",n:98,c:"sosuri",ro:"Sosul casei",hu:"A ház szósza",d:"Usturoi, boia, maioneză, ou",dh:"Fokhagyma, paprika, majonéz, tojás",p:10,g:"90 gr",al:["ou","lactoza"]},
+ {id:"smantana",n:99,c:"sosuri",ro:"Smântână",hu:"Tejföl",d:"Smântână",dh:"Tejföl",p:5,g:"45 gr",al:["lactoza"]},
+ {id:"ketchup",n:100,c:"sosuri",ro:"Ketchup",hu:"Ketchup",d:"Ketchup",dh:"Ketchup",p:7,g:"90 gr",al:[]},
+ {id:"mustar",n:101,c:"sosuri",ro:"Muștar",hu:"Mustár",d:"Muștar",dh:"Mustár",p:7,g:"90 gr",al:["mustar"]},
+ {id:"maioneza",n:102,c:"sosuri",ro:"Maioneză",hu:"Majonéz",d:"Maioneză",dh:"Majonéz",p:7,g:"90 gr",al:["lactoza","ou"]},
+ {id:"sos-iaurt",n:103,c:"sosuri",ro:"Sos de iaurt cu usturoi copt",hu:"Joghurtos szósz sült fokhagymával",d:"Iaurt, usturoi copt",dh:"Joghurt, sült fokhagyma",p:10,g:"90 gr",al:[]},
+
+ {id:"papanas",n:104,c:"desert",ro:"Papanaș",hu:"Túrógombóc",d:"Rumenit, cu smântână și dulceață de afine. Brânză de vaci, telemea, făină, gem de afine, smântână, zahăr pudră, ou",dh:"Aranybarnára sütve, tejföllel és áfonyalekvárral. Túró, telemea, liszt, áfonyalekvár, tejföl, porcukor, tojás",p:33,g:"120/70/70 gr",al:["gluten","ou","lactoza"],img:"papanas",t:["home"]},
+ {id:"lapte-pasare",n:105,c:"desert",ro:"Lapte de pasăre",hu:"Madártej",d:"După rețeta clasică de acasă: cremă fină de vanilie, albușuri bătute, zahăr",dh:"A klasszikus házi recept szerint: finom vaníliakrém, felvert tojásfehérje, cukor",p:29,g:"130/30 gr",al:["gluten","ou","telina"],img:"lapte-pasare",t:["home"]},
+ {id:"tarta-mere",n:106,c:"desert",ro:"Tartă cu mere",hu:"Almás pite",d:"Semințe de pin, scorțișoară, mere, zahăr, ouă, unt, lapte, stafide",dh:"Fenyőmag, fahéj, alma, cukor, tojás, vaj, tej, mazsola",p:29,g:"180 gr",al:["lactoza"],img:"tarta-mere"}
+];
+const BY = Object.fromEntries(M.map(x=>[x.id,x]));
+const EXTRAS = {
+  burger:[{k:"cartofi",l:["Cartofi prăjiți 150 gr","Hasábburgonya 150 gr"],p:15},{k:"special-fries",l:["Special Fries (cheddar, bacon)","Special Fries (cheddar, bacon)"],p:21},{k:"sosul-casei",l:["Sosul casei","A ház szósza"],p:10}],
+  main:[{k:"mujdei",l:["Mujdeiul casei","Házi mujdei"],p:10},{k:"sos-usturoi",l:["Sos de usturoi","Fokhagymás szósz"],p:10},{k:"smantana",l:["Smântână","Tejföl"],p:5},{k:"ardei-iute",l:["Ardei iute","Csípős paprika"],p:4.5}],
+  dessert:[{k:"smantana",l:["Smântână extra","Extra tejföl"],p:5}]
+};
+const extrasFor = it => ["smash","burger"].includes(it.c) && it.id!=="cartofi" && it.id!=="special-fries" ? EXTRAS.burger : ["nou","casa","ardeal","pui","post","dejun"].includes(it.c) ? EXTRAS.main : it.c==="desert" ? EXTRAS.dessert : [];
+const MOODS = [
+  {id:"casa",ro:"De-al casei",hu:"Házias",img:"ciolan-lyra",ids:["ciolan-lyra","costite","ceafa-tiganeasca","fasole-batuta","papricas","snitel-lyra"],sub:["Rețete Lyra servite în tigaie fierbinte","Lyra receptek forró serpenyőben"]},
+  {id:"burger",ro:"Burger night",hu:"Burger este",img:"double-smash",ids:["double-smash","spicy-smash","eleven-burger","burger-ozn","special-fries"],sub:["Smash nou + clasicii la foc de cărbune","Új smash + faszénen sült klasszikusok"]},
+  {id:"usor",ro:"Ușor & verde",hu:"Könnyű & zöld",img:"halloumi",ids:["halloumi","salata-pui","oua-posate","spanac","ciorba-legume"],sub:["Salate, ouă și preparate de post","Saláták, tojás, böjti ételek"]},
+  {id:"premium",ro:"Seară specială",hu:"Különleges este",img:"antricot",ids:["antricot","muschi","tocanita","camembert"],sub:["Noutățile din vită Black Angus","Black Angus újdonságok"]},
+  {id:"dulce",ro:"Ceva dulce",hu:"Valami édes",img:"papanas",ids:["papanas","lapte-pasare","tarta-mere"],sub:["Deserturi făcute în casă","Házi készítésű desszertek"]},
+  {id:"dimineata",ro:"Mic dejun",hu:"Reggeli",img:"english",ids:["english","bruschete","omleta","paine-ou","spanac"],sub:["Pentru o dimineață lungă","Egy hosszú reggelhez"]}
+];
+const T = {
+  ro:{hello:"Bună seara",ask:"Ce poftă ai azi?",deliv:"Livrare",pick:"Ridicare",delivSub:"~45 min",pickSub:"~25 min",search:"Caută: ciolan, papanaș, burger…",allergy:"Alergii",menu:"Meniu",orders:"Comenzi",club:"Lyra Club",cart:"Vezi coșul",add:"Adaugă",picks:"Alese pentru tine",out:"Epuizat azi",contains:"Conține",hot:"Servit în tigaie fierbinte",garn:"Include garnitură",nogarn:"Nu include garnitură",casa:"Rețeta casei",home:"Home made",angus:"Black Angus Farm",coal:"Cuptor pe cărbune",post:"De post",veg:"Vegetarian",wine:"Potrivit cu vin",extras:"Completează",note:"Mențiuni pentru bucătărie",notePh:"Ex: fără ceapă, sosul separat",newBadge:"Nou"},
+  hu:{hello:"Jó estét",ask:"Mire van ma kedved?",deliv:"Kiszállítás",pick:"Elvitel",delivSub:"~45 perc",pickSub:"~25 perc",search:"Keresés: csülök, túrógombóc, burger…",allergy:"Allergiák",menu:"Étlap",orders:"Rendelések",club:"Lyra Club",cart:"Kosár",add:"Hozzáad",picks:"Neked válogatva",out:"Ma elfogyott",contains:"Tartalmaz",hot:"Forró serpenyőben tálalva",garn:"Körettel",nogarn:"Köret nélkül",casa:"Házi recept",home:"Házi készítésű",angus:"Black Angus Farm",coal:"Faszenes kemence",post:"Böjti",veg:"Vegetáriánus",wine:"Ajánlott bor",extras:"Egészítsd ki",note:"Megjegyzés a konyhának",notePh:"Pl. hagyma nélkül, szósz külön",newBadge:"Új"}
+};
+const TIERS = [{n:"Bronz",min:0,mult:1,cls:"bronze"},{n:"Argint",min:500,mult:1.05,cls:"silver"},{n:"Aur",min:1500,mult:1.1,cls:"gold"}];
+const tierOf = life => [...TIERS].reverse().find(t=>life>=t.min);
+const nextTier = life => TIERS.find(t=>t.min>life);
+const CODES = {LYRA10:{pct:10,l:"-10% la toată comanda"},PRANZ15:{pct:15,cat:"burger",l:"-15% la Lyra's Burger"}};
+const DELIV_FEE = 10, FREE_OVER = 100, STARS = 6;
+
+/* ================= STORE (shared between both interfaces) ================= */
+const KEY = "lyra-demo-v1";
+const now = () => Date.now();
+const MIN = 60000;
+function seed(){
+  const t = now();
+  const S = {
+    seq:1046, open:true, sound:true, pushPromo:null, soldOut:{"muschi":false},
+    customers:[
+      {id:"c1",name:"Ioana Mureșan",phone:"0745 218 904",addr:"Str. Avram Iancu 14, ap. 3",pts:820,life:1240,orders:9,stars:5,spent:1985,fav:"papanas",allergies:[],since:"mar 2025",free:false},
+      {id:"c2",name:"Kovács Mihály",phone:"0733 551 207",addr:"B-dul Revoluției 42",pts:1460,life:2310,orders:23,stars:2,spent:3720,fav:"ciolan-lyra",allergies:[],since:"nov 2024"},
+      {id:"c3",name:"Andreea Pop",phone:"0752 904 113",addr:"Str. Florilor 7",pts:180,life:180,orders:2,stars:2,spent:212,fav:"halloumi",allergies:["lactoza"],since:"sep 2026"},
+      {id:"c4",name:"Szabó Zoltán",phone:"0721 330 845",addr:"Str. Mihai Viteazu 101",pts:610,life:640,orders:7,stars:1,spent:905,fav:"eleven-burger",allergies:[],since:"ian 2026"},
+      {id:"c5",name:"Radu Ilie",phone:"0768 402 519",addr:"Calea Turzii 210, bl. C2",pts:45,life:45,orders:1,stars:1,spent:47,fav:"english",allergies:["gluten"],since:"oct 2026"},
+      {id:"c6",name:"Elena Dragomir",phone:"0740 118 662",addr:"Str. Morii 3",pts:960,life:1620,orders:16,stars:4,spent:2490,fav:"costite",allergies:["ou"],since:"iun 2025"}
+    ],
+    promos:[
+      {id:"p1",kicker:"Nou la Lyra",title:"Double Smash + cartofi",text:"Două chiftele smash din vită, cheddar topit și cartofi prăjiți. Preț de lansare, doar azi.",item:"double-smash",extras:["cartofi"],price:42,img:"double-smash",active:true,popup:true},
+      {id:"p2",kicker:"Prânz la Lyra",title:"-15% la Lyra's Burger",text:"Între 12:00 și 15:00, cu codul de mai jos, la toate meniurile Lyra's Burger.",code:"PRANZ15",img:"eleven-burger",active:true,popup:false},
+      {id:"p3",kicker:"Weekend",title:"Papanaș din partea casei",text:"La comenzile de peste 150 lei, desertul vine din partea noastră.",img:"papanas",active:false,popup:false}
+    ],
+    orders:[], ratings:[5,5,4,5,5,4,5,5,5,4,5]
+  };
+  const mk = (cust, items, status, ago, eta, extra={}) => {
+    const c = S.customers.find(x=>x.id===cust);
+    const o = {id:"o"+(++S.seq), no:S.seq, cust, name:c.name, phone:c.phone, addr:c.addr, mode:"livrare", pay:"card", items:items.map(([id,qty,ex=[]])=>({id,qty,ex})), note:"", created:t-ago*MIN, msgs:[], status, allergies:c.allergies, ...extra};
+    Object.assign(o, priceOrder(o.items, o.mode, c, 0, ""));
+    if(status!=="new"){o.acceptedAt=o.created+2*MIN;o.eta=eta;o.msgs.push({at:o.acceptedAt,text:`Comanda a fost acceptată. Estimăm livrarea în ${eta} minute.`})}
+    if(status==="road"||status==="done"){o.roadAt=o.created+(eta-14)*MIN;}
+    if(status==="done"){o.doneAt=o.created+(eta-2)*MIN;}
+    S.orders.push(o); return o;
+  };
+  mk("c2",[["ciolan-lyra",2,["mujdei"]],["varza-murata",1],["papanas",2]],"done",190,50);
+  mk("c4",[["eleven-burger",1],["double-smash",1,["cartofi"]]],"done",150,40);
+  mk("c6",[["costite",1],["salata-asortata",1],["lapte-pasare",1]],"done",110,45);
+  mk("c3",[["halloumi",1],["ciorba-legume",1]],"done",80,35,{mode:"ridicare"});
+  mk("c2",[["fasole-batuta",1],["ceafa-tiganeasca",1],["muraturi",2]],"road",38,45);
+  mk("c4",[["spicy-smash",2,["cartofi"]],["special-fries",1]],"prep",14,35,{note:"Sună la interfon 12, vă rog."});
+  mk("c6",[["papricas",1],["tocanita",1],["tarta-mere",2]],"prep",6,45);
+  return S;
+}
+let S;
+try { S = JSON.parse(localStorage.getItem(KEY)) } catch(e) {}
+if(!S || !S.orders) S = seed();
+const bc = ("BroadcastChannel" in window) ? new BroadcastChannel("lyra-demo") : null;
+function save(){ try{localStorage.setItem(KEY, JSON.stringify(S))}catch(e){} bc && bc.postMessage("sync"); }
+bc && (bc.onmessage = () => { try{ S = JSON.parse(localStorage.getItem(KEY)) || S }catch(e){} renderAll(); });
+function commit(){ save(); renderAll(); }
+
+/* ================= helpers ================= */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const lei = n => (Math.round(n*100)/100).toFixed(2) + " lei";
+const hm = ts => new Date(ts).toLocaleTimeString("ro-RO",{hour:"2-digit",minute:"2-digit"});
+const cust = id => S.customers.find(c=>c.id===id);
+const initials = n => n.split(" ").map(w=>w[0]).slice(0,2).join("");
+function lineUnit(l){ const it = BY[l.id]; if(l.pp!=null) return l.pp; return it.p + (l.ex||[]).reduce((s,k)=>s+(BY[k]?.p||0),0); }
+function priceOrder(items, mode, c, usePts, code){
+  const sub = items.reduce((s,l)=>s+lineUnit(l)*l.qty,0);
+  let disc = 0, codeL = "";
+  const cd = CODES[code];
+  if(cd){ const base = cd.cat ? items.filter(l=>BY[l.id].c===cd.cat && l.pp==null).reduce((s,l)=>s+lineUnit(l)*l.qty,0) : sub; disc = base*cd.pct/100; codeL = cd.l; }
+  const tier = tierOf(c.life);
+  const fee = mode==="livrare" && sub>0 && sub<FREE_OVER && tier.n!=="Aur" ? DELIV_FEE : 0;
+  const ptsVal = usePts ? Math.min(Math.floor(c.pts/100)*10, Math.floor((sub-disc)*0.5/10)*10) : 0;
+  const total = Math.max(0, sub - disc - ptsVal + fee);
+  const earn = Math.floor(total * tier.mult);
+  return {sub, disc, codeL, fee, ptsVal, ptsUsed:ptsVal*10, total, earn};
+}
+function remaining(o){ return o.acceptedAt + o.eta*MIN - now(); }
+function mmss(ms){ const neg = ms<0; ms=Math.abs(ms); const m=Math.floor(ms/MIN), s=Math.floor(ms%MIN/1000); return (neg?"+":"")+m+":"+String(s).padStart(2,"0"); }
+function hms(ms){ ms=Math.max(0,ms); const h=Math.floor(ms/3600000), m=Math.floor(ms%3600000/MIN), s=Math.floor(ms%MIN/1000); return (h?h+":"+String(m).padStart(2,"0"):m)+":"+String(s).padStart(2,"0"); }
+function preserve(fn){
+  const a = document.activeElement, id = a && a.id, s = a && a.selectionStart, sc = $("#c-scroll")?.scrollTop, rs = $("#rx-main")?.scrollTop;
+  fn();
+  if($("#c-scroll")) $("#c-scroll").scrollTop = sc; if($("#rx-main")) $("#rx-main").scrollTop = rs;
+  if(id){ const el = document.getElementById(id); if(el){ el.focus(); try{ s!=null && el.setSelectionRange(s,s) }catch(e){} } }
+}
+const lyraMark = (w=28) => `<svg viewBox="0 0 40 40" width="${w}" height="${w}" aria-hidden="true">${$("#logo-src").innerHTML}</svg>`;
+const alIcons = (it, avoid=[]) => `<span class="al">${it.al.map(a=>`<i class="${avoid.includes(a)?"warn":""}" title="${AL[a][0]}">${svg(ICON[a],'stroke-width="2"')}</i>`).join("")}</span>`;
+
+/* ================= CLIENT ================= */
+const C = {lang:"ro", tab:"menu", cat:"nou", q:"", mood:null, mode:"livrare", cart:[], usePts:false, code:"", codeMsg:"", pay:"card", note:"", sheet:null, hideBlocked:false, me:"c1", lastPromo:0, popShown:false, trackId:null, form:null};
+const tt = k => T[C.lang][k] || T.ro[k];
+const nm = it => C.lang==="hu" ? it.hu : it.ro;
+const ds = it => C.lang==="hu" && it.dh ? it.dh : it.d;
+const me = () => cust(C.me);
+const cartQty = id => C.cart.filter(l=>l.id===id&&!l.gift).reduce((s,l)=>s+l.qty,0);
+const cartCount = () => C.cart.reduce((s,l)=>s+l.qty,0);
+function cartTotals(){ return priceOrder(C.cart, C.mode, me(), C.usePts, C.code); }
+
+function renderClient(){ preserve(()=>{ renderCMain(); renderCNav(); renderFab(); }); }
+function renderCNav(){
+  const active = S.orders.filter(o=>o.cust===C.me && ["new","prep","road"].includes(o.status)).length;
+  $("#c-nav").innerHTML = [["menu","menu",tt("menu")],["orders","orders",tt("orders")],["club","star",tt("club")]].map(([k,ic,l])=>
+    `<button data-ctab="${k}" aria-current="${C.tab===k}">${I(ic)}${l}${k==="orders"&&active?`<span class="badge">${active}</span>`:""}</button>`).join("");
+}
+function renderFab(){
+  const n = cartCount();
+  $("#c-fab").innerHTML = n && C.tab==="menu" ? `<button class="fab" data-act="open-cart"><span class="q">${n}</span><span>${tt("cart")}</span><b class="num">${lei(cartTotals().sub)}</b></button>` : "";
+}
+function cHead(){
+  const c = me();
+  return `<div class="c-head"><div class="c-row">
+    <div class="c-logo">${lyraMark()}<b>LYRA</b></div>
+    <button class="pill" data-ctab="club" title="Punctele tale Lyra Club">${I("star")}<span class="num">${c.pts}</span></button>
+    <button class="lang" data-act="lang" aria-label="Schimbă limba">${C.lang==="ro"?"RO · hu":"ro · HU"}</button>
+  </div>
+  <div class="mode" role="group">
+    <button data-mode="livrare" aria-pressed="${C.mode==="livrare"}">${tt("deliv")}<small>${tt("delivSub")}</small></button>
+    <button data-mode="ridicare" aria-pressed="${C.mode==="ridicare"}">${tt("pick")}<small>${tt("pickSub")}</small></button>
+  </div></div>`;
+}
+function itemRow(it){
+  const q = cartQty(it.id), out = S.soldOut[it.id], avoid = me().allergies, blocked = it.al.some(a=>avoid.includes(a));
+  if(blocked && C.hideBlocked) return "";
+  const tags = [];
+  if((it.t||[]).includes("new")) tags.push(`<span class="tag">${tt("newBadge")}</span>`);
+  if((it.t||[]).includes("post")) tags.push(`<span class="tag green">${tt("post")}</span>`);
+  if((it.t||[]).includes("veg")) tags.push(`<span class="tag green">${tt("veg")}</span>`);
+  if((it.t||[]).includes("home")) tags.push(`<span class="tag">${tt("home")}</span>`);
+  if(blocked) tags.push(`<span class="tag red">${tt("contains")} ${it.al.filter(a=>avoid.includes(a)).map(a=>AL[a][C.lang==="hu"?1:0]).join(", ")}</span>`);
+  if(out) tags.push(`<span class="tag red">${tt("out")}</span>`);
+  return `<article class="it ${it.img?"":"noimg"} ${out?"out":""} ${blocked?"blocked":""}">
+    ${it.img?`<button class="it-img" data-open="${it.id}" aria-label="${esc(nm(it))}"><img src="${IMG(it.img)}" alt="" loading="lazy">${it.hot?`<span class="flame" title="${tt("hot")}">${svg(UI.flame)}</span>`:""}</button>`:""}
+    <div class="it-body">
+      <button class="it-open" data-open="${it.id}">
+        <div class="it-t">${it.n?`<span class="it-no">${it.n}</span>`:""}<h4>${esc(nm(it))}</h4></div>
+        <p>${esc(ds(it))}</p>
+      </button>
+      <div class="it-meta"><span class="gr">${it.g}</span>${alIcons(it,avoid)}${tags.join("")}</div>
+      <div class="it-foot"><span class="price num">${lei(it.p)}</span>
+        ${out?`<button class="add" disabled aria-label="${tt("out")}">+</button>`: q ? `<span class="step"><button data-dec="${it.id}" aria-label="Mai puțin">−</button><b class="num">${q}</b><button data-inc="${it.id}" aria-label="Mai mult">+</button></span>` : `<button class="add" data-quick="${it.id}" aria-label="${tt("add")} ${esc(nm(it))}">+</button>`}
+      </div>
+    </div></article>`;
+}
+function renderCMain(){
+  const el = $("#c-main");
+  if(C.tab==="menu") el.innerHTML = cHead() + menuView();
+  else if(C.tab==="orders") el.innerHTML = cHead() + ordersView();
+  else el.innerHTML = cHead() + clubView();
+}
+function menuView(){
+  const c = me(), h = new Date().getHours();
+  const hello = C.lang==="hu" ? (h<11?"Jó reggelt":h<18?"Jó napot":"Jó estét") : (h<11?"Bună dimineața":h<18?"Bună ziua":"Bună seara");
+  const mood = MOODS.find(m=>m.id===C.mood);
+  const q = C.q.trim().toLowerCase();
+  const match = it => !q || (it.ro+" "+it.hu+" "+it.d).toLowerCase().includes(q);
+  const secs = CATS.map(cat=>{
+    const items = M.filter(it=>it.c===cat.id && match(it)).map(itemRow).join("");
+    if(!items) return "";
+    return `<section class="sec" id="sec-${cat.id}" data-sec="${cat.id}"><div class="sec-h"><h2>${C.lang==="hu"?cat.hu:cat.ro}</h2><span>${C.lang==="hu"?cat.ro:cat.hu}</span></div>${cat.note?`<p class="sec-note">${cat.note[C.lang==="hu"?1:0]}</p>`:""}${items}</section>`;
+  }).join("");
+  return `<div class="c-body">
+    <h1 class="hello">${hello}, <em>${esc(c.name.split(" ")[0])}</em>.<br>${tt("ask")}</h1>
+    <div class="moods">${MOODS.map(m=>`<button class="mood" data-mood="${m.id}" aria-pressed="${C.mood===m.id}"><img src="${IMG(m.img)}" alt="">${C.lang==="hu"?m.hu:m.ro}</button>`).join("")}</div>
+    ${mood?`<p class="sub" style="margin-top:10px">${mood.sub[C.lang==="hu"?1:0]}</p><div class="recs">${mood.ids.map(id=>BY[id]).map(it=>`<button class="rec" data-open="${it.id}"><img src="${IMG(it.img)}" alt=""><div><b>${esc(nm(it))}</b><span class="num">${lei(it.p)}</span></div></button>`).join("")}</div>`:""}
+    <button class="hero" data-jump="smash" aria-label="Vezi New Smash Burgers">
+      <div class="h-txt"><img class="logo" src="${IMG("logo-burgers")}" alt="Lyra's Burgers"><div class="k">${C.lang==="hu"?"Újdonság":"Nou"} · by Lyra</div><h3>New Smash<br>Burgers</h3><p>${C.lang==="hu"?"25 leitől · kézműves zsemle":"De la 25 lei · chiflă artizanală"}</p><span class="cta">${C.lang==="hu"?"Megnézem":"Descoperă"} →</span></div>
+      <img class="h-photo" src="${IMG("spicy-smash")}" alt="">
+    </button>
+    <div class="tools">
+      <label class="search">${I("search")}<input id="c-q" type="search" placeholder="${tt("search")}" value="${esc(C.q)}" aria-label="Caută în meniu"></label>
+      <button class="tbtn" data-act="allergy" aria-pressed="${C.hideBlocked}">${I("shield")}${tt("allergy")}${c.allergies.length?` · ${c.allergies.length}`:""}</button>
+    </div>
+    <nav class="cats" id="c-cats">${CATS.map(cat=>`<button class="cat" data-jump="${cat.id}" aria-current="${C.cat===cat.id}">${C.lang==="hu"?cat.hu:cat.ro}</button>`).join("")}</nav>
+    ${secs || `<div class="empty">${I("search")}<p>Nimic găsit pentru „${esc(C.q)}”.</p></div>`}
+  </div>`;
+}
+function stepIdx(o){ return {new:0,prep:1,road:2,done:3}[o.status] ?? 0; }
+function trackCard(o){
+  const R = 82, CIRC = 2*Math.PI*R;
+  const isPick = o.mode==="ridicare";
+  let ring, title, sub;
+  if(o.status==="new"){
+    ring = `<div class="ring wait"><svg viewBox="0 0 184 184"><circle cx="92" cy="92" r="${R}" stroke="#1e452f" stroke-width="10" fill="none"/><circle cx="92" cy="92" r="${R}" stroke="#e9b770" stroke-width="10" fill="none" stroke-linecap="round" stroke-dasharray="${CIRC*.22} ${CIRC}"/></svg><div class="c"><b style="font-size:30px">#${o.no}</b><small>trimisă</small></div></div>`;
+    title = "Restaurantul confirmă comanda"; sub = "De obicei durează sub un minut. Vei vedea aici ora estimată.";
+  } else if(o.status==="rejected"){
+    ring = ""; title = "Comanda nu a putut fi preluată"; sub = esc(o.reason||"") + ". Nu ți-a fost reținută nicio sumă.";
+  } else if(o.status==="done"){
+    ring = `<div class="ring"><svg viewBox="0 0 184 184"><circle cx="92" cy="92" r="${R}" stroke="#5fd39a" stroke-width="10" fill="none"/></svg><div class="c" style="color:var(--ok)">${svg(UI.check,'width="64" height="64" style="margin:auto"')}<small>${isPick?"ridicată":"livrată"}</small></div></div>`;
+    title = "Poftă bună!"; sub = `Ai primit <b style="color:var(--gold-2)">+${o.earn} puncte</b> și o stea nouă în constelația Lyra.`;
+  } else {
+    const rem = remaining(o), frac = Math.max(0, Math.min(1, rem/(o.eta*MIN)));
+    ring = `<div class="ring"><svg viewBox="0 0 184 184"><circle cx="92" cy="92" r="${R}" stroke="#1e452f" stroke-width="10" fill="none"/><circle data-ring="${o.id}" cx="92" cy="92" r="${R}" stroke="#e9b770" stroke-width="10" fill="none" stroke-linecap="round" stroke-dasharray="${CIRC}" stroke-dashoffset="${CIRC*(1-frac)}" style="transition:stroke-dashoffset 1s linear"/></svg><div class="c"><b class="num" data-min="${o.id}">${Math.max(0,Math.ceil(rem/MIN))}</b><small>minute</small></div></div>`;
+    title = o.status==="prep" ? "Se gătește acum" : isPick ? "Comanda te așteaptă" : "Curierul e pe drum";
+    sub = isPick ? `Gata de ridicare la ~<b>${hm(o.acceptedAt+o.eta*MIN)}</b>` : `Sosește la ~<b>${hm(o.acceptedAt+o.eta*MIN)}</b> · ${esc(o.addr)}`;
+  }
+  const labels = ["Trimisă","În bucătărie", isPick?"Gata de ridicare":"Pe drum", isPick?"Ridicată":"Livrată"];
+  const si = stepIdx(o);
+  const steps = o.status==="rejected" ? "" : `<div class="steps">${labels.map((l,i)=>`<div class="${i<si||o.status==="done"?"done":i===si?"now":""}"><i></i>${l}</div>`).join("")}</div>`;
+  const msgs = o.msgs.length ? `<div class="msgs">${o.msgs.slice().reverse().map(m=>`<div class="msg">${esc(m.text)}<small>Lyra · ${hm(m.at)}</small></div>`).join("")}</div>` : "";
+  const rate = o.status==="done" ? `<div class="stars" role="group" aria-label="Evaluează comanda">${[1,2,3,4,5].map(n=>`<button data-rate="${o.id}:${n}" class="${(o.rating||0)>=n?"on":""}" aria-label="${n} stele">${svg(UI.star)}</button>`).join("")}</div><p class="t-sub">${o.rating?"Mulțumim! Am transmis bucătăriei.":"Cum a fost? Evaluarea ajunge direct la bucătar."}</p>` : "";
+  return `<div class="track">${ring}<h3 class="t-title">${title}</h3><p class="t-sub">${sub}</p>${steps}${rate}${msgs}</div>`;
+}
+function ordersView(){
+  const mine = S.orders.filter(o=>o.cust===C.me).sort((a,b)=>b.created-a.created);
+  const active = mine.filter(o=>["new","prep","road"].includes(o.status) || (o.status==="done" && now()-o.doneAt<30*MIN) || o.status==="rejected" && now()-o.created<30*MIN);
+  const past = mine.filter(o=>!active.includes(o));
+  const hist = past.length ? past.map(o=>`<div class="hist"><div class="imgs">${o.items.slice(0,3).map(l=>BY[l.id].img?`<img src="${IMG(BY[l.id].img)}" alt="">`:"").join("")}</div><div class="t"><b>${o.items.map(l=>nm(BY[l.id])).join(", ")}</b><small>${new Date(o.created).toLocaleDateString("ro-RO",{day:"numeric",month:"short"})} · ${lei(o.total)}</small></div><button class="mini" data-reorder="${o.id}">Din nou</button></div>`).join("") :
+    [["ciolan-lyra","papanas"],["eleven-burger","special-fries"]].map((ids,i)=>`<div class="hist"><div class="imgs">${ids.map(id=>`<img src="${IMG(BY[id].img)}" alt="">`).join("")}</div><div class="t"><b>${ids.map(id=>nm(BY[id])).join(", ")}</b><small>${i?"12 sep":"27 sep"} · ${lei(ids.reduce((s,id)=>s+BY[id].p,0)+(i?DELIV_FEE:0))}</small></div><button class="mini" data-reorder-ids="${ids.join(",")}">Din nou</button></div>`).join("");
+  return `<div class="c-body">
+    ${active.length ? active.map(trackCard).join("") : `<div class="empty">${I("bag")}<p>Nu ai nicio comandă în desfășurare.</p><button class="big ghost" data-ctab="menu" style="margin-top:12px">Deschide meniul</button></div>`}
+    <p class="lbl">Comenzile tale anterioare</p>${hist}
+  </div>`;
+}
+const CONST_PTS = [[60,22],[92,14],[78,62],[118,72],[104,124],[54,112]];// Vega first
+const CONST_ORDER = [1,2,5,4,3,0]; // which star lights at each order (Vega last)
+function constellation(lit, size=150){
+  const L = [[0,1],[0,2],[2,3],[3,4],[4,5],[5,2]];
+  const on = new Set(CONST_ORDER.slice(0,lit));
+  return `<svg viewBox="0 0 150 150" width="${size}" height="${size}" role="img" aria-label="${lit} din ${STARS} stele aprinse">
+    ${L.map(([a,b])=>`<line x1="${CONST_PTS[a][0]}" y1="${CONST_PTS[a][1]}" x2="${CONST_PTS[b][0]}" y2="${CONST_PTS[b][1]}" stroke="${on.has(a)&&on.has(b)?"#e9b770":"#2d4a3a"}" stroke-width="1.2"/>`).join("")}
+    ${CONST_PTS.map(([x,y],i)=>`<circle cx="${x}" cy="${y}" r="${i===0?9:6}" class="${on.has(i)?"star-on":"star-off"}"/>`).join("")}
+    <text x="60" y="44" fill="#a3b6a7" font-size="9" text-anchor="middle" font-family="DM Mono, monospace">VEGA</text>
+  </svg>`;
+}
+function clubView(){
+  const c = me(), tier = tierOf(c.life), nt = nextTier(c.life);
+  const rewards = [["lapte-pasare",290],["papanas",330],["special-fries",210]];
+  return `<div class="c-body">
+    <h1 class="hello">Lyra <em>Club</em></h1>
+    <p class="sub">1 leu cheltuit = 1 punct. 100 puncte = 10 lei reducere.</p>
+    <div class="card ${tier.cls}">
+      ${constellation(STARS)}
+      <div class="ct"><b>LYRA</b><span>Membru ${tier.n}</span></div>
+      <div class="cp"><small>Puncte disponibile</small><b class="num">${c.pts}</b></div>
+      <div class="cn"><span>${esc(c.name.toUpperCase())}</span><span>din ${c.since}</span></div>
+    </div>
+    <div class="tierbar">${nt?`Încă <b>${nt.min-c.life} puncte</b> până la nivelul <b>${nt.n}</b>${nt.n==="Aur"?" (livrare gratuită mereu, +10% puncte)":" (+5% puncte la fiecare comandă)"}.`:"Ești la nivelul maxim: livrare gratuită și +10% puncte."}
+      <div class="prog"><i style="width:${nt?Math.round((c.life-tier.min)/(nt.min-tier.min)*100):100}%"></i></div></div>
+    <div class="const">${constellation(c.stars)}<div><h3>Constelația Lyra</h3><p>Fiecare comandă aprinde o stea. Când se aprinde <b style="color:var(--gold-2)">Vega</b>, a ${STARS}-a, primești un <b style="color:var(--gold-2)">Papanaș din partea casei</b>.</p><p><b style="color:var(--cream)">${c.stars} din ${STARS}</b> stele aprinse${c.free?" · cadoul te așteaptă în coș":""}</p></div></div>
+    <p class="lbl">Schimbă punctele</p>
+    ${rewards.map(([id,cost])=>{const it=BY[id];return `<div class="rw"><img src="${IMG(it.img)}" alt=""><div><b>${esc(nm(it))}</b><small class="num">${cost} puncte</small></div><button class="mini" data-redeem="${id}:${cost}" ${c.pts<cost?"disabled style='opacity:.4'":""}>Folosește</button></div>`}).join("")}
+    <p class="lbl">Profil alergii</p>
+    <p class="sub" style="margin-bottom:8px">Marcăm în meniu preparatele care le conțin, iar bucătăria vede alerta pe bon.</p>
+    <div class="chips">${Object.keys(AL).map(a=>`<button class="chip" data-alg="${a}" aria-pressed="${c.allergies.includes(a)}">${AL[a][C.lang==="hu"?1:0]}</button>`).join("")}</div>
+    <p class="lbl">Invită un prieten</p>
+    <div class="code"><span>IOANA-LYRA</span><button class="mini" data-act="copy">${I("copy")}</button></div>
+    <p class="sub" style="margin-top:6px">Prietenul primește -20 lei la prima comandă, tu primești 200 de puncte.</p>
+  </div>`;
+}
+
+/* ---- sheets ---- */
+function openSheet(kind, data){ C.sheet = {kind, ...data}; renderSheet(); }
+function closeSheet(){ C.sheet = null; $("#c-sheet").innerHTML = ""; }
+function renderSheet(){
+  const sh = C.sheet; if(!sh){ $("#c-sheet").innerHTML=""; return; }
+  let html = "";
+  if(sh.kind==="item") html = itemSheet(sh);
+  if(sh.kind==="cart") html = cartSheet();
+  $("#c-sheet").innerHTML = `<div class="veil" data-act="close"></div><div class="sheet" role="dialog" aria-modal="true">${html}</div>`;
+}
+function itemSheet(sh){
+  const it = BY[sh.id], ex = extrasFor(it), avoid = me().allergies, L = C.lang==="hu"?1:0;
+  const unit = it.p + sh.ex.reduce((s,k)=>s+BY[k].p,0);
+  const f = [];
+  if(it.hot) f.push(`<span class="fact hot">${svg(UI.flame)}${tt("hot")}</span>`);
+  const t = it.t||[];
+  if(t.includes("garn")) f.push(`<span class="fact">${I("check")}${tt("garn")}</span>`);
+  if(t.includes("nogarn")) f.push(`<span class="fact">${tt("nogarn")}</span>`);
+  if(t.includes("casa")) f.push(`<span class="fact">${I("star")}${tt("casa")}</span>`);
+  if(t.includes("home")) f.push(`<span class="fact">${I("star")}${tt("home")}</span>`);
+  if(t.includes("angus")) f.push(`<span class="fact">${tt("angus")}</span>`);
+  if(t.includes("coal")) f.push(`<span class="fact hot">${svg(UI.flame)}${tt("coal")}</span>`);
+  if(t.includes("post")) f.push(`<span class="fact">${tt("post")}</span>`);
+  if(it.m) f.push(`<span class="fact">${MEAT[it.m][L]}</span>`);
+  return `${it.img?`<div class="d-img"><img src="${IMG(it.img)}" alt=""></div>`:`<div class="grab"></div>`}
+   <button class="sh-close" data-act="close" aria-label="Închide">×</button>
+   <div class="sh-pad">
+    <h2 class="d-name">${esc(nm(it))}</h2>
+    <p class="d-hu">${esc(L?it.ro:it.hu)}</p>
+    <p class="d-desc">${esc(ds(it))}</p>
+    <div class="facts"><span class="fact">${it.g}</span>${f.join("")}</div>
+    ${it.al.length?`<div class="facts">${it.al.map(a=>`<span class="fact ${avoid.includes(a)?"warn":""}">${svg(ICON[a])}${AL[a][L]}</span>`).join("")}</div>`:""}
+    ${it.w?`<div class="wine">${I("wine")}<div>${tt("wine")} <b>${it.w}</b><br><span style="color:var(--muted);font-size:12px">Recomandarea somelierului Lyra</span></div></div>`:""}
+    ${ex.length?`<p class="lbl">${tt("extras")}</p>${ex.map(e=>`<label class="opt"><input type="checkbox" data-ex="${e.k}" ${sh.ex.includes(e.k)?"checked":""}><span>${e.l[L]}</span><b class="num">+${lei(e.p)}</b></label>`).join("")}`:""}
+    <p class="lbl">${tt("note")}</p>
+    <textarea id="it-note" rows="2" placeholder="${tt("notePh")}">${esc(sh.note||"")}</textarea>
+    <div class="row-btw" style="margin-top:16px">
+      <span class="step"><button data-sq="-1" aria-label="Mai puțin">−</button><b class="num">${sh.qty}</b><button data-sq="1" aria-label="Mai mult">+</button></span>
+      <button class="big" style="width:auto;flex:1" data-act="add-item" ${S.soldOut[it.id]?"disabled":""}>${S.soldOut[it.id]?tt("out"):`${tt("add")} · <span class="num">${lei(unit*sh.qty)}</span>`}</button>
+    </div>
+   </div>`;
+}
+function cartSheet(){
+  const c = me(), P = cartTotals(), L = C.lang==="hu"?1:0;
+  if(!C.cart.length) return `<div class="grab"></div><button class="sh-close" data-act="close">×</button><div class="sh-pad"><div class="empty">${I("bag")}<p>Coșul e gol.</p></div></div>`;
+  const inCart = new Set(C.cart.map(l=>l.id));
+  const ups = ["sosul-casei","mujdei","muraturi","papanas","lapte-pasare","ardei-iute","cartofi"].filter(id=>!inCart.has(id)).slice(0,5);
+  const need = FREE_OVER - P.sub;
+  const tier = tierOf(c.life);
+  const maxPts = Math.min(Math.floor(c.pts/100)*10, Math.floor((P.sub-P.disc)*0.5/10)*10);
+  const f = C.form;
+  return `<div class="grab"></div><button class="sh-close" data-act="close" aria-label="Închide">×</button>
+  <div class="sh-pad">
+    <h2 class="d-name" style="margin:0 0 4px">Coșul tău</h2>
+    <p class="sub">${C.mode==="livrare"?"Livrare la "+esc(f.addr):"Ridicare personală din restaurant"}</p>
+    ${C.cart.map((l,i)=>{const it=BY[l.id];return `<div class="cl">${it.img?`<img src="${IMG(it.img)}" alt="">`:`<span class="ph"></span>`}<div><b>${esc(nm(it))}</b><small>${[...(l.ex||[]).map(k=>"+ "+nm(BY[k])), l.gift?"Cadou Lyra Club":"", l.reward?"Plătit cu puncte":"", l.promo?"Ofertă: "+l.promo:"", l.note?"„"+esc(l.note)+"”":""].filter(Boolean).join(" · ")}</small><span class="p num">${l.pp===0?"gratuit":lei(lineUnit(l)*l.qty)}</span></div>
+      ${l.gift||l.reward?`<span class="tag">${l.gift?"Cadou":"Puncte"}</span>`:`<span class="step"><button data-cdec="${i}" aria-label="Mai puțin">−</button><b class="num">${l.qty}</b><button data-cinc="${i}" aria-label="Mai mult">+</button></span>`}</div>`}).join("")}
+    ${ups.length?`<p class="lbl">Merge perfect alături</p><div class="ups">${ups.map(id=>{const it=BY[id];return `<button class="up" data-quick="${id}">${it.img?`<img src="${IMG(it.img)}" alt="">`:`<span class="ph"></span>`}${esc(nm(it))} <em class="num">+${lei(it.p)}</em></button>`}).join("")}</div>`:""}
+    <p class="lbl">Livrare</p>
+    <div class="mode" style="margin-top:0"><button data-mode="livrare" aria-pressed="${C.mode==="livrare"}">${tt("deliv")}</button><button data-mode="ridicare" aria-pressed="${C.mode==="ridicare"}">${tt("pick")}</button></div>
+    ${C.mode==="livrare"?(tier.n==="Aur"?`<p class="note-ok" style="margin-top:8px">Livrare gratuită: ești membru <b>Aur</b>.</p>`:need>0?`<p class="note-ok" style="margin-top:8px">Mai adaugă <b class="num">${lei(need)}</b> pentru livrare gratuită.</p><div class="prog"><i style="width:${Math.min(100,P.sub/FREE_OVER*100)}%"></i></div>`:`<p class="note-ok" style="margin-top:8px"><b>Livrarea e gratuită</b> pentru comanda ta.</p>`):""}
+    <div class="grid2" style="margin-top:10px"><input class="in" id="f-name" value="${esc(f.name)}" aria-label="Nume" placeholder="Nume"><input class="in" id="f-phone" value="${esc(f.phone)}" aria-label="Telefon" placeholder="Telefon"></div>
+    ${C.mode==="livrare"?`<input class="in" id="f-addr" style="margin-top:8px" value="${esc(f.addr)}" aria-label="Adresă" placeholder="Adresa de livrare">`:""}
+    <textarea id="f-note" rows="2" style="margin-top:8px" placeholder="Mențiuni pentru curier sau bucătărie">${esc(C.note)}</textarea>
+    <p class="lbl">Lyra Club</p>
+    <div class="ptsbox"><div class="t"><b>Folosește ${maxPts*10} puncte</b>${maxPts?`−${lei(maxPts)} din comandă · ai ${c.pts} puncte`:`Ai ${c.pts} puncte. Le poți folosi de la 100.`}</div><button class="switch" role="switch" aria-checked="${C.usePts&&maxPts>0}" data-act="pts" ${maxPts?"":"disabled"} aria-label="Folosește punctele"></button></div>
+    <div style="display:flex;gap:8px;margin-top:8px"><input class="in" id="f-code" value="${esc(C.code)}" placeholder="Cod promoțional" aria-label="Cod promoțional" style="text-transform:uppercase"><button class="mini" data-act="code">Aplică</button></div>
+    ${C.codeMsg?`<p class="note-ok" style="margin:6px 0 0">${C.codeMsg}</p>`:""}
+    <p class="lbl">Plata</p>
+    <div class="chips">${[["card","Card la livrare"],["cash","Numerar"],["online","Card online"]].map(([k,l])=>`<button class="chip" data-pay="${k}" aria-pressed="${C.pay===k}">${l}</button>`).join("")}</div>
+    <div class="sum">
+      <div><span>Produse</span><span class="num">${lei(P.sub)}</span></div>
+      ${P.disc?`<div class="neg"><span>${P.codeL}</span><span class="num">−${lei(P.disc)}</span></div>`:""}
+      ${P.ptsVal?`<div class="neg"><span>Puncte Lyra Club</span><span class="num">−${lei(P.ptsVal)}</span></div>`:""}
+      ${C.mode==="livrare"?`<div><span>Livrare</span><span class="num">${P.fee?lei(P.fee):"gratuit"}</span></div>`:""}
+      <div class="tot"><span>Total</span><span class="num">${lei(P.total)}</span></div>
+      <div style="color:var(--gold);font-size:12.5px"><span>Câștigi la această comandă</span><span class="num">+${P.earn} puncte · +1 stea</span></div>
+    </div>
+    <button class="big" data-act="place" ${!S.open?"disabled":""}>${S.open?`Trimite comanda · <span class="num">${lei(P.total)}</span>`:"Restaurantul nu preia comenzi acum"}</button>
+  </div>`;
+}
+function addToCart(id, qty=1, ex=[], note="", extra={}){
+  const it = BY[id]; if(!it || S.soldOut[id]) return;
+  const key = id+"|"+ex.slice().sort().join(",")+"|"+note+"|"+(extra.pp??"");
+  const ex1 = C.cart.find(l=>l.key===key && !l.gift && !l.reward);
+  if(ex1) ex1.qty += qty; else C.cart.push({key,id,qty,ex,note,...extra});
+}
+function ensureGift(){
+  const c = me();
+  const has = C.cart.find(l=>l.gift);
+  if(c.free && !has && C.cart.length) C.cart.push({key:"gift",id:"papanas",qty:1,ex:[],pp:0,gift:true});
+  if((!c.free || !C.cart.some(l=>!l.gift)) && has) C.cart = C.cart.filter(l=>!l.gift);
+}
+function placeOrder(){
+  const c = me(), P = cartTotals();
+  const f = C.form;
+  if(!f.name.trim() || !f.phone.trim() || (C.mode==="livrare" && !f.addr.trim())){ ctoast("alert","Completează numele, telefonul și adresa."); return; }
+  const o = {id:"o"+(++S.seq), no:S.seq, cust:c.id, name:f.name, phone:f.phone, addr:C.mode==="livrare"?f.addr:"Ridicare din restaurant", mode:C.mode, pay:C.pay,
+    items:C.cart.map(l=>({id:l.id,qty:l.qty,ex:l.ex||[],note:l.note||"",pp:l.pp,gift:l.gift,reward:l.reward,promo:l.promo})), note:C.note, created:now(), msgs:[], status:"new", allergies:c.allergies.slice(), code:C.code, ...P};
+  c.pts -= P.ptsUsed;
+  if(C.cart.some(l=>l.gift)) c.free = false;
+  S.orders.push(o);
+  C.cart = []; C.usePts = false; C.code = ""; C.codeMsg = ""; C.note = "";
+  closeSheet(); C.tab = "orders";
+  commit();
+  $("#c-scroll").scrollTop = 0;
+  ctoast("send", `Comanda #${o.no} a fost trimisă restaurantului.`);
+}
+
+/* ---- promo popup ---- */
+function showPromo(p){
+  if(!p) return;
+  const it = p.item && BY[p.item];
+  const old = it ? it.p + (p.extras||[]).reduce((s,k)=>s+BY[k].p,0) : null;
+  const end = new Date(); end.setHours(23,59,59,0);
+  $("#c-pop").innerHTML = `<div class="pop" role="dialog" aria-modal="true" aria-label="${esc(p.title)}"><div class="pop-card">
+    <div class="pi"><span class="ribbon">${esc(p.kicker||"Ofertă")}</span><img src="${IMG(p.img)}" alt=""><button class="sh-close" data-act="pop-close" aria-label="Închide">×</button></div>
+    <div class="pb"><h3>${esc(p.title)}</h3><p>${esc(p.text)}</p>
+      ${p.price!=null&&old?`<div class="pp num">${lei(p.price)}<s>${lei(old)}</s></div><div class="cd num" data-cd="${end.getTime()}">expiră în ${hms(end-now())}</div>`:""}
+      ${p.code?`<div class="codebox">${esc(p.code)}</div>`:""}
+      <button class="big" data-promo="${p.id}">${p.price!=null?"Adaugă în coș":p.code?"Aplică codul":"Vezi meniul"}</button>
+      <button class="later" data-act="pop-close">Mai târziu</button>
+    </div></div></div>`;
+}
+function ctoast(icon, text){
+  const el = document.createElement("div"); el.className="toast"; el.innerHTML = I(icon)+`<span>${text}</span>`;
+  $("#c-toasts").appendChild(el); setTimeout(()=>el.remove(), 4200);
+}
+
+/* ---- client events ---- */
+$("#screen").addEventListener("click", e => {
+  const b = e.target.closest("button,[data-act],input[type=checkbox]"); if(!b) return;
+  const d = b.dataset;
+  if(d.ctab){ C.tab = d.ctab; closeSheet(); renderClient(); $("#c-scroll").scrollTop=0; return; }
+  if(d.mode){ C.mode = d.mode; renderClient(); if(C.sheet?.kind==="cart") renderSheet(); return; }
+  if(d.mood){ C.mood = C.mood===d.mood?null:d.mood; renderClient(); return; }
+  if(d.jump){ C.cat = d.jump; const s = $("#sec-"+d.jump); if(s){ $("#c-scroll").scrollTo({top:s.offsetTop-84,behavior:"smooth"}); } updateCats(); return; }
+  if(d.open){ openSheet("item",{id:d.open,qty:1,ex:[],note:""}); return; }
+  if(d.quick){ addToCart(d.quick); ensureGift(); renderClient(); if(C.sheet?.kind==="cart") renderSheet(); bump(); return; }
+  if(d.inc){ const l = [...C.cart].reverse().find(l=>l.id===d.inc&&!l.gift&&!l.reward); l ? l.qty++ : addToCart(d.inc); renderClient(); return; }
+  if(d.dec){ const l = [...C.cart].reverse().find(l=>l.id===d.dec&&!l.gift&&!l.reward); if(l){ l.qty--; if(!l.qty) C.cart.splice(C.cart.indexOf(l),1);} ensureGift(); renderClient(); return; }
+  if(d.cinc){ C.cart[+d.cinc].qty++; renderSheet(); renderClient(); return; }
+  if(d.cdec){ const l = C.cart[+d.cdec]; l.qty--; if(!l.qty) C.cart.splice(+d.cdec,1); ensureGift(); renderSheet(); renderClient(); return; }
+  if(d.sq){ C.sheet.qty = Math.max(1, C.sheet.qty + +d.sq); C.sheet.note = $("#it-note")?.value||""; renderSheet(); return; }
+  if(d.ex){ const s = C.sheet; s.note = $("#it-note")?.value||""; s.ex = b.checked ? [...s.ex,d.ex] : s.ex.filter(k=>k!==d.ex); renderSheet(); return; }
+  if(d.pay){ C.pay = d.pay; renderSheet(); return; }
+  if(d.rate){ const [id,n] = d.rate.split(":"); const o = S.orders.find(x=>x.id===id); if(!o.rating) S.ratings.push(+n); else S.ratings[S.ratings.length-1] = +n; o.rating = +n; commit(); return; }
+  if(d.reorder){ const o = S.orders.find(x=>x.id===d.reorder); o.items.filter(l=>!l.gift&&!l.reward).forEach(l=>addToCart(l.id,l.qty,l.ex,l.note)); ensureGift(); C.tab="menu"; renderClient(); openSheet("cart"); return; }
+  if(d.reorderIds){ d.reorderIds.split(",").forEach(id=>addToCart(id)); ensureGift(); C.tab="menu"; renderClient(); openSheet("cart"); return; }
+  if(d.redeem){ const [id,cost] = d.redeem.split(":"); const c = me(); if(c.pts<+cost) return; c.pts -= +cost; C.cart.push({key:"rw"+now(),id,qty:1,ex:[],pp:0,reward:true}); ensureGift(); commit(); ctoast("gift", `${nm(BY[id])} a fost adăugat în coș, plătit cu ${cost} puncte.`); return; }
+  if(d.alg){ const c = me(); c.allergies = c.allergies.includes(d.alg) ? c.allergies.filter(a=>a!==d.alg) : [...c.allergies,d.alg]; commit(); return; }
+  if(d.promo){ const p = S.promos.find(x=>x.id===d.promo); $("#c-pop").innerHTML="";
+    if(p.price!=null){ addToCart(p.item,1,p.extras||[],"",{pp:p.price,promo:p.title}); ensureGift(); renderClient(); openSheet("cart"); }
+    else if(p.code){ C.code = p.code; C.codeMsg = "Codul "+p.code+" a fost aplicat: "+CODES[p.code].l; ctoast("check","Codul "+p.code+" e salvat pentru comanda ta."); renderClient(); }
+    else { C.tab="menu"; renderClient(); }
+    return; }
+  switch(d.act){
+    case "close": closeSheet(); break;
+    case "pop-close": $("#c-pop").innerHTML=""; break;
+    case "open-cart": ensureGift(); openSheet("cart"); break;
+    case "add-item": { const s = C.sheet; addToCart(s.id, s.qty, s.ex, ($("#it-note")?.value||"").trim()); ensureGift(); closeSheet(); renderClient(); bump(); ctoast("check", `${nm(BY[s.id])} a fost adăugat în coș.`); break; }
+    case "lang": C.lang = C.lang==="ro"?"hu":"ro"; renderClient(); if(C.sheet) renderSheet(); break;
+    case "allergy": if(!me().allergies.length){ C.tab="club"; renderClient(); ctoast("shield","Alege alergiile tale; le marcăm în tot meniul."); setTimeout(()=>{const el=$(".chips"); el && $("#c-scroll").scrollTo({top:el.offsetTop-200,behavior:"smooth"})},50);} else { C.hideBlocked=!C.hideBlocked; renderClient(); } break;
+    case "pts": C.usePts = !C.usePts; renderSheet(); break;
+    case "code": { const v = ($("#f-code").value||"").trim().toUpperCase(); if(CODES[v]){ C.code=v; C.codeMsg="Cod aplicat: "+CODES[v].l; } else { C.code=""; C.codeMsg = v ? "Codul „"+esc(v)+"” nu există sau a expirat." : ""; } renderSheet(); break; }
+    case "place": placeOrder(); break;
+    case "copy": { const t="IOANA-LYRA"; navigator.clipboard?.writeText(t).then(()=>ctoast("check","Codul a fost copiat."),()=>ctoast("copy","Codul tău: "+t)); break; }
+  }
+});
+$("#screen").addEventListener("input", e => {
+  const t = e.target;
+  if(t.id==="c-q"){ C.q = t.value; preserve(renderCMain); }
+  if(t.id==="f-name") C.form.name = t.value;
+  if(t.id==="f-phone") C.form.phone = t.value;
+  if(t.id==="f-addr") C.form.addr = t.value;
+  if(t.id==="f-note") C.note = t.value;
+});
+function bump(){ const f = $(".fab"); if(f){ f.style.animation="none"; f.offsetHeight; f.style.animation=""; } }
+function updateCats(){
+  const host = $("#c-cats"); if(!host) return;
+  host.querySelectorAll(".cat").forEach(b=>b.setAttribute("aria-current", b.dataset.jump===C.cat));
+  const cur = host.querySelector('[aria-current="true"]'); cur && host.scrollTo({left:cur.offsetLeft-40,behavior:"smooth"});
+}
+$("#c-scroll").addEventListener("scroll", () => {
+  if(C.tab!=="menu") return;
+  const secs = [...document.querySelectorAll("[data-sec]")]; const top = $("#c-scroll").scrollTop + 120;
+  let cur = secs[0]?.dataset.sec; for(const s of secs){ if(s.offsetTop <= top) cur = s.dataset.sec; }
+  if(cur && cur!==C.cat){ C.cat = cur; updateCats(); }
+}, {passive:true});
+
+/* ================= RECEPTION ================= */
+const R = {tab:"orders", sel:null, eta:null, rejecting:false, drawer:null, draft:{kicker:"Ofertă specială",title:"",text:"",item:"ciolan-lyra",price:"",code:"",img:"ciolan-lyra"}, inc:0};
+function renderRx(){ preserve(()=>{ renderRxSide(); renderRxMain(); renderDrawer(); }); }
+function renderRxSide(){
+  const n = S.orders.filter(o=>o.status==="new").length;
+  $("#rx-side").innerHTML = `<div class="rb">${lyraMark()}<div><b>LYRA</b><small>Recepție</small></div></div>
+   ${[["orders","orders","Comenzi",n],["promos","promo","Promoții"],["clients","users","Clienți & fidelizare"],["menu","dish","Meniu & stoc"]].map(([k,ic,l,c])=>`<button class="rnav" data-rtab="${k}" aria-current="${R.tab===k}">${I(ic)}${l}${c?`<span class="n">${c}</span>`:""}</button>`).join("")}
+   <div class="openbox"><div class="row-btw"><b>${S.open?"Preiau comenzi":"Închis pentru comenzi"}</b><button class="switch" role="switch" aria-checked="${S.open}" data-ract="open" aria-label="Preiau comenzi online"></button></div><span class="muted" style="font-size:11.5px">${S.open?"Aplicația acceptă comenzi.":"Clienții văd că restaurantul e închis."}</span></div>`;
+}
+function kpis(){
+  const today = S.orders.filter(o=>o.status!=="rejected");
+  const rev = today.reduce((s,o)=>s+o.total,0);
+  const done = S.orders.filter(o=>o.status==="done" && o.doneAt);
+  const avg = done.length ? Math.round(done.reduce((s,o)=>s+(o.doneAt-o.created)/MIN,0)/done.length) : 0;
+  const load = S.orders.filter(o=>o.status==="prep").length;
+  const lp = Math.min(100, load/8*100);
+  const rating = (S.ratings.reduce((a,b)=>a+b,0)/S.ratings.length).toFixed(1);
+  return `<div class="kpis">
+    <div class="kpi"><small>Comenzi azi</small><b class="num">${today.length}</b><em>${S.orders.filter(o=>o.status==="rejected").length} refuzate</em></div>
+    <div class="kpi"><small>Încasări azi</small><b class="num">${Math.round(rev).toLocaleString("ro-RO")} lei</b><em>bon mediu ${today.length?lei(rev/today.length):"–"}</em></div>
+    <div class="kpi"><small>Timp mediu livrare</small><b class="num">${avg} min</b><em>de la comandă la client</em></div>
+    <div class="kpi"><small>Bucătăria acum</small><b class="num">${load} în lucru</b><div class="load"><i style="width:${lp}%;background:${lp>70?"var(--bad)":lp>40?"var(--warn)":"var(--ok)"}"></i></div></div>
+    <div class="kpi"><small>Rating clienți</small><b class="num">${rating} <span style="color:var(--gold);font-size:18px">★</span></b><em>${S.ratings.length} evaluări</em></div>
+  </div>`;
+}
+function recEta(o){ const load = S.orders.filter(x=>x.status==="prep").length; const base = (o.mode==="livrare"?30:15) + load*4; return [20,30,40,50,60,75].reduce((a,b)=>Math.abs(b-base)<Math.abs(a-base)?b:a); }
+function lineTxt(l){ const it = BY[l.id]; return it.ro; }
+function ticket(o){
+  const c = cust(o.cust), tier = tierOf(c.life);
+  const al = o.allergies||[];
+  const flagged = o.items.filter(l=>BY[l.id].al.some(a=>al.includes(a)));
+  return `<div class="ticket">
+    <div class="tno"><b>#${o.no}</b><span>${hm(o.created)} · ${o.mode==="livrare"?"LIVRARE":"RIDICARE"}</span></div>
+    ${al.length?`<div class="alert">${I("alert")}ALERGIE CLIENT: ${al.map(a=>AL[a][0].toUpperCase()).join(", ")}${flagged.length?` · verifică: ${flagged.map(l=>BY[l.id].ro).join(", ")}`:""}</div>`:""}
+    ${o.items.map(l=>`<div class="tl"><span class="q">${l.qty}×</span><div><b>${esc(lineTxt(l))}</b>${(l.ex||[]).map(k=>`<span class="x">+ ${BY[k].ro}</span>`).join("")}${l.note?`<span class="x">„${esc(l.note)}”</span>`:""}${l.gift?`<span class="x">CADOU LYRA CLUB (Vega)</span>`:""}${l.reward?`<span class="x">plătit cu puncte</span>`:""}${l.promo?`<span class="x">promo: ${esc(l.promo)}</span>`:""}<small>${BY[l.id].g}${BY[l.id].hot?" · tigaie fierbinte":""}</small></div><span>${l.pp===0?"0.00":(lineUnit(l)*l.qty).toFixed(2)}</span></div>`).join("")}
+    ${o.note?`<div class="tn"><b>Mențiune:</b> ${esc(o.note)}</div>`:""}
+    ${c.stars===STARS-1?`<div class="gift">${I("gift")}Aceasta e a ${STARS}-a stea: clientul primește Papanaș la comanda următoare.</div>`:""}
+    <div class="tot"><span>TOTAL · ${({card:"card la livrare",cash:"numerar",online:"plătit online"})[o.pay]}</span><b>${lei(o.total)}</b></div>
+    ${o.ptsUsed?`<small>Reducere puncte: −${lei(o.ptsVal)}${o.disc?` · ${esc(o.codeL)}: −${lei(o.disc)}`:""}</small>`:o.disc?`<small>${esc(o.codeL)}: −${lei(o.disc)}</small>`:""}
+  </div>`;
+}
+function incomingBlock(){
+  const list = S.orders.filter(o=>o.status==="new").sort((a,b)=>a.created-b.created);
+  if(!list.length) return "";
+  if(R.inc>=list.length) R.inc = 0;
+  const o = list[R.inc], c = cust(o.cust), tier = tierOf(c.life);
+  const rec = recEta(o); if(R.eta==null || R.etaFor!==o.id){ R.eta = rec; R.etaFor = o.id; R.rejecting=false; }
+  const load = S.orders.filter(x=>x.status==="prep").length;
+  const fav = BY[c.fav];
+  return `<section class="incoming" aria-live="assertive">
+    <div class="inc-h">${svg(UI.bell,'class="bell"')}<b>Comandă nouă</b>${list.length>1?`<div class="queue" style="color:var(--ink)">${list.map((x,i)=>`<button data-inc="${i}" aria-current="${i===R.inc}" style="color:inherit;border-color:rgba(19,36,26,.4)">#${x.no}</button>`).join("")}</div>`:""}<span class="num" data-age="${o.created}">acum ${mmss(now()-o.created)}</span></div>
+    ${ticket(o)}
+    <div class="decide">
+      <div class="who"><span class="avatar" style="background:${tier.n==="Aur"?"linear-gradient(135deg,#f7e2b5,#d9a75b)":tier.n==="Argint"?"linear-gradient(135deg,#f1f3f1,#aab3ae)":"linear-gradient(135deg,#f1c9a5,#b8774a)"}">${initials(c.name)}</span><div><b>${esc(o.name)}</b><small>${esc(o.phone)} · ${esc(o.addr)}</small></div></div>
+      <div class="insight">
+        <span><span class="tier ${tier.n}">${tier.n}</span>&nbsp; client din ${c.since} · <b>a ${c.orders+1}-a comandă</b> · ${lei(c.spent)} cheltuiți</span>
+        <span>Preferatul lui: <b>${fav?fav.ro:"–"}</b> · ${c.stars}/${STARS} stele în constelație</span>
+        ${c.orders===0?`<span><b>Client nou.</b> Un bilețel de bun venit în pungă face diferența.</span>`:tier.n==="Aur"?`<span><b>Client VIP.</b> Livrare gratuită inclusă automat.</span>`:""}
+      </div>
+      <div><p class="lbl" style="margin-top:0">Timp estimat ${o.mode==="livrare"?"de livrare":"de ridicare"} · ${load} comenzi în bucătărie</p>
+      <div class="etas">${[20,30,40,50,60,75].map(m=>`<button class="eta" data-eta="${m}" aria-pressed="${R.eta===m}">${m===rec?`<span class="rec">recomandat</span>`:""}${m}<small>gata la ${hm(now()+m*MIN)}</small></button>`).join("")}</div></div>
+      <button class="accept" data-accept="${o.id}">${I("check")} Acceptă · ${R.eta} min</button>
+      ${R.rejecting?`<div class="rsn">${["Produs epuizat","Zonă în afara livrării","Bucătăria e plină","Restaurant închis"].map(r=>`<button data-reject="${o.id}:${r}">${r}</button>`).join("")}<button data-ract="norej" style="border-color:var(--line);color:var(--muted)">Anulează</button></div>`:`<button class="reject" data-ract="rej">Refuză comanda…</button>`}
+    </div>
+  </section>`;
+}
+function ocard(o){
+  const its = o.items.map(l=>`${l.qty}× ${BY[l.id].ro}`).join(" · ");
+  let tm = "", bar = "", go = "";
+  if(o.status==="prep"||o.status==="road"){
+    const rem = remaining(o), frac = 1 - rem/(o.eta*MIN), cls = rem<0?"bad":rem<8*MIN?"warn":"ok";
+    tm = `<span class="tm ${cls} num" data-rem="${o.id}">${rem<0?"întârziere "+mmss(rem):mmss(rem)}</span>`;
+    bar = `<div class="bar"><i data-bar="${o.id}" style="width:${Math.min(100,Math.max(2,frac*100))}%;background:var(--${cls==="ok"?"ok":cls==="warn"?"warn":"bad"})"></i></div>`;
+    go = o.status==="prep" ? `<button class="go" data-adv="${o.id}">${o.mode==="livrare"?"Predă curierului":"Gata de ridicare"} →</button>` : `<button class="go" data-adv="${o.id}">${o.mode==="livrare"?"Livrată":"Ridicată"} ✓</button>`;
+  } else if(o.status==="done"){
+    tm = `<span class="tm ok num">${hm(o.doneAt)}</span>`;
+  }
+  return `<div class="oc" role="button" tabindex="0" data-od="${o.id}">
+    <div class="h"><b>#${o.no}</b><span class="tag ${o.mode==="livrare"?"":"green"}">${o.mode==="livrare"?"livrare":"ridicare"}</span>${(o.allergies||[]).length?`<span class="tag red">alergie</span>`:""}${tm}</div>
+    <div class="who2">${esc(o.name)} <span class="tier ${tierOf(cust(o.cust).life).n}" style="font-size:9px">${tierOf(cust(o.cust).life).n}</span></div>
+    <div class="its">${its}</div>${bar}
+    <div class="ft"><span class="num" style="font-weight:800;color:var(--gold-2)">${lei(o.total)}</span>${o.rating?`<span class="muted" style="font-size:12px">${"★".repeat(o.rating)}</span>`:""}${go?`<span class="go-wrap" style="margin-left:auto">${go}</span>`:""}</div>
+  </div>`;
+}
+function ordersTab(){
+  const col = (st, title, color, empty) => { const list = S.orders.filter(o=>st.includes(o.status)).sort((a,b)=>st[0]==="done"?b.doneAt-a.doneAt:a.created-b.created);
+    return `<div class="col"><div class="col-h"><i style="background:${color}"></i>${title}<span>${list.length}</span></div>${list.length?list.map(ocard).join(""):`<div class="colempty">${empty}</div>`}</div>`; };
+  return `${kpis()}${incomingBlock()}
+   <div class="board">${col(["prep"],"În bucătărie","var(--warn)","Nicio comandă în lucru")}${col(["road"],"Pe drum / la pass","var(--gold)","Nimic de predat")}${col(["done"],"Finalizate azi","var(--ok)","Încă nimic finalizat")}</div>`;
+}
+function promosTab(){
+  const d = R.draft, it = BY[d.item];
+  const opts = M.filter(x=>x.img).map(x=>`<option value="${x.id}" ${x.id===d.item?"selected":""}>${x.ro} · ${lei(x.p)}</option>`).join("");
+  return `<div class="pgrid"><div>
+    <h3 class="h3">Promoții în aplicație</h3>
+    ${S.promos.map(p=>`<div class="pc"><img src="${IMG(p.img)}" alt=""><div><span class="tag">${esc(p.kicker)}</span><h4>${esc(p.title)}</h4><p>${esc(p.text)}</p>
+      <div class="ft">${p.price!=null?`<b style="color:var(--gold-2)" class="num">${lei(p.price)}</b>`:""}${p.code?`<span class="tag">cod ${esc(p.code)}</span>`:""}
+      <span style="margin-left:auto;display:flex;align-items:center;gap:8px">Activă <button class="switch" role="switch" aria-checked="${p.active}" data-ptog="${p.id}" aria-label="Activează promoția"></button></span>
+      <button class="rbtn" data-push="${p.id}" ${p.active?"":"disabled style='opacity:.4'"}>${I("send")}Arată acum ca popup</button></div></div></div>`).join("")}
+   </div>
+   <div class="form">
+    <h3 class="h3" style="margin:0">Promoție nouă</h3>
+    <label>Etichetă<input class="in" id="pd-kicker" value="${esc(d.kicker)}"></label>
+    <label>Titlu<input class="in" id="pd-title" value="${esc(d.title)}" placeholder="Ex: Ciolan à la Lyra la 45 lei"></label>
+    <label>Text<textarea id="pd-text" rows="2" placeholder="Ce primește clientul și până când">${esc(d.text)}</textarea></label>
+    <label>Produs<select id="pd-item">${opts}</select></label>
+    <div class="grid2"><label>Preț promo (lei)<input class="in" id="pd-price" inputmode="decimal" value="${esc(d.price)}" placeholder="${it?(it.p*0.85).toFixed(0):""}"></label><label>sau cod reducere<select id="pd-code"><option value="">fără cod</option>${Object.keys(CODES).map(k=>`<option ${d.code===k?"selected":""}>${k}</option>`).join("")}</select></label></div>
+    <p class="lbl" style="margin:4px 0 0">Previzualizare popup</p>
+    <div class="prev"><img src="${IMG(it.img)}" alt=""><div><b>${esc(d.title||"Titlul promoției")}</b><small>${esc(d.text||"Descrierea apare aici.")}</small>${d.price?`<div class="num" style="font-weight:800;margin-top:6px">${lei(+d.price)} <s style="color:var(--dim);font-weight:500">${lei(it.p)}</s></div>`:""}</div></div>
+    <button class="big" data-ract="publish">${I("send")} Publică și arată clienților</button>
+   </div></div>`;
+}
+function clientsTab(){
+  const rows = S.customers.slice().sort((a,b)=>b.life-a.life);
+  return `<h3 class="h3">Regulile programului Lyra Club</h3>
+   <div class="rules">
+    <div class="rule"><b>1 leu = 1 punct</b>100 puncte = 10 lei reducere, max. 50% din comandă</div>
+    <div class="rule"><b>Argint · 500</b>+5% puncte la fiecare comandă</div>
+    <div class="rule"><b>Aur · 1500</b>+10% puncte, livrare gratuită mereu</div>
+    <div class="rule"><b>Constelația · ${STARS} stele</b>La a ${STARS}-a comandă: Papanaș din partea casei</div>
+   </div>
+   <h3 class="h3" style="margin-top:8px">Clienți fideli</h3>
+   <div class="tbl-wrap"><table><thead><tr><th>Client</th><th>Nivel</th><th>Puncte</th><th>Comenzi</th><th>Total cheltuit</th><th>Stele</th><th>Alergii</th><th></th></tr></thead><tbody>
+   ${rows.map(c=>`<tr><td><b>${esc(c.name)}</b><br><span class="muted" style="font-size:12px">${esc(c.phone)}</span></td><td><span class="tier ${tierOf(c.life).n}">${tierOf(c.life).n}</span></td><td class="n">${c.pts}</td><td class="n">${c.orders}</td><td class="n">${lei(c.spent)}</td><td>${constellation(c.stars,44)}</td><td>${c.allergies.length?c.allergies.map(a=>`<span class="tag red">${AL[a][0]}</span>`).join(" "):'<span class="muted">–</span>'}</td><td><button class="rbtn" data-bonus="${c.id}">${I("gift")}+100 puncte</button></td></tr>`).join("")}
+   </tbody></table></div>`;
+}
+function menuTab(){
+  return `<h3 class="h3">Disponibilitate azi</h3><p class="muted" style="margin:-4px 0 12px">Un preparat marcat epuizat apare imediat gri în aplicație și nu mai poate fi comandat.</p>
+  ${CATS.map(cat=>`<p class="lbl">${cat.ro}</p><div class="mgrid">${M.filter(it=>it.c===cat.id).map(it=>`<div class="mi ${S.soldOut[it.id]?"off":""}">${it.img?`<img src="${IMG(it.img)}" alt="">`:`<span class="ph"></span>`}<div><b>${it.ro}</b><div class="row-btw"><span class="num">${lei(it.p)}</span><button class="switch" role="switch" aria-checked="${!S.soldOut[it.id]}" data-stock="${it.id}" aria-label="Disponibil"></button></div></div></div>`).join("")}</div>`).join("")}`;
+}
+function renderRxMain(){
+  const title = {orders:["Comenzi","Acceptă, setează timpul, urmărește până la client"],promos:["Promoții","Popup-uri care apar instant în aplicația clienților"],clients:["Clienți & fidelizare","Lyra Club: puncte, niveluri, constelația"],menu:["Meniu & stoc","Ce se poate comanda azi"]}[R.tab];
+  const body = R.tab==="orders"?ordersTab():R.tab==="promos"?promosTab():R.tab==="clients"?clientsTab():menuTab();
+  $("#rx-main").innerHTML = `<div class="rx-top"><h2>${title[0]}<small>${title[1]}</small></h2>
+    <span class="clock num" id="rx-clock">${new Date().toLocaleTimeString("ro-RO",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}</span>
+    <button class="rbtn ${S.sound?"on":""}" data-ract="sound">${I(S.sound?"sound":"mute")}${S.sound?"Sunet pornit":"Sunet oprit"}</button>
+    <button class="rbtn solid" data-ract="sim">${I("plus")}Simulează comandă</button>
+  </div><div class="rx-body">${body}</div>`;
+}
+function renderDrawer(){
+  const o = R.drawer && S.orders.find(x=>x.id===R.drawer);
+  if(!o){ $("#rx-drawer").innerHTML=""; return; }
+  const steps = [["Primită",o.created],["Acceptată · "+(o.eta||"–")+" min",o.acceptedAt],[o.mode==="livrare"?"Predată curierului":"Gata de ridicare",o.roadAt],[o.mode==="livrare"?"Livrată":"Ridicată",o.doneAt]];
+  const active = ["prep","road"].includes(o.status);
+  $("#rx-drawer").innerHTML = `<div class="drawer-veil" data-ract="dclose"></div><aside class="drawer" role="dialog" aria-modal="true">
+    <div class="row-btw"><h3>Comanda #${o.no}</h3><button class="sh-close" style="position:static" data-ract="dclose" aria-label="Închide">×</button></div>
+    <p class="muted">${esc(o.name)} · ${esc(o.phone)}<br>${esc(o.addr)}</p>
+    <div class="tl2">${steps.map(([l,t])=>`<div class="${t?"done":""}"><i></i>${l}<span>${t?hm(t):""}</span></div>`).join("")}</div>
+    ${ticket(o)}
+    ${active?`<p class="lbl">Ține clientul la curent</p>
+    <div class="qr">
+      <button data-delay="${o.id}:10">${I("clock")} +10 min întârziere</button>
+      <button data-delay="${o.id}:-5">${I("clock")} −5 min, merge repede</button>
+      ${["Comanda ta e pe grătar, miroase minunat!","Curierul a plecat spre tine.","Am adăugat un mic cadou din partea casei."].map(t=>`<button data-msg="${o.id}">${esc(t)}</button>`).join("")}
+    </div>
+    <button class="big" style="margin-top:14px" data-adv="${o.id}">${o.status==="prep"?(o.mode==="livrare"?"Predă curierului":"Gata de ridicare"):(o.mode==="livrare"?"Marchează livrată":"Marchează ridicată")}</button>`:""}
+    ${o.rating?`<p class="lbl">Evaluarea clientului</p><p style="color:var(--gold);font-size:22px">${"★".repeat(o.rating)}<span style="color:var(--forest-4)">${"★".repeat(5-o.rating)}</span></p>`:""}
+  </aside>`;
+}
+
+/* ---- order lifecycle (reception actions) ---- */
+function pushMsg(o, text){ o.msgs.push({at:now(), text}); }
+function accept(o, eta){
+  o.status="prep"; o.acceptedAt=now(); o.eta=eta;
+  pushMsg(o, `Comanda a fost acceptată. Estimăm ${o.mode==="livrare"?"livrarea":"ridicarea"} în ${eta} minute, la ${hm(now()+eta*MIN)}.`);
+  R.eta=null; R.inc=0; commit();
+}
+function advance(o){
+  if(o.status==="prep"){ o.status="road"; o.roadAt=now(); pushMsg(o, o.mode==="livrare"?"Curierul a preluat comanda și e pe drum spre tine.":"Comanda e gata. Te așteptăm la restaurant."); }
+  else if(o.status==="road"){ o.status="done"; o.doneAt=now(); const c = cust(o.cust);
+    c.orders++; c.spent += o.total; c.pts += o.earn; c.life += o.earn; c.stars++;
+    if(c.stars>=STARS){ c.stars=0; c.free=true; pushMsg(o,"Ai aprins Vega! Papanașul din partea casei e deja în coșul următoarei comenzi."); }
+    pushMsg(o, `Poftă bună! Ai primit ${o.earn} puncte Lyra Club.`); }
+  commit();
+}
+function simulate(){
+  const pool = ["c2","c3","c4","c5","c6"];
+  const cid = pool[Math.floor(Math.random()*pool.length)], c = cust(cid);
+  const mains = ["ciolan-lyra","costite","eleven-burger","double-smash","papricas","cordon-bleu","snitel-lyra","fasole-batuta","burger-ozn","carbonara","halloumi","tocanita","borzas"].filter(id=>!S.soldOut[id]);
+  const sides = ["varza-murata","muraturi","salata-asortata","mujdei","sosul-casei","cartofi"];
+  const des = ["papanas","lapte-pasare","tarta-mere"];
+  const pick = a => a[Math.floor(Math.random()*a.length)];
+  const items = [{id:pick(mains),qty:1+(Math.random()<.35?1:0),ex:Math.random()<.4?["mujdei"]:[]}];
+  if(Math.random()<.7) items.push({id:pick(mains),qty:1,ex:[]});
+  if(Math.random()<.6) items.push({id:pick(sides),qty:1,ex:[]});
+  if(Math.random()<.5) items.push({id:pick(des),qty:1+(Math.random()<.3?1:0),ex:[]});
+  items.forEach(l=>{ if(["smash","burger"].includes(BY[l.id].c)) l.ex=[]; });
+  const mode = Math.random()<.75?"livrare":"ridicare";
+  const notes = ["","",items.some(l=>["smash","burger"].includes(BY[l.id].c))?"Fără ceapă la burger, vă rog.":"Fără ceapă, vă rog.","Sună când ajungi, interfonul nu merge.","Sosul separat.",""];
+  const o = {id:"o"+(++S.seq), no:S.seq, cust:cid, name:c.name, phone:c.phone, addr:mode==="livrare"?c.addr:"Ridicare din restaurant", mode, pay:pick(["card","cash","online"]), items, note:pick(notes), created:now(), msgs:[], status:"new", allergies:c.allergies.slice(), ...priceOrder(items, mode, c, false, "")};
+  S.orders.push(o); commit();
+}
+
+/* ---- reception events ---- */
+$("#rx").addEventListener("click", e => {
+  unlockAudio();
+  const b = e.target.closest("[data-rtab],[data-ract],[data-eta],[data-accept],[data-reject],[data-adv],[data-od],[data-inc],[data-delay],[data-msg],[data-ptog],[data-push],[data-bonus],[data-stock]"); if(!b) return;
+  const d = b.dataset;
+  if(d.rtab){ R.tab=d.rtab; R.drawer=null; renderRx(); $("#rx-main").scrollTop=0; return; }
+  if(d.eta){ R.eta=+d.eta; renderRx(); return; }
+  if(d.inc){ R.inc=+d.inc; R.eta=null; renderRx(); return; }
+  if(d.accept){ accept(S.orders.find(o=>o.id===d.accept), R.eta); return; }
+  if(d.reject){ const [id,r] = d.reject.split(":"); const o = S.orders.find(x=>x.id===id); o.status="rejected"; o.reason=r; pushMsg(o,"Ne pare rău, nu putem prelua comanda: "+r.toLowerCase()+"."); if(o.ptsUsed) cust(o.cust).pts += o.ptsUsed; R.rejecting=false; R.eta=null; commit(); return; }
+  if(d.adv){ e.stopPropagation(); advance(S.orders.find(o=>o.id===d.adv)); return; }
+  if(d.od){ R.drawer=d.od; renderDrawer(); return; }
+  if(d.delay){ const [id,m] = d.delay.split(":"); const o = S.orders.find(x=>x.id===id); o.eta = Math.max(5, o.eta + +m); pushMsg(o, +m>0 ? `Avem nevoie de încă ${m} minute ca totul să iasă perfect. Noua oră estimată: ${hm(o.acceptedAt+o.eta*MIN)}.` : `Vești bune: comanda ajunge mai repede, la ${hm(o.acceptedAt+o.eta*MIN)}.`); commit(); return; }
+  if(d.msg){ const o = S.orders.find(x=>x.id===d.msg); pushMsg(o, b.textContent.trim()); commit(); rxFlash(b); return; }
+  if(d.ptog){ const p = S.promos.find(x=>x.id===d.ptog); p.active=!p.active; commit(); return; }
+  if(d.push){ S.pushPromo = {id:d.push, at:now()}; commit(); return; }
+  if(d.bonus){ const c = cust(d.bonus); c.pts+=100; c.life+=100; commit(); if(c.id===C.me) ctoast("gift","Lyra ți-a oferit 100 de puncte bonus."); return; }
+  if(d.stock){ S.soldOut[d.stock] = !S.soldOut[d.stock]; commit(); return; }
+  switch(d.ract){
+    case "open": S.open=!S.open; commit(); break;
+    case "sound": S.sound=!S.sound; commit(); break;
+    case "sim": simulate(); break;
+    case "rej": R.rejecting=true; renderRx(); break;
+    case "norej": R.rejecting=false; renderRx(); break;
+    case "dclose": R.drawer=null; renderDrawer(); break;
+    case "publish": { const dr = R.draft; if(!dr.title.trim()){ $("#pd-title").focus(); return; }
+      const it = BY[dr.item]; const p = {id:"p"+now(), kicker:dr.kicker||"Ofertă", title:dr.title.trim(), text:dr.text.trim()||it.ro, item:dr.code?null:dr.item, extras:[], price:dr.price&&!dr.code?+String(dr.price).replace(",","."):null, code:dr.code||null, img:it.img, active:true, popup:true};
+      S.promos.unshift(p); S.pushPromo={id:p.id,at:now()}; R.draft={kicker:"Ofertă specială",title:"",text:"",item:"ciolan-lyra",price:"",code:"",img:"ciolan-lyra"}; commit(); break; }
+  }
+});
+$("#rx").addEventListener("keydown", e => { if(e.key==="Enter" && e.target.dataset.od){ R.drawer=e.target.dataset.od; renderDrawer(); } });
+$("#rx").addEventListener("input", e => {
+  const t = e.target, m = t.id.match(/^pd-(\w+)$/); if(!m) return;
+  R.draft[m[1]] = t.value; if(m[1]==="item") R.draft.img = BY[t.value].img;
+  preserve(renderRxMain);
+});
+function rxFlash(b){ b.style.borderColor="var(--ok)"; b.style.color="#9be8c0"; setTimeout(()=>{b.style.borderColor="";b.style.color=""},900); }
+
+/* ---- sound: two-tone bell for new orders ---- */
+let AC = null;
+function unlockAudio(){ if(!AC){ try{ AC = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } AC && AC.state==="suspended" && AC.resume(); }
+document.addEventListener("pointerdown", unlockAudio, {once:true});
+function chime(){
+  if(!AC || !S.sound) return;
+  const t = AC.currentTime;
+  [[880,0],[1318.5,.16],[1760,.32]].forEach(([f,dt])=>{ const o = AC.createOscillator(), g = AC.createGain(); o.type="sine"; o.frequency.value=f; g.gain.setValueAtTime(0,t+dt); g.gain.linearRampToValueAtTime(.18,t+dt+.02); g.gain.exponentialRampToValueAtTime(.0001,t+dt+.9); o.connect(g).connect(AC.destination); o.start(t+dt); o.stop(t+dt+1); });
+}
+
+/* ================= global render + ticking ================= */
+let lastNew = new Set(S.orders.filter(o=>o.status==="new").map(o=>o.id));
+let lastStatus = Object.fromEntries(S.orders.map(o=>[o.id,o.status]));
+function renderAll(){
+  renderClient(); renderRx();
+  // reception: ring on fresh orders
+  const nw = S.orders.filter(o=>o.status==="new").map(o=>o.id);
+  if(nw.some(id=>!lastNew.has(id))) chime();
+  lastNew = new Set(nw);
+  // client: toasts when restaurant updates my order
+  S.orders.filter(o=>o.cust===C.me).forEach(o=>{
+    const prev = lastStatus[o.id];
+    if(prev && prev!==o.status){
+      if(o.status==="prep") ctoast("check", `Comanda #${o.no} a fost acceptată · ${o.eta} min`);
+      if(o.status==="road") ctoast("bike", o.mode==="livrare"?"Curierul e pe drum!":"Comanda e gata de ridicare.");
+      if(o.status==="done") ctoast("star", `+${o.earn} puncte Lyra Club`);
+      if(o.status==="rejected") ctoast("alert", "Comanda nu a putut fi preluată.");
+    }
+    lastStatus[o.id] = o.status;
+  });
+  // client: promo pushed from reception
+  if(S.pushPromo && S.pushPromo.at > C.lastPromo){ C.lastPromo = S.pushPromo.at; showPromo(S.promos.find(p=>p.id===S.pushPromo.id)); }
+  const n = S.orders.filter(o=>o.status==="new").length;
+  document.title = n ? `(${n}) Comandă nouă · Lyra` : "Lyra Comenzi";
+}
+setInterval(()=>{
+  const ck = $("#rx-clock"); if(ck) ck.textContent = new Date().toLocaleTimeString("ro-RO",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+  document.querySelectorAll("[data-rem]").forEach(el=>{ const o = S.orders.find(x=>x.id===el.dataset.rem); if(!o) return; const r = remaining(o); el.textContent = r<0?"întârziere "+mmss(r):mmss(r); el.className = "tm num "+(r<0?"bad":r<8*MIN?"warn":"ok"); const bar = document.querySelector(`[data-bar="${o.id}"]`); if(bar) bar.style.width = Math.min(100,Math.max(2,(1-r/(o.eta*MIN))*100))+"%"; });
+  document.querySelectorAll("[data-min]").forEach(el=>{ const o = S.orders.find(x=>x.id===el.dataset.min); if(!o) return; const r = remaining(o); el.textContent = Math.max(0,Math.ceil(r/MIN)); const ring = document.querySelector(`[data-ring="${o.id}"]`); if(ring){ const C2 = 2*Math.PI*82; ring.style.strokeDashoffset = C2*(1-Math.max(0,Math.min(1,r/(o.eta*MIN)))); } });
+  document.querySelectorAll("[data-age]").forEach(el=>{ el.textContent = "acum "+mmss(now()- +el.dataset.age); });
+  document.querySelectorAll("[data-cd]").forEach(el=>{ el.textContent = "expiră în "+hms(+el.dataset.cd-now()); });
+}, 1000);
+setInterval(()=>{ if(S.sound && S.orders.some(o=>o.status==="new")) chime(); }, 9000);
+
+/* ================= view switch ================= */
+document.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{
+  unlockAudio();
+  document.querySelectorAll(".seg button").forEach(x=>x.setAttribute("aria-pressed", x===b));
+  $("#stage").className = "stage" + (b.dataset.view==="client"?" only-client":b.dataset.view==="rx"?" only-rx":"");
+  try{ localStorage.setItem("lyra-view", b.dataset.view) }catch(e){}
+}));
+try{ const v = localStorage.getItem("lyra-view") || (matchMedia("(max-width:760px)").matches?"client":null); v && document.querySelector(`.seg [data-view="${v}"]`)?.click(); }catch(e){}
+
+/* ================= boot ================= */
+C.form = {name:me().name, phone:me().phone, addr:me().addr};
+renderAll();
+// promo popup on first open of the app
+setTimeout(()=>{ const p = S.promos.find(p=>p.active && p.popup); if(p && !$("#c-pop").innerHTML){ C.lastPromo = Math.max(C.lastPromo, S.pushPromo?.at||0); showPromo(p); } }, 1400);
+// a fresh order lands at reception a few seconds after opening, to show the flow
+setTimeout(()=>{ if(!S.orders.some(o=>o.status==="new")) simulate(); }, 7000);
+</script>
