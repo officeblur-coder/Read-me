@@ -206,6 +206,8 @@ declare
   v_mode   text := coalesce(p->>'mode','livrare');
   o        public.orders;
   allg     text[] := '{}';
+  pr       public.promos;
+  is_promo boolean;
 begin
   select * into s from public.settings where id = 1;
   if not s.accepting_orders then raise exception 'Restaurantul nu preia comenzi acum.' using errcode = 'P0001'; end if;
@@ -234,18 +236,33 @@ begin
       grams  := it.variants->vi->>'g';
     end if;
     ex_arr := '[]';
-    for ex_id in select jsonb_array_elements_text(coalesce(line->'extras','[]')) loop
-      select * into ex from public.items where id = ex_id and active and available;
-      if found then
-        unit := unit + ex.price;
-        ex_arr := ex_arr || jsonb_build_object('id', ex.id, 'name', ex.name_ro, 'price', ex.price);
-      end if;
-    end loop;
+    is_promo := false;
+    if coalesce(line->>'promo','') <> '' then
+      select * into pr from public.promos
+        where id::text = line->>'promo' and active and item_id = it.id and price is not null;
+      is_promo := found;
+    end if;
+    if is_promo then
+      unit := pr.price;
+      for ex_id in select unnest(pr.extras) loop
+        select * into ex from public.items where id = ex_id;
+        if found then ex_arr := ex_arr || jsonb_build_object('id', ex.id, 'name', ex.name_ro, 'price', 0); end if;
+      end loop;
+    else
+      for ex_id in select jsonb_array_elements_text(coalesce(line->'extras','[]')) loop
+        select * into ex from public.items where id = ex_id and active and available;
+        if found then
+          unit := unit + ex.price;
+          ex_arr := ex_arr || jsonb_build_object('id', ex.id, 'name', ex.name_ro, 'price', ex.price);
+        end if;
+      end loop;
+    end if;
     sub := sub + unit * qty;
     lines := lines || jsonb_build_object(
       'id', it.id, 'name', it.name_ro, 'qty', qty, 'unit', unit, 'variant', vlabel, 'vi', vi,
       'grams', grams, 'hot', it.hot, 'allergens', to_jsonb(it.allergens), 'category', it.category_id,
-      'extras', ex_arr, 'note', left(coalesce(line->>'note',''), 200));
+      'extras', ex_arr, 'note', left(coalesce(line->>'note',''), 200),
+      'promo', case when is_promo then pr.title end);
   end loop;
 
   if sub < s.min_order then raise exception 'Comanda minimă este % lei.', s.min_order using errcode = 'P0001'; end if;
@@ -257,7 +274,7 @@ begin
       if pc.category_id is null then disc := round(sub * pc.percent / 100.0, 2);
       else
         select round(coalesce(sum((l->>'unit')::numeric * (l->>'qty')::int), 0) * pc.percent / 100.0, 2) into disc
-          from jsonb_array_elements(lines) l where l->>'category' = pc.category_id;
+          from jsonb_array_elements(lines) l where l->>'category' = pc.category_id and l->>'promo' is null;
       end if;
       disc_lbl := pc.label;
     end if;
@@ -297,6 +314,13 @@ begin
 
   return jsonb_build_object('id', o.id, 'number', o.number, 'token', o.token, 'total', o.total);
 end $$;
+
+-- Verificare cod promoțional înainte de trimitere (nu expune lista de coduri).
+create or replace function public.check_code(p_code text) returns jsonb
+language sql stable security definer set search_path = public as $$
+  select jsonb_build_object('code', code, 'percent', percent, 'category_id', category_id, 'label', label)
+  from public.promo_codes where code = upper(trim(p_code)) and active;
+$$;
 
 -- Urmărirea comenzii de către client, pe baza linkului secret.
 create or replace function public.get_order(p_token uuid) returns jsonb
@@ -399,7 +423,7 @@ grant  select, insert, update, delete on public.categories, public.items, public
 grant  update on public.settings, public.orders to authenticated;
 grant  select on public.staff, public.customers, public.orders, public.order_messages to authenticated;
 grant  insert on public.order_messages to authenticated;
-grant  execute on function public.place_order(jsonb), public.get_order(uuid), public.rate_order(uuid,int) to anon, authenticated;
+grant  execute on function public.place_order(jsonb), public.get_order(uuid), public.rate_order(uuid,int), public.check_code(text) to anon, authenticated;
 
 -- actualizări în timp real pentru recepție
 do $$ begin
