@@ -53,6 +53,9 @@ create table if not exists public.settings (
   gift_item_id        text default 'papanas'
 );
 insert into public.settings(id) values (1) on conflict do nothing;
+alter table public.settings add column if not exists site_url text not null default 'https://lyrago.netlify.app';
+alter table public.settings add column if not exists email_from text not null default 'Lyra <onboarding@resend.dev>';
+alter table public.settings add column if not exists review_url text not null default 'https://g.page/r/Cb92kT0SuXLSEAE/review';
 
 -- ---------- Promoții și coduri ----------
 create table if not exists public.promos (
@@ -121,6 +124,18 @@ create table if not exists public.customers (
   created_at    timestamptz not null default now()
 );
 
+-- Puncte strânse de clienți fără cont (după email); se mută în cont când își fac cont
+create table if not exists public.pending_points (
+  email      text primary key,
+  points     int not null default 0,
+  lifetime   int not null default 0,
+  orders     int not null default 0,
+  spent      numeric(12,2) not null default 0,
+  stars      int not null default 0,
+  free_gift  boolean not null default false,
+  updated_at timestamptz not null default now()
+);
+
 -- ---------- Comenzi ----------
 create table if not exists public.orders (
   id             uuid primary key default gen_random_uuid(),
@@ -183,8 +198,15 @@ $$;
 -- Clientul se creează automat la prima logare (email).
 create or replace function public.handle_new_user() returns trigger
 language plpgsql security definer set search_path = public as $$
+declare pp public.pending_points;
 begin
   insert into public.customers(id, email) values (new.id, new.email) on conflict (id) do nothing;
+  delete from public.pending_points where email = lower(new.email) returning * into pp;
+  if pp.email is not null then
+    update public.customers set points = points + pp.points, lifetime = lifetime + pp.lifetime,
+      orders_count = orders_count + pp.orders, spent = spent + pp.spent, stars = pp.stars, free_gift = pp.free_gift
+    where id = new.id;
+  end if;
   return new;
 end $$;
 drop trigger if exists on_auth_user_created on auth.users;
@@ -359,7 +381,7 @@ $$;
 -- Puncte, stele și cadou se acordă o singură dată, când comanda devine „livrată”.
 create or replace function public.on_order_status() returns trigger
 language plpgsql security definer set search_path = public as $$
-declare s public.settings;
+declare s public.settings; cid uuid;
 begin
   if new.status = 'prep' and old.status = 'new' and new.accepted_at is null then new.accepted_at := now(); end if;
   if new.status = 'road' and new.road_at is null then new.road_at := now(); end if;
@@ -377,6 +399,26 @@ begin
       stars = case when c.stars + 1 >= s.stars_for_gift then 0 else c.stars + 1 end,
       free_gift = c.free_gift or (c.stars + 1 >= s.stars_for_gift)
     where c.id = new.customer_id;
+    new.credited := true;
+  elsif new.status = 'done' and not old.credited and coalesce(new.email,'') <> '' then
+    select * into s from public.settings where id = 1;
+    select c.id into cid from public.customers c where lower(c.email) = lower(new.email) limit 1;
+    if cid is not null then
+      update public.customers c set
+        points = c.points + new.points_earned, lifetime = c.lifetime + new.points_earned,
+        orders_count = c.orders_count + 1, spent = c.spent + new.total,
+        stars = case when c.stars + 1 >= s.stars_for_gift then 0 else c.stars + 1 end,
+        free_gift = c.free_gift or (c.stars + 1 >= s.stars_for_gift)
+      where c.id = cid;
+    else
+      insert into public.pending_points as p (email, points, lifetime, orders, spent, stars, free_gift)
+        values (lower(new.email), new.points_earned, new.points_earned, 1, new.total, 1, 1 >= s.stars_for_gift)
+      on conflict (email) do update set
+        points = p.points + excluded.points, lifetime = p.lifetime + excluded.lifetime,
+        orders = p.orders + 1, spent = p.spent + excluded.spent,
+        stars = case when p.stars + 1 >= s.stars_for_gift then 0 else p.stars + 1 end,
+        free_gift = p.free_gift or (p.stars + 1 >= s.stars_for_gift), updated_at = now();
+    end if;
     new.credited := true;
   end if;
   return new;
@@ -398,6 +440,7 @@ alter table public.staff          enable row level security;
 alter table public.customers      enable row level security;
 alter table public.orders         enable row level security;
 alter table public.order_messages enable row level security;
+alter table public.pending_points enable row level security;
 
 do $$ begin
   -- curățăm politicile vechi, ca fișierul să poată fi rulat din nou
@@ -512,3 +555,88 @@ begin
   return 'ok';
 end $$;
 grant execute on function public.list_staff(), public.admin_set_staff(text,text,text) to authenticated;
+
+
+-- =====================================================================
+-- Email de mulțumire după livrare (Resend). Cheia stă în Supabase Vault:
+--   select vault.create_secret('re_...cheia ta...', 'resend_api_key');
+-- Fără cheie, nu se trimite nimic și comenzile merg normal.
+-- =====================================================================
+do $$ begin
+  begin create extension if not exists pg_net; exception when others then null; end;
+end $$;
+
+create or replace function public.send_thanks_email(o public.orders) returns void
+language plpgsql security definer set search_path = public as $$
+declare
+  s public.settings; key text; pts int; total_pts int; stars int; has_acc boolean := false;
+  first text; html text; lines text := ''; l jsonb;
+begin
+  if coalesce(o.email,'') = '' then return; end if;
+  select * into s from public.settings where id = 1;
+  begin
+    select decrypted_secret into key from vault.decrypted_secrets where name = 'resend_api_key' limit 1;
+  exception when others then key := null; end;
+  if key is null then return; end if;
+
+  select c.points, c.stars into total_pts, stars from public.customers c where lower(c.email) = lower(o.email) limit 1;
+  if found then has_acc := true;
+  else select p.points, p.stars into total_pts, stars from public.pending_points p where p.email = lower(o.email); end if;
+  pts := o.points_earned; total_pts := coalesce(total_pts, pts); stars := coalesce(stars, 0);
+  first := split_part(trim(o.name), ' ', 1);
+  for l in select * from jsonb_array_elements(o.items) loop
+    lines := lines || format('<tr><td style="padding:4px 0;color:#1f1712">%s× %s</td><td align="right" style="padding:4px 0;color:#6b5d52">%s lei</td></tr>',
+      l->>'qty', l->>'name', to_char((l->>'unit')::numeric * (l->>'qty')::int, 'FM999990.00'));
+  end loop;
+
+  html := format($h$<!doctype html><html><body style="margin:0;background:#faf5ee;font-family:Arial,Helvetica,sans-serif">
+<table width="100%%" cellpadding="0" cellspacing="0" style="background:#faf5ee;padding:24px 12px"><tr><td align="center">
+<table width="100%%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border-radius:24px;overflow:hidden">
+<tr><td align="center" style="padding:28px 24px 8px"><img src="%1$s/img/logo-lyra.jpg" alt="Lyra" height="56" style="border-radius:10px"></td></tr>
+<tr><td style="padding:8px 28px 0;text-align:center">
+  <h1 style="margin:0;font-size:28px;line-height:1.1;color:#1f1712">Mulțumim, %2$s!</h1>
+  <p style="margin:10px 0 0;color:#6b5d52;font-size:15px">Comanda ta #%3$s a ajuns. Poftă bună de la toată echipa Lyra!</p>
+</td></tr>
+<tr><td style="padding:22px 28px 0">
+  <table width="100%%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,#ff9a4a,#ee4a28);background-color:#ee4a28;border-radius:20px">
+  <tr><td style="padding:22px 24px;color:#ffffff">
+    <div style="font-size:12px;letter-spacing:2px;text-transform:uppercase;opacity:.85">Lyra Club</div>
+    <div style="font-size:40px;font-weight:bold;line-height:1.1;margin-top:6px">+%4$s puncte</div>
+    <div style="font-size:15px;margin-top:6px">Ai acum <b>%5$s puncte</b> · %6$s din 6 stele în constelația Lyra</div>
+    <div style="font-size:13px;margin-top:8px;opacity:.9">100 de puncte = 10 lei reducere. La a 6-a stea, desertul e din partea casei.</div>
+  </td></tr></table>
+</td></tr>
+<tr><td style="padding:20px 28px 0"><table width="100%%" style="font-size:14px">%7$s
+  <tr><td style="padding-top:8px;border-top:1px dashed #e5d9cb;font-weight:bold">Total</td><td align="right" style="padding-top:8px;border-top:1px dashed #e5d9cb;font-weight:bold">%8$s lei</td></tr></table></td></tr>
+<tr><td align="center" style="padding:24px 28px 8px">
+  <a href="%1$s/cont" style="display:inline-block;background:#ee4a28;color:#ffffff;text-decoration:none;font-weight:bold;padding:14px 26px;border-radius:999px">%9$s</a>
+</td></tr>
+<tr><td align="center" style="padding:6px 28px 28px">
+  <a href="%10$s" style="color:#1f1712;font-size:14px">Ți-a plăcut? Lasă-ne o recenzie pe Google ★★★★★</a>
+</td></tr>
+</table>
+<p style="color:#9a8b7f;font-size:12px;margin:16px 0 0">Lyra · Pensiune Restaurant · Tradiții din 1999</p>
+</td></tr></table></body></html>$h$,
+    s.site_url, coalesce(nullif(first,''),'dragă client'), o.number, pts, total_pts, stars, lines,
+    to_char(o.total,'FM999990.00'),
+    case when has_acc then 'Vezi punctele în Lyra Club' else 'Fă-ți cont și păstrează punctele' end, s.review_url);
+
+  perform net.http_post(
+    url := 'https://api.resend.com/emails',
+    body := jsonb_build_object('from', s.email_from, 'to', jsonb_build_array(o.email),
+      'subject', format('Mulțumim! Ai primit %s puncte Lyra Club 🌟', pts), 'html', html),
+    headers := jsonb_build_object('Authorization', 'Bearer ' || key, 'Content-Type', 'application/json'));
+exception when others then
+  raise warning 'Emailul de mulțumire nu a putut fi trimis: %', sqlerrm;
+end $$;
+
+create or replace function public.on_order_done_email() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if new.status = 'done' and old.status <> 'done' then perform public.send_thanks_email(new); end if;
+  return new;
+end $$;
+drop trigger if exists orders_done_email on public.orders;
+create trigger orders_done_email after update of status on public.orders
+  for each row execute function public.on_order_done_email();
+revoke execute on function public.send_thanks_email(public.orders) from public, anon, authenticated;

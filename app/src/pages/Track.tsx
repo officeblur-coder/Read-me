@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
+import { confetti } from "../lib/fx";
 import { supabase } from "../lib/supabase";
 import type { PublicOrder } from "../lib/types";
 import { GOOGLE_REVIEW_URL, hm, lei } from "../lib/format";
@@ -12,6 +13,8 @@ export default function Track() {
   const [o, setO] = useState<PublicOrder | null>(null);
   const [missing, setMissing] = useState(false);
   const [now, setNow] = useState(Date.now());
+  const loc = useLocation();
+  useEffect(() => { if ((loc.state as { fresh?: boolean } | null)?.fresh) { setTimeout(confetti, 250); history.replaceState({}, ""); } }, []);
 
   async function load() {
     const { data, error } = await supabase.rpc("get_order", { p_token: token });
