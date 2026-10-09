@@ -7,6 +7,7 @@ import { tierOf, useCustomer } from "../lib/auth";
 import { flyToCart, haptic } from "../lib/fx";
 import Icon from "../components/Icon";
 import BottomNav from "../components/BottomNav";
+import SiteFooter from "../components/SiteFooter";
 
 type Lang = "ro" | "hu";
 type ItemSheet = { id: string; qty: number; vi: number; extras: string[]; note: string };
@@ -412,7 +413,7 @@ export default function Menu({ source }: { source?: string }) {
           {!settings?.accepting_orders ? "Nu preluăm comenzi acum" : sending ? "Se trimite…" : <>Trimite comanda · <span className="num">{lei(total)}</span></>}
         </button>
         {sendErr && <p className="err">{sendErr}</p>}
-        <p className="fine">Plătești la livrare. Primești un link ca să urmărești comanda în timp real.</p>
+        <p className="fine">Plătești la livrare. Trimițând comanda ești de acord cu <Link to="/termeni">Termenii</Link> și <Link to="/confidentialitate">Politica de confidențialitate</Link>.</p>
       </>)}
     </div>
   );
@@ -534,7 +535,7 @@ export default function Menu({ source }: { source?: string }) {
             );
           })}
           {query && loaded && !items.some(match) && <p className="empty-q">Nimic găsit pentru „{q}”. Încearcă „ciolan”, „burger” sau „papanaș”.</p>}
-          <footer className="m-foot"><img src="/img/logo-lyra.jpg" alt="" /><p>Lyra · Pensiune Restaurant · Tradiții din 1999</p></footer>
+          <SiteFooter />
         </main>
 
         <aside className="cartcol" aria-label="Coș">{cartPanel}</aside>

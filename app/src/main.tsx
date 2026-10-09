@@ -11,6 +11,7 @@ import Reception from "./pages/Reception";
 import Admin from "./pages/Admin";
 import Courier from "./pages/Courier";
 import Account from "./pages/Account";
+import { Privacy, Terms } from "./pages/Legal";
 
 // Short campaign links: lyrago.ro/fb, /qr, /ig, /google… open the menu and tag the order's source.
 const SOURCES = ["fb", "ig", "qr", "google", "tiktok", "wa", "flyer"];
@@ -29,6 +30,8 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         <Route path="/admin" element={<Admin />} />
         <Route path="/curier" element={<Courier />} />
         <Route path="/cont" element={<Account />} />
+        <Route path="/confidentialitate" element={<Privacy />} />
+        <Route path="/termeni" element={<Terms />} />
         <Route path="/:src" element={<SourceMenu />} />
       </Routes>
     </BrowserRouter>

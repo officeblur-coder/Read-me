@@ -6,6 +6,7 @@ import type { Order } from "../lib/types";
 import { ALLERGENS, imgUrl, lei } from "../lib/format";
 import Icon from "../components/Icon";
 import BottomNav from "../components/BottomNav";
+import SiteFooter from "../components/SiteFooter";
 
 // six stars of the Lyra constellation; Vega (the brightest) lights up last
 const PTS: [number, number][] = [[60, 22], [92, 14], [78, 62], [118, 72], [104, 124], [54, 112]];
@@ -29,6 +30,7 @@ export default function Account() {
       <header className="acc-top"><Link to="/"><img src="/img/logo-lyra.jpg" alt="Lyra" /></Link><b>Lyra Club</b>
         {session && <button className="mini" onClick={() => supabase.auth.signOut()}>Ieși din cont</button>}</header>
       {session && customer ? <Member c={customer} refresh={refresh} /> : <SignIn />}
+      <SiteFooter />
       <BottomNav active={location.hash === "#comenzi" ? "orders" : "club"} />
     </div>
   );
@@ -82,7 +84,7 @@ function SignIn() {
             <button className="later" onClick={() => { setSent(false); setCode(""); }}>Alt email sau cod nou</button>
           </>}
           {err && <p className="err">{err}</p>}
-          <p className="fine">Prin crearea contului ești de acord să păstrăm emailul, telefonul și comenzile tale pentru Lyra Club.</p>
+          <p className="fine">Prin crearea contului ești de acord cu <Link to="/termeni">Termenii</Link>. Datele tale sunt folosite conform <Link to="/confidentialitate">Politicii de confidențialitate</Link>.</p>
         </div>
       </section>
     </main>
