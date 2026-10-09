@@ -17,6 +17,11 @@ on conflict (code) do nothing;`);
 out.push(`insert into public.promos(kicker,title,body,item_id,extras,price,image,active,popup)
 select 'Nou la Lyra','Double Smash + cartofi','Două chiftele smash din vită, cheddar topit și cartofi prăjiți. Preț de lansare.','double-smash',array['cartofi'],42,'double-smash.jpg',true,true
 where not exists (select 1 from public.promos);`);
+out.push(`insert into public.banners(chip,title,body,cta,image,category_id,sort)
+select * from (values
+  ('Nou · Smash Burgers', null, 'Chiftele smash din vită, cheddar topit, chiflă artizanală. De la 25 lei.', 'Comandă acum', 'double-smash.jpg', 'smash', 10),
+  ('BBQ Pit Box Smoker', 'Afumat lent, ore întregi', null, 'Specialitățile casei', 'pitbox.jpg', 'specialitati', 20)
+) v where not exists (select 1 from public.banners);`);
 out.push("commit;");
 fs.writeFileSync(path.join(root, "supabase/02_seed_menu.sql"), out.join("\n") + "\n");
 fs.writeFileSync(path.join(root, "supabase/setup.sql"),

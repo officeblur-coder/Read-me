@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
 import type { Category, Item, Variant } from "../lib/types";
+import { BannersTab, PromosTab, CodesTab } from "./AdminPromo";
+import { uploadImage } from "../lib/upload";
 import { ALLERGENS, MEAT, TAGS, imgUrl, lei } from "../lib/format";
 import Icon from "../components/Icon";
 import { Login } from "./Reception";
@@ -12,19 +14,6 @@ const TAG_KEYS = ["new", "garn", "nogarn", "casa", "home", "coal", "smoker", "an
 
 const slug = (s: string) =>
   s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
-
-/** Shrinks a photo in the browser before upload (max 1600 px, JPEG), so the site stays fast. */
-async function resizeImage(file: File): Promise<Blob> {
-  const url = URL.createObjectURL(file);
-  try {
-    const img = await new Promise<HTMLImageElement>((ok, err) => { const i = new Image(); i.onload = () => ok(i); i.onerror = err; i.src = url; });
-    const scale = Math.min(1, 1600 / Math.max(img.width, img.height));
-    const c = document.createElement("canvas");
-    c.width = Math.round(img.width * scale); c.height = Math.round(img.height * scale);
-    c.getContext("2d")!.drawImage(img, 0, 0, c.width, c.height);
-    return await new Promise<Blob>((ok, err) => c.toBlob(b => (b ? ok(b) : err(new Error("Poza nu a putut fi procesată."))), "image/jpeg", 0.86));
-  } finally { URL.revokeObjectURL(url); }
-}
 
 export default function Admin() {
   const [session, setSession] = useState<Session | null>(null);
@@ -53,7 +42,10 @@ export default function Admin() {
   return <AdminPanel email={session.user.email || ""} />;
 }
 
+type Tab = "menu" | "banners" | "promos" | "codes";
 function AdminPanel({ email }: { email: string }) {
+  const [tab, setTab] = useState<Tab>(() => (["menu", "banners", "promos", "codes"].includes(location.hash.slice(1)) ? location.hash.slice(1) as Tab : "menu"));
+  const go = (t: Tab) => { setTab(t); history.replaceState(null, "", "#" + t); };
   const [cats, setCats] = useState<Category[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [cat, setCat] = useState<string>("all");
@@ -104,6 +96,10 @@ function AdminPanel({ email }: { email: string }) {
       <header className="adm-top">
         <img src="/img/logo-lyra.jpg" alt="Lyra" />
         <div className="adm-title"><b>Administrare meniu</b><small>{email}</small></div>
+        <nav className="adm-tabs" aria-label="Secțiuni">
+          {([["menu", "Meniu"], ["banners", "Bannere"], ["promos", "Promoții & popup"], ["codes", "Coduri reducere"]] as const).map(([k, l]) =>
+            <button key={k} aria-current={tab === k} onClick={() => go(k)}>{l}</button>)}
+        </nav>
         <nav>
           <a className="rbtn" href="/" target="_blank" rel="noreferrer">Vezi site-ul ↗</a>
           <a className="rbtn" href="/receptie">Recepție</a>
@@ -111,7 +107,10 @@ function AdminPanel({ email }: { email: string }) {
         </nav>
       </header>
 
-      <div className="adm-shell">
+      {tab === "banners" && <BannersTab cats={cats} flash={flash} />}
+      {tab === "promos" && <PromosTab items={items} flash={flash} />}
+      {tab === "codes" && <CodesTab cats={cats} flash={flash} />}
+      {tab === "menu" && <div className="adm-shell">
         <aside className="adm-cats">
           <p className="cp-lbl" style={{ marginTop: 0 }}>Categorii</p>
           <button className="adm-cat" aria-current={cat === "all"} onClick={() => setCat("all")}><span>Toate preparatele</span><i>{items.length}</i></button>
@@ -155,7 +154,7 @@ function AdminPanel({ email }: { email: string }) {
             {list.length === 0 && <p className="muted">Niciun preparat aici. Apasă „Preparat nou”.</p>}
           </div>
         </main>
-      </div>
+      </div>}
 
       {draft && <ItemEditor draft={draft} cats={cats} items={items} onClose={() => setDraft(null)} onSaved={m => { setDraft(null); load(); flash(m); }} />}
       {catEdit && <CategoryEditor c={catEdit} onClose={() => setCatEdit(null)} onSaved={() => { setCatEdit(null); load(); flash("Categoria a fost salvată."); }} />}
@@ -179,11 +178,7 @@ function ItemEditor({ draft: initial, cats, items, onClose, onSaved }: { draft: 
   async function upload(f: File) {
     setErr(""); setUploading(true);
     try {
-      const blob = await resizeImage(f);
-      const path = `${d.id || slug(d.name_ro) || "preparat"}-${Date.now()}.jpg`;
-      const { error } = await supabase.storage.from("menu").upload(path, blob, { contentType: "image/jpeg", upsert: true });
-      if (error) throw error;
-      set({ image: supabase.storage.from("menu").getPublicUrl(path).data.publicUrl });
+      set({ image: await uploadImage(f, d.id || slug(d.name_ro) || "preparat") });
     } catch (e) {
       setErr("Poza nu a putut fi încărcată: " + (e instanceof Error ? e.message : String(e)));
     } finally { setUploading(false); }

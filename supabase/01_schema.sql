@@ -71,6 +71,23 @@ create table if not exists public.promos (
   created_at timestamptz not null default now()
 );
 
+alter table public.promos add column if not exists starts_at timestamptz;
+alter table public.promos add column if not exists ends_at timestamptz;
+
+-- Bannere pe prima pagină (coperte mari)
+create table if not exists public.banners (
+  id          uuid primary key default gen_random_uuid(),
+  chip        text,
+  title       text,
+  body        text,
+  cta         text,
+  image       text,
+  category_id text references public.categories(id) on delete set null,
+  active      boolean not null default true,
+  sort        int not null default 0,
+  created_at  timestamptz not null default now()
+);
+
 create table if not exists public.promo_codes (
   code        text primary key,
   percent     int not null check (percent between 1 and 100),
@@ -237,7 +254,8 @@ begin
     is_promo := false;
     if coalesce(line->>'promo','') <> '' then
       select * into pr from public.promos
-        where id::text = line->>'promo' and active and item_id = it.id and price is not null;
+        where id::text = line->>'promo' and active and item_id = it.id and price is not null
+          and (starts_at is null or starts_at <= now()) and (ends_at is null or ends_at >= now());
       is_promo := found;
     end if;
     if is_promo then
@@ -375,6 +393,7 @@ alter table public.items          enable row level security;
 alter table public.settings       enable row level security;
 alter table public.promos         enable row level security;
 alter table public.promo_codes    enable row level security;
+alter table public.banners        enable row level security;
 alter table public.staff          enable row level security;
 alter table public.customers      enable row level security;
 alter table public.orders         enable row level security;
@@ -397,6 +416,8 @@ create policy "settings write"    on public.settings for update using (public.is
 create policy "promos read"       on public.promos for select using (active or public.is_staff());
 create policy "promos write"      on public.promos for all using (public.is_staff()) with check (public.is_staff());
 create policy "codes staff"       on public.promo_codes for all using (public.is_staff()) with check (public.is_staff());
+create policy "banners read"      on public.banners for select using (active or public.is_staff());
+create policy "banners write"     on public.banners for all using (public.is_staff()) with check (public.is_staff());
 
 -- echipa își vede propriul rând (ca aplicația să știe că e recepție)
 create policy "staff self"        on public.staff for select using (user_id = auth.uid());
@@ -416,8 +437,8 @@ create policy "messages staff add" on public.order_messages for insert with chec
 -- drepturi pe coloane: clientul NU își poate modifica punctele, stelele sau cadoul
 revoke update on public.customers from anon, authenticated;
 grant  update (name, phone, addresses, allergies, marketing_ok) on public.customers to authenticated;
-grant  select on public.categories, public.items, public.settings, public.promos to anon, authenticated;
-grant  select, insert, update, delete on public.categories, public.items, public.promos, public.promo_codes to authenticated;
+grant  select on public.categories, public.items, public.settings, public.promos, public.banners to anon, authenticated;
+grant  select, insert, update, delete on public.categories, public.items, public.promos, public.promo_codes, public.banners to authenticated;
 grant  update on public.settings, public.orders to authenticated;
 grant  select on public.staff, public.customers, public.orders, public.order_messages to authenticated;
 grant  insert on public.order_messages to authenticated;
@@ -430,6 +451,7 @@ do $$ begin
     begin alter publication supabase_realtime add table public.order_messages; exception when duplicate_object then null; end;
     begin alter publication supabase_realtime add table public.items; exception when duplicate_object then null; end;
     begin alter publication supabase_realtime add table public.promos; exception when duplicate_object then null; end;
+    begin alter publication supabase_realtime add table public.banners; exception when duplicate_object then null; end;
     begin alter publication supabase_realtime add table public.settings; exception when duplicate_object then null; end;
   end if;
 end $$;

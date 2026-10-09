@@ -255,7 +255,7 @@ function Console({ email }: { email: string }) {
                 </div>
               </div>
             </div>))}
-          <p className="muted">Crearea de promoții noi vine în panoul de administrare.</p>
+          <a className="rbtn" href="/admin#promos" style={{ justifySelf: "start" }}>Creează sau editează promoții →</a>
         </div>}
       </main>
 

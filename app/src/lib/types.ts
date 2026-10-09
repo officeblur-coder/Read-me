@@ -52,6 +52,20 @@ export type Promo = {
   active: boolean;
   popup: boolean;
   pushed_at: string | null;
+  starts_at: string | null;
+  ends_at: string | null;
+};
+
+export type Banner = {
+  id: string;
+  chip: string | null;
+  title: string | null;
+  body: string | null;
+  cta: string | null;
+  image: string | null;
+  category_id: string | null;
+  active: boolean;
+  sort: number;
 };
 
 export type OrderLine = {

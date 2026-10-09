@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import type { CartLine, Category, Item, Promo, Settings } from "../lib/types";
+import type { Banner, CartLine, Category, Item, Promo, Settings } from "../lib/types";
 import { ALLERGENS, MEAT, TAGS, imgUrl, lei, rememberOrder } from "../lib/format";
 import Icon from "../components/Icon";
 
@@ -42,6 +42,11 @@ function loadForm(): Form {
   try { return { name: "", phone: "", email: "", address: "", ...JSON.parse(localStorage.getItem("lyra-form") || "{}") }; }
   catch { return { name: "", phone: "", email: "", address: "" }; }
 }
+// shown only until the banners table exists in the database
+const DEFAULT_BANNERS: Banner[] = [
+  { id: "d1", chip: "Nou · Smash Burgers", title: null, body: "Chiftele smash din vită, cheddar topit, chiflă artizanală. De la 25 lei.", cta: "Comandă acum", image: "double-smash.jpg", category_id: "smash", active: true, sort: 10 },
+  { id: "d2", chip: "BBQ Pit Box Smoker", title: "Afumat lent, ore întregi", body: null, cta: "Specialitățile casei", image: "pitbox.jpg", category_id: "specialitati", active: true, sort: 20 },
+];
 const isDesktop = () => window.matchMedia("(min-width: 1100px)").matches;
 
 export default function Menu({ source }: { source?: string }) {
@@ -49,6 +54,7 @@ export default function Menu({ source }: { source?: string }) {
   const [cats, setCats] = useState<Category[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [settings, setSettings] = useState<Settings | null>(null);
+  const [banners, setBanners] = useState<Banner[]>([]);
   const [loadErr, setLoadErr] = useState("");
   const [lang, setLang] = useState<Lang>("ro");
   const [mode, setMode] = useState<"livrare" | "ridicare">("livrare");
@@ -88,18 +94,21 @@ export default function Menu({ source }: { source?: string }) {
 
   // ---- data ----
   async function load() {
-    const [c, i, s, p] = await Promise.all([
+    const [c, i, s, p, b] = await Promise.all([
       supabase.from("categories").select("*").eq("active", true).order("sort"),
       supabase.from("items").select("*").eq("active", true).order("sort"),
       supabase.from("settings").select("*").eq("id", 1).single(),
       supabase.from("promos").select("*").eq("active", true).order("created_at", { ascending: false }),
+      supabase.from("banners").select("*").eq("active", true).order("sort"),
     ]);
+    setBanners(b.error ? DEFAULT_BANNERS : (b.data || []) as Banner[]);
     if (c.error || i.error) { setLoadErr("Meniul nu s-a putut încărca. Verifică conexiunea și reîncarcă pagina."); return null; }
     setCats(c.data as Category[]);
     setItems(i.data as Item[]);
     if (s.data) setSettings(s.data as Settings);
     setActiveCat(prev => prev || (c.data as Category[])[0]?.id || "");
-    return (p.data || []) as Promo[];
+    const now = Date.now();
+    return ((p.data || []) as Promo[]).filter(x => (!x.starts_at || new Date(x.starts_at).getTime() <= now) && (!x.ends_at || new Date(x.ends_at).getTime() >= now));
   }
   useEffect(() => {
     load().then(ps => {
@@ -111,6 +120,7 @@ export default function Menu({ source }: { source?: string }) {
     const ch = supabase.channel("menu-live")
       .on("postgres_changes", { event: "*", schema: "public", table: "items" }, () => { load(); })
       .on("postgres_changes", { event: "*", schema: "public", table: "settings" }, () => { load(); })
+      .on("postgres_changes", { event: "*", schema: "public", table: "banners" }, () => { load(); })
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "promos" }, payload => {
         const p = payload.new as Promo;
         if (p.active && p.pushed_at && Date.now() - new Date(p.pushed_at).getTime() < 60000) setPopup(p);
@@ -346,13 +356,18 @@ export default function Menu({ source }: { source?: string }) {
       <div className="shell">
         <main className="m-main">
           {/* ---------- hero ---------- */}
-          {!query && <section className="heroes">
-            <button className="hero h-smash" onClick={() => jump("smash")} style={{ backgroundImage: "url(/img/double-smash.jpg)" }}>
-              <div className="h-txt"><span className="chip-hot">Nou · Smash Burgers</span><p className="h-lead">{hello}! Chiftele smash din vită, cheddar topit, chiflă artizanală. <b>De la 25 lei.</b></p><span className="h-cta">Comandă acum →</span></div>
-            </button>
-            <button className="hero h-smoke" onClick={() => jump("specialitati")} style={{ backgroundImage: "url(/img/pitbox.jpg)" }}>
-              <div className="h-txt"><span className="chip-hot alt">BBQ Pit Box Smoker</span><h2>Afumat lent,<br />ore întregi</h2><span className="h-cta ghost">Specialitățile casei →</span></div>
-            </button>
+          {!query && banners.length > 0 && <section className={`heroes n${Math.min(banners.length, 3)}`}>
+            {banners.slice(0, 3).map((bn, i) => (
+              <button key={bn.id} className={`hero ${i === 0 ? "h-main" : "h-side"}`} onClick={() => bn.category_id && jump(bn.category_id)}
+                style={{ backgroundImage: bn.image ? `url(${imgUrl(bn.image)})` : undefined }}>
+                <div className="h-txt">
+                  {bn.chip && <span className={`chip-hot ${i ? "alt" : ""}`}>{bn.chip}</span>}
+                  {bn.title && (i === 0 ? <h1>{bn.title}</h1> : <h2>{bn.title}</h2>)}
+                  {bn.body && <p className="h-lead">{i === 0 ? `${hello}! ` : ""}{bn.body}</p>}
+                  {bn.cta && <span className={`h-cta ${i ? "ghost" : ""}`}>{bn.cta} →</span>}
+                </div>
+              </button>
+            ))}
           </section>}
 
           {/* ---------- category tiles ---------- */}
