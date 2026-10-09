@@ -4,7 +4,7 @@ import { COMPANY } from "../lib/company";
 export default function SiteFooter() {
   return (
     <footer className="sfoot">
-      <div className="sf-brand"><img src="/img/logo-lyra.jpg" alt="Lyra" /><p>Lyra · Pensiune Restaurant · Tradiții din 1999</p></div>
+      <div className="sf-brand"><img src="/img/logo-lyra.jpg" alt="Lyra" /><p><b className="wm">Lyra's <span>Delivery</span></b><br />by Lyra Pensiune Restaurant · Tradiții din 1999</p></div>
       <div className="sf-cols">
         <div>
           <b>{COMPANY.name}</b>

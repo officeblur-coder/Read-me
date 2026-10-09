@@ -8,7 +8,7 @@ const contact = [COMPANY.email && `email ${COMPANY.email}`, COMPANY.phone && `te
   || "datele de contact din subsolul site-ului";
 
 function Page({ title, children }: { title: string; children: React.ReactNode }) {
-  useEffect(() => { document.title = `${title} · Lyra`; window.scrollTo(0, 0); }, [title]);
+  useEffect(() => { document.title = `${title} · Lyra's Delivery`; window.scrollTo(0, 0); }, [title]);
   return (
     <div className="legal">
       <header className="acc-top"><Link to="/"><img src="/img/logo-lyra.jpg" alt="Lyra" /></Link><b>{COMPANY.brand}</b><Link className="mini" to="/">Înapoi la meniu</Link></header>

@@ -161,7 +161,7 @@ function Console({ email }: { email: string }) {
       `Comanda a fost acceptată. Estimăm ${o.mode === "livrare" ? "livrarea" : "ridicarea"} în ${m} minute, la ${hm(Date.now() + m * 60000)}.`);
   const advance = (o: Order) => o.status === "prep"
     ? setStatus(o, "road", {}, o.mode === "livrare" ? "Curierul a preluat comanda și e pe drum spre tine." : "Comanda e gata. Te așteptăm la restaurant.")
-    : setStatus(o, "done", {}, "Poftă bună! Mulțumim că ai comandat de la Lyra.");
+    : setStatus(o, "done", {}, "Poftă bună! Mulțumim că ai comandat de la Lyra's Delivery.");
   async function delay(o: Order, m: number) {
     const e = Math.max(5, (o.eta_min || 0) + m);
     await supabase.from("orders").update({ eta_min: e }).eq("id", o.id);

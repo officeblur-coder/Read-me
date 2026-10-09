@@ -423,7 +423,7 @@ export default function Menu({ source }: { source?: string }) {
       {/* ---------- top bar ---------- */}
       <header className="topbar" ref={topRef}>
         <div className="tb-in">
-          <a className="brand" href="/" aria-label="Lyra · acasă"><img src="/img/logo-lyra.jpg" alt="Lyra Pensiune Restaurant" /></a>
+          <a className="brand" href="/" aria-label="Lyra's Delivery · acasă"><img src="/img/logo-lyra.jpg" alt="Lyra" /><b className="wm">Lyra's<span>Delivery</span></b></a>
           <div className="tb-hello"><small>{hello}{firstName ? `, ${firstName}` : ""}!</small>
             <div className="seg tb-mode" role="group" aria-label="Livrare sau ridicare">
               <button aria-pressed={mode === "livrare"} onClick={() => setMode("livrare")}>{t.deliv}</button>

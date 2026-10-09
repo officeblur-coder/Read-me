@@ -56,7 +56,8 @@ create table if not exists public.settings (
 );
 insert into public.settings(id) values (1) on conflict do nothing;
 alter table public.settings add column if not exists site_url text not null default 'https://lyrago.netlify.app';
-alter table public.settings add column if not exists email_from text not null default 'Lyra <onboarding@resend.dev>';
+alter table public.settings add column if not exists email_from text not null default 'Lyra''s Delivery <onboarding@resend.dev>';
+update public.settings set email_from = 'Lyra''s Delivery <onboarding@resend.dev>' where email_from = 'Lyra <onboarding@resend.dev>';
 alter table public.settings add column if not exists review_url text not null default 'https://g.page/r/Cb92kT0SuXLSEAE/review';
 
 -- ---------- Promoții și coduri ----------
@@ -597,7 +598,7 @@ begin
 <tr><td align="center" style="padding:28px 24px 8px"><img src="%1$s/img/logo-lyra.jpg" alt="Lyra" height="56" style="border-radius:10px"></td></tr>
 <tr><td style="padding:8px 28px 0;text-align:center">
   <h1 style="margin:0;font-size:28px;line-height:1.1;color:#1f1712">Mulțumim, %2$s!</h1>
-  <p style="margin:10px 0 0;color:#6b5d52;font-size:15px">Comanda ta #%3$s a ajuns. Poftă bună de la toată echipa Lyra!</p>
+  <p style="margin:10px 0 0;color:#6b5d52;font-size:15px">Comanda ta #%3$s a ajuns. Poftă bună de la toată echipa Lyra's Delivery!</p>
 </td></tr>
 <tr><td style="padding:22px 28px 0">
   <table width="100%%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,#ff9a4a,#ee4a28);background-color:#ee4a28;border-radius:20px">
@@ -617,7 +618,7 @@ begin
   <a href="%10$s" style="color:#1f1712;font-size:14px">Ți-a plăcut? Lasă-ne o recenzie pe Google ★★★★★</a>
 </td></tr>
 </table>
-<p style="color:#9a8b7f;font-size:12px;margin:16px 0 0">Lyra · Pensiune Restaurant · Tradiții din 1999</p>
+<p style="color:#9a8b7f;font-size:12px;margin:16px 0 0">Lyras Delivery · by Lyra Pensiune Restaurant · Tradiții din 1999</p>
 </td></tr></table></body></html>$h$,
     s.site_url, coalesce(nullif(first,''),'dragă client'), o.number, pts, total_pts, stars, lines,
     to_char(o.total,'FM999990.00'),

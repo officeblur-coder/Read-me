@@ -809,3 +809,11 @@ h1,h2,h3,h4{margin:0;font-weight:700;text-wrap:balance}
 .legal-doc ul{padding-left:20px;display:grid;gap:6px}
 .legal-doc a{color:var(--brand)}
 @media (max-width:760px){.sf-cols{grid-template-columns:minmax(0,1fr)}}
+
+/* wordmark */
+.wm{font-family:var(--f-display);font-weight:800;letter-spacing:-.03em;line-height:.9;color:var(--text)}
+.brand .wm{display:grid;font-size:21px}
+.wm span{color:var(--brand)}
+.brand .wm span{font-size:12px;letter-spacing:.32em;text-transform:uppercase;font-family:var(--f-body);margin-top:3px}
+.sf-brand .wm{font-size:18px}
+@media (max-width:860px){.brand .wm{font-size:18px}.tb-hello small{display:none}.tb-hello{flex:1}}
