@@ -347,9 +347,8 @@ export default function Menu({ source }: { source?: string }) {
         <main className="m-main">
           {/* ---------- hero ---------- */}
           {!query && <section className="heroes">
-            <button className="hero h-smash" onClick={() => jump("smash")}>
-              <div className="h-txt"><span className="chip-hot">Nou · by Lyra</span><h1>New Smash<br />Burgers</h1><p>{hello}! Două chiftele smash, cheddar topit, chiflă artizanală. De la 25 lei.</p><span className="h-cta">Comandă acum →</span></div>
-              <img src="/img/spicy-smash.jpg" alt="" />
+            <button className="hero h-smash" onClick={() => jump("smash")} style={{ backgroundImage: "url(/img/double-smash.jpg)" }}>
+              <div className="h-txt"><span className="chip-hot">Nou · Smash Burgers</span><p className="h-lead">{hello}! Chiftele smash din vită, cheddar topit, chiflă artizanală. <b>De la 25 lei.</b></p><span className="h-cta">Comandă acum →</span></div>
             </button>
             <button className="hero h-smoke" onClick={() => jump("specialitati")} style={{ backgroundImage: "url(/img/pitbox.jpg)" }}>
               <div className="h-txt"><span className="chip-hot alt">BBQ Pit Box Smoker</span><h2>Afumat lent,<br />ore întregi</h2><span className="h-cta ghost">Specialitățile casei →</span></div>

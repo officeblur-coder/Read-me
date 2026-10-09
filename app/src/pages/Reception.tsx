@@ -53,7 +53,7 @@ export default function Reception() {
   return <Console email={session.user.email || ""} />;
 }
 
-function Login() {
+export function Login({ title = "Recepție" }: { title?: string }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
@@ -67,7 +67,7 @@ function Login() {
         if (error) setErr(error.message === "Invalid login credentials" ? "Email sau parolă greșită." : error.message);
       }}>
         <img src="/img/logo-lyra.jpg" alt="Lyra" />
-        <h1>Recepție</h1>
+        <h1>{title}</h1>
         <input className="in" type="email" required placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} autoComplete="username" aria-label="Email" />
         <input className="in" type="password" required placeholder="Parolă" value={password} onChange={e => setPassword(e.target.value)} autoComplete="current-password" aria-label="Parolă" />
         <button className="big" disabled={busy}>{busy ? "Se conectează…" : "Intră în consolă"}</button>
@@ -231,7 +231,7 @@ function Console({ email }: { email: string }) {
         </div>}
 
         {tab === "menu" && <div className="rx-body">
-          <p className="muted" style={{ margin: 0 }}>Un preparat marcat epuizat apare imediat gri pe site și nu mai poate fi comandat.</p>
+          <div className="row-btw" style={{ flexWrap: "wrap" }}><p className="muted" style={{ margin: 0 }}>Un preparat marcat epuizat apare imediat gri pe site și nu mai poate fi comandat.</p><a className="rbtn" href="/admin">Editează meniul (poze, prețuri) →</a></div>
           <div className="mgrid">{items.map(it => (
             <div key={it.id} className={`mi ${it.available ? "" : "off"}`}>
               {imgUrl(it.image) ? <img src={imgUrl(it.image)!} alt="" /> : <span className="ph" />}

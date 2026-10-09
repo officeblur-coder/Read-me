@@ -436,6 +436,30 @@ do $$ begin
   end if;
 end $$;
 
+-- =====================================================================
+-- Poze meniu (Supabase Storage): oricine le vede, doar echipa le încarcă
+-- =====================================================================
+do $$ begin
+  if exists (select 1 from information_schema.schemata where schema_name = 'storage') then
+    insert into storage.buckets (id, name, public) values ('menu', 'menu', true)
+      on conflict (id) do update set public = true;
+    drop policy if exists "menu images public read" on storage.objects;
+    drop policy if exists "menu images staff insert" on storage.objects;
+    drop policy if exists "menu images staff update" on storage.objects;
+    drop policy if exists "menu images staff delete" on storage.objects;
+    create policy "menu images public read"  on storage.objects for select using (bucket_id = 'menu');
+    create policy "menu images staff insert" on storage.objects for insert to authenticated with check (bucket_id = 'menu' and public.is_staff());
+    create policy "menu images staff update" on storage.objects for update to authenticated using (bucket_id = 'menu' and public.is_staff());
+    create policy "menu images staff delete" on storage.objects for delete to authenticated using (bucket_id = 'menu' and public.is_staff());
+  end if;
+end $$;
+
+create or replace function public.is_admin() returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.staff where user_id = auth.uid() and role = 'admin');
+$$;
+grant execute on function public.is_admin() to authenticated;
+
 
 -- Meniul Lyra (generat automat din lyra/data/menu.js). Nu suprascrie modificările făcute în admin.
 begin;
