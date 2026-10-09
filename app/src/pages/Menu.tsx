@@ -79,6 +79,12 @@ export default function Menu({ source }: { source?: string }) {
   }, []);
   const t = T[lang];
   const L = lang === "hu" ? 1 : 0;
+  const [dark, setDark] = useState(() => document.documentElement.dataset.theme === "dark");
+  function toggleTheme() {
+    const next = !dark; setDark(next);
+    document.documentElement.dataset.theme = next ? "dark" : "light";
+    try { localStorage.setItem("lyra-theme", next ? "dark" : "light"); } catch { /* ignore */ }
+  }
 
   // ---- data ----
   async function load() {
@@ -328,6 +334,7 @@ export default function Menu({ source }: { source?: string }) {
             <button aria-pressed={mode === "ridicare"} onClick={() => setMode("ridicare")}>{t.pick}</button>
           </div>
           <label className="tb-search"><Icon name="search" size={17} /><input type="search" value={q} onChange={e => setQ(e.target.value)} placeholder={t.search} aria-label="Caută în meniu" /></label>
+          <button className="tb-theme" onClick={toggleTheme} aria-label={dark ? "Temă deschisă" : "Temă închisă"} title={dark ? "Temă deschisă" : "Temă închisă"}><Icon name={dark ? "sun" : "moon"} size={18} /></button>
           <button className="tb-lang" onClick={() => setLang(lang === "ro" ? "hu" : "ro")} aria-label="Schimbă limba">{lang === "ro" ? "RO" : "HU"}</button>
           <button key={bump} className={`tb-cart ${bump ? "pop" : ""}`} onClick={() => setCartOpen(true)} aria-label="Deschide coșul">
             <Icon name="bag" size={19} />{count > 0 && <span className="num">{count}</span>}
@@ -439,7 +446,7 @@ export default function Menu({ source }: { source?: string }) {
           <div className="sheet modal" role="dialog" aria-modal="true" aria-label={nm(it)}>
             <button className="x-btn" onClick={() => setSheet(null)} aria-label="Închide">×</button>
             <div className="md-grid">
-              {img && <div className="md-img"><img src={img} alt="" /></div>}
+              {img && <div className="md-img" style={{ ["--img" as string]: `url(${img})` }}><img src={img} alt="" /></div>}
               <div className="md-body">
                 <h2 className="md-name">{nm(it)}</h2>
                 <p className="md-sub">{L ? it.name_ro : it.name_hu}</p>
