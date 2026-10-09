@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
 import type { Category, Item, Variant } from "../lib/types";
-import { BannersTab, PromosTab, CodesTab } from "./AdminPromo";
+import { BannersTab, PromosTab, CodesTab, TeamTab } from "./AdminPromo";
 import { uploadImage } from "../lib/upload";
 import { ALLERGENS, MEAT, TAGS, imgUrl, lei } from "../lib/format";
 import Icon from "../components/Icon";
@@ -42,9 +42,9 @@ export default function Admin() {
   return <AdminPanel email={session.user.email || ""} />;
 }
 
-type Tab = "menu" | "banners" | "promos" | "codes";
+type Tab = "menu" | "banners" | "promos" | "codes" | "team";
 function AdminPanel({ email }: { email: string }) {
-  const [tab, setTab] = useState<Tab>(() => (["menu", "banners", "promos", "codes"].includes(location.hash.slice(1)) ? location.hash.slice(1) as Tab : "menu"));
+  const [tab, setTab] = useState<Tab>(() => (["menu", "banners", "promos", "codes", "team"].includes(location.hash.slice(1)) ? location.hash.slice(1) as Tab : "menu"));
   const go = (t: Tab) => { setTab(t); history.replaceState(null, "", "#" + t); };
   const [cats, setCats] = useState<Category[]>([]);
   const [items, setItems] = useState<Item[]>([]);
@@ -97,7 +97,7 @@ function AdminPanel({ email }: { email: string }) {
         <img src="/img/logo-lyra.jpg" alt="Lyra" />
         <div className="adm-title"><b>Administrare meniu</b><small>{email}</small></div>
         <nav className="adm-tabs" aria-label="Secțiuni">
-          {([["menu", "Meniu"], ["banners", "Bannere"], ["promos", "Promoții & popup"], ["codes", "Coduri reducere"]] as const).map(([k, l]) =>
+          {([["menu", "Meniu"], ["banners", "Bannere"], ["promos", "Promoții & popup"], ["codes", "Coduri reducere"], ["team", "Echipa"]] as const).map(([k, l]) =>
             <button key={k} aria-current={tab === k} onClick={() => go(k)}>{l}</button>)}
         </nav>
         <nav>
@@ -110,6 +110,7 @@ function AdminPanel({ email }: { email: string }) {
       {tab === "banners" && <BannersTab cats={cats} flash={flash} />}
       {tab === "promos" && <PromosTab items={items} flash={flash} />}
       {tab === "codes" && <CodesTab cats={cats} flash={flash} />}
+      {tab === "team" && <TeamTab flash={flash} />}
       {tab === "menu" && <div className="adm-shell">
         <aside className="adm-cats">
           <p className="cp-lbl" style={{ marginTop: 0 }}>Categorii</p>

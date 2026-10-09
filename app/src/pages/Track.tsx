@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import type { PublicOrder } from "../lib/types";
-import { hm, lei } from "../lib/format";
+import { GOOGLE_REVIEW_URL, hm, lei } from "../lib/format";
 import Icon from "../components/Icon";
 
 const R = 82, CIRC = 2 * Math.PI * R;
@@ -42,15 +42,15 @@ export default function Track() {
 
   let ring = null, title = "", sub: React.ReactNode = "";
   if (o.status === "new") {
-    ring = <div className="ring wait"><svg viewBox="0 0 184 184"><circle cx="92" cy="92" r={R} stroke="#1e452f" strokeWidth="10" fill="none" /><circle cx="92" cy="92" r={R} stroke="#e9b770" strokeWidth="10" fill="none" strokeLinecap="round" strokeDasharray={`${CIRC * 0.22} ${CIRC}`} /></svg><div className="c"><b style={{ fontSize: 32 }}>#{o.number}</b><small>trimisă</small></div></div>;
+    ring = <div className="ring wait"><svg viewBox="0 0 184 184"><circle cx="92" cy="92" r={R} style={{ stroke: "var(--surface-3)" }} strokeWidth="10" fill="none" /><circle cx="92" cy="92" r={R} style={{ stroke: "var(--brand)", transition: "stroke-dashoffset 1s linear" }} strokeWidth="10" fill="none" strokeLinecap="round" strokeDasharray={`${CIRC * 0.22} ${CIRC}`} /></svg><div className="c"><b style={{ fontSize: 32 }}>#{o.number}</b><small>trimisă</small></div></div>;
     title = "Restaurantul confirmă comanda"; sub = "De obicei durează sub un minut. Ora estimată apare aici.";
   } else if (o.status === "rejected") {
     title = "Comanda nu a putut fi preluată"; sub = <>{o.reject_reason ? o.reject_reason + ". " : ""}Nu ți-a fost reținută nicio sumă. Ne poți suna pentru detalii.</>;
   } else if (o.status === "done") {
-    ring = <div className="ring"><svg viewBox="0 0 184 184"><circle cx="92" cy="92" r={R} stroke="#5fd39a" strokeWidth="10" fill="none" /></svg><div className="c" style={{ color: "var(--ok)" }}><Icon name="check" size={64} /><small>{pick ? "ridicată" : "livrată"}</small></div></div>;
+    ring = <div className="ring"><svg viewBox="0 0 184 184"><circle cx="92" cy="92" r={R} style={{ stroke: "var(--ok)" }} strokeWidth="10" fill="none" /></svg><div className="c" style={{ color: "var(--ok)" }}><Icon name="check" size={64} /><small>{pick ? "ridicată" : "livrată"}</small></div></div>;
     title = "Poftă bună!"; sub = "Mulțumim că ai comandat de la Lyra.";
   } else {
-    ring = <div className="ring"><svg viewBox="0 0 184 184"><circle cx="92" cy="92" r={R} stroke="#1e452f" strokeWidth="10" fill="none" /><circle cx="92" cy="92" r={R} stroke="#e9b770" strokeWidth="10" fill="none" strokeLinecap="round" strokeDasharray={CIRC} strokeDashoffset={CIRC * (1 - frac)} style={{ transition: "stroke-dashoffset 1s linear" }} /></svg><div className="c"><b className="num">{Math.max(0, Math.ceil(rem / 60000))}</b><small>minute</small></div></div>;
+    ring = <div className="ring"><svg viewBox="0 0 184 184"><circle cx="92" cy="92" r={R} style={{ stroke: "var(--surface-3)" }} strokeWidth="10" fill="none" /><circle cx="92" cy="92" r={R} style={{ stroke: "var(--brand)", transition: "stroke-dashoffset 1s linear" }} strokeWidth="10" fill="none" strokeLinecap="round" strokeDasharray={CIRC} strokeDashoffset={CIRC * (1 - frac)} /></svg><div className="c"><b className="num">{Math.max(0, Math.ceil(rem / 60000))}</b><small>minute</small></div></div>;
     title = o.status === "prep" ? "Se gătește acum" : pick ? "Comanda te așteaptă" : "Curierul e pe drum";
     sub = <>{pick ? "Gata de ridicare" : "Sosește"} la ~<b>{hm(due)}</b>{!pick && o.address ? ` · ${o.address}` : ""}</>;
   }
@@ -65,7 +65,15 @@ export default function Track() {
         {o.status !== "rejected" && <div className="steps">{labels.map((l, i) => <div key={l} className={i < si || o.status === "done" ? "done" : i === si ? "now" : ""}><i />{l}</div>)}</div>}
         {o.status === "done" && <>
           <div className="stars" role="group" aria-label="Evaluează comanda">{[1, 2, 3, 4, 5].map(n => <button key={n} className={(o.rating || 0) >= n ? "on" : ""} onClick={() => rate(n)} aria-label={`${n} stele`}><Icon name="star" size={32} fill /></button>)}</div>
-          <p className="t-sub">{o.rating ? "Mulțumim! Am transmis bucătăriei." : "Cum a fost? Evaluarea ajunge direct la bucătar."}</p>
+          {!o.rating && <p className="t-sub">Cum a fost? Apasă pe stele. Evaluarea ajunge direct la bucătar.</p>}
+          {o.rating && o.rating >= 4 && (
+            <div className="review-cta">
+              <b>Ne bucurăm că ți-a plăcut!</b>
+              <p>Ne ajuți enorm cu o recenzie pe Google. Durează 30 de secunde.</p>
+              <a className="cta" href={GOOGLE_REVIEW_URL} target="_blank" rel="noreferrer"><span className="g-logo">G</span> Lasă o recenzie pe Google</a>
+            </div>
+          )}
+          {o.rating && o.rating <= 3 && <p className="t-sub">Ne pare rău că n-a fost perfect. Am transmis bucătăriei și ne vom strădui mai mult data viitoare.</p>}
         </>}
         {o.messages.length > 0 && <div className="msgs">{[...o.messages].reverse().map((m, i) => <div key={i} className="msg">{m.body}<small>Lyra · {hm(m.at)}</small></div>)}</div>}
       </div>

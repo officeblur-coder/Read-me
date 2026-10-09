@@ -116,6 +116,8 @@ export type Order = {
   road_at: string | null;
   done_at: string | null;
   rating: number | null;
+  courier_id?: string | null;
+  courier_name?: string | null;
 };
 
 export type PublicOrder = Pick<

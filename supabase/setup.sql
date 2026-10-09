@@ -482,6 +482,39 @@ language sql stable security definer set search_path = public as $$
 $$;
 grant execute on function public.is_admin() to authenticated;
 
+-- =====================================================================
+-- Curieri: rol nou în echipă + cine a preluat livrarea
+-- =====================================================================
+alter table public.staff drop constraint if exists staff_role_check;
+alter table public.staff add constraint staff_role_check check (role in ('reception','admin','courier'));
+alter table public.orders add column if not exists courier_id uuid references auth.users(id) on delete set null;
+alter table public.orders add column if not exists courier_name text;
+
+-- Admin: lista echipei și adăugarea unui cont existent (după email) cu un rol
+create or replace function public.list_staff() returns table(user_id uuid, email text, name text, role text)
+language sql stable security definer set search_path = public as $$
+  select s.user_id, u.email::text, s.name, s.role from public.staff s join auth.users u on u.id = s.user_id
+  where public.is_admin() order by s.role, u.email;
+$$;
+
+create or replace function public.admin_set_staff(p_email text, p_role text, p_name text default null) returns text
+language plpgsql security definer set search_path = public as $$
+declare uid uuid;
+begin
+  if not public.is_admin() then raise exception 'Doar administratorul poate modifica echipa.' using errcode = 'P0001'; end if;
+  select id into uid from auth.users where lower(email) = lower(trim(p_email));
+  if uid is null then raise exception 'Nu există cont cu emailul %. Creează-l întâi în Supabase → Authentication → Add user.', p_email using errcode = 'P0001'; end if;
+  if p_role = 'none' then
+    if uid = auth.uid() then raise exception 'Nu îți poți scoate propriul acces.' using errcode = 'P0001'; end if;
+    delete from public.staff where user_id = uid; return 'removed';
+  end if;
+  if p_role not in ('reception','admin','courier') then raise exception 'Rol necunoscut.' using errcode = 'P0001'; end if;
+  insert into public.staff(user_id, name, role) values (uid, nullif(trim(p_name),''), p_role)
+    on conflict (user_id) do update set role = excluded.role, name = coalesce(excluded.name, public.staff.name);
+  return 'ok';
+end $$;
+grant execute on function public.list_staff(), public.admin_set_staff(text,text,text) to authenticated;
+
 
 -- Meniul Lyra (generat automat din lyra/data/menu.js). Nu suprascrie modificările făcute în admin.
 begin;

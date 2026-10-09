@@ -352,3 +352,57 @@ export function CodesTab({ cats, flash }: { cats: Category[]; flash: Flash }) {
     </div>
   );
 }
+
+/* ============================== ECHIPA ============================== */
+type Member = { user_id: string; email: string; name: string | null; role: string };
+const ROLES: Record<string, [string, string]> = {
+  admin: ["Administrator", "meniu, promoții, echipă și recepție"],
+  reception: ["Recepție", "primește și acceptă comenzi"],
+  courier: ["Curier", "preia și livrează comenzi, din telefon"],
+};
+export function TeamTab({ flash }: { flash: Flash }) {
+  const [list, setList] = useState<Member[]>([]);
+  const [n, setN] = useState({ email: "", name: "", role: "courier" });
+  const [err, setErr] = useState("");
+  const load = async () => { const { data } = await supabase.rpc("list_staff"); setList((data || []) as Member[]); };
+  useEffect(() => { load(); }, []);
+  async function setRole(email: string, role: string, name?: string) {
+    setErr("");
+    const { error } = await supabase.rpc("admin_set_staff", { p_email: email, p_role: role, p_name: name || null });
+    if (error) { setErr(error.message); return false; }
+    load(); return true;
+  }
+  return (
+    <div className="adm-page">
+      <div className="adm-bar"><h1>Echipa</h1></div>
+      <div className="muted adm-help">
+        <p style={{ margin: "0 0 6px" }}>Cine are acces și unde intră:</p>
+        <ul className="team-links">
+          <li><b>Recepție:</b> lyrago.netlify.app/receptie</li>
+          <li><b>Curieri:</b> lyrago.netlify.app/curier (din telefon)</li>
+          <li><b>Administrare:</b> lyrago.netlify.app/admin</li>
+        </ul>
+        <p style={{ margin: "8px 0 0" }}>Pentru un om nou: <b>1.</b> în Supabase → Authentication → Users → <b>Add user</b> (email + parolă, bifează Auto Confirm). <b>2.</b> Aici, scrie emailul și alege rolul.</p>
+      </div>
+      <div className="code-new team-new">
+        <label className="fl"><span>Email</span><input value={n.email} onChange={e => setN({ ...n, email: e.target.value })} placeholder="curier.mihai@gmail.com" inputMode="email" /></label>
+        <label className="fl"><span>Nume afișat</span><input value={n.name} onChange={e => setN({ ...n, name: e.target.value })} placeholder="Mihai" /></label>
+        <label className="fl"><span>Rol</span><select value={n.role} onChange={e => setN({ ...n, role: e.target.value })}>{Object.keys(ROLES).map(r => <option key={r} value={r}>{ROLES[r][0]}</option>)}</select></label>
+        <button className="addbtn" onClick={async () => { if (await setRole(n.email, n.role, n.name)) { flash(`${n.email} a fost adăugat ca ${ROLES[n.role][0].toLowerCase()}.`); setN({ email: "", name: "", role: "courier" }); } }}>Adaugă <span>+</span></button>
+      </div>
+      {err && <p className="err">{err}</p>}
+      <div className="pr-list" style={{ marginTop: 16 }}>
+        {list.map(m => (
+          <div key={m.user_id} className="pr-row team-row">
+            <span className="team-av">{(m.name || m.email).slice(0, 1).toUpperCase()}</span>
+            <div className="adm-info"><b>{m.name || m.email.split("@")[0]}</b><small>{m.email}</small></div>
+            <select className="team-role" value={m.role} onChange={async e => { if (await setRole(m.email, e.target.value)) flash("Rolul a fost schimbat."); }}>
+              {Object.keys(ROLES).map(r => <option key={r} value={r}>{ROLES[r][0]}</option>)}
+            </select>
+            <button className="mini danger" onClick={async () => { if (await setRole(m.email, "none")) flash(`${m.email} nu mai are acces.`); }}>Scoate accesul</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

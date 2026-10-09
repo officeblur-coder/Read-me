@@ -9,6 +9,7 @@ import Menu from "./pages/Menu";
 import Track from "./pages/Track";
 import Reception from "./pages/Reception";
 import Admin from "./pages/Admin";
+import Courier from "./pages/Courier";
 
 // Short campaign links: lyrago.ro/fb, /qr, /ig, /google… open the menu and tag the order's source.
 const SOURCES = ["fb", "ig", "qr", "google", "tiktok", "wa", "flyer"];
@@ -25,6 +26,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         <Route path="/comanda/:token" element={<Track />} />
         <Route path="/receptie" element={<Reception />} />
         <Route path="/admin" element={<Admin />} />
+        <Route path="/curier" element={<Courier />} />
         <Route path="/:src" element={<SourceMenu />} />
       </Routes>
     </BrowserRouter>

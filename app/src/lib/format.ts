@@ -59,3 +59,5 @@ export function rememberOrder(token: string, number: number) {
 export function myOrders(): { token: string; number: number; at: number }[] {
   try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch { return []; }
 }
+
+export const GOOGLE_REVIEW_URL = "https://g.page/r/Cb92kT0SuXLSEAE/review";

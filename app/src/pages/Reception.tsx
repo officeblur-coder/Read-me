@@ -9,20 +9,28 @@ const ETAS = [20, 30, 40, 50, 60, 75];
 const REASONS = ["Produs epuizat", "Zonă în afara livrării", "Bucătăria e plină", "Restaurantul se închide"];
 const QUICK = ["Comanda ta e pe grătar, miroase minunat!", "Curierul a plecat spre tine.", "Am adăugat un mic cadou din partea casei."];
 
-/* ---------- sound: a short three-note bell; browsers allow it after the first click ---------- */
+/* ---------- sound: a loud two-burst bell. Browsers only allow audio after one tap, hence the start screen. ---------- */
 let AC: AudioContext | null = null;
-function unlockAudio() {
+export function unlockAudio() {
   try { if (!AC) AC = new AudioContext(); if (AC.state === "suspended") AC.resume(); } catch { /* no audio */ }
 }
-function chime() {
+export const audioReady = () => !!AC && AC.state === "running";
+export function chime() {
   if (!AC) return;
+  if (AC.state === "suspended") AC.resume();
   const t = AC.currentTime;
-  [[880, 0], [1318.5, 0.16], [1760, 0.32]].forEach(([f, dt]) => {
+  [0, 0.75].forEach(base => [[988, 0], [1319, 0.14], [1760, 0.28]].forEach(([f, dt]) => {
     const o = AC!.createOscillator(), g = AC!.createGain();
-    o.frequency.value = f; g.gain.setValueAtTime(0, t + dt);
-    g.gain.linearRampToValueAtTime(0.2, t + dt + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + dt + 0.9);
-    o.connect(g).connect(AC!.destination); o.start(t + dt); o.stop(t + dt + 1);
-  });
+    o.type = "triangle"; o.frequency.value = f;
+    g.gain.setValueAtTime(0, t + base + dt);
+    g.gain.linearRampToValueAtTime(0.55, t + base + dt + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + base + dt + 0.7);
+    o.connect(g).connect(AC!.destination); o.start(t + base + dt); o.stop(t + base + dt + 0.75);
+  }));
+}
+let wakeLock: { release: () => Promise<void> } | null = null;
+async function keepAwake() {
+  try { wakeLock = await (navigator as unknown as { wakeLock: { request: (t: string) => Promise<{ release: () => Promise<void> }> } }).wakeLock.request("screen"); } catch { /* not supported */ }
 }
 
 export default function Reception() {
@@ -37,8 +45,8 @@ export default function Reception() {
   }, []);
   useEffect(() => {
     if (!session) { setIsStaff(null); return; }
-    supabase.from("staff").select("user_id").eq("user_id", session.user.id).maybeSingle()
-      .then(({ data }) => setIsStaff(!!data));
+    supabase.from("staff").select("role").eq("user_id", session.user.id).maybeSingle()
+      .then(({ data }) => setIsStaff(!!data && data.role !== "courier"));
   }, [session]);
 
   if (!ready) return null;
@@ -47,7 +55,7 @@ export default function Reception() {
   if (!isStaff) return (
     <div className="login"><form onSubmit={e => { e.preventDefault(); supabase.auth.signOut(); }}>
       <img src="/img/logo-lyra.jpg" alt="Lyra" /><h1>Fără acces la recepție</h1>
-      <p className="muted" style={{ textAlign: "center" }}>Contul {session.user.email} nu e în echipa Lyra. Cere administratorului să te adauge.</p>
+      <p className="muted" style={{ textAlign: "center" }}>Contul {session.user.email} nu are acces la recepție. Curierii folosesc <a href="/curier">lyrago.netlify.app/curier</a>.</p>
       <button className="big ghost">Ieși din cont</button></form></div>
   );
   return <Console email={session.user.email || ""} />;
@@ -94,6 +102,12 @@ function Console({ email }: { email: string }) {
   const [toast, setToast] = useState("");
   const seen = useRef<Set<string> | null>(null);
   const soundRef = useRef(sound); soundRef.current = sound;
+  const [showStart, setShowStart] = useState(true);
+  const started = useRef(false);
+  function start() {
+    unlockAudio(); chime(); keepAwake();
+    started.current = true; setShowStart(false);
+  }
 
   const flash = (m: string) => { setToast(m); setTimeout(() => setToast(""), 2500); };
 
@@ -123,11 +137,13 @@ function Console({ email }: { email: string }) {
       .on("postgres_changes", { event: "*", schema: "public", table: "settings" }, () => loadMenu())
       .subscribe();
     const tick = setInterval(() => setNow(Date.now()), 1000);
-    const safety = setInterval(loadOrders, 30000);            // in case the live connection drops
-    const ring = setInterval(() => { if (soundRef.current && document.querySelector(".incoming")) chime(); }, 10000);
+    const poll = setInterval(loadOrders, 4000);                // new orders show up within 4 s even if the live connection drops
+    const ring = setInterval(() => { if (soundRef.current && document.querySelector(".incoming")) chime(); }, 4000);
+    const wake = () => { if (document.visibilityState === "visible" && started.current) keepAwake(); };
+    document.addEventListener("visibilitychange", wake);
     const unlock = () => unlockAudio();
     document.addEventListener("pointerdown", unlock);
-    return () => { supabase.removeChannel(ch); clearInterval(tick); clearInterval(safety); clearInterval(ring); document.removeEventListener("pointerdown", unlock); };
+    return () => { supabase.removeChannel(ch); clearInterval(tick); clearInterval(poll); clearInterval(ring); document.removeEventListener("pointerdown", unlock); document.removeEventListener("visibilitychange", wake); wakeLock?.release().catch(() => {}); };
   }, [loadOrders, loadMenu]);
 
   const incoming = orders.filter(o => o.status === "new");
@@ -189,7 +205,7 @@ function Console({ email }: { email: string }) {
         <div className="rx-top">
           <h2>{tab === "orders" ? "Comenzi" : tab === "menu" ? "Meniu & stoc" : "Promoții"}</h2>
           <span className="clock num">{new Date(now).toLocaleTimeString("ro-RO")}</span>
-          <button className={`rbtn ${sound ? "on" : ""}`} onClick={() => { unlockAudio(); setSound(!sound); }}><Icon name={sound ? "sound" : "mute"} size={16} />{sound ? "Sunet pornit" : "Sunet oprit"}</button>
+          <button className={`rbtn ${sound ? "on" : ""}`} onClick={() => { unlockAudio(); if (!sound) chime(); setSound(!sound); }}><Icon name={sound ? "sound" : "mute"} size={16} />{sound ? "Sunet pornit" : "Sunet oprit"}</button>
         </div>
 
         {tab === "orders" && <div className="rx-body">
@@ -280,6 +296,18 @@ function Console({ email }: { email: string }) {
         </aside>
       </>}
       {toast && <div className="toast">{toast}</div>}
+      {showStart && (
+        <div className="start-veil">
+          <div className="start-card">
+            <img src="/img/logo-lyra.jpg" alt="Lyra" />
+            <h2>Pornește consola</h2>
+            <p>Apasă o dată ca să pornești <b>soneria</b> pentru comenzi noi. Ecranul rămâne aprins cât e deschisă consola.</p>
+            {incoming.length > 0 && <p className="start-new">{incoming.length} {incoming.length === 1 ? "comandă nouă te așteaptă" : "comenzi noi te așteaptă"}</p>}
+            <button className="cta" onClick={start}><Icon name="bell" size={20} /> Pornește soneria</button>
+            <button className="later" onClick={() => setShowStart(false)}>Continuă fără sunet</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -315,7 +343,7 @@ function OrderCard({ o, now, onOpen, onAdvance }: { o: Order; now: number; onOpe
       <div className="h"><b>#{o.number}</b><span className={`tag ${o.mode === "livrare" ? "" : "green"}`}>{o.mode}</span>
         {o.allergies.length > 0 && <span className="tag red">alergie</span>}
         {active && due ? <span className={`tm ${cls} num`}>{rem < 0 ? "întârziere " + mmss(rem) : mmss(rem)}</span> : o.done_at ? <span className="tm ok num">{hm(o.done_at)}</span> : null}</div>
-      <div style={{ fontWeight: 700, fontSize: 13 }}>{o.name}</div>
+      <div style={{ fontWeight: 700, fontSize: 13 }}>{o.name}{o.courier_name && <span className="muted" style={{ fontWeight: 600 }}> · curier {o.courier_name}</span>}</div>
       <div className="its">{o.items.map(l => `${l.qty}× ${l.name}`).join(" · ")}</div>
       {active && due > 0 && <div className="bar"><i style={{ width: `${Math.min(100, Math.max(2, frac * 100))}%`, background: `var(--${cls})` }} /></div>}
       <div className="ft"><b className="num" style={{ color: "var(--gold-2)" }}>{lei(Number(o.total))}</b>{o.rating && <span style={{ color: "var(--gold)" }}>{"★".repeat(o.rating)}</span>}
