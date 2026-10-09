@@ -529,8 +529,9 @@ td:first-child{min-width:150px}
   </section>
 </main>
 
+<script src="data/menu.js"></script>
 <script>
-/* ================= DATA ================= */
+/* ================= DATA (menu is in data/menu.js) ================= */
 const IMG = k => "img/" + k + ".jpg";
 const ICON = {
   gluten:'<path d="M12 22V7M12 7c-1.6-.8-2.6-2.4-2.6-4.4 1.7.2 2.6 2 2.6 4.4zm0 0c1.6-.8 2.6-2.4 2.6-4.4-1.7.2-2.6 2-2.6 4.4zM12 12.5c-2-.6-3.4-2-3.6-4 2 .2 3.4 1.6 3.6 4zm0 0c2-.6 3.4-2 3.6-4-2 .2-3.4 1.6-3.6 4zM12 17.5c-2-.6-3.4-2-3.6-4 2 .2 3.4 1.6 3.6 4zm0 0c2-.6 3.4-2 3.6-4-2 .2-3.4 1.6-3.6 4z"/>',
@@ -540,10 +541,11 @@ const ICON = {
   mustar:'<path d="M11 2h2v3h1.2l1.3 3.2V20a1.8 1.8 0 0 1-1.8 1.8h-3.4A1.8 1.8 0 0 1 8.5 20V8.2L9.8 5H11z"/>',
   soia:'<path d="M5.5 18.5c-2.2-2.2-1-6 2-8.3l6-4.8c3-2.3 6.3.2 4.8 3.3l-4.6 6.8c-2.2 3.3-6 5.2-8.2 3z"/><circle cx="9" cy="14.2" r="1.2"/><circle cx="12.2" cy="11" r="1.2"/><circle cx="15.3" cy="7.9" r="1.2"/>',
   seminte:'<ellipse cx="8" cy="9" rx="2.2" ry="3.4"/><ellipse cx="15.5" cy="8" rx="2.2" ry="3.4"/><ellipse cx="11.5" cy="16.5" rx="2.2" ry="3.4"/>',
-  ciuperci:'<path d="M3.5 12.5a8.5 7.5 0 0 1 17 0zM9.8 12.5v6.3a2.2 2.2 0 0 0 4.4 0v-6.3"/>'
+  ciuperci:'<path d="M3.5 12.5a8.5 7.5 0 0 1 17 0zM9.8 12.5v6.3a2.2 2.2 0 0 0 4.4 0v-6.3"/>',
+  peste:'<path d="M3 12c3-4.5 9-6 13-2l4-3v10l-4-3c-4 4-10 2.5-13-2z"/><circle cx="8" cy="11.2" r=".9"/>'
 };
-const AL = {gluten:["Gluten","Glutén"],ou:["Ou","Tojás"],lactoza:["Lactoză","Laktóz"],telina:["Țelină","Zeller"],mustar:["Muștar","Mustár"],soia:["Soia","Szója"],seminte:["Semințe","Magvak"],ciuperci:["Ciuperci","Gomba"]};
-const MEAT = {porc:["Porc","Sertés"],vita:["Vită","Marha"],pui:["Pui","Csirke"]};
+const AL = {gluten:["Gluten","Glutén"],ou:["Ou","Tojás"],lactoza:["Lactoză","Laktóz"],telina:["Țelină","Zeller"],mustar:["Muștar","Mustár"],soia:["Soia","Szója"],seminte:["Semințe","Magvak"],ciuperci:["Ciuperci","Gomba"],peste:["Pește","Hal"]};
+const MEAT = {porc:["Porc","Sertés"],vita:["Vită","Marha"],pui:["Pui","Csirke"],peste:["Pește","Hal"]};
 const svg = (p, extra="") => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" ${extra}>${p}</svg>`;
 const UI = {
   flame:'<path d="M12 22c4 0 7-3 7-7.2 0-3.8-2.6-6-3.8-9.8-1.9 1.8-2.9 3.8-3 5.9-1-.9-1.8-2.2-2-4-2.9 2-5.2 5-5.2 8C5 19 8 22 12 22z" fill="currentColor" stroke="none"/>',
@@ -572,116 +574,23 @@ const UI = {
 };
 const I = (k, cls="") => svg(UI[k], cls ? `class="${cls}"` : "");
 
-const CATS = [
-  {id:"nou",ro:"Noutăți",hu:"Új fogás"},
-  {id:"smash",ro:"Smash Burgers",hu:"Smash burgerek",note:["Nou: burgeri smash pe chiflă artizanală","Új: smash burgerek kézműves zsemlében"]},
-  {id:"burger",ro:"Lyra's Burger",hu:"Lyra's Burger",note:["Preparate la foc pe cărbune · chiflă artizanală, producție proprie","Faszénen készítve · saját készítésű kézműves zsemle"]},
-  {id:"casa",ro:"Specialitățile casei",hu:"A ház különlegességei"},
-  {id:"ardeal",ro:"Bucătăria transilvăneană",hu:"Erdélyi konyha"},
-  {id:"pui",ro:"Preparate din pui",hu:"Csirke ételek"},
-  {id:"dejun",ro:"Mic dejun",hu:"Reggeli",note:["Spanacul cu ochiuri se servește între 08:00–22:00","A spenótfőzelék 08:00–22:00 között kapható"]},
-  {id:"paste",ro:"Paste",hu:"Tészták"},
-  {id:"salate",ro:"Salate",hu:"Saláták"},
-  {id:"post",ro:"Preparate de post",hu:"Böjti ételek"},
-  {id:"garnituri",ro:"Salate & murături",hu:"Saláták, savanyúságok"},
-  {id:"sosuri",ro:"Sosuri",hu:"Szószok"},
-  {id:"desert",ro:"Desert",hu:"Desszert"}
-];
-const FS="Fetească Regală Pivnița Savu";
-const M = [
- {id:"antricot",n:11,c:"nou",ro:"Antricot de vită la grătar",hu:"Grillezett marha hátszín (entrecôte)",d:"Alături de cartofi copți în coajă și rozmarin",dh:"Héjában sült burgonyával és rozmaringgal",p:145,g:"200/250 gr",al:["lactoza"],m:"vita",hot:1,img:"antricot",t:["garn"]},
- {id:"muschi",n:12,c:"nou",ro:"Mușchi de vită cu sos de piper",hu:"Marhabélszín borsmártással",d:"Piper murat, frișcă de gătit și piure de cartofi",dh:"Savanyított borssal, főzőtejszínnel és burgonyapürével",p:165,g:"160/150/100 gr",al:["lactoza"],m:"vita",img:"muschi",t:["garn"]},
- {id:"tocanita",n:13,c:"nou",ro:"Tocăniță de vițel cu găluște",hu:"Borjúpörkölt galuskával",d:"Pulpă de vită Black Angus, legume, paste",dh:"Black Angus marhapecsenye, zöldségek, tészta",p:66,g:"250/150 gr",al:["gluten","ou","telina"],m:"vita",hot:1,img:"tocanita",t:["angus"]},
-
- {id:"double-smash",c:"smash",ro:"Double Smash",hu:"Double Smash",d:"2 × 60 g carne de vită, castraveți murați, brânză cheddar, sos burger, ceapă, unt, salată iceberg",dh:"2 × 60 g marhahús, csemegeuborka, cheddar, burger szósz, hagyma, vaj, jégsaláta",p:35,g:"2 × 60 g vită",al:["gluten","lactoza"],m:"vita",img:"double-smash",t:["new"]},
- {id:"spicy-smash",c:"smash",ro:"Spicy Smash",hu:"Spicy Smash",d:"2 × 60 g carne de vită, castraveți murați, brânză cheddar, sos Vifon, jalapeño, unt, ceapă, salată iceberg",dh:"2 × 60 g marhahús, csemegeuborka, cheddar, Vifon szósz, jalapeño, vaj, hagyma, jégsaláta",p:35,g:"2 × 60 g vită",al:["gluten","lactoza"],m:"vita",img:"spicy-smash",t:["new","spicy"]},
- {id:"smash",c:"smash",ro:"Smash Burger",hu:"Smash Burger",d:"1 × 60 g carne de vită, brânză cheddar, castraveți murați, sos burger, ceapă, unt, salată iceberg",dh:"1 × 60 g marhahús, cheddar, csemegeuborka, burger szósz, hagyma, vaj, jégsaláta",p:25,g:"1 × 60 g vită",al:["gluten","lactoza"],m:"vita",img:"smash",t:["new"]},
- {id:"special-fries",c:"smash",ro:"Special Fries",hu:"Special Fries",d:"Cartofi pai, brânză cheddar, bacon crocant, sos burger, chives (arpagic verde)",dh:"Hasábburgonya, cheddar, ropogós bacon, burger szósz, metélőhagyma",p:21,g:"200 gr",al:["lactoza"],m:"porc",img:"special-fries"},
- {id:"cartofi",c:"smash",ro:"Cartofi prăjiți",hu:"Hasábburgonya",d:"Porție de cartofi prăjiți",dh:"Egy adag hasábburgonya",p:15,g:"150 gr",al:[],img:"cartofi",t:["veg"]},
-
- {id:"chicken-burger",n:25,c:"burger",ro:"Meniu Chicken Burger",hu:"Chicken Burger menü",d:"Chiflă, dulceață de ceapă, salată iceberg, chiftea din pui 80%, slănină de porc 20%, brânză cheddar, sos burger, cartofi prăjiți și sosul casei, parmezan",p:56,g:"80/120/90/150/40 gr",al:["gluten","lactoza"],m:"pui",img:"chicken-burger"},
- {id:"ozn-pulled",n:26,c:"burger",ro:"Meniu OZN Pulled Pork",hu:"OZN Pulled Pork menü",d:"Chiflă, spată de porc, cașcaval, salată coleslaw, sos BBQ, cartofi prăjiți și sosul casei, parmezan",p:49.5,g:"80/120/120/150/40 gr",al:["mustar","gluten","lactoza"],m:"porc",img:"ozn-pulled"},
- {id:"crispy-burger",n:27,c:"burger",ro:"Meniu Crispy Burger",hu:"Crispy Burger menü",d:"Crispy de pui de casă, cașcaval, salată, sos burger, cartofi prăjiți și sosul casei, parmezan",p:48.5,g:"80/100/90/150/40 gr",al:["gluten","lactoza"],m:"pui",img:"crispy-burger"},
- {id:"eleven-burger",n:28,c:"burger",ro:"Meniu Eleven Burger",hu:"Eleven Burger menü",d:"Chiflă, dulceață de ceapă, salată iceberg, chiftea din vită Black Angus, brânză cheddar, bacon, sos burger, cartofi prăjiți și sosul casei, parmezan",p:64.5,g:"80/100/90/150/40 gr",al:["gluten","lactoza"],m:"vita",img:"eleven-burger",t:["angus"]},
- {id:"burger-ozn",n:29,c:"burger",ro:"Burger OZN",hu:"OZN Burger",d:"Chiftea Black Angus, salată iceberg, roșii, ceapă, sos burger, parmezan, cartofi, sos brânzeturi",p:60,g:"80/100/70/150/100 gr",al:["gluten","lactoza"],m:"vita",img:"burger-ozn",t:["angus"]},
- {id:"veggie-ozn",n:30,c:"burger",ro:"Meniu Veggie Burger OZN",hu:"Veggie OZN Burger menü",d:"Chiflă, brânză cheddar, salată iceberg, ceapă caramelizată, legume, chiftea veggie, ciuperci, cartofi prăjiți și sosul casei, parmezan",p:64,g:"80/100/90/150/40 gr",al:["mustar","gluten","lactoza"],img:"veggie-ozn",t:["veg"],w:"Sauvignon Blanc Pivnița Savu"},
-
- {id:"ciolan-varza",n:15,c:"casa",ro:"Ciolan fraged pe pat de varză roșie călită",hu:"Puha csülök vöröskáposzta ágyon",d:"Ciolan, varză, frișcă de gătit",dh:"Csülök, káposzta, főzőtejszín",p:85,g:"600/250/100 gr",al:["lactoza","seminte"],m:"porc",img:"ciolan-varza"},
- {id:"iahnie-ciolan",n:16,c:"casa",ro:"Iahnie de fasole cu ciolan afumat",hu:"Babfőzelék füstölt csülökkel",d:"Și ardei iute",dh:"És csípős paprikával",p:69,g:"350/200 gr",al:["gluten"],m:"porc",hot:1,img:"iahnie-ciolan"},
- {id:"costite",n:21,c:"casa",ro:"Costițe Lyra fragede afumate cu sos BBQ",hu:"Lyra omlós, füstölt sertésoldalas BBQ szósszal",d:"Cu cartofi copți cu usturoi",dh:"Fokhagymás sült burgonyával",p:79,g:"300/150/100/40 gr",al:["gluten"],m:"porc",hot:1,img:"costite",t:["garn","casa"]},
- {id:"ceafa-afumata",n:22,c:"casa",ro:"Felie de ceafă afumată",hu:"Füstölt tarjaszeletek",d:"Gătită lent la temperatură joasă pentru păstrarea frăgezimii, cu piure de cartofi și sos brun",dh:"Alacsony hőmérsékleten, lassan főzve; krumplipüré, barna szósz",p:57,g:"180/150/50 gr",al:["telina","ou","lactoza"],m:"porc",hot:1,img:"ceafa-afumata",t:["garn","casa"]},
- {id:"ciolan-lyra",n:41,c:"casa",ro:"Ciolan à la Lyra cu cartofi petală și cașcaval",hu:"Csülök Lyra módra",d:"Servit pe pat de cartofi cu cașcaval, sos de hrean cu usturoi, cremă de gătit, smântână",dh:"Sajtos burgonyaágyon tálalva, fokhagymás tormamártással, főzőtejszínnel és tejföllel",p:55,g:"180/110/50 gr",al:["gluten","mustar","soia","ou","lactoza","telina"],m:"porc",hot:1,img:"ciolan-lyra",t:["garn","casa"]},
- {id:"ceafa-tiganeasca",n:42,c:"casa",ro:"Ceafă țigănească fragedă și cartofi Lyra",hu:"Omlós cigánypecsenye tarja és Lyra burgonya",d:"Ceafă de porc, mujdeiul casei, boia, slănină prăjită, cartofi cu usturoi și cașcaval",dh:"Sertéstarja házi fokhagymamártással, pirospaprikával, sült szalonnával, fokhagymás-sajtos burgonyával",p:68,g:"170/250/45/75 gr",al:["lactoza"],m:"porc",hot:1,img:"ceafa-tiganeasca",t:["coal"]},
- {id:"snitel-lyra",n:48,c:"casa",ro:"Șnițel Lyra din cotlet",hu:"Lyra karaj szelet",d:"Cotlet de porc, sos ciuperci, cașcaval, cheddar, șuncă, smântână vegetală, ou",dh:"Sertéstarja, gombás szósz, cheddar, sajt, sonka, növényi tejszín",p:57,g:"350 gr",al:["lactoza","ciuperci","ou"],m:"porc",hot:1,img:"snitel-lyra",w:"Chardonnay Barique Pivnița Savu"},
-
- {id:"fasole-batuta",n:46,c:"ardeal",ro:"Fasole bătută cu cârnați de casă",hu:"Tört bab házi kolbásszal",d:"Prăjiți în untură și ceapă călită",dh:"Zsírban sütve, pirított hagymával",p:59,g:"250/150 gr",al:["gluten","soia","lactoza"],m:"porc",hot:1,img:"fasole-batuta"},
- {id:"papricas",n:47,c:"ardeal",ro:"Papricaș de pui cu mămăliguță prăjită",hu:"Csirkepaprikás puliszkával",d:"Pulpă de pui, ceapă, ardei, cremă vegetală pentru gătit",dh:"Csirkecomb, hagyma, paprika, főzéshez növényi krém",p:45,g:"300/130 gr",al:["gluten","ou","telina"],m:"pui",hot:1,img:"papricas"},
- {id:"ficatei",n:49,c:"ardeal",ro:"Ficăței la tigaie rumeniți cu dulceață de ceapă",hu:"Serpenyőben pirított csirkemáj hagymalekvárral",d:"Ficăței de pui rumeniți la tigaie, cu dulceață de ceapă",dh:"Serpenyőben pirított csirkemáj hagymalekvárral",p:47,g:"250/130 gr",al:["gluten"],m:"pui",hot:1,img:"ficatei"},
-
- {id:"piept-lyra",n:50,c:"pui",ro:"Piept de pui à la Lyra",hu:"Csirkemell Lyra módra",d:"Piept de pui la grătar, ciuperci, șuncă de pui, cașcaval cheddar, cremă de gătit",dh:"Csirkemell, gomba, sonka, sajt, cheddar, főzőkrém",p:39,g:"80/100/40/40 gr",al:["gluten","mustar","soia","lactoza","telina"],m:"pui",hot:1,img:"piept-lyra",w:FS,t:["nogarn"]},
- {id:"borzas",n:51,c:"pui",ro:"Borzaș",hu:"Borzás",d:"Piept de pui, cartofi răzuiți, ou, usturoi, smântână, sos de usturoi",dh:"Csirkemell, reszelt burgonya, tojás, fokhagyma, tejföl, fokhagymás szósz",p:49,g:"300 gr",al:["ou","lactoza","telina"],m:"pui",img:"borzas",w:FS},
- {id:"borzas-medie",c:"pui",ro:"Borzaș · porție medie",hu:"Borzás – közepes adag",d:"Piept de pui, cartofi răzuiți, ou, usturoi, smântână, sos de usturoi",dh:"Csirkemell, reszelt burgonya, tojás, fokhagyma, tejföl, fokhagymás szósz",p:32,g:"200 gr",al:["ou","lactoza","telina"],m:"pui",img:"borzas-medie"},
- {id:"cordon-bleu",n:52,c:"pui",ro:"Cordon bleu cu cartofi à la Lyra",hu:"Cordon bleu burgonyával à la Lyra",d:"Șuncă de pui, cașcaval, cartofi cu usturoi, ou",dh:"Sajt, sonka, fokhagymás burgonya és sajt",p:49,g:"150/250 gr",al:["ou","soia","mustar","gluten","lactoza","telina"],m:"pui",hot:1,img:"cordon-bleu",w:FS,t:["garn"]},
- {id:"salata-pui",n:53,c:"pui",ro:"Salată cu piept de pui",hu:"Csirkemell saláta",d:"Mix salată, sparanghel, conopidă crocantă, rodie, cremă de avocado, dressing miere, piept de pui",dh:"Salátakeverék, spárga, ropogós karfiol, gránátalma, avokádókrém, mézes öntet, csirkemell",p:52,g:"150/80/30 gr",al:["soia","ou","seminte"],m:"pui",img:"salata-pui",w:FS},
-
- {id:"bruschete",n:6,c:"dejun",ro:"Bruschete țărănești",hu:"Paraszti bruschetta",d:"Cu ou ochi, cartofi prăjiți și telemea, brânză de burduf, slănină, ceapă",dh:"Tükörtojással, sült burgonyával és juhtúróval",p:45,g:"100/30/150 gr",al:["gluten","ou"],hot:1,img:"bruschete"},
- {id:"english",n:7,c:"dejun",ro:"Mic dejun englezesc",hu:"Angol reggeli",d:"Cârnăciori cu cașcaval, ochiuri, guanciale, fasole în sos tomat, focaccia făcută în casă",dh:"Kolbászkák sajttal, tükörtojás, guanciale, babos paradicsomszósz, focaccia",p:47,g:"50/100/100/100/50 gr",al:["gluten","ou"],m:"porc",hot:1,img:"english"},
- {id:"omleta",n:8,c:"dejun",ro:"Omletă cu șuncă și cașcaval",hu:"Sonkával és sajttal rántotta",d:"Ouă, șuncă, cașcaval",dh:"Tojás, sonka, sajt",p:35,g:"300 gr",al:["lactoza","ou"],hot:1,img:"omleta"},
- {id:"spanac",n:9,c:"dejun",ro:"Spanac cu ochiuri",hu:"Spenótfőzelék tükörtojással",d:"Ouă, spanac, usturoi, cremă de gătit vegetală",dh:"Tojás, spenót, fokhagyma, növényi főzőkrém",p:38,g:"200/100 gr",al:["ou"],hot:1,img:"spanac",t:["veg"]},
- {id:"oua-posate",n:10,c:"dejun",ro:"Ouă poșate cu salată",hu:"Posírozott tojás salátával",d:"Mix salată, cremă de avocado, conopidă, rodie, sparanghel, dressing miere",dh:"Salátamix, avokádókrém, karfiol, gránátalma, spárga, mézes öntet",p:43,g:"300 gr",al:["lactoza","ou"],img:"oua-posate",t:["veg"]},
- {id:"paine-ou",c:"dejun",ro:"Pâine cu ou",hu:"Bundás kenyér",d:"Felii de pâine prăjite în ou",dh:"Tojásba mártott, sült kenyérszeletek",p:35,g:"300 gr",al:["lactoza","ou"],img:"paine-ou",t:["veg"]},
-
- {id:"carbonara",n:60,c:"paste",ro:"Penne Carbonara",hu:"Karbonara penne",d:"Guanciale, ou, parmezan, cremă de gătit",dh:"Guanciale, tojás, főzőtejszín, parmezán",p:46,g:"250/50/50/30 gr",al:["gluten","ou","telina"],m:"porc",img:"carbonara"},
- {id:"bolognese",n:61,c:"paste",ro:"Penne Bolognese",hu:"Bolognai penne",d:"Carne de vită tocată, legume, parmezan",dh:"Darált marhahús, zöldség, parmezán",p:46,g:"250/120/30 gr",al:["gluten","ou","telina"],m:"vita",img:"bolognese"},
-
- {id:"halloumi",n:62,c:"salate",ro:"Salată Halloumi",hu:"Halloumi saláta",d:"Mix salată, sparanghel, conopidă crocantă, rodie, cremă de avocado, dressing miere, halloumi",dh:"Salátakeverék, spárga, ropogós karfiol, gránátalma, avokádókrém, mézes öntet, halloumi",p:47,g:"400 gr",al:["ou","telina","lactoza"],img:"halloumi",t:["veg"]},
- {id:"camembert",n:63,c:"salate",ro:"Camembert pane cu gem de afine și salată de sezon",hu:"Rántott camembert áfonyalekvárral és salátával",d:"Mix salată, sparanghel, conopidă crocantă, rodie, cremă de avocado, dressing miere, camembert",dh:"Salátakeverék, spárga, ropogós karfiol, gránátalma, avokádókrém, mézes öntet, camembert",p:62,g:"170/100/50 gr",al:["lactoza"],img:"camembert",t:["veg"]},
-
- {id:"ciorba-legume",n:71,c:"post",ro:"Ciorbă de legume",hu:"Zöldségleves",d:"Ciorbă de post cu legume de sezon",dh:"Böjti zöldségleves",p:29,g:"400 gr",al:["telina"],img:"ciorba-legume",t:["post"]},
- {id:"ciorba-fasole",n:72,c:"post",ro:"Ciorbă de fasole",hu:"Bableves",d:"Ciorbă de fasole de post",dh:"Böjti bableves",p:29,g:"400 gr",al:[],img:"ciorba-fasole",t:["post"]},
- {id:"ciorba-pita",n:73,c:"post",ro:"Ciorbă de fasole în pită prăjită",hu:"Bableves pirított kenyércipóban",d:"Servită în pită prăjită, cu ceapă roșie",dh:"Pirított kenyércipóban, vöröshagymával",p:37,g:"270/400/50 gr",al:["gluten"],img:"ciorba-pita",t:["post"]},
- {id:"iahnie-soia",n:74,c:"post",ro:"Iahnie de fasole cu șnițel soia",hu:"Babpörkölt szójaszelettel",d:"Iahnie de fasole cu șnițel de soia și ardei iute",dh:"Babpörkölt szójaszelettel és csípős paprikával",p:52,g:"250/130 gr",al:["lactoza"],img:"iahnie-soia",t:["post"]},
-
- {id:"varza-murata",n:88,c:"garnituri",ro:"Varză murată",hu:"Savanyúkáposzta",d:"Rețetă tradițională · de sezon",dh:"Hagyományos recept · idényjellegű",p:15,g:"130 gr",al:[],img:"varza-murata",t:["post"]},
- {id:"muraturi",n:89,c:"garnituri",ro:"Murături asortate",hu:"Vegyes savanyúság",d:"Varză murată, castraveți, gogoșari",dh:"Savanyúkáposzta, uborka, paprika",p:16,g:"130 gr",al:[],img:"muraturi",t:["post"]},
- {id:"sfecla",n:90,c:"garnituri",ro:"Salată de sfeclă roșie",hu:"Céklasaláta",d:"Rețetă tradițională",dh:"Hagyományos recept",p:16,g:"130 gr",al:[],img:"sfecla",t:["post"]},
- {id:"ardei-copti",n:91,c:"garnituri",ro:"Ardei copți",hu:"Sült paprika",d:"Ardei copți, cu ulei și usturoi",dh:"Sült paprika",p:15,g:"130 gr",al:[],img:"ardei-copti",t:["post"]},
- {id:"salata-varza",n:92,c:"garnituri",ro:"Salată de varză",hu:"Káposztasaláta",d:"Varză albă proaspătă",dh:"Friss fejes káposzta",p:13,g:"130 gr",al:[],img:"salata-varza",t:["post"]},
- {id:"salata-asortata",n:93,c:"garnituri",ro:"Salată asortată",hu:"Vegyes saláta",d:"Varză, roșii, castraveți",dh:"Káposzta, paradicsom, uborka",p:15,g:"130 gr",al:[],img:"salata-asortata",t:["post"]},
- {id:"ardei-iute",n:94,c:"garnituri",ro:"Ardei iute murat sau proaspăt",hu:"Ecetes csípős paprika vagy friss",d:"La alegere: murat sau proaspăt",dh:"Választható: ecetes vagy friss",p:4.5,g:"1 buc",al:[],img:"ardei-iute",t:["post"]},
- {id:"ceapa",n:95,c:"garnituri",ro:"Ceapă roșie",hu:"Vöröshagyma",d:"Ceapă roșie feliată",dh:"Szeletelt vöröshagyma",p:5,g:"50 gr",al:[],img:"ceapa",t:["post"]},
-
- {id:"sos-usturoi",n:96,c:"sosuri",ro:"Sos de usturoi",hu:"Fokhagymás szósz",d:"Rețeta casei: usturoi, iaurt, lămâie",dh:"Házi recept: fokhagyma, joghurt, citrom",p:10,g:"90 gr",al:["lactoza"]},
- {id:"mujdei",n:97,c:"sosuri",ro:"Mujdeiul casei",hu:"Házi mujdei",d:"Rețeta casei: usturoi, boia, ulei, sare, zeamă de lămâie",dh:"Házi recept: fokhagyma, paprika, olaj, só, citromlé",p:10,g:"90 gr",al:[],t:["post"]},
- {id:"sosul-casei",n:98,c:"sosuri",ro:"Sosul casei",hu:"A ház szósza",d:"Usturoi, boia, maioneză, ou",dh:"Fokhagyma, paprika, majonéz, tojás",p:10,g:"90 gr",al:["ou","lactoza"]},
- {id:"smantana",n:99,c:"sosuri",ro:"Smântână",hu:"Tejföl",d:"Smântână",dh:"Tejföl",p:5,g:"45 gr",al:["lactoza"]},
- {id:"ketchup",n:100,c:"sosuri",ro:"Ketchup",hu:"Ketchup",d:"Ketchup",dh:"Ketchup",p:7,g:"90 gr",al:[]},
- {id:"mustar",n:101,c:"sosuri",ro:"Muștar",hu:"Mustár",d:"Muștar",dh:"Mustár",p:7,g:"90 gr",al:["mustar"]},
- {id:"maioneza",n:102,c:"sosuri",ro:"Maioneză",hu:"Majonéz",d:"Maioneză",dh:"Majonéz",p:7,g:"90 gr",al:["lactoza","ou"]},
- {id:"sos-iaurt",n:103,c:"sosuri",ro:"Sos de iaurt cu usturoi copt",hu:"Joghurtos szósz sült fokhagymával",d:"Iaurt, usturoi copt",dh:"Joghurt, sült fokhagyma",p:10,g:"90 gr",al:[]},
-
- {id:"papanas",n:104,c:"desert",ro:"Papanaș",hu:"Túrógombóc",d:"Rumenit, cu smântână și dulceață de afine. Brânză de vaci, telemea, făină, gem de afine, smântână, zahăr pudră, ou",dh:"Aranybarnára sütve, tejföllel és áfonyalekvárral. Túró, telemea, liszt, áfonyalekvár, tejföl, porcukor, tojás",p:33,g:"120/70/70 gr",al:["gluten","ou","lactoza"],img:"papanas",t:["home"]},
- {id:"lapte-pasare",n:105,c:"desert",ro:"Lapte de pasăre",hu:"Madártej",d:"După rețeta clasică de acasă: cremă fină de vanilie, albușuri bătute, zahăr",dh:"A klasszikus házi recept szerint: finom vaníliakrém, felvert tojásfehérje, cukor",p:29,g:"130/30 gr",al:["gluten","ou","telina"],img:"lapte-pasare",t:["home"]},
- {id:"tarta-mere",n:106,c:"desert",ro:"Tartă cu mere",hu:"Almás pite",d:"Semințe de pin, scorțișoară, mere, zahăr, ouă, unt, lapte, stafide",dh:"Fenyőmag, fahéj, alma, cukor, tojás, vaj, tej, mazsola",p:29,g:"180 gr",al:["lactoza"],img:"tarta-mere"}
-];
-const BY = Object.fromEntries(M.map(x=>[x.id,x]));
 const EXTRAS = {
   burger:[{k:"cartofi",l:["Cartofi prăjiți 150 gr","Hasábburgonya 150 gr"],p:15},{k:"special-fries",l:["Special Fries (cheddar, bacon)","Special Fries (cheddar, bacon)"],p:21},{k:"sosul-casei",l:["Sosul casei","A ház szósza"],p:10}],
   main:[{k:"mujdei",l:["Mujdeiul casei","Házi mujdei"],p:10},{k:"sos-usturoi",l:["Sos de usturoi","Fokhagymás szósz"],p:10},{k:"smantana",l:["Smântână","Tejföl"],p:5},{k:"ardei-iute",l:["Ardei iute","Csípős paprika"],p:4.5}],
   dessert:[{k:"smantana",l:["Smântână extra","Extra tejföl"],p:5}]
 };
-const extrasFor = it => ["smash","burger"].includes(it.c) && it.id!=="cartofi" && it.id!=="special-fries" ? EXTRAS.burger : ["nou","casa","ardeal","pui","post","dejun"].includes(it.c) ? EXTRAS.main : it.c==="desert" ? EXTRAS.dessert : [];
+const extrasFor = it => ["smash","burger"].includes(it.c) && it.id!=="special-fries" ? EXTRAS.burger : ["nou","specialitati","porc","ardeal","pui","peste","post","dejun","platouri","vegetariene"].includes(it.c) ? EXTRAS.main : it.c==="desert" ? EXTRAS.dessert : [];
 const MOODS = [
-  {id:"casa",ro:"De-al casei",hu:"Házias",img:"ciolan-lyra",ids:["ciolan-lyra","costite","ceafa-tiganeasca","fasole-batuta","papricas","snitel-lyra"],sub:["Rețete Lyra servite în tigaie fierbinte","Lyra receptek forró serpenyőben"]},
+  {id:"casa",ro:"De-al casei",hu:"Házias",img:"ciolan-lyra",ids:["ciolan-lyra","costite","sarmale","carne-garnita","fasole-batuta","papricas"],sub:["Rețete Lyra servite în tigaie fierbinte","Lyra receptek forró serpenyőben"]},
   {id:"burger",ro:"Burger night",hu:"Burger este",img:"double-smash",ids:["double-smash","spicy-smash","eleven-burger","burger-ozn","special-fries"],sub:["Smash nou + clasicii la foc de cărbune","Új smash + faszénen sült klasszikusok"]},
-  {id:"usor",ro:"Ușor & verde",hu:"Könnyű & zöld",img:"halloumi",ids:["halloumi","salata-pui","oua-posate","spanac","ciorba-legume"],sub:["Salate, ouă și preparate de post","Saláták, tojás, böjti ételek"]},
+  {id:"usor",ro:"Ușor & verde",hu:"Könnyű & zöld",img:"halloumi",ids:["halloumi","salata-pui","pastrav","oua-posate","supa-crema","papricas-ciuperci"],sub:["Salate, ouă și preparate de post","Saláták, tojás, böjti ételek"]},
   {id:"premium",ro:"Seară specială",hu:"Különleges este",img:"antricot",ids:["antricot","muschi","tocanita","camembert"],sub:["Noutățile din vită Black Angus","Black Angus újdonságok"]},
-  {id:"dulce",ro:"Ceva dulce",hu:"Valami édes",img:"papanas",ids:["papanas","lapte-pasare","tarta-mere"],sub:["Deserturi făcute în casă","Házi készítésű desszertek"]},
+  {id:"dulce",ro:"Ceva dulce",hu:"Valami édes",img:"papanas",ids:["papanas","somloi","lapte-pasare","panna-cotta","clatite","tarta-mere"],sub:["Deserturi făcute în casă","Házi készítésű desszertek"]},
   {id:"dimineata",ro:"Mic dejun",hu:"Reggeli",img:"english",ids:["english","bruschete","omleta","paine-ou","spanac"],sub:["Pentru o dimineață lungă","Egy hosszú reggelhez"]}
 ];
 const T = {
-  ro:{hello:"Bună seara",ask:"Ce poftă ai azi?",deliv:"Livrare",pick:"Ridicare",delivSub:"~45 min",pickSub:"~25 min",search:"Caută: ciolan, papanaș, burger…",allergy:"Alergii",menu:"Meniu",orders:"Comenzi",club:"Lyra Club",cart:"Vezi coșul",add:"Adaugă",picks:"Alese pentru tine",out:"Epuizat azi",contains:"Conține",hot:"Servit în tigaie fierbinte",garn:"Include garnitură",nogarn:"Nu include garnitură",casa:"Rețeta casei",home:"Home made",angus:"Black Angus Farm",coal:"Cuptor pe cărbune",post:"De post",veg:"Vegetarian",wine:"Potrivit cu vin",extras:"Completează",note:"Mențiuni pentru bucătărie",notePh:"Ex: fără ceapă, sosul separat",newBadge:"Nou"},
-  hu:{hello:"Jó estét",ask:"Mire van ma kedved?",deliv:"Kiszállítás",pick:"Elvitel",delivSub:"~45 perc",pickSub:"~25 perc",search:"Keresés: csülök, túrógombóc, burger…",allergy:"Allergiák",menu:"Étlap",orders:"Rendelések",club:"Lyra Club",cart:"Kosár",add:"Hozzáad",picks:"Neked válogatva",out:"Ma elfogyott",contains:"Tartalmaz",hot:"Forró serpenyőben tálalva",garn:"Körettel",nogarn:"Köret nélkül",casa:"Házi recept",home:"Házi készítésű",angus:"Black Angus Farm",coal:"Faszenes kemence",post:"Böjti",veg:"Vegetáriánus",wine:"Ajánlott bor",extras:"Egészítsd ki",note:"Megjegyzés a konyhának",notePh:"Pl. hagyma nélkül, szósz külön",newBadge:"Új"}
+  ro:{hello:"Bună seara",ask:"Ce poftă ai azi?",deliv:"Livrare",pick:"Ridicare",delivSub:"~45 min",pickSub:"~25 min",search:"Caută: ciolan, papanaș, burger…",allergy:"Alergii",menu:"Meniu",orders:"Comenzi",club:"Lyra Club",cart:"Vezi coșul",add:"Adaugă",picks:"Alese pentru tine",out:"Epuizat azi",contains:"Conține",hot:"Servit în tigaie fierbinte",garn:"Include garnitură",nogarn:"Nu include garnitură",casa:"Rețeta casei",home:"Home made",angus:"Black Angus Farm",coal:"Cuptor pe cărbune",post:"De post",veg:"Vegetarian",wine:"Potrivit cu vin",extras:"Completează",note:"Mențiuni pentru bucătărie",notePh:"Ex: fără ceapă, sosul separat",newBadge:"Nou",smoker:"Din BBQ Pit Box Smoker",share:"Pentru 2–3 persoane",portion:"Alege porția",from:"de la"},
+  hu:{hello:"Jó estét",ask:"Mire van ma kedved?",deliv:"Kiszállítás",pick:"Elvitel",delivSub:"~45 perc",pickSub:"~25 perc",search:"Keresés: csülök, túrógombóc, burger…",allergy:"Allergiák",menu:"Étlap",orders:"Rendelések",club:"Lyra Club",cart:"Kosár",add:"Hozzáad",picks:"Neked válogatva",out:"Ma elfogyott",contains:"Tartalmaz",hot:"Forró serpenyőben tálalva",garn:"Körettel",nogarn:"Köret nélkül",casa:"Házi recept",home:"Házi készítésű",angus:"Black Angus Farm",coal:"Faszenes kemence",post:"Böjti",veg:"Vegetáriánus",wine:"Ajánlott bor",extras:"Egészítsd ki",note:"Megjegyzés a konyhának",notePh:"Pl. hagyma nélkül, szósz külön",newBadge:"Új",smoker:"BBQ Pit Box Smokerből",share:"2–3 személyre",portion:"Válassz adagot",from:"ártól"}
 };
 const TIERS = [{n:"Bronz",min:0,mult:1,cls:"bronze"},{n:"Argint",min:500,mult:1.05,cls:"silver"},{n:"Aur",min:1500,mult:1.1,cls:"gold"}];
 const tierOf = life => [...TIERS].reverse().find(t=>life>=t.min);
@@ -690,7 +599,7 @@ const CODES = {LYRA10:{pct:10,l:"-10% la toată comanda"},PRANZ15:{pct:15,cat:"b
 const DELIV_FEE = 10, FREE_OVER = 100, STARS = 6;
 
 /* ================= STORE (shared between both interfaces) ================= */
-const KEY = "lyra-demo-v1";
+const KEY = "lyra-demo-v2";
 const now = () => Date.now();
 const MIN = 60000;
 function seed(){
@@ -745,7 +654,9 @@ const lei = n => (Math.round(n*100)/100).toFixed(2) + " lei";
 const hm = ts => new Date(ts).toLocaleTimeString("ro-RO",{hour:"2-digit",minute:"2-digit"});
 const cust = id => S.customers.find(c=>c.id===id);
 const initials = n => n.split(" ").map(w=>w[0]).slice(0,2).join("");
-function lineUnit(l){ const it = BY[l.id]; if(l.pp!=null) return l.pp; return it.p + (l.ex||[]).reduce((s,k)=>s+(BY[k]?.p||0),0); }
+function basePrice(it, vi){ return it.v ? it.v[vi||0].p : it.p; }
+function vLabel(it, vi, L=0){ return it.v && vi!=null ? (L ? it.v[vi].lh : it.v[vi].l) : ""; }
+function lineUnit(l){ const it = BY[l.id]; if(l.pp!=null) return l.pp; return basePrice(it, l.vi) + (l.ex||[]).reduce((s,k)=>s+(BY[k]?.p||0),0); }
 function priceOrder(items, mode, c, usePts, code){
   const sub = items.reduce((s,l)=>s+lineUnit(l)*l.qty,0);
   let disc = 0, codeL = "";
@@ -793,7 +704,7 @@ function renderFab(){
 function cHead(){
   const c = me();
   return `<div class="c-head"><div class="c-row">
-    <div class="c-logo">${lyraMark()}<b>LYRA</b></div>
+    <div class="c-logo"><img src="${IMG("logo-lyra")}" alt="Lyra" style="height:34px;width:auto;border-radius:6px"><b style="font-size:13px;letter-spacing:.22em;color:var(--muted)">COMENZI</b></div>
     <button class="pill" data-ctab="club" title="Punctele tale Lyra Club">${I("star")}<span class="num">${c.pts}</span></button>
     <button class="lang" data-act="lang" aria-label="Schimbă limba">${C.lang==="ro"?"RO · hu":"ro · HU"}</button>
   </div>
@@ -820,7 +731,7 @@ function itemRow(it){
         <p>${esc(ds(it))}</p>
       </button>
       <div class="it-meta"><span class="gr">${it.g}</span>${alIcons(it,avoid)}${tags.join("")}</div>
-      <div class="it-foot"><span class="price num">${lei(it.p)}</span>
+      <div class="it-foot"><span class="price num">${it.v?`<small style="font-weight:600;color:var(--muted)">${tt("from")} </small>`+lei(Math.min(...it.v.map(v=>v.p))):lei(it.p)}</span>
         ${out?`<button class="add" disabled aria-label="${tt("out")}">+</button>`: q ? `<span class="step"><button data-dec="${it.id}" aria-label="Mai puțin">−</button><b class="num">${q}</b><button data-inc="${it.id}" aria-label="Mai mult">+</button></span>` : `<button class="add" data-quick="${it.id}" aria-label="${tt("add")} ${esc(nm(it))}">+</button>`}
       </div>
     </div></article>`;
@@ -944,7 +855,7 @@ function renderSheet(){
 }
 function itemSheet(sh){
   const it = BY[sh.id], ex = extrasFor(it), avoid = me().allergies, L = C.lang==="hu"?1:0;
-  const unit = it.p + sh.ex.reduce((s,k)=>s+BY[k].p,0);
+  const unit = basePrice(it, sh.vi) + sh.ex.reduce((s,k)=>s+BY[k].p,0);
   const f = [];
   if(it.hot) f.push(`<span class="fact hot">${svg(UI.flame)}${tt("hot")}</span>`);
   const t = it.t||[];
@@ -955,6 +866,8 @@ function itemSheet(sh){
   if(t.includes("angus")) f.push(`<span class="fact">${tt("angus")}</span>`);
   if(t.includes("coal")) f.push(`<span class="fact hot">${svg(UI.flame)}${tt("coal")}</span>`);
   if(t.includes("post")) f.push(`<span class="fact">${tt("post")}</span>`);
+  if(t.includes("smoker")) f.push(`<span class="fact hot">${svg(UI.flame)}${tt("smoker")}</span>`);
+  if(t.includes("share")) f.push(`<span class="fact">${tt("share")}</span>`);
   if(it.m) f.push(`<span class="fact">${MEAT[it.m][L]}</span>`);
   return `${it.img?`<div class="d-img"><img src="${IMG(it.img)}" alt=""></div>`:`<div class="grab"></div>`}
    <button class="sh-close" data-act="close" aria-label="Închide">×</button>
@@ -962,7 +875,8 @@ function itemSheet(sh){
     <h2 class="d-name">${esc(nm(it))}</h2>
     <p class="d-hu">${esc(L?it.ro:it.hu)}</p>
     <p class="d-desc">${esc(ds(it))}</p>
-    <div class="facts"><span class="fact">${it.g}</span>${f.join("")}</div>
+    <div class="facts"><span class="fact">${it.v?it.v[sh.vi||0].g:it.g}</span>${f.join("")}</div>
+    ${it.v?`<p class="lbl">${tt("portion")}</p><div class="chips">${it.v.map((v,i)=>`<button class="chip" data-vi="${i}" aria-pressed="${(sh.vi||0)===i}">${L?v.lh:v.l} · <span class="num">${lei(v.p)}</span></button>`).join("")}</div>`:""}
     ${it.al.length?`<div class="facts">${it.al.map(a=>`<span class="fact ${avoid.includes(a)?"warn":""}">${svg(ICON[a])}${AL[a][L]}</span>`).join("")}</div>`:""}
     ${it.w?`<div class="wine">${I("wine")}<div>${tt("wine")} <b>${it.w}</b><br><span style="color:var(--muted);font-size:12px">Recomandarea somelierului Lyra</span></div></div>`:""}
     ${ex.length?`<p class="lbl">${tt("extras")}</p>${ex.map(e=>`<label class="opt"><input type="checkbox" data-ex="${e.k}" ${sh.ex.includes(e.k)?"checked":""}><span>${e.l[L]}</span><b class="num">+${lei(e.p)}</b></label>`).join("")}`:""}
@@ -987,7 +901,7 @@ function cartSheet(){
   <div class="sh-pad">
     <h2 class="d-name" style="margin:0 0 4px">Coșul tău</h2>
     <p class="sub">${C.mode==="livrare"?"Livrare la "+esc(f.addr):"Ridicare personală din restaurant"}</p>
-    ${C.cart.map((l,i)=>{const it=BY[l.id];return `<div class="cl">${it.img?`<img src="${IMG(it.img)}" alt="">`:`<span class="ph"></span>`}<div><b>${esc(nm(it))}</b><small>${[...(l.ex||[]).map(k=>"+ "+nm(BY[k])), l.gift?"Cadou Lyra Club":"", l.reward?"Plătit cu puncte":"", l.promo?"Ofertă: "+l.promo:"", l.note?"„"+esc(l.note)+"”":""].filter(Boolean).join(" · ")}</small><span class="p num">${l.pp===0?"gratuit":lei(lineUnit(l)*l.qty)}</span></div>
+    ${C.cart.map((l,i)=>{const it=BY[l.id];return `<div class="cl">${it.img?`<img src="${IMG(it.img)}" alt="">`:`<span class="ph"></span>`}<div><b>${esc(nm(it))}</b><small>${[vLabel(it,l.vi,L), ...(l.ex||[]).map(k=>"+ "+nm(BY[k])), l.gift?"Cadou Lyra Club":"", l.reward?"Plătit cu puncte":"", l.promo?"Ofertă: "+l.promo:"", l.note?"„"+esc(l.note)+"”":""].filter(Boolean).join(" · ")}</small><span class="p num">${l.pp===0?"gratuit":lei(lineUnit(l)*l.qty)}</span></div>
       ${l.gift||l.reward?`<span class="tag">${l.gift?"Cadou":"Puncte"}</span>`:`<span class="step"><button data-cdec="${i}" aria-label="Mai puțin">−</button><b class="num">${l.qty}</b><button data-cinc="${i}" aria-label="Mai mult">+</button></span>`}</div>`}).join("")}
     ${ups.length?`<p class="lbl">Merge perfect alături</p><div class="ups">${ups.map(id=>{const it=BY[id];return `<button class="up" data-quick="${id}">${it.img?`<img src="${IMG(it.img)}" alt="">`:`<span class="ph"></span>`}${esc(nm(it))} <em class="num">+${lei(it.p)}</em></button>`}).join("")}</div>`:""}
     <p class="lbl">Livrare</p>
@@ -1015,7 +929,8 @@ function cartSheet(){
 }
 function addToCart(id, qty=1, ex=[], note="", extra={}){
   const it = BY[id]; if(!it || S.soldOut[id]) return;
-  const key = id+"|"+ex.slice().sort().join(",")+"|"+note+"|"+(extra.pp??"");
+  if(it.v && extra.vi==null) extra = {...extra, vi:0};
+  const key = id+"|"+ex.slice().sort().join(",")+"|"+note+"|"+(extra.pp??"")+"|"+(extra.vi??"");
   const ex1 = C.cart.find(l=>l.key===key && !l.gift && !l.reward);
   if(ex1) ex1.qty += qty; else C.cart.push({key,id,qty,ex,note,...extra});
 }
@@ -1030,7 +945,7 @@ function placeOrder(){
   const f = C.form;
   if(!f.name.trim() || !f.phone.trim() || (C.mode==="livrare" && !f.addr.trim())){ ctoast("alert","Completează numele, telefonul și adresa."); return; }
   const o = {id:"o"+(++S.seq), no:S.seq, cust:c.id, name:f.name, phone:f.phone, addr:C.mode==="livrare"?f.addr:"Ridicare din restaurant", mode:C.mode, pay:C.pay,
-    items:C.cart.map(l=>({id:l.id,qty:l.qty,ex:l.ex||[],note:l.note||"",pp:l.pp,gift:l.gift,reward:l.reward,promo:l.promo})), note:C.note, created:now(), msgs:[], status:"new", allergies:c.allergies.slice(), code:C.code, ...P};
+    items:C.cart.map(l=>({id:l.id,qty:l.qty,vi:l.vi,ex:l.ex||[],note:l.note||"",pp:l.pp,gift:l.gift,reward:l.reward,promo:l.promo})), note:C.note, created:now(), msgs:[], status:"new", allergies:c.allergies.slice(), code:C.code, ...P};
   c.pts -= P.ptsUsed;
   if(C.cart.some(l=>l.gift)) c.free = false;
   S.orders.push(o);
@@ -1069,8 +984,9 @@ $("#screen").addEventListener("click", e => {
   if(d.mode){ C.mode = d.mode; renderClient(); if(C.sheet?.kind==="cart") renderSheet(); return; }
   if(d.mood){ C.mood = C.mood===d.mood?null:d.mood; renderClient(); return; }
   if(d.jump){ C.cat = d.jump; const s = $("#sec-"+d.jump); if(s){ $("#c-scroll").scrollTo({top:s.offsetTop-84,behavior:"smooth"}); } updateCats(); return; }
-  if(d.open){ openSheet("item",{id:d.open,qty:1,ex:[],note:""}); return; }
-  if(d.quick){ addToCart(d.quick); ensureGift(); renderClient(); if(C.sheet?.kind==="cart") renderSheet(); bump(); return; }
+  if(d.open){ openSheet("item",{id:d.open,qty:1,ex:[],note:"",vi:0}); return; }
+  if(d.vi){ C.sheet.vi = +d.vi; C.sheet.note = $("#it-note")?.value||""; renderSheet(); return; }
+  if(d.quick){ if(BY[d.quick].v){ openSheet("item",{id:d.quick,qty:1,ex:[],note:"",vi:0}); return; } addToCart(d.quick); ensureGift(); renderClient(); if(C.sheet?.kind==="cart") renderSheet(); bump(); return; }
   if(d.inc){ const l = [...C.cart].reverse().find(l=>l.id===d.inc&&!l.gift&&!l.reward); l ? l.qty++ : addToCart(d.inc); renderClient(); return; }
   if(d.dec){ const l = [...C.cart].reverse().find(l=>l.id===d.dec&&!l.gift&&!l.reward); if(l){ l.qty--; if(!l.qty) C.cart.splice(C.cart.indexOf(l),1);} ensureGift(); renderClient(); return; }
   if(d.cinc){ C.cart[+d.cinc].qty++; renderSheet(); renderClient(); return; }
@@ -1079,7 +995,7 @@ $("#screen").addEventListener("click", e => {
   if(d.ex){ const s = C.sheet; s.note = $("#it-note")?.value||""; s.ex = b.checked ? [...s.ex,d.ex] : s.ex.filter(k=>k!==d.ex); renderSheet(); return; }
   if(d.pay){ C.pay = d.pay; renderSheet(); return; }
   if(d.rate){ const [id,n] = d.rate.split(":"); const o = S.orders.find(x=>x.id===id); if(!o.rating) S.ratings.push(+n); else S.ratings[S.ratings.length-1] = +n; o.rating = +n; commit(); return; }
-  if(d.reorder){ const o = S.orders.find(x=>x.id===d.reorder); o.items.filter(l=>!l.gift&&!l.reward).forEach(l=>addToCart(l.id,l.qty,l.ex,l.note)); ensureGift(); C.tab="menu"; renderClient(); openSheet("cart"); return; }
+  if(d.reorder){ const o = S.orders.find(x=>x.id===d.reorder); o.items.filter(l=>!l.gift&&!l.reward).forEach(l=>addToCart(l.id,l.qty,l.ex,l.note,l.vi!=null?{vi:l.vi}:{})); ensureGift(); C.tab="menu"; renderClient(); openSheet("cart"); return; }
   if(d.reorderIds){ d.reorderIds.split(",").forEach(id=>addToCart(id)); ensureGift(); C.tab="menu"; renderClient(); openSheet("cart"); return; }
   if(d.redeem){ const [id,cost] = d.redeem.split(":"); const c = me(); if(c.pts<+cost) return; c.pts -= +cost; C.cart.push({key:"rw"+now(),id,qty:1,ex:[],pp:0,reward:true}); ensureGift(); commit(); ctoast("gift", `${nm(BY[id])} a fost adăugat în coș, plătit cu ${cost} puncte.`); return; }
   if(d.alg){ const c = me(); c.allergies = c.allergies.includes(d.alg) ? c.allergies.filter(a=>a!==d.alg) : [...c.allergies,d.alg]; commit(); return; }
@@ -1092,7 +1008,7 @@ $("#screen").addEventListener("click", e => {
     case "close": closeSheet(); break;
     case "pop-close": $("#c-pop").innerHTML=""; break;
     case "open-cart": ensureGift(); openSheet("cart"); break;
-    case "add-item": { const s = C.sheet; addToCart(s.id, s.qty, s.ex, ($("#it-note")?.value||"").trim()); ensureGift(); closeSheet(); renderClient(); bump(); ctoast("check", `${nm(BY[s.id])} a fost adăugat în coș.`); break; }
+    case "add-item": { const s = C.sheet; addToCart(s.id, s.qty, s.ex, ($("#it-note")?.value||"").trim(), BY[s.id].v?{vi:s.vi||0}:{}); ensureGift(); closeSheet(); renderClient(); bump(); ctoast("check", `${nm(BY[s.id])} a fost adăugat în coș.`); break; }
     case "lang": C.lang = C.lang==="ro"?"hu":"ro"; renderClient(); if(C.sheet) renderSheet(); break;
     case "allergy": if(!me().allergies.length){ C.tab="club"; renderClient(); ctoast("shield","Alege alergiile tale; le marcăm în tot meniul."); setTimeout(()=>{const el=$(".chips"); el && $("#c-scroll").scrollTo({top:el.offsetTop-200,behavior:"smooth"})},50);} else { C.hideBlocked=!C.hideBlocked; renderClient(); } break;
     case "pts": C.usePts = !C.usePts; renderSheet(); break;
@@ -1127,7 +1043,7 @@ const R = {tab:"orders", sel:null, eta:null, rejecting:false, drawer:null, draft
 function renderRx(){ preserve(()=>{ renderRxSide(); renderRxMain(); renderDrawer(); }); }
 function renderRxSide(){
   const n = S.orders.filter(o=>o.status==="new").length;
-  $("#rx-side").innerHTML = `<div class="rb">${lyraMark()}<div><b>LYRA</b><small>Recepție</small></div></div>
+  $("#rx-side").innerHTML = `<div class="rb"><img src="${IMG("logo-lyra")}" alt="Lyra" style="height:38px;width:auto;border-radius:6px"><div><small>Recepție</small></div></div>
    ${[["orders","orders","Comenzi",n],["promos","promo","Promoții"],["clients","users","Clienți & fidelizare"],["menu","dish","Meniu & stoc"]].map(([k,ic,l,c])=>`<button class="rnav" data-rtab="${k}" aria-current="${R.tab===k}">${I(ic)}${l}${c?`<span class="n">${c}</span>`:""}</button>`).join("")}
    <div class="openbox"><div class="row-btw"><b>${S.open?"Preiau comenzi":"Închis pentru comenzi"}</b><button class="switch" role="switch" aria-checked="${S.open}" data-ract="open" aria-label="Preiau comenzi online"></button></div><span class="muted" style="font-size:11.5px">${S.open?"Aplicația acceptă comenzi.":"Clienții văd că restaurantul e închis."}</span></div>`;
 }
@@ -1156,7 +1072,7 @@ function ticket(o){
   return `<div class="ticket">
     <div class="tno"><b>#${o.no}</b><span>${hm(o.created)} · ${o.mode==="livrare"?"LIVRARE":"RIDICARE"}</span></div>
     ${al.length?`<div class="alert">${I("alert")}ALERGIE CLIENT: ${al.map(a=>AL[a][0].toUpperCase()).join(", ")}${flagged.length?` · verifică: ${flagged.map(l=>BY[l.id].ro).join(", ")}`:""}</div>`:""}
-    ${o.items.map(l=>`<div class="tl"><span class="q">${l.qty}×</span><div><b>${esc(lineTxt(l))}</b>${(l.ex||[]).map(k=>`<span class="x">+ ${BY[k].ro}</span>`).join("")}${l.note?`<span class="x">„${esc(l.note)}”</span>`:""}${l.gift?`<span class="x">CADOU LYRA CLUB (Vega)</span>`:""}${l.reward?`<span class="x">plătit cu puncte</span>`:""}${l.promo?`<span class="x">promo: ${esc(l.promo)}</span>`:""}<small>${BY[l.id].g}${BY[l.id].hot?" · tigaie fierbinte":""}</small></div><span>${l.pp===0?"0.00":(lineUnit(l)*l.qty).toFixed(2)}</span></div>`).join("")}
+    ${o.items.map(l=>`<div class="tl"><span class="q">${l.qty}×</span><div><b>${esc(lineTxt(l))}</b>${vLabel(BY[l.id],l.vi)?`<span class="x">${vLabel(BY[l.id],l.vi)}</span>`:""}${(l.ex||[]).map(k=>`<span class="x">+ ${BY[k].ro}</span>`).join("")}${l.note?`<span class="x">„${esc(l.note)}”</span>`:""}${l.gift?`<span class="x">CADOU LYRA CLUB (Vega)</span>`:""}${l.reward?`<span class="x">plătit cu puncte</span>`:""}${l.promo?`<span class="x">promo: ${esc(l.promo)}</span>`:""}<small>${BY[l.id].v?BY[l.id].v[l.vi||0].g:BY[l.id].g}${BY[l.id].hot?" · tigaie fierbinte":""}</small></div><span>${l.pp===0?"0.00":(lineUnit(l)*l.qty).toFixed(2)}</span></div>`).join("")}
     ${o.note?`<div class="tn"><b>Mențiune:</b> ${esc(o.note)}</div>`:""}
     ${c.stars===STARS-1?`<div class="gift">${I("gift")}Aceasta e a ${STARS}-a stea: clientul primește Papanaș la comanda următoare.</div>`:""}
     <div class="tot"><span>TOTAL · ${({card:"card la livrare",cash:"numerar",online:"plătit online"})[o.pay]}</span><b>${lei(o.total)}</b></div>
