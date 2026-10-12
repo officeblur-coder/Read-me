@@ -3,8 +3,8 @@
   "short_name": "Lyra Carduri",
   "description": "Carduri cadou – Pensiune Restaurant Lyra",
   "lang": "ro",
-  "start_url": "/",
-  "scope": "/",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#f3f5f0",
   "theme_color": "#195f1e",
@@ -13,7 +13,7 @@
     { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
   ],
   "shortcuts": [
-    { "name": "Ospătar", "url": "/ospatar/" },
-    { "name": "Evidență carduri", "url": "/#evidenta" }
+    { "name": "Ospătar", "url": "ospatar/" },
+    { "name": "Evidență carduri", "url": "./#evidenta" }
   ]
 }
