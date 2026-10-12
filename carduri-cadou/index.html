@@ -5,7 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#195f1e">
 <title>Lyra Carduri Cadou</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@500;600;700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&display=swap">
+<link rel="stylesheet" href="fonts.css">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="Lyra Carduri">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="referrer" content="no-referrer">
+<meta name="description" content="Carduri cadou – Pensiune Restaurant Lyra">
 <style>
 /* Layout: bara verde Lyra sus, apoi un spațiu de lucru pe file; vizualizarea ospătarului într-o ramă de telefon */
 :root{
@@ -331,7 +340,7 @@ td .sub{display:block;font-size:12.5px;color:var(--muted)}
 </main>
 <div class="demo-foot"><span>Versiune demonstrativă: datele sunt păstrate doar în acest browser.</span><button class="link" type="button" id="resetDemo">Repune datele de probă</button></div>
 
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="lib/html5-qrcode.min.js"></script>
 <script>
 (() => {
 "use strict";
@@ -619,7 +628,7 @@ function renderNews() {
     : `<tr><td colspan="5" class="empty-state">Încă nu sunt clienți abonați.</td></tr>`;
   const copy = async (text, ok) => { try { await navigator.clipboard.writeText(text); toast(ok); } catch (e) { const ta = document.createElement("textarea"); ta.value = text; document.body.append(ta); ta.select(); try { document.execCommand("copy"); toast(ok); } catch (_) { toast("Selectează și copiază manual."); } ta.remove(); } };
   $("#copyEmails").onclick = () => copy(uniq.map(c => c.client.email).join(", "), "Emailurile au fost copiate.");
-  $("#copyCsv").onclick = () => copy(["Prenume,Nume,Email,Telefon", ...uniq.map(c => [c.client.first, c.client.last, c.client.email, c.client.phone].map(v => `"${v.replace(/"/g, '""')}"`).join(","))].join("\n"), "Tabelul a fost copiat. Îl poți lipi în Excel sau Mailchimp.");
+  $("#copyCsv").onclick = () => copy(["Prenume,Nume,Email,Telefon", ...uniq.map(c => [c.client.first, c.client.last, c.client.email, c.client.phone].map(v => `"${v.replace(/"/g, '""')}"`).join(","))].join("\n"), "Tabelul a fost copiat. Îl poți lipi în Excel sau în programul de emailuri.");
 }
 
 // ================= OSPĂTAR =================
