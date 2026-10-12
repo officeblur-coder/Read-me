@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#195f1e">
+<title>Lyra Carduri Cadou</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@500;600;700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&display=swap">
+<style>
+/* Layout: bara verde Lyra sus, apoi un spațiu de lucru pe file; vizualizarea ospătarului într-o ramă de telefon */
+:root{
+  --green:#22702a; --green-deep:#165f1b; --red:#e11f26; --gold:#e9a628;
+  --bg:#f3f5f0; --surface:#ffffff; --surface-2:#eef2ea; --ink:#18221a; --muted:#5d6b5f; --line:#dbe2d7;
+  --ok:#1f7a35; --ok-bg:#e3f3e6; --warn:#a35f00; --warn-bg:#fdf0d6; --bad:#b4161c; --bad-bg:#fbe3e3; --idle:#566159; --idle-bg:#e9ece7;
+  --on-accent:#ffffff;
+  --f-display:"Josefin Sans","Avenir Next","Century Gothic",sans-serif;
+  --f-body:"Nunito Sans","Segoe UI",system-ui,sans-serif;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1510; --surface:#172019; --surface-2:#1e2920; --ink:#e8eee6; --muted:#9fae9f; --line:#2c3a2e;
+  --ok:#6fd38a; --ok-bg:#163522; --warn:#f2bd5c; --warn-bg:#3a2a0c; --bad:#ff8a8a; --bad-bg:#3d1717; --idle:#a8b3a9; --idle-bg:#252e26;
+  --red:#ef3a40; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1510; --surface:#172019; --surface-2:#1e2920; --ink:#e8eee6; --muted:#9fae9f; --line:#2c3a2e;
+  --ok:#6fd38a; --ok-bg:#163522; --warn:#f2bd5c; --warn-bg:#3a2a0c; --bad:#ff8a8a; --bad-bg:#3d1717; --idle:#a8b3a9; --idle-bg:#252e26;
+  --red:#ef3a40; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45}
+button,input,select{font:inherit;color:inherit}
+h1,h2,h3{font-family:var(--f-display);font-weight:700;letter-spacing:.01em;margin:0;text-wrap:balance}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---------- header ---------- */
+.top{background:linear-gradient(180deg,#22702a,#195f1e);color:#fff;padding:10px 16px 0}
+.top-in{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.top img{height:54px;width:auto;display:block}
+.top .brand{display:flex;flex-direction:column;line-height:1.15}
+.top .brand b{font-family:var(--f-display);font-size:20px;letter-spacing:.04em}
+.top .brand span{font-size:12.5px;opacity:.85;letter-spacing:.08em;text-transform:uppercase}
+.top .who{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:13.5px}
+.top .who select{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.35);border-radius:8px;padding:6px 8px;color:#fff}
+.top .who select option{color:#18221a}
+.bell{position:relative;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:8px;padding:6px 10px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.bell .dot{background:var(--gold);color:#3a2600;border-radius:999px;font-weight:800;font-size:12px;padding:0 7px;line-height:18px}
+.bell .dot[data-zero]{display:none}
+.tabs{max-width:1180px;margin:10px auto 0;display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+.tabs button{background:none;border:0;color:rgba(255,255,255,.82);padding:10px 14px;border-radius:9px 9px 0 0;cursor:pointer;white-space:nowrap;font-weight:700}
+.tabs button[aria-selected="true"]{background:var(--bg);color:var(--ink)}
+.tabs button:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
+
+main{max-width:1180px;margin:0 auto;padding:22px 16px 40px}
+.view[hidden]{display:none}
+.view-head{display:flex;align-items:end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.view-head h2{font-size:26px}
+.view-head p{margin:2px 0 0;color:var(--muted)}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.btn{border:0;border-radius:9px;padding:11px 18px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn-primary{background:var(--red);color:var(--on-accent)}
+.btn-primary:hover{filter:brightness(1.06)}
+.btn-green{background:var(--green);color:var(--on-accent)}
+.btn-ghost{background:var(--surface-2);color:var(--ink);border:1px solid var(--line)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn:focus-visible,.chip:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.link{background:none;border:0;color:var(--green);font-weight:700;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px}
+:root:not([data-theme="light"]) .link{color:var(--ok)}
+
+.pill{display:inline-block;font-size:12px;font-weight:800;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.st-activ{background:var(--ok-bg);color:var(--ok)}
+.st-curand{background:var(--warn-bg);color:var(--warn)}
+.st-expirat{background:var(--bad-bg);color:var(--bad)}
+.st-consumat{background:var(--idle-bg);color:var(--idle)}
+
+/* ---------- încărcare ---------- */
+.load-grid{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:18px;align-items:start}
+.scan-box{padding:20px;display:flex;flex-direction:column;gap:14px}
+.scan-box h3{font-size:18px}
+.scan-hint{color:var(--muted);font-size:14px;margin:0}
+.code-row{display:flex;gap:8px}
+.code-row input{flex:1;min-width:0;text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:13px;font-weight:700;color:var(--muted)}
+.field input,.field select{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:10px 12px;width:100%}
+.field input[aria-invalid="true"]{border-color:var(--bad)}
+.field .err{color:var(--bad);font-size:12.5px;min-height:0}
+.form{padding:22px;display:flex;flex-direction:column;gap:18px}
+.form-sec{display:flex;flex-direction:column;gap:10px}
+.form-sec>h4{margin:0;font-size:12.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 14px;font-weight:700;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:#fff}
+.consent{display:flex;gap:10px;align-items:flex-start;background:var(--surface-2);border-radius:9px;padding:12px 14px;cursor:pointer}
+.consent input{width:20px;height:20px;margin:1px 0 0;accent-color:var(--green);flex:none}
+.consent small{display:block;color:var(--muted)}
+.empty-state{padding:34px 22px;text-align:center;color:var(--muted)}
+.empty-state .giftcard{margin:0 auto 16px}
+.form-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:16px}
+.summary-line{font-size:14px;color:var(--muted)}
+.summary-line b{color:var(--ink);font-size:17px}
+
+/* card fizic desenat */
+.giftcard{width:260px;max-width:100%;aspect-ratio:85.6/54;border-radius:12px;background:
+  radial-gradient(120% 90% at 0% 0%,#2f8a35 0%,#1a6420 55%,#10501a 100%);color:#fff;position:relative;overflow:hidden;
+  box-shadow:0 10px 24px -12px rgba(0,0,0,.45);padding:12px 14px;display:flex;flex-direction:column;justify-content:space-between;text-align:left}
+.giftcard::after{content:"";position:absolute;inset:5px;border:1px solid rgba(233,166,40,.7);border-radius:8px;pointer-events:none}
+.giftcard .gc-top{display:flex;justify-content:space-between;align-items:flex-start}
+.giftcard .gc-name{font-family:var(--f-display);font-weight:700;font-size:22px;background:var(--red);padding:3px 10px 0;border-radius:6px;border:2px solid #fff;line-height:1.2}
+.giftcard .gc-label{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#f5d58c}
+.giftcard .gc-bottom{display:flex;justify-content:space-between;align-items:flex-end;gap:8px}
+.giftcard .gc-code{font-weight:800;font-size:12px;letter-spacing:.08em}
+.giftcard .qr{width:52px;height:52px;background:#fff;border-radius:4px;padding:3px}
+.giftcard .qr canvas{width:100%;height:100%;display:block;image-rendering:pixelated}
+
+/* ---------- evidență ---------- */
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.stat{padding:14px 16px}
+.stat .k{font-size:12.5px;color:var(--muted);font-weight:700}
+.stat .v{font-family:var(--f-display);font-size:26px;font-weight:700;margin-top:2px}
+.stat .v small{font-family:var(--f-body);font-size:13px;color:var(--muted);font-weight:700}
+.alert{border:1px solid color-mix(in srgb,var(--gold) 55%,var(--line));background:var(--warn-bg);border-radius:var(--r);padding:14px 16px;margin-bottom:16px}
+.alert h3{font-size:17px;color:var(--warn);display:flex;align-items:center;gap:8px}
+.alert p{margin:4px 0 10px;color:var(--ink);font-size:14px}
+.call-list{display:flex;flex-direction:column;gap:8px}
+.call{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) auto;gap:10px;align-items:center;background:var(--surface);border-radius:8px;padding:10px 12px;border:1px solid var(--line)}
+.call .who b{display:block}
+.call .who span{font-size:13px;color:var(--muted)}
+.call .tel{font-weight:800;font-size:16px;user-select:all}
+.call .acts{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.called{font-size:12.5px;color:var(--ok);font-weight:700}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line)}
+.toolbar input{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:9px 12px;min-width:0;flex:1 1 220px}
+.table-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:880px;font-size:14px}
+th{text-align:left;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:800;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:var(--surface-2)}
+td.r,th.r{text-align:right}
+td .sub{display:block;font-size:12.5px;color:var(--muted)}
+.mono{font-weight:800;letter-spacing:.05em;font-size:13px}
+.bar{height:5px;border-radius:3px;background:var(--surface-2);margin-top:5px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--green)}
+
+/* drawer */
+.scrim{position:fixed;inset:0;background:rgba(10,20,12,.45);z-index:40;display:flex;justify-content:flex-end}
+.drawer{width:min(460px,100%);height:100%;background:var(--surface);overflow:auto;padding:22px;display:flex;flex-direction:column;gap:16px;padding-bottom:calc(22px + env(safe-area-inset-bottom,0px))}
+.drawer-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:14px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;font-weight:700;min-width:0;overflow-wrap:anywhere}
+.history{display:flex;flex-direction:column;border-left:2px solid var(--line);margin-left:6px}
+.h-item{padding:0 0 14px 16px;position:relative;font-size:14px}
+.h-item::before{content:"";position:absolute;left:-6px;top:5px;width:10px;height:10px;border-radius:50%;background:var(--green)}
+.h-item.use::before{background:var(--red)}
+.h-item .when{font-size:12.5px;color:var(--muted)}
+
+/* newsletter */
+.nl-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 16px;border-bottom:1px solid var(--line)}
+
+/* ---------- ospătar (telefon) ---------- */
+.waiter-wrap{display:grid;grid-template-columns:minmax(0,390px) minmax(0,1fr);gap:28px;align-items:start}
+.phone{border:10px solid #111612;border-radius:38px;background:var(--bg);overflow:hidden;box-shadow:0 30px 50px -30px rgba(0,0,0,.6);height:760px;display:flex;flex-direction:column;max-width:100%}
+.phone .p-top{background:#195f1e;color:#fff;padding:14px 16px 12px;display:flex;align-items:center;gap:10px}
+.phone .p-top img{height:34px}
+.phone .p-top b{font-family:var(--f-display);font-size:17px;letter-spacing:.04em}
+.phone .p-top span{font-size:12px;opacity:.85}
+.p-body{flex:1;overflow:auto;padding:18px 16px;display:flex;flex-direction:column;gap:14px}
+.scan-big{background:var(--red);color:#fff;border:0;border-radius:18px;padding:34px 16px;font-family:var(--f-display);font-size:22px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:12px;cursor:pointer}
+.scan-big svg{width:64px;height:64px}
+.p-recent h4{margin:0 0 8px;font-size:12.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.p-recent .ri{display:flex;justify-content:space-between;font-size:14px;padding:9px 0;border-bottom:1px solid var(--line)}
+.bal-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;text-align:center}
+.bal-card .lbl{font-size:13px;color:var(--muted);font-weight:700}
+.bal-card .big{font-family:var(--f-display);font-size:52px;font-weight:700;line-height:1.05;margin:4px 0}
+.bal-card .big small{font-size:22px}
+.bal-meta{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;text-align:left}
+.bal-meta div{background:var(--surface-2);border-radius:10px;padding:8px 10px;font-size:13px}
+.bal-meta b{display:block;font-size:14.5px}
+.amount-in{display:flex;align-items:center;border:2px solid var(--line);border-radius:14px;background:var(--surface);padding:4px 14px}
+.amount-in input{border:0;background:none;font-family:var(--f-display);font-size:34px;font-weight:700;width:100%;min-width:0;padding:6px 0;outline:none}
+.amount-in span{font-weight:800;color:var(--muted)}
+.amount-in:focus-within{border-color:var(--green)}
+.p-actions{display:flex;flex-direction:column;gap:8px}
+.p-actions .btn{padding:15px;font-size:16px;border-radius:12px}
+.msg{border-radius:10px;padding:10px 12px;font-size:14px;font-weight:600}
+.msg.bad{background:var(--bad-bg);color:var(--bad)}
+.msg.warn{background:var(--warn-bg);color:var(--warn)}
+.done{text-align:center;padding:20px 6px;display:flex;flex-direction:column;align-items:center;gap:8px}
+.done .tick{width:72px;height:72px;border-radius:50%;background:var(--ok-bg);color:var(--ok);display:grid;place-items:center}
+.side-notes{display:flex;flex-direction:column;gap:12px;max-width:520px}
+.side-notes h3{font-size:20px}
+.side-notes p{margin:0;color:var(--muted)}
+.side-notes ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+
+/* ---------- scanner modal ---------- */
+.modal{position:fixed;inset:0;background:rgba(5,12,6,.72);z-index:60;display:grid;place-items:center;padding:16px}
+.modal-box{background:var(--surface);border-radius:16px;width:min(420px,100%);padding:18px;display:flex;flex-direction:column;gap:12px;max-height:100%;overflow:auto}
+.modal-box h3{font-size:19px}
+.viewfinder{position:relative;background:#0b0f0c;border-radius:12px;aspect-ratio:1/1;overflow:hidden;display:grid;place-items:center;color:#c9d3ca;text-align:center;font-size:14px}
+.viewfinder #reader{position:absolute;inset:0}
+.viewfinder #reader video{width:100%!important;height:100%!important;object-fit:cover}
+.viewfinder .frame{position:absolute;inset:18%;border:3px solid var(--gold);border-radius:14px;pointer-events:none}
+.viewfinder .laser{position:absolute;left:18%;right:18%;height:2px;background:var(--red);top:50%;box-shadow:0 0 10px var(--red);animation:sweep 2.2s ease-in-out infinite;pointer-events:none}
+@keyframes sweep{0%,100%{top:22%}50%{top:78%}}
+@media (prefers-reduced-motion:reduce){.viewfinder .laser{animation:none}}
+.viewfinder .cam-msg{position:relative;padding:0 30px;z-index:1}
+.test-cards{display:flex;flex-wrap:wrap;gap:6px}
+.test-cards button{font-size:12.5px;padding:6px 10px}
+.or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12.5px}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:10px;font-weight:700;z-index:80;max-width:calc(100% - 32px)}
+.demo-foot{max-width:1180px;margin:0 auto;padding:0 16px 30px;color:var(--muted);font-size:13px;display:flex;gap:12px;flex-wrap:wrap;justify-content:space-between}
+
+@media (max-width:900px){
+  .load-grid,.waiter-wrap{grid-template-columns:minmax(0,1fr)}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .phone{height:auto;min-height:640px;border-width:0;border-radius:14px}
+  .side-notes{order:2}
+}
+@media (max-width:560px){
+  .row2{grid-template-columns:1fr}
+  .call{grid-template-columns:1fr}
+  .call .acts{justify-content:flex-start}
+  .top .who{margin-left:0;width:100%}
+  .top img{height:44px}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <img src="lyra-sign.jpg" alt="Lyra – Pensiune Restaurant">
+    <div class="brand"><b>Carduri cadou</b><span>Pensiune Restaurant Lyra</span></div>
+    <div class="who">
+      <label for="user">Conectat ca</label>
+      <select id="user"></select>
+      <button class="bell" id="bell" type="button" title="Carduri care expiră în 7 zile">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+        <span class="dot" id="bellCount">0</span>
+      </button>
+    </div>
+  </div>
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-view="load" aria-selected="true">Încarcă card</button>
+    <button role="tab" data-view="list" aria-selected="false">Evidență carduri</button>
+    <button role="tab" data-view="news" aria-selected="false">Clienți newsletter</button>
+    <button role="tab" data-view="waiter" aria-selected="false">Ospătar (telefon)</button>
+  </nav>
+</header>
+
+<main>
+  <!-- ÎNCARCĂ -->
+  <section class="view" id="view-load">
+    <div class="view-head"><div><h2>Încarcă un card cadou</h2><p>Scanează cardul fizic, completează datele clientului și alege suma.</p></div></div>
+    <div class="load-grid">
+      <div class="panel scan-box">
+        <h3>1. Cardul</h3>
+        <button class="btn btn-primary" type="button" id="loadScanBtn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/></svg>
+          Scanează cu camera
+        </button>
+        <div class="or">sau scrie codul / folosește cititorul USB</div>
+        <form class="code-row" id="loadCodeForm">
+          <input id="loadCode" placeholder="ex. LYRA-0007" autocomplete="off" aria-label="Codul cardului">
+          <button class="btn btn-ghost" type="submit">Caută</button>
+        </form>
+        <p class="scan-hint">Carduri goale pentru probă: <button class="link" type="button" data-fill="LYRA-0007">LYRA-0007</button>, <button class="link" type="button" data-fill="LYRA-0008">LYRA-0008</button>, <button class="link" type="button" data-fill="LYRA-0009">LYRA-0009</button></p>
+      </div>
+      <div class="panel" id="loadRight"></div>
+    </div>
+  </section>
+
+  <!-- EVIDENȚĂ -->
+  <section class="view" id="view-list" hidden>
+    <div class="view-head"><div><h2>Evidență carduri</h2><p>Toate cardurile încărcate, de cine, când și până când sunt valabile.</p></div></div>
+    <div class="stats" id="stats"></div>
+    <div id="expAlert"></div>
+    <div class="panel">
+      <div class="toolbar">
+        <input id="search" placeholder="Caută după nume, telefon, email sau cod" aria-label="Caută">
+        <div class="chips" id="filters"></div>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Cod card</th><th>Client</th><th>Încărcat de</th><th>Data încărcării</th><th class="r">Valoare</th><th class="r">Sold rămas</th><th>Expiră</th><th>Stare</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- NEWSLETTER -->
+  <section class="view" id="view-news" hidden>
+    <div class="view-head"><div><h2>Clienți newsletter</h2><p>Doar clienții care au bifat acordul pentru emailuri de promovare.</p></div></div>
+    <div class="panel">
+      <div class="nl-head">
+        <div id="nlCount" class="summary-line"></div>
+        <div class="chips">
+          <button class="btn btn-ghost" type="button" id="copyEmails">Copiază emailurile</button>
+          <button class="btn btn-green" type="button" id="copyCsv">Copiază ca tabel (CSV)</button>
+        </div>
+      </div>
+      <div class="table-wrap"><table style="min-width:640px">
+        <thead><tr><th>Nume</th><th>Email</th><th>Telefon</th><th>Acord dat la</th><th>Card</th></tr></thead>
+        <tbody id="nlRows"></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- OSPĂTAR -->
+  <section class="view" id="view-waiter" hidden>
+    <div class="waiter-wrap">
+      <div class="phone"><div class="p-top"><img src="lyra-sign.jpg" alt=""><div><b>Lyra · Ospătar</b><br><span id="waiterName"></span></div></div>
+        <div class="p-body" id="pBody"></div>
+      </div>
+      <div class="side-notes">
+        <h3>Așa arată pe telefonul ospătarului</h3>
+        <p>Ospătarul deschide aplicația, apasă pe butonul roșu și ține cardul clientului în fața camerei.</p>
+        <ol>
+          <li>Vede imediat suma disponibilă și până când e valabil cardul.</li>
+          <li>Scrie cât a consumat clientul și apasă „Scade de pe card”.</li>
+          <li>Soldul nou apare pe ecran și în evidența de la recepție.</li>
+        </ol>
+        <p>Pentru probă poți folosi cardul <button class="link" type="button" data-wscan="LYRA-0001">LYRA-0001</button> (activ), <button class="link" type="button" data-wscan="LYRA-0003">LYRA-0003</button> (expiră curând) sau <button class="link" type="button" data-wscan="LYRA-0005">LYRA-0005</button> (expirat).</p>
+      </div>
+    </div>
+  </section>
+</main>
+<div class="demo-foot"><span>Versiune demonstrativă: datele sunt păstrate doar în acest browser.</span><button class="link" type="button" id="resetDemo">Repune datele de probă</button></div>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+(() => {
+"use strict";
+// ---------------- utilitare ----------------
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const DAY = 864e5;
+const startOfDay = d => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
+const today = () => startOfDay(new Date());
+const addDays = (d, n) => new Date(startOfDay(d).getTime() + n * DAY);
+const addMonths = (d, n) => { const x = startOfDay(d); x.setMonth(x.getMonth() + n); return x; };
+const iso = d => { const x = new Date(d); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}-${String(x.getDate()).padStart(2, "0")}`; };
+const fmtDate = d => new Date(d).toLocaleDateString("ro-RO", { day: "2-digit", month: "short", year: "numeric" });
+const fmtDT = d => new Date(d).toLocaleString("ro-RO", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+const lei = n => (Math.round(n * 100) / 100).toLocaleString("ro-RO", { minimumFractionDigits: Number.isInteger(+n) ? 0 : 2, maximumFractionDigits: 2 }) + " lei";
+const daysLeft = c => Math.round((startOfDay(c.expiresAt) - today()) / DAY);
+const normCode = s => String(s || "").trim().toUpperCase();
+
+const RECEPTIE = ["Andreea (recepție)", "Mihai (recepție)", "Ioana (recepție)"];
+const OSPATARI = ["Radu (ospătar)", "Elena (ospătar)", "Vlad (ospătar)"];
+
+// ---------------- stocare (în demo: localStorage) ----------------
+const KEY = "lyra-carduri-v1";
+let db;
+function seed() {
+  const t = today();
+  const mk = (code, first, last, phone, email, mk, by, issuedDaysAgo, months, amount, uses, extraExp) => {
+    const issuedAt = new Date(addDays(t, -issuedDaysAgo).getTime() + 10.5 * 36e5);
+    const expiresAt = extraExp != null ? addDays(t, extraExp) : addMonths(issuedAt, months);
+    const tx = [{ type: "load", amount, at: issuedAt.toISOString(), by }];
+    let bal = amount;
+    uses.forEach(([d, a, w]) => { bal -= a; tx.push({ type: "use", amount: a, at: new Date(addDays(t, -d).getTime() + 20 * 36e5).toISOString(), by: w }); });
+    return { code, client: { first, last, phone, email }, marketing: mk, amount, balance: bal, issuedAt: issuedAt.toISOString(), expiresAt: iso(expiresAt), issuedBy: by, contactedAt: null, tx };
+  };
+  return { cards: [
+    mk("LYRA-0001", "Maria", "Popescu", "0722 418 903", "maria.popescu@gmail.com", true, RECEPTIE[0], 8, 6, 300, [[3, 115, OSPATARI[0]]]),
+    mk("LYRA-0002", "Andrei", "Ionescu", "0745 112 560", "andrei.ionescu@yahoo.com", false, RECEPTIE[1], 64, 3, 200, []),
+    mk("LYRA-0003", "Cristina", "Dumitru", "0733 905 218", "cristina.d@gmail.com", true, RECEPTIE[0], 175, 6, 500, [[120, 180, OSPATARI[1]]], 5),
+    mk("LYRA-0004", "Bogdan", "Stan", "0758 330 447", "bogdan.stan@outlook.com", true, RECEPTIE[2], 85, 3, 150, [], 3),
+    mk("LYRA-0005", "Elena", "Marin", "0726 671 092", "elena.marin@gmail.com", false, RECEPTIE[1], 200, 6, 250, [[150, 90, OSPATARI[2]]], -16),
+    mk("LYRA-0006", "Ștefan", "Radu", "0740 228 615", "stefan.radu@gmail.com", true, RECEPTIE[2], 10, 12, 400, [[7, 260, OSPATARI[0]], [2, 140, OSPATARI[1]]]),
+  ] };
+}
+function load() { try { const raw = localStorage.getItem(KEY); if (raw) return JSON.parse(raw); } catch (e) {} return seed(); }
+function save() { try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) {} }
+db = load();
+const find = code => db.cards.find(c => c.code === normCode(code));
+
+function status(c) {
+  if (c.balance <= 0) return { k: "consumat", t: "Consumat" };
+  const d = daysLeft(c);
+  if (d < 0) return { k: "expirat", t: "Expirat" };
+  if (d <= 7) return { k: "curand", t: d === 0 ? "Expiră azi" : `Expiră în ${d} ${d === 1 ? "zi" : "zile"}` };
+  return { k: "activ", t: "Activ" };
+}
+const pill = c => { const s = status(c); return `<span class="pill st-${s.k}">${s.t}</span>`; };
+
+// ---------------- QR desenat pe cardul ilustrat (doar decorativ) ----------------
+function drawFakeQR(canvas, text) {
+  const n = 21, ctx = canvas.getContext("2d"); canvas.width = canvas.height = n;
+  let h = 2166136261; for (const ch of text) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); }
+  const rnd = () => { h ^= h << 13; h ^= h >>> 17; h ^= h << 5; return ((h >>> 0) % 1000) / 1000; };
+  ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, n, n); ctx.fillStyle = "#111";
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (rnd() > .52) ctx.fillRect(x, y, 1, 1);
+  [[0, 0], [n - 7, 0], [0, n - 7]].forEach(([x, y]) => { ctx.fillStyle = "#111"; ctx.fillRect(x, y, 7, 7); ctx.fillStyle = "#fff"; ctx.fillRect(x + 1, y + 1, 5, 5); ctx.fillStyle = "#111"; ctx.fillRect(x + 2, y + 2, 3, 3); });
+}
+function giftCardHTML(code, sub) {
+  return `<div class="giftcard"><div class="gc-top"><span class="gc-name">LYRA</span><span class="gc-label">Card cadou</span></div>
+  <div class="gc-bottom"><div><div class="gc-label">${esc(sub || "Pensiune Restaurant")}</div><div class="gc-code">${esc(code)}</div></div><div class="qr"><canvas data-qr="${esc(code)}"></canvas></div></div></div>`;
+}
+const paintQRs = root => $$("canvas[data-qr]", root).forEach(c => drawFakeQR(c, c.dataset.qr));
+
+// ---------------- utilizator ----------------
+const userSel = $("#user");
+function fillUsers() {
+  userSel.innerHTML = `<optgroup label="Recepție">${RECEPTIE.map(u => `<option>${u}</option>`).join("")}</optgroup><optgroup label="Ospătari">${OSPATARI.map(u => `<option>${u}</option>`).join("")}</optgroup>`;
+}
+fillUsers();
+const currentUser = () => userSel.value;
+userSel.addEventListener("change", () => { $("#waiterName").textContent = currentUser(); });
+
+// ---------------- toast ----------------
+let toastT;
+function toast(msg) {
+  let t = $(".toast"); if (!t) { t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "status"); document.body.append(t); }
+  t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 2600);
+}
+
+// ---------------- tab-uri ----------------
+let view = "load";
+function show(v) {
+  view = v;
+  $$(".tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.view === v));
+  $$(".view").forEach(s => s.hidden = s.id !== "view-" + v);
+  if (v === "waiter" && !OSPATARI.includes(currentUser())) userSel.value = OSPATARI[0];
+  if (v !== "waiter" && !RECEPTIE.includes(currentUser())) userSel.value = RECEPTIE[0];
+  $("#waiterName").textContent = currentUser();
+  renderAll();
+}
+$$(".tabs button").forEach(b => b.addEventListener("click", () => show(b.dataset.view)));
+$("#bell").addEventListener("click", () => { show("list"); filter = "curand"; renderList(); });
+
+// ---------------- scanner ----------------
+let qr = null;
+function openScanner(title, onCode, testCodes) {
+  const m = document.createElement("div"); m.className = "modal";
+  m.innerHTML = `<div class="modal-box" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+    <h3>${esc(title)}</h3>
+    <div class="viewfinder"><div id="reader"></div><div class="cam-msg" id="camMsg">Pornesc camera…</div><div class="frame"></div><div class="laser"></div></div>
+    <div class="or">sau</div>
+    <form class="code-row" id="manForm"><input id="manCode" placeholder="Scrie codul de pe card" autocomplete="off" aria-label="Codul de pe card"><button class="btn btn-ghost" type="submit">OK</button></form>
+    ${testCodes ? `<div><div class="scan-hint" style="margin-bottom:6px">Carduri de probă (simulează scanarea):</div><div class="test-cards">${testCodes.map(c => `<button class="btn btn-ghost" type="button" data-t="${c}">${c}</button>`).join("")}</div></div>` : ""}
+    <button class="btn btn-ghost" type="button" id="closeScan">Închide</button></div>`;
+  document.body.append(m);
+  const finish = async code => { await stopCam(); m.remove(); if (code) onCode(normCode(code)); };
+  $("#closeScan", m).onclick = () => finish(null);
+  m.addEventListener("click", e => { if (e.target === m) finish(null); });
+  $("#manForm", m).onsubmit = e => { e.preventDefault(); const v = $("#manCode", m).value; if (v.trim()) finish(v); };
+  $$("[data-t]", m).forEach(b => b.onclick = () => finish(b.dataset.t));
+  startCam(code => finish(code), msg => { const el = $("#camMsg", m); if (el) el.textContent = msg; });
+}
+async function startCam(onCode, onMsg) {
+  if (!window.Html5Qrcode || !navigator.mediaDevices?.getUserMedia) { onMsg("Camera nu este disponibilă pe acest dispozitiv. Scrie codul sau alege un card de probă."); return; }
+  try {
+    qr = new Html5Qrcode("reader", { verbose: false });
+    await qr.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 220, height: 220 } }, text => onCode(text), () => {});
+    onMsg("");
+  } catch (e) {
+    qr = null;
+    onMsg("Nu am primit acces la cameră. Permite camera din browser, scrie codul sau alege un card de probă.");
+  }
+}
+async function stopCam() { if (qr) { try { await qr.stop(); qr.clear(); } catch (e) {} qr = null; } }
+
+// ================= ÎNCARCĂ CARD =================
+let loadState = { code: null, amount: 200, months: 6, customDate: "", customAmount: "", form: {}, errors: {} };
+const right = $("#loadRight");
+$("#loadScanBtn").onclick = () => openScanner("Scanează cardul cadou", pickLoadCode, ["LYRA-0007", "LYRA-0008", "LYRA-0009", "LYRA-0001"]);
+$("#loadCodeForm").onsubmit = e => { e.preventDefault(); const v = $("#loadCode").value; if (v.trim()) pickLoadCode(normCode(v)); };
+$$("[data-fill]").forEach(b => b.onclick = () => pickLoadCode(b.dataset.fill));
+function pickLoadCode(code) { loadState = { ...loadState, code, form: {}, errors: {}, customAmount: "", customDate: "" }; $("#loadCode").value = code; renderLoad(); }
+
+function renderLoad() {
+  const s = loadState;
+  if (!s.code) {
+    right.innerHTML = `<div class="empty-state">${giftCardHTML("LYRA-••••", "Card cadou")}<b style="color:var(--ink)">Niciun card scanat încă</b><br>Scanează codul QR de pe spatele cardului ca să începi.</div>`;
+    paintQRs(right); return;
+  }
+  const existing = find(s.code);
+  if (existing) {
+    const st = status(existing);
+    right.innerHTML = `<div class="form"><div class="drawer-head"><div><h3 style="font-size:20px">Cardul ${esc(existing.code)} este deja încărcat</h3><p class="scan-hint">Un card poate fi încărcat o singură dată. Detaliile de mai jos sunt doar pentru verificare.</p></div>${pill(existing)}</div>
+      <dl class="kv"><dt>Client</dt><dd>${esc(existing.client.first)} ${esc(existing.client.last)}</dd><dt>Telefon</dt><dd>${esc(existing.client.phone)}</dd>
+      <dt>Sold rămas</dt><dd class="num">${lei(existing.balance)} din ${lei(existing.amount)}</dd><dt>Valabil până la</dt><dd>${fmtDate(existing.expiresAt)}</dd>
+      <dt>Încărcat de</dt><dd>${esc(existing.issuedBy)}, ${fmtDT(existing.issuedAt)}</dd></dl>
+      <div class="form-foot"><button class="btn btn-ghost" type="button" id="openDetails">Vezi istoricul cardului</button><button class="btn btn-primary" type="button" id="nextCard">Scanează alt card</button></div></div>`;
+    $("#openDetails").onclick = () => openDrawer(existing.code);
+    $("#nextCard").onclick = () => { loadState.code = null; $("#loadCode").value = ""; renderLoad(); $("#loadScanBtn").focus(); };
+    return;
+  }
+  const f = s.form, er = s.errors;
+  const amt = s.customAmount !== "" ? +s.customAmount : s.amount;
+  const exp = s.months === "custom" ? s.customDate : iso(addMonths(new Date(), s.months));
+  const amounts = [100, 150, 200, 300, 500];
+  const durations = [[3, "3 luni"], [6, "6 luni"], [12, "12 luni"], ["custom", "Altă dată"]];
+  const fld = (id, label, type = "text", extra = "") => `<div class="field"><label for="f-${id}">${label}</label><input id="f-${id}" type="${type}" value="${esc(f[id] || "")}" ${er[id] ? 'aria-invalid="true"' : ""} ${extra}><span class="err">${er[id] || ""}</span></div>`;
+  right.innerHTML = `<form class="form" id="loadForm" novalidate>
+    <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">${giftCardHTML(s.code, "Card nou")}<div><h3 style="font-size:20px">Card nou: ${esc(s.code)}</h3><p class="scan-hint">Cardul nu a fost folosit. Completează datele de mai jos.</p></div></div>
+    <div class="form-sec"><h4>2. Datele clientului</h4>
+      <div class="row2">${fld("last", "Nume", "text", 'autocomplete="family-name"')}${fld("first", "Prenume", "text", 'autocomplete="given-name"')}</div>
+      <div class="row2">${fld("phone", "Telefon", "tel", 'inputmode="tel" placeholder="07xx xxx xxx"')}${fld("email", "Email", "email", 'placeholder="nume@exemplu.ro"')}</div>
+      <label class="consent" for="f-mk"><input type="checkbox" id="f-mk" ${f.mk ? "checked" : ""}><span><b>Clientul este de acord să primească emailuri de promovare de la Lyra</b><small>Oferte, meniuri noi și evenimente. Se poate dezabona oricând.</small></span></label>
+    </div>
+    <div class="form-sec"><h4>3. Suma</h4>
+      <div class="chips">${amounts.map(a => `<button type="button" class="chip" data-amt="${a}" aria-pressed="${s.customAmount === "" && s.amount === a}">${a} lei</button>`).join("")}</div>
+      <div class="field" style="max-width:220px"><label for="f-amt">Altă sumă (lei)</label><input id="f-amt" type="number" min="1" step="1" inputmode="numeric" value="${esc(s.customAmount)}" ${er.amt ? 'aria-invalid="true"' : ""}><span class="err">${er.amt || ""}</span></div>
+    </div>
+    <div class="form-sec"><h4>4. Valabilitate</h4>
+      <div class="chips">${durations.map(([v, t]) => `<button type="button" class="chip" data-mon="${v}" aria-pressed="${s.months === v}">${t}</button>`).join("")}</div>
+      ${s.months === "custom" ? `<div class="field" style="max-width:220px"><label for="f-date">Valabil până la</label><input id="f-date" type="date" min="${iso(addDays(new Date(), 1))}" value="${esc(s.customDate)}" ${er.date ? 'aria-invalid="true"' : ""}><span class="err">${er.date || ""}</span></div>` : ""}
+    </div>
+    <div class="form-foot"><div class="summary-line">Se încarcă <b class="num">${amt > 0 ? lei(amt) : "–"}</b>, valabil până la <b>${exp ? fmtDate(exp) : "–"}</b><br>de către ${esc(currentUser())}</div>
+      <button class="btn btn-primary" type="submit">Încarcă cardul</button></div>
+  </form>`;
+  paintQRs(right);
+  const form = $("#loadForm");
+  const keep = () => { ["last", "first", "phone", "email"].forEach(k => f[k] = $("#f-" + k).value); f.mk = $("#f-mk").checked; s.customAmount = $("#f-amt").value; if ($("#f-date")) s.customDate = $("#f-date").value; };
+  $$("[data-amt]", form).forEach(b => b.onclick = () => { keep(); s.amount = +b.dataset.amt; s.customAmount = ""; renderLoad(); });
+  $$("[data-mon]", form).forEach(b => b.onclick = () => { keep(); s.months = b.dataset.mon === "custom" ? "custom" : +b.dataset.mon; renderLoad(); });
+  $("#f-amt").onchange = () => { keep(); renderLoad(); };
+  if ($("#f-date")) $("#f-date").onchange = () => { keep(); renderLoad(); };
+  form.onsubmit = e => {
+    e.preventDefault(); keep();
+    const errs = {};
+    if (!f.last?.trim()) errs.last = "Scrie numele clientului.";
+    if (!f.first?.trim()) errs.first = "Scrie prenumele clientului.";
+    const ph = (f.phone || "").replace(/[\s.-]/g, "").replace(/^\+40/, "0");
+    if (!/^0\d{9}$/.test(ph)) errs.phone = "Numărul trebuie să aibă 10 cifre, ex. 0722 123 456.";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test((f.email || "").trim())) errs.email = "Adresa de email nu pare corectă.";
+    const a = s.customAmount !== "" ? +s.customAmount : s.amount;
+    if (!(a > 0)) errs.amt = "Alege sau scrie o sumă mai mare de 0.";
+    const expD = s.months === "custom" ? s.customDate : iso(addMonths(new Date(), s.months));
+    if (!expD || startOfDay(expD + "T00:00") <= today()) errs.date = "Alege o dată din viitor.";
+    s.errors = errs;
+    if (Object.keys(errs).length) { renderLoad(); const first = $('[aria-invalid="true"]', right); first && first.focus(); return; }
+    const now = new Date().toISOString();
+    const card = { code: s.code, client: { first: f.first.trim(), last: f.last.trim(), phone: ph.replace(/(\d{4})(\d{3})(\d{3})/, "$1 $2 $3"), email: f.email.trim().toLowerCase() },
+      marketing: !!f.mk, consentAt: f.mk ? now : null, amount: a, balance: a, issuedAt: now, expiresAt: expD, issuedBy: currentUser(), contactedAt: null, tx: [{ type: "load", amount: a, at: now, by: currentUser() }] };
+    db.cards.unshift(card); save();
+    right.innerHTML = `<div class="form"><div class="done"><div class="tick"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></div>
+      <h3 style="font-size:22px">Card încărcat</h3><p class="scan-hint">${esc(card.code)} · ${lei(a)} · valabil până la ${fmtDate(expD)}<br>${esc(card.client.first)} ${esc(card.client.last)}${card.marketing ? " · adăugat la newsletter" : ""}</p>
+      <button class="btn btn-primary" type="button" id="nextCard">Încarcă alt card</button></div></div>`;
+    $("#nextCard").onclick = () => { loadState = { code: null, amount: 200, months: 6, customDate: "", customAmount: "", form: {}, errors: {} }; $("#loadCode").value = ""; renderLoad(); };
+    toast("Cardul a fost încărcat.");
+    updateBell();
+  };
+}
+
+// ================= EVIDENȚĂ =================
+let filter = "toate", query = "";
+const FILTERS = [["toate", "Toate"], ["activ", "Active"], ["curand", "Expiră curând"], ["expirat", "Expirate"], ["consumat", "Consumate"]];
+$("#search").addEventListener("input", e => { query = e.target.value.toLowerCase(); renderList(); });
+const expiring = () => db.cards.filter(c => status(c).k === "curand").sort((a, b) => daysLeft(a) - daysLeft(b));
+function renderList() {
+  const live = db.cards.filter(c => ["activ", "curand"].includes(status(c).k));
+  const month = new Date(); const thisMonth = db.cards.filter(c => { const d = new Date(c.issuedAt); return d.getMonth() === month.getMonth() && d.getFullYear() === month.getFullYear(); });
+  $("#stats").innerHTML = [
+    ["Carduri active", live.length, ""],
+    ["Sold nefolosit", live.reduce((s, c) => s + c.balance, 0).toLocaleString("ro-RO"), "lei"],
+    ["Expiră în 7 zile", expiring().length, ""],
+    ["Vândute luna aceasta", thisMonth.reduce((s, c) => s + c.amount, 0).toLocaleString("ro-RO"), `lei · ${thisMonth.length} carduri`],
+  ].map(([k, v, u]) => `<div class="panel stat"><div class="k">${k}</div><div class="v num">${v} <small>${u}</small></div></div>`).join("");
+
+  const ex = expiring();
+  $("#expAlert").innerHTML = ex.length ? `<div class="alert" role="alert"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>${ex.length} ${ex.length === 1 ? "card expiră" : "carduri expiră"} în următoarele 7 zile</h3>
+    <p>Sună clienții și spune-le că mai au bani pe card și până când îi pot folosi.</p>
+    <div class="call-list">${ex.map(c => `<div class="call"><div class="who"><b>${esc(c.client.first)} ${esc(c.client.last)}</b><span>${esc(c.code)} · ${lei(c.balance)} rămași · ${status(c).t.toLowerCase()} (${fmtDate(c.expiresAt)})</span></div>
+      <div class="tel num">${esc(c.client.phone)}</div>
+      <div class="acts">${c.contactedAt ? `<span class="called">Sunat ${fmtDT(c.contactedAt)}</span><button class="link" type="button" data-uncall="${c.code}">Anulează</button>` : `<button class="btn btn-green" type="button" data-call="${c.code}">Am sunat clientul</button>`}</div></div>`).join("")}</div></div>` : "";
+  $$("[data-call]").forEach(b => b.onclick = () => { const c = find(b.dataset.call); c.contactedAt = new Date().toISOString(); c.contactedBy = currentUser(); save(); renderList(); toast("Notat: clientul a fost sunat."); });
+  $$("[data-uncall]").forEach(b => b.onclick = () => { const c = find(b.dataset.uncall); c.contactedAt = null; save(); renderList(); });
+
+  $("#filters").innerHTML = FILTERS.map(([k, t]) => `<button type="button" class="chip" data-f="${k}" aria-pressed="${filter === k}">${t} <span class="num" style="opacity:.7">${k === "toate" ? db.cards.length : db.cards.filter(c => status(c).k === k).length}</span></button>`).join("");
+  $$("[data-f]").forEach(b => b.onclick = () => { filter = b.dataset.f; renderList(); });
+
+  const list = db.cards.filter(c => filter === "toate" || status(c).k === filter).filter(c => !query || [c.code, c.client.first, c.client.last, c.client.phone, c.client.phone.replace(/\s/g, ""), c.client.email].join(" ").toLowerCase().includes(query))
+    .sort((a, b) => new Date(b.issuedAt) - new Date(a.issuedAt));
+  $("#rows").innerHTML = list.length ? list.map(c => `<tr data-open="${c.code}" tabindex="0">
+    <td class="mono">${esc(c.code)}</td>
+    <td><b>${esc(c.client.first)} ${esc(c.client.last)}</b><span class="sub num">${esc(c.client.phone)}</span></td>
+    <td>${esc(c.issuedBy)}</td>
+    <td class="num">${fmtDT(c.issuedAt)}</td>
+    <td class="r num">${lei(c.amount)}</td>
+    <td class="r num"><b>${lei(c.balance)}</b><div class="bar"><i style="width:${Math.max(0, c.balance / c.amount * 100)}%"></i></div></td>
+    <td class="num">${fmtDate(c.expiresAt)}</td>
+    <td>${pill(c)}</td></tr>`).join("") : `<tr><td colspan="8" class="empty-state">Niciun card nu se potrivește căutării.</td></tr>`;
+  $$("[data-open]").forEach(r => { r.onclick = () => openDrawer(r.dataset.open); r.onkeydown = e => { if (e.key === "Enter") openDrawer(r.dataset.open); }; });
+}
+
+function openDrawer(code) {
+  const c = find(code); if (!c) return;
+  const s = document.createElement("div"); s.className = "scrim";
+  s.innerHTML = `<aside class="drawer" role="dialog" aria-modal="true" aria-label="Card ${esc(c.code)}">
+    <div class="drawer-head"><div><h3 style="font-size:22px">${esc(c.client.first)} ${esc(c.client.last)}</h3><span class="mono" style="color:var(--muted)">${esc(c.code)}</span></div><button class="btn btn-ghost" type="button" id="dClose">Închide</button></div>
+    <div style="display:flex;gap:10px;align-items:center">${pill(c)}<span class="num" style="font-size:18px;font-weight:800">${lei(c.balance)}</span><span style="color:var(--muted)">din ${lei(c.amount)}</span></div>
+    <dl class="kv"><dt>Telefon</dt><dd class="num">${esc(c.client.phone)}</dd><dt>Email</dt><dd>${esc(c.client.email)}</dd><dt>Newsletter</dt><dd>${c.marketing ? "Da, a fost de acord" : "Nu"}</dd>
+    <dt>Încărcat de</dt><dd>${esc(c.issuedBy)}</dd><dt>Data</dt><dd>${fmtDT(c.issuedAt)}</dd><dt>Valabil până la</dt><dd>${fmtDate(c.expiresAt)}</dd>
+    ${c.contactedAt ? `<dt>Sunat</dt><dd>${fmtDT(c.contactedAt)}</dd>` : ""}</dl>
+    <div><h4 style="margin:0 0 10px;font-size:12.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)">Istoric</h4><div class="history">
+    ${[...c.tx].reverse().map(t => `<div class="h-item ${t.type}"><b class="num">${t.type === "load" ? "Încărcat " : "Consumat −"}${lei(t.amount)}</b><div class="when">${fmtDT(t.at)} · ${esc(t.by)}</div></div>`).join("")}</div></div></aside>`;
+  document.body.append(s);
+  const close = () => s.remove();
+  $("#dClose", s).onclick = close; s.onclick = e => { if (e.target === s) close(); };
+  document.addEventListener("keydown", function k(e) { if (e.key === "Escape") { close(); document.removeEventListener("keydown", k); } });
+  $("#dClose", s).focus();
+}
+
+// ================= NEWSLETTER =================
+function renderNews() {
+  const subs = db.cards.filter(c => c.marketing);
+  const uniq = [...new Map(subs.map(c => [c.client.email, c])).values()];
+  $("#nlCount").innerHTML = `<b class="num">${uniq.length}</b> clienți au acceptat emailuri de promovare (din ${new Set(db.cards.map(c => c.client.email)).size} clienți în total)`;
+  $("#nlRows").innerHTML = uniq.length ? uniq.map(c => `<tr style="cursor:default"><td><b>${esc(c.client.first)} ${esc(c.client.last)}</b></td><td>${esc(c.client.email)}</td><td class="num">${esc(c.client.phone)}</td><td class="num">${fmtDate(c.consentAt || c.issuedAt)}</td><td class="mono">${esc(c.code)}</td></tr>`).join("")
+    : `<tr><td colspan="5" class="empty-state">Încă nu sunt clienți abonați.</td></tr>`;
+  const copy = async (text, ok) => { try { await navigator.clipboard.writeText(text); toast(ok); } catch (e) { const ta = document.createElement("textarea"); ta.value = text; document.body.append(ta); ta.select(); try { document.execCommand("copy"); toast(ok); } catch (_) { toast("Selectează și copiază manual."); } ta.remove(); } };
+  $("#copyEmails").onclick = () => copy(uniq.map(c => c.client.email).join(", "), "Emailurile au fost copiate.");
+  $("#copyCsv").onclick = () => copy(["Prenume,Nume,Email,Telefon", ...uniq.map(c => [c.client.first, c.client.last, c.client.email, c.client.phone].map(v => `"${v.replace(/"/g, '""')}"`).join(","))].join("\n"), "Tabelul a fost copiat. Îl poți lipi în Excel sau Mailchimp.");
+}
+
+// ================= OSPĂTAR =================
+let w = { screen: "home", code: null, amount: "", err: "", last: null };
+const pBody = $("#pBody");
+const scanIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="4" height="4"/><rect x="13" y="13" width="4" height="4"/><path d="M13 7h4v2M7 15v2h2"/></svg>`;
+function wScan() { openScanner("Scanează cardul clientului", code => { w = { ...w, screen: "card", code, amount: "", err: "" }; renderWaiter(); }, ["LYRA-0001", "LYRA-0003", "LYRA-0006", "LYRA-0005", "LYRA-0008"]); }
+$$("[data-wscan]").forEach(b => b.onclick = () => { w = { ...w, screen: "card", code: b.dataset.wscan, amount: "", err: "" }; renderWaiter(); });
+function renderWaiter() {
+  $("#waiterName").textContent = currentUser();
+  if (w.screen === "home") {
+    const mine = db.cards.flatMap(c => c.tx.filter(t => t.type === "use").map(t => ({ ...t, code: c.code }))).sort((a, b) => new Date(b.at) - new Date(a.at)).slice(0, 5);
+    pBody.innerHTML = `<button class="scan-big" type="button" id="wScanBtn">${scanIcon}Scanează card cadou</button>
+      <div class="p-recent"><h4>Ultimele plăți cu card</h4>${mine.map(t => `<div class="ri"><span><b class="mono">${esc(t.code)}</b><br><span style="color:var(--muted);font-size:12.5px">${fmtDT(t.at)} · ${esc(t.by.split(" ")[0])}</span></span><b class="num">−${lei(t.amount)}</b></div>`).join("") || `<p class="scan-hint">Nicio plată încă.</p>`}</div>`;
+    $("#wScanBtn").onclick = wScan; return;
+  }
+  const back = `<button class="btn btn-ghost" type="button" id="wBack">Înapoi</button>`;
+  const c = find(w.code);
+  if (!c) {
+    pBody.innerHTML = `<div class="bal-card"><div class="lbl">${esc(w.code)}</div><h3 style="margin:10px 0 6px">Cardul nu este încărcat</h3><p class="scan-hint">Acest card nu a fost activat la recepție, deci nu are bani pe el. Trimite clientul la recepție sau încasează normal.</p></div>
+      <div class="p-actions"><button class="btn btn-primary" type="button" id="wAgain">Scanează alt card</button>${back}</div>`;
+  } else if (w.screen === "card") {
+    const st = status(c), blocked = st.k === "expirat" || st.k === "consumat";
+    pBody.innerHTML = `<div class="bal-card"><div class="lbl">Sold disponibil</div><div class="big num">${(Math.round(c.balance * 100) / 100).toLocaleString("ro-RO")} <small>lei</small></div>${pill(c)}
+      <div class="bal-meta"><div>Valabil până la<b>${fmtDate(c.expiresAt)}</b></div><div>Client<b>${esc(c.client.first)} ${esc(c.client.last[0])}.</b></div></div></div>
+      ${blocked ? `<div class="msg bad">${st.k === "expirat" ? `Cardul a expirat pe ${fmtDate(c.expiresAt)} și nu mai poate fi folosit.` : "Pe acest card nu mai sunt bani."}</div>
+        <div class="p-actions"><button class="btn btn-primary" type="button" id="wAgain">Scanează alt card</button>${back}</div>`
+      : `<div class="field"><label for="wAmt">Suma consumată de client</label><div class="amount-in"><input id="wAmt" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0" value="${esc(w.amount)}"><span>lei</span></div></div>
+        ${w.err ? `<div class="msg ${w.errType || "bad"}">${w.err}</div>` : ""}
+        <div class="p-actions"><button class="btn btn-primary" type="button" id="wNext">Scade de pe card</button><button class="btn btn-ghost" type="button" id="wAll">Folosește tot soldul (${lei(c.balance)})</button>${back}</div>`}`;
+    if (!blocked) {
+      const inp = $("#wAmt");
+      inp.oninput = () => { w.amount = inp.value; };
+      $("#wAll").onclick = () => { w.amount = String(c.balance); w.screen = "confirm"; w.err = ""; renderWaiter(); };
+      $("#wNext").onclick = () => {
+        const a = Math.round(parseFloat(String(w.amount).replace(",", ".")) * 100) / 100;
+        if (!(a > 0)) { w.err = "Scrie suma consumată."; w.errType = "bad"; return renderWaiter(); }
+        if (a > c.balance + 1e-9) { w.err = `Pe card sunt doar ${lei(c.balance)}. Folosește tot soldul, iar diferența de ${lei(a - c.balance)} se plătește separat.`; w.errType = "warn"; return renderWaiter(); }
+        w.amount = String(a); w.screen = "confirm"; w.err = ""; renderWaiter();
+      };
+    }
+  } else if (w.screen === "confirm") {
+    const a = +w.amount;
+    pBody.innerHTML = `<div class="bal-card"><div class="lbl">Confirmă plata cu cardul ${esc(c.code)}</div><div class="big num">−${(a).toLocaleString("ro-RO")} <small>lei</small></div>
+      <div class="bal-meta"><div>Sold acum<b class="num">${lei(c.balance)}</b></div><div>Rămâne pe card<b class="num">${lei(c.balance - a)}</b></div></div></div>
+      <div class="p-actions"><button class="btn btn-primary" type="button" id="wOk">Confirmă</button><button class="btn btn-ghost" type="button" id="wEdit">Modifică suma</button></div>`;
+    $("#wOk").onclick = () => {
+      c.balance = Math.round((c.balance - a) * 100) / 100;
+      c.tx.push({ type: "use", amount: a, at: new Date().toISOString(), by: currentUser() }); save();
+      w.screen = "done"; w.last = a; renderWaiter(); updateBell();
+    };
+    $("#wEdit").onclick = () => { w.screen = "card"; renderWaiter(); };
+  } else if (w.screen === "done") {
+    pBody.innerHTML = `<div class="done"><div class="tick"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></div>
+      <h3 style="font-size:22px">Plată înregistrată</h3><p class="scan-hint">Au fost scăzuți ${lei(w.last)} de pe cardul ${esc(c.code)}.</p></div>
+      <div class="bal-card"><div class="lbl">Sold rămas pe card</div><div class="big num">${(c.balance).toLocaleString("ro-RO")} <small>lei</small></div><div class="scan-hint">Valabil până la ${fmtDate(c.expiresAt)}</div></div>
+      <div class="p-actions"><button class="btn btn-primary" type="button" id="wAgain">Scanează alt card</button><button class="btn btn-ghost" type="button" id="wBack">Gata</button></div>`;
+  }
+  $("#wBack") && ($("#wBack").onclick = () => { w = { screen: "home" }; renderWaiter(); });
+  $("#wAgain") && ($("#wAgain").onclick = () => { w = { screen: "home" }; renderWaiter(); wScan(); });
+}
+
+// ---------------- notificări ----------------
+function updateBell() {
+  const n = expiring().filter(c => !c.contactedAt).length;
+  const el = $("#bellCount"); el.textContent = n; n ? el.removeAttribute("data-zero") : el.setAttribute("data-zero", "");
+}
+
+function renderAll() {
+  if (view === "load") renderLoad();
+  if (view === "list") renderList();
+  if (view === "news") renderNews();
+  if (view === "waiter") renderWaiter();
+  updateBell();
+}
+$("#resetDemo").onclick = () => { db = seed(); save(); loadState.code = null; w = { screen: "home" }; renderAll(); toast("Datele de probă au fost repuse."); };
+if (location.hash === "#ospatar") show("waiter"); else if (location.hash === "#evidenta") show("list"); else renderAll();
+})();
+</script>
+</body>
+</html>
