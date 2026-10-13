@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#06120c">
+<title>Lyra · Meniu</title>
+<meta name="description" content="Meniul digital Lyra — Pensiune Restaurant, tradiții din 1999. Română · English · Magyar.">
+<link rel="icon" href="img/logo.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="preload" as="image" href="img/restaurant.webp">
+</head>
+<body>
+
+<!-- ================= INTRO / LANGUAGE ================= -->
+<section id="intro" aria-label="Alegeți limba">
+  <div class="intro-bg"></div>
+  <canvas id="embers" aria-hidden="true"></canvas>
+  <div class="intro-inner">
+    <img class="intro-logo" src="img/logo.webp" alt="Lyra — Pensiune Restaurant, Tradiții din 1999">
+    <p class="intro-kicker">Pensiune · Restaurant · 1999</p>
+    <h1 class="intro-title"><span>Bun venit</span><span>Welcome</span><span>Üdvözöljük</span></h1>
+    <p class="intro-sub">Alegeți limba · Choose your language · Válasszon nyelvet</p>
+    <div class="lang-btns">
+      <button class="lang-btn" data-lang="ro"><span class="flag">🇷🇴</span><span><b>Română</b><small>Meniu</small></span></button>
+      <button class="lang-btn" data-lang="en"><span class="flag">🇬🇧</span><span><b>English</b><small>Menu</small></span></button>
+      <button class="lang-btn" data-lang="hu"><span class="flag">🇭🇺</span><span><b>Magyar</b><small>Étlap</small></span></button>
+    </div>
+  </div>
+</section>
+
+<!-- ================= APP ================= -->
+<div id="app" hidden>
+  <header class="topbar">
+    <button class="tb-logo" id="toTop" aria-label="Sus"><img src="img/logo.webp" alt="Lyra"></button>
+    <div class="tb-actions">
+      <button class="icon-btn" id="btnSearch" aria-label="Search">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+      </button>
+      <button class="icon-btn lang-pill" id="btnLang" aria-label="Language"><span id="langLabel">RO</span></button>
+      <button class="icon-btn" id="btnList" aria-label="My list">
+        <svg viewBox="0 0 24 24"><path d="M6 7h12l-1 13H7L6 7Z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>
+        <span class="badge" id="listCount" hidden>0</span>
+      </button>
+    </div>
+  </header>
+
+  <nav class="catnav" id="catnav">
+    <button class="cat-grid-btn" id="btnCats" aria-label="Categorii">
+      <svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/></svg>
+    </button>
+    <div class="chips" id="chips"></div>
+  </nav>
+
+  <main>
+    <section class="hero" id="hero"></section>
+    <div id="sections"></div>
+    <footer class="footer" id="footer"></footer>
+  </main>
+</div>
+
+<!-- ================= WAITER FAB ================= -->
+<button id="fab" hidden aria-label="Ospătarul Lyra">
+  <span class="fab-teaser" id="fabTeaser"></span>
+  <span class="fab-avatar"><svg class="cloche" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="15" r="3.2"/><path d="M10 44a22 22 0 0 1 44 0Z"/><rect x="6" y="46" width="52" height="4.5" rx="2.2"/><path class="shine" d="M19 37a14 14 0 0 1 9-10" /></svg></span>
+</button>
+
+<!-- ================= WAITER CHAT ================= -->
+<section id="chat" class="sheet chat" aria-label="Lyra" hidden>
+  <div class="chat-head" id="chatHead">
+    <span class="grabber"></span>
+    <span class="avatar"><svg class="cloche" viewBox="0 0 64 64"><circle cx="32" cy="15" r="3.2"/><path d="M10 44a22 22 0 0 1 44 0Z"/><rect x="6" y="46" width="52" height="4.5" rx="2.2"/></svg></span>
+    <div class="who"><b>Lyra</b><small id="chatStatus"></small></div>
+    <button class="icon-btn sm" id="btnSound" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M4 10v4h4l5 4V6L8 10H4Z"/><path class="wave" d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/></svg></button>
+    <button class="icon-btn sm" id="btnChatMin" aria-label="Minimize"><svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button>
+  </div>
+  <div class="chat-log" id="chatLog"></div>
+  <form class="chat-input" id="chatForm" autocomplete="off">
+    <button type="button" class="icon-btn sm" id="btnMic" hidden aria-label="Mic"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+    <input id="chatInput" type="text" enterkeyhint="send">
+    <button type="submit" class="send" aria-label="Send"><svg viewBox="0 0 24 24"><path d="M4 12h15M13 6l6 6-6 6"/></svg></button>
+  </form>
+</section>
+
+<!-- ================= DISH DETAIL ================= -->
+<div class="scrim" id="scrim" hidden></div>
+<section id="dish" class="sheet dish-sheet" hidden aria-modal="true" role="dialog"></section>
+
+<!-- ================= MY LIST ================= -->
+<section id="list" class="sheet list-sheet" hidden aria-modal="true" role="dialog"></section>
+
+<!-- ================= SEARCH ================= -->
+<section id="search" class="overlay" hidden>
+  <div class="search-bar">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+    <input id="searchInput" type="search" enterkeyhint="search">
+    <button class="icon-btn sm" id="searchClose" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  </div>
+  <div class="search-res" id="searchRes"></div>
+</section>
+
+<!-- ================= CATEGORY GRID ================= -->
+<section id="catgrid" class="overlay" hidden>
+  <div class="cg-head"><h2 id="cgTitle"></h2><button class="icon-btn sm" id="cgClose" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+  <div class="cg-grid" id="cgGrid"></div>
+</section>
+
+<!-- ================= REELS ================= -->
+<section id="reels" hidden>
+  <button class="icon-btn reels-close" id="reelsClose" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  <div class="reels-track" id="reelsTrack"></div>
+</section>
+
+<!-- ================= SHOW WAITER (fullscreen list) ================= -->
+<section id="showwaiter" class="overlay" hidden></section>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
