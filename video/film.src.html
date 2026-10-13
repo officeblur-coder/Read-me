@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wrap – Film produs</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:100%;height:100%;overflow:hidden;background:#000;cursor:none}
+  body{display:flex;align-items:center;justify-content:center}
+  canvas{display:block;max-width:100vw;max-height:100vh;width:auto;height:auto}
+</style>
+</head>
+<body>
+<canvas id="film"></canvas>
+<script>
+/* Filmare de produs: doar camera, lumina, abur, grain. Fara text / grafica.
+   Randare determinista: renderFrame(t) deseneaza cadrul la secunda t.
+   Deschis normal in browser ruleaza in bucla, in timp real. */
+const SRC = "__IMG__";
+const P = new URLSearchParams(location.search);
+const W = +P.get('w') || 1080, H = +P.get('h') || 1920;
+const cv = document.getElementById('film');
+cv.width = W; cv.height = H;
+const ctx = cv.getContext('2d');
+
+const mk = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
+const lerp = (a, b, t) => a + (b - a) * t;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+// mostly-linear move with soft ends, like a slider/gimbal move cut mid-travel
+const glide = t => 0.65 * t + 0.35 * (0.5 - 0.5 * Math.cos(Math.PI * t));
+function rng(seed) { return () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; }; }
+
+const PX = 500, PY = 900;
+let IW, IH, feather, blurImg, backdrop, wrapMask, dofLayer, fxLayer, bufA, bufB, grain = [];
+
+/* ---------- shots (source-image coordinates) ---------- */
+const SHOTS = [
+  { // hero, slow push in
+    d: 3.3, cam: [{ x: 725, y: 615, s: 0.74, r: -1.6 }, { x: 705, y: 600, s: 0.83, r: -0.2 }],
+    focus: { x: 520, y: 640, r: 520 }, steam: 1, sweep: null },
+  { // macro: mango & sauce, lateral slide
+    d: 3.0, cam: [{ x: 300, y: 590, s: 1.95, r: 2.0 }, { x: 560, y: 640, s: 2.05, r: 1.2 }],
+    focus: { x: 430, y: 600, r: 260, track: true }, steam: 1.3, sweep: null },
+  { // grill marks, diagonal glide + light pass
+    d: 2.9, cam: [{ x: 820, y: 360, s: 1.75, r: -6 }, { x: 1080, y: 520, s: 1.85, r: -5 }],
+    focus: { x: 950, y: 440, r: 330, track: true }, steam: 0, sweep: { a: -0.6, from: -0.2, to: 1.2 } },
+  { // open end, push in on the filling
+    d: 2.8, cam: [{ x: 470, y: 720, s: 1.45, r: 0.5 }, { x: 450, y: 700, s: 1.72, r: -0.5 }],
+    focus: { x: 470, y: 720, r: 330, track: true }, steam: 1.1, sweep: null },
+  { // hero settle / pull back, hold
+    d: 3.6, cam: [{ x: 690, y: 620, s: 1.0, r: 1.2 }, { x: 712, y: 605, s: 0.77, r: 0 }],
+    focus: { x: 600, y: 620, r: 600 }, steam: 1, sweep: { a: -0.6, from: -0.3, to: 1.3 }, hold: 0.9 },
+];
+const XF = 0.28; // dissolve length (s)
+let T0 = [], DURATION = 0; for (const s of SHOTS) { T0.push(DURATION); DURATION += s.d; }
+
+/* ---------- setup ---------- */
+async function setup() {
+  const img = new Image(); img.src = SRC; await img.decode();
+  IW = img.naturalWidth; IH = img.naturalHeight;
+
+  // edge feather so the photo melts into the out-of-focus backdrop
+  const fm = mk(IW, IH), fc = fm.getContext('2d');
+  const id = fc.createImageData(IW, IH), E = 90;
+  for (let y = 0; y < IH; y++) for (let x = 0; x < IW; x++) {
+    const e = Math.min(x, y, IW - 1 - x, IH - 1 - y) / E;
+    const a = e >= 1 ? 1 : e * e * (3 - 2 * e);
+    id.data[(y * IW + x) * 4 + 3] = a * 255;
+  }
+  fc.putImageData(id, 0, 0);
+
+  feather = mk(IW, IH); { const c = feather.getContext('2d');
+    c.drawImage(img, 0, 0); c.globalCompositeOperation = 'destination-in'; c.drawImage(fm, 0, 0); }
+
+  blurImg = mk(IW, IH); { const c = blurImg.getContext('2d');
+    c.drawImage(img, 0, 0); c.filter = 'blur(9px)'; c.drawImage(img, 0, 0); c.filter = 'none';
+    c.globalCompositeOperation = 'destination-in'; c.drawImage(fm, 0, 0); }
+
+  // extended, defocused set: edge rows/columns of the backdrop stretched outward
+  backdrop = mk(IW + 2 * PX, IH + 2 * PY); { const c = backdrop.getContext('2d'), BW = IW + 2 * PX, BH = IH + 2 * PY;
+    c.drawImage(img, 0, 0, IW, 160, PX, 0, IW, PY + 160);
+    c.drawImage(img, 0, IH - 60, IW, 60, PX, PY + IH - 60, IW, PY + 60);
+    c.drawImage(img, PX, PY);
+    c.drawImage(backdrop, PX, 0, 40, BH, 0, 0, PX, BH);
+    c.drawImage(backdrop, PX + IW - 40, 0, 40, BH, PX + IW, 0, PX, BH);
+    const t = mk(BW, BH), tc = t.getContext('2d'); tc.filter = 'blur(34px)'; tc.drawImage(backdrop, 0, 0);
+    c.clearRect(0, 0, BW, BH); c.drawImage(t, 0, 0);
+    const fall = c.createLinearGradient(0, 0, 0, BH);
+    fall.addColorStop(0, 'rgba(1,5,20,0.75)'); fall.addColorStop(PY / BH, 'rgba(1,5,20,0.2)');
+    fall.addColorStop(1 - PY / BH, 'rgba(1,5,20,0.2)'); fall.addColorStop(1, 'rgba(1,5,20,0.85)');
+    c.fillStyle = fall; c.fillRect(0, 0, BW, BH); }
+
+  // product mask (everything that is not the blue set)
+  wrapMask = mk(IW, IH); {
+    const t = mk(IW, IH), tc = t.getContext('2d'); tc.drawImage(img, 0, 0);
+    const d = tc.getImageData(0, 0, IW, IH), p = d.data;
+    for (let i = 0; i < p.length; i += 4) {
+      const warm = (p[i] - p[i + 2]) / 60;
+      p[i] = p[i + 1] = p[i + 2] = 255; p[i + 3] = clamp(warm + 0.2, 0, 1) * 255;
+    }
+    tc.putImageData(d, 0, 0);
+    const c = wrapMask.getContext('2d'); c.filter = 'blur(3px)'; c.drawImage(t, 0, 0);
+  }
+
+  dofLayer = mk(IW, IH); fxLayer = mk(IW, IH);
+  bufA = mk(W, H); bufB = mk(W, H);
+
+  const r = rng(7);
+  for (let k = 0; k < 6; k++) {
+    const g = mk(256, 256), gc = g.getContext('2d'), gd = gc.createImageData(256, 256);
+    for (let i = 0; i < gd.data.length; i += 4) { const v = 128 + (r() - 0.5) * 200; gd.data[i] = gd.data[i + 1] = gd.data[i + 2] = v; gd.data[i + 3] = 255; }
+    gc.putImageData(gd, 0, 0); grain.push(g);
+  }
+}
+
+/* ---------- steam ---------- */
+const STEAM = (() => { const r = rng(42), a = [];
+  for (let i = 0; i < 46; i++) {
+    const u = r();
+    a.push({ x: lerp(170, 900, u) + (r() - 0.5) * 60, y: lerp(500, 690, u) + (r() - 0.5) * 40,
+      period: 2.6 + r() * 2.2, off: r() * 10, rise: 190 + r() * 170, sway: 20 + r() * 40,
+      size: 26 + r() * 30, ph: r() * 6.28, a: 0.035 + r() * 0.04 });
+  }
+  return a; })();
+
+function drawSteam(c, t, amt) {
+  if (!amt) return;
+  c.save(); c.globalCompositeOperation = 'screen';
+  for (const s of STEAM) {
+    const life = ((t + s.off) % s.period) / s.period;
+    const y = s.y - life * s.rise;
+    const x = s.x + Math.sin(t * 0.9 + s.ph + life * 3) * s.sway * life + life * 25;
+    const rad = s.size * (0.6 + life * 2.4);
+    const al = Math.sin(Math.PI * life) ** 1.5 * s.a * amt;
+    const g = c.createRadialGradient(x, y, 0, x, y, rad);
+    g.addColorStop(0, `rgba(235,240,255,${al})`);
+    g.addColorStop(0.55, `rgba(225,232,255,${al * 0.45})`);
+    g.addColorStop(1, 'rgba(220,230,255,0)');
+    c.fillStyle = g;
+    c.save(); c.translate(x, y); c.scale(0.75, 1.25); c.translate(-x, -y);
+    c.fillRect(x - rad, y - rad, rad * 2, rad * 2); c.restore();
+  }
+  c.restore();
+}
+
+/* ---------- one shot ---------- */
+function drawShot(out, si, lt) {
+  const S = SHOTS[si], c = out.getContext('2d');
+  const span = S.d - (S.hold || 0);
+  const p = glide(clamp(lt / span, 0, 1));
+  const A = S.cam[0], B = S.cam[1];
+  const cam = { x: lerp(A.x, B.x, p), y: lerp(A.y, B.y, p), s: lerp(A.s, B.s, p), r: lerp(A.r, B.r, p) };
+  const tg = T0[si] + lt;
+  // handheld / gimbal micro drift (screen px)
+  const hx = Math.sin(tg * 0.83) * 3.2 + Math.sin(tg * 2.11 + 1.3) * 1.3 + Math.sin(tg * 5.3) * 0.35;
+  const hy = Math.cos(tg * 0.71 + 0.4) * 2.6 + Math.sin(tg * 1.93) * 1.1 + Math.cos(tg * 4.7) * 0.3;
+  const hr = Math.sin(tg * 0.6 + 2) * 0.12;
+
+  c.setTransform(1, 0, 0, 1, 0, 0);
+  c.fillStyle = '#04102e'; c.fillRect(0, 0, W, H);
+
+  c.translate(W / 2 + hx, H / 2 + hy);
+  c.rotate((cam.r + hr) * Math.PI / 180);
+  c.scale(cam.s, cam.s);
+  c.translate(-cam.x, -cam.y);
+
+  c.drawImage(backdrop, -PX, -PY);
+  c.drawImage(feather, 0, 0);
+
+  // shallow depth of field
+  const f = S.focus, fx = f.track ? lerp(f.x, cam.x, 0.55) : f.x, fy = f.track ? lerp(f.y, cam.y, 0.4) : f.y;
+  const d = dofLayer.getContext('2d');
+  d.globalCompositeOperation = 'copy'; d.drawImage(blurImg, 0, 0);
+  d.globalCompositeOperation = 'destination-out';
+  const g = d.createRadialGradient(fx, fy, f.r * 0.35, fx, fy, f.r * 1.35);
+  g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+  d.fillStyle = g; d.fillRect(0, 0, IW, IH);
+  c.drawImage(dofLayer, 0, 0);
+
+  // warm light pass across the tortilla
+  if (S.sweep) {
+    const sw = S.sweep, sp = lerp(sw.from, sw.to, clamp(lt / S.d, 0, 1));
+    const e = fxLayer.getContext('2d');
+    e.globalCompositeOperation = 'copy';
+    const cx = sp * IW, ca = Math.cos(sw.a), sa = Math.sin(sw.a);
+    const lg = e.createLinearGradient(cx - ca * 260, IH / 2 - sa * 260, cx + ca * 260, IH / 2 + sa * 260);
+    lg.addColorStop(0, 'rgba(255,214,160,0)'); lg.addColorStop(0.5, 'rgba(255,226,180,0.55)'); lg.addColorStop(1, 'rgba(255,214,160,0)');
+    e.fillStyle = lg; e.fillRect(0, 0, IW, IH);
+    e.globalCompositeOperation = 'destination-in'; e.drawImage(wrapMask, 0, 0);
+    c.save(); c.globalCompositeOperation = 'soft-light'; c.globalAlpha = 0.9; c.drawImage(fxLayer, 0, 0);
+    c.globalCompositeOperation = 'screen'; c.globalAlpha = 0.16; c.drawImage(fxLayer, 0, 0); c.restore();
+  }
+
+  drawSteam(c, tg, S.steam);
+  c.setTransform(1, 0, 0, 1, 0, 0);
+}
+
+/* ---------- frame ---------- */
+function renderFrame(t) {
+  t = clamp(t, 0, DURATION - 1e-4);
+  let si = 0; while (si < SHOTS.length - 1 && t >= T0[si + 1]) si++;
+  const lt = t - T0[si];
+  drawShot(bufA, si, lt);
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  ctx.drawImage(bufA, 0, 0);
+  // dissolve from previous shot (previous keeps moving through the overlap)
+  if (si > 0 && lt < XF) {
+    drawShot(bufB, si - 1, SHOTS[si - 1].d + lt);
+    ctx.globalAlpha = 1 - glide(lt / XF); ctx.drawImage(bufB, 0, 0); ctx.globalAlpha = 1;
+  }
+  // grade: gentle contrast curve + warm mids, vignette, grain, fade in/out
+  ctx.save();
+  ctx.globalCompositeOperation = 'soft-light'; ctx.fillStyle = 'rgba(255,190,120,0.10)'; ctx.fillRect(0, 0, W, H);
+  ctx.globalCompositeOperation = 'source-over';
+  const v = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.hypot(W, H) * 0.6);
+  v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,4,16,0.55)');
+  ctx.fillStyle = v; ctx.fillRect(0, 0, W, H);
+  const fi = Math.floor(t * 24) % grain.length, gr = rng(Math.floor(t * 24) + 3);
+  ctx.globalCompositeOperation = 'overlay'; ctx.globalAlpha = 0.07;
+  ctx.fillStyle = ctx.createPattern(grain[fi], 'repeat');
+  ctx.translate(-gr() * 256, -gr() * 256); ctx.fillRect(0, 0, W + 256, H + 256);
+  ctx.restore();
+  const fade = Math.min(t / 0.45, (DURATION - t) / 0.6, 1);
+  if (fade < 1) { ctx.fillStyle = `rgba(0,0,0,${1 - glide(clamp(fade, 0, 1))})`; ctx.fillRect(0, 0, W, H); }
+}
+
+window.FILM = { ready: setup(), renderFrame, DURATION, canvas: cv };
+if (!P.has('render')) {
+  window.FILM.ready.then(() => {
+    const start = performance.now();
+    const loop = now => { renderFrame(((now - start) / 1000) % DURATION); requestAnimationFrame(loop); };
+    requestAnimationFrame(loop);
+  });
+  document.addEventListener('click', () => document.documentElement.requestFullscreen?.());
+}
+</script>
+</body>
+</html>
