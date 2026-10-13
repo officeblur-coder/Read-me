@@ -1,0 +1,1042 @@
+<title>Emerald Event Manager</title>
+<meta name="description" content="Prototip: soft de gestiune a evenimentelor pentru Emerald Luxury Events">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600&family=Manrope:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: graphite sidebar (brand surface, same in both themes) + calm working area; the event sheet is the centre of the product. */
+:root {
+  --ink: #121416;          /* sidebar, brand graphite */
+  --ink-2: #1B1E21;
+  --chrome: #C8CDD1;       /* silver, from the logo */
+  --chrome-dim: #858C92;
+  --bg: #F3F4F3;
+  --surface: #FFFFFF;
+  --surface-2: #F8F9F8;
+  --fg: #1A1D1F;
+  --muted: #69706C;
+  --line: #E2E5E3;
+  --accent: #0E6B50;       /* emerald */
+  --accent-fg: #FFFFFF;
+  --accent-soft: #E2F0EA;
+  --amber: #A86A12;
+  --amber-soft: #FBF0DC;
+  --slate: #52647A;
+  --slate-soft: #E8EDF2;
+  --danger: #B42318;
+  --danger-soft: #FCEAE8;
+  --shadow: 0 1px 2px rgba(18,20,22,.05), 0 4px 16px rgba(18,20,22,.04);
+  --font-display: "Josefin Sans", "Futura", "Century Gothic", system-ui, sans-serif;
+  --font-body: "Manrope", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ink: #0B0C0D; --ink-2: #15181A; --chrome: #C8CDD1; --chrome-dim: #7D858B;
+    --bg: #101213; --surface: #171A1C; --surface-2: #1C2022; --fg: #E7EAE8; --muted: #9AA19D; --line: #2A2F2F;
+    --accent: #3DB389; --accent-fg: #0B0C0D; --accent-soft: #15322A;
+    --amber: #E3AA4D; --amber-soft: #382B15; --slate: #A3B4C8; --slate-soft: #1F2731;
+    --danger: #F2806F; --danger-soft: #3A1B17; --shadow: 0 1px 2px rgba(0,0,0,.3);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --ink: #0B0C0D; --ink-2: #15181A; --chrome: #C8CDD1; --chrome-dim: #7D858B;
+  --bg: #101213; --surface: #171A1C; --surface-2: #1C2022; --fg: #E7EAE8; --muted: #9AA19D; --line: #2A2F2F;
+  --accent: #3DB389; --accent-fg: #0B0C0D; --accent-soft: #15322A;
+  --amber: #E3AA4D; --amber-soft: #382B15; --slate: #A3B4C8; --slate-soft: #1F2731;
+  --danger: #F2806F; --danger-soft: #3A1B17; --shadow: 0 1px 2px rgba(0,0,0,.3);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 500 14px/1.5 var(--font-body); -webkit-font-smoothing: antialiased; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.num { font-variant-numeric: tabular-nums; }
+
+.app { display: grid; grid-template-columns: 244px minmax(0, 1fr); min-height: 100%; }
+
+/* Sidebar */
+.side { background: var(--ink); color: var(--chrome); display: flex; flex-direction: column; gap: 28px; padding: 28px 16px 20px; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+.brand { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 4px 0 6px; }
+.brand svg { width: 38px; height: 30px; }
+.word { font-family: var(--font-display); font-weight: 300; font-size: 23px; letter-spacing: .32em; margin-right: -.32em; color: #E9ECEE; line-height: 1; }
+.word-sub { font-family: var(--font-display); font-weight: 400; font-size: 9.5px; letter-spacing: .42em; margin-right: -.42em; color: var(--chrome-dim); }
+.nav { display: flex; flex-direction: column; gap: 2px; }
+.nav-label { font-family: var(--font-display); font-size: 10.5px; letter-spacing: .2em; text-transform: uppercase; color: var(--chrome-dim); padding: 0 12px 8px; }
+.nav button { display: flex; align-items: center; gap: 12px; width: 100%; background: none; border: 0; color: var(--chrome); padding: 9px 12px; border-radius: 8px; text-align: left; font-weight: 500; transition: background .15s, color .15s; }
+.nav button:hover { background: var(--ink-2); color: #fff; }
+.nav button.on { background: var(--ink-2); color: #fff; box-shadow: inset 0 0 0 1px #2A2F33; }
+.nav button svg { width: 18px; height: 18px; flex: none; opacity: .85; }
+.nav .count { margin-left: auto; font-size: 11.5px; background: #2A2F33; color: #E9ECEE; border-radius: 999px; padding: 1px 8px; }
+.side-foot { margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 12px; border-top: 1px solid #23272A; }
+.avatar { width: 32px; height: 32px; border-radius: 50%; background: #2A2F33; color: #E9ECEE; display: grid; place-items: center; font-size: 12px; font-weight: 600; flex: none; }
+.side-foot b { display: block; color: #E9ECEE; font-weight: 600; font-size: 13px; }
+.side-foot span { font-size: 12px; color: var(--chrome-dim); }
+
+/* Main */
+.main { min-width: 0; display: flex; flex-direction: column; }
+.top { display: flex; align-items: center; gap: 12px; padding: 14px 32px; border-bottom: 1px solid var(--line); background: var(--surface); position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; }
+.menu-btn { display: none; background: none; border: 1px solid var(--line); border-radius: 8px; width: 36px; height: 36px; place-items: center; }
+.search { flex: 1; max-width: 420px; display: flex; align-items: center; gap: 8px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 0 12px; height: 38px; }
+.search input { border: 0; background: none; outline: none; width: 100%; min-width: 0; }
+.search svg { width: 16px; height: 16px; color: var(--muted); flex: none; }
+.top-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.demo-badge { font-size: 11.5px; font-weight: 600; color: var(--amber); background: var(--amber-soft); padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+.role { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--muted); }
+.role select { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; height: 36px; padding: 0 10px; font-weight: 600; color: var(--fg); }
+
+.page { padding: 28px 32px 48px; display: flex; flex-direction: column; gap: 24px; max-width: 1360px; width: 100%; }
+.head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.eyebrow { font-family: var(--font-display); font-size: 11.5px; letter-spacing: .22em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
+h1 { font-family: var(--font-display); font-weight: 400; font-size: 30px; letter-spacing: .01em; line-height: 1.15; margin: 0; text-wrap: balance; }
+h2 { font-size: 15px; font-weight: 700; margin: 0; }
+.sub { color: var(--muted); margin: 4px 0 0; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--shadow); min-width: 0; }
+.card-h { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--line); }
+.card-b { padding: 16px 20px; }
+.link { background: none; border: 0; color: var(--accent); font-weight: 600; font-size: 13px; padding: 0; }
+
+.btn { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); font-weight: 600; font-size: 13.5px; white-space: nowrap; transition: background .15s, border-color .15s; }
+.btn:hover { background: var(--surface-2); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+.btn.primary:hover { filter: brightness(1.07); }
+.btn.sm { height: 30px; padding: 0 10px; font-size: 12.5px; }
+.btn svg { width: 16px; height: 16px; }
+
+/* KPI */
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.kpi { padding: 18px 20px; display: flex; flex-direction: column; gap: 6px; }
+.kpi .label { color: var(--muted); font-size: 12.5px; font-weight: 600; }
+.kpi .value { font-size: 26px; font-weight: 700; letter-spacing: -.01em; line-height: 1.2; }
+.kpi .note { font-size: 12.5px; color: var(--muted); }
+.kpi .note b { color: var(--fg); font-weight: 600; }
+
+.grid-2 { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 16px; }
+.grid-2b { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 16px; }
+
+/* Chips */
+.chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+.chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.chip.ok { color: var(--accent); background: var(--accent-soft); }
+.chip.warn { color: var(--amber); background: var(--amber-soft); }
+.chip.info { color: var(--slate); background: var(--slate-soft); }
+.chip.bad { color: var(--danger); background: var(--danger-soft); }
+.chip.plain { color: var(--muted); background: var(--surface-2); border: 1px solid var(--line); }
+.chip.plain::before { display: none; }
+
+/* Lists */
+.rows { display: flex; flex-direction: column; }
+.row { display: grid; grid-template-columns: 74px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 13px 20px; border-top: 1px solid var(--line); background: none; border-left: 0; border-right: 0; border-bottom: 0; text-align: left; width: 100%; }
+.row:first-child { border-top: 0; }
+.row:hover { background: var(--surface-2); }
+.when { display: flex; flex-direction: column; line-height: 1.25; }
+.when b { font-size: 13px; }
+.when span { font-size: 12px; color: var(--muted); }
+.row .t { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .m { color: var(--muted); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.depts { display: flex; gap: 4px; }
+.dot { width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; font-size: 10.5px; font-weight: 700; }
+.dot.ok { background: var(--accent-soft); color: var(--accent); }
+.dot.pending { background: var(--amber-soft); color: var(--amber); }
+
+.alert { display: grid; grid-template-columns: 4px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 13px 20px 13px 0; border-top: 1px solid var(--line); }
+.alert:first-child { border-top: 0; }
+.alert .bar { align-self: stretch; border-radius: 0 3px 3px 0; }
+.alert.bad .bar { background: var(--danger); }
+.alert.warn .bar { background: var(--amber); }
+.alert.info .bar { background: var(--slate); }
+.alert .t { font-weight: 600; font-size: 13.5px; }
+.alert .m { color: var(--muted); font-size: 12.5px; }
+
+/* Chart */
+.chart svg { width: 100%; height: auto; display: block; }
+.chart text { fill: var(--muted); font: 500 11px var(--font-body); }
+.legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+
+/* Saturdays */
+.sat { display: grid; grid-template-columns: 120px repeat(8, minmax(0, 1fr)); gap: 6px; align-items: center; font-size: 12.5px; }
+.sat .h { color: var(--muted); font-size: 11px; text-align: center; }
+.sat .n { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sat .c { height: 26px; border-radius: 6px; background: var(--surface-2); border: 1px dashed var(--line); }
+.sat .c.ok { background: var(--accent); border: 0; }
+.sat .c.warn { background: var(--amber-soft); border: 1px solid var(--amber); }
+
+/* Calendar */
+.cal-wrap { overflow-x: auto; }
+.cal { display: grid; grid-template-columns: 150px repeat(7, minmax(128px, 1fr)); min-width: 1050px; }
+.cal > div { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); min-width: 0; }
+.cal > div:nth-child(8n) { border-right: 0; }
+.cal .dh { padding: 12px; font-size: 12px; color: var(--muted); background: var(--surface-2); }
+.cal .dh b { display: block; font-size: 17px; color: var(--fg); font-weight: 700; }
+.cal .dh.today { background: var(--accent-soft); }
+.cal .dh.today b { color: var(--accent); }
+.cal .dh.we b::after { content: " · weekend"; font-size: 11px; color: var(--muted); font-weight: 500; }
+.cal .hall { padding: 14px 12px; display: flex; flex-direction: column; gap: 2px; }
+.cal .hall b { font-size: 13.5px; }
+.cal .hall span { font-size: 12px; color: var(--muted); }
+.cal .cell { padding: 8px; display: flex; flex-direction: column; gap: 6px; min-height: 104px; }
+.cal .cell.today { background: color-mix(in srgb, var(--accent-soft) 40%, transparent); }
+.ev { text-align: left; border: 0; border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; font-size: 12px; line-height: 1.35; transition: transform .15s; width: 100%; }
+.ev:hover { transform: translateY(-1px); }
+.ev b { font-size: 12.5px; font-weight: 700; }
+.ev.confirmat { background: var(--accent-soft); color: var(--fg); box-shadow: inset 3px 0 0 var(--accent); }
+.ev.optiune { background: var(--amber-soft); color: var(--fg); box-shadow: inset 3px 0 0 var(--amber); }
+.ev.discutie { background: var(--slate-soft); color: var(--fg); box-shadow: inset 3px 0 0 var(--slate); }
+.ev span { color: var(--muted); }
+.free { flex: 1; border: 1px dashed var(--line); border-radius: 8px; background: none; color: var(--muted); font-size: 12px; opacity: 0; transition: opacity .15s; }
+.cell:hover .free { opacity: 1; }
+
+/* Toolbar */
+.toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.seg { display: inline-flex; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 3px; gap: 2px; flex-wrap: wrap; }
+.seg button { border: 0; background: none; padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 13px; color: var(--muted); }
+.seg button.on { background: var(--accent-soft); color: var(--accent); }
+
+/* Table */
+.tbl-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; min-width: 860px; }
+th { text-align: left; font-size: 11.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; padding: 12px 16px; border-bottom: 1px solid var(--line); background: var(--surface-2); }
+td { padding: 13px 16px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+tr:last-child td { border-bottom: 0; }
+tbody tr.click { cursor: pointer; }
+tbody tr.click:hover td { background: var(--surface-2); }
+td .t { font-weight: 600; }
+td .m { color: var(--muted); font-size: 12.5px; }
+.right { text-align: right; }
+.progress { height: 6px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); overflow: hidden; min-width: 80px; }
+.progress i { display: block; height: 100%; background: var(--accent); }
+
+/* Event sheet */
+.back { background: none; border: 0; color: var(--muted); font-weight: 600; padding: 0; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
+.back:hover { color: var(--fg); }
+.meta { display: flex; flex-wrap: wrap; gap: 8px 22px; color: var(--muted); font-size: 13.5px; margin-top: 10px; }
+.meta b { color: var(--fg); font-weight: 600; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.dept-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.dept { padding: 14px 20px; border-left: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.dept:first-child { border-left: 0; }
+.dept b { display: block; font-size: 13.5px; }
+.dept span { font-size: 12px; color: var(--muted); }
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.tabs button { border: 0; background: none; padding: 10px 14px; font-weight: 600; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+.tabs button.on { color: var(--fg); border-bottom-color: var(--accent); }
+.kv { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 10px 16px; font-size: 13.5px; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; font-weight: 600; min-width: 0; }
+.courses { display: flex; flex-direction: column; }
+.course { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 14px; padding: 14px 20px; border-top: 1px solid var(--line); align-items: baseline; }
+.course:first-child { border-top: 0; }
+.course .time { font-weight: 700; color: var(--accent); }
+.course .t { font-weight: 600; }
+.course .m { color: var(--muted); font-size: 12.5px; }
+.timeline { display: flex; flex-direction: column; padding: 6px 0; }
+.tl { display: grid; grid-template-columns: 64px 18px minmax(0, 1fr); gap: 10px; padding: 8px 20px; align-items: start; }
+.tl .time { font-weight: 700; font-size: 13px; }
+.tl .pin { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--accent); margin-top: 5px; background: var(--surface); position: relative; }
+.tl .who { color: var(--muted); font-size: 12.5px; }
+.special { display: flex; flex-direction: column; gap: 8px; }
+.special div { display: flex; justify-content: space-between; gap: 12px; padding: 10px 12px; border-radius: 8px; background: var(--surface-2); border: 1px solid var(--line); font-size: 13px; }
+.floor svg { width: 100%; height: auto; display: block; }
+.floor text { font: 600 11px var(--font-body); fill: var(--fg); }
+.hist { display: flex; flex-direction: column; }
+.hist div { padding: 12px 20px; border-top: 1px solid var(--line); display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 12px; font-size: 13px; }
+.hist div:first-child { border-top: 0; }
+.hist span { color: var(--muted); font-size: 12.5px; }
+
+/* Pipeline */
+.board { display: grid; grid-template-columns: repeat(4, minmax(240px, 1fr)); gap: 14px; overflow-x: auto; padding-bottom: 4px; }
+.col { background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r); padding: 12px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.col-h { display: flex; justify-content: space-between; align-items: center; padding: 2px 4px 4px; }
+.col-h b { font-size: 13px; }
+.col-h span { font-size: 12px; color: var(--muted); }
+.lead { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px; box-shadow: var(--shadow); }
+.lead .t { font-weight: 700; font-size: 13.5px; }
+.lead .m { color: var(--muted); font-size: 12.5px; }
+.lead .f { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+/* Modal + toast */
+.overlay { position: fixed; inset: 0; background: rgba(10,12,13,.45); display: grid; place-items: center; padding: 16px; z-index: 20; }
+.modal { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; width: min(560px, 100%); max-height: calc(100% - 32px); overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.25); animation: pop .18s ease-out; }
+.modal.wide { width: min(760px, 100%); }
+.modal-h { padding: 18px 22px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.modal-b { padding: 20px 22px; display: flex; flex-direction: column; gap: 16px; }
+.modal-f { padding: 14px 22px; border-top: 1px solid var(--line); display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+.x { background: none; border: 0; font-size: 22px; line-height: 1; color: var(--muted); }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label { font-size: 12.5px; font-weight: 600; color: var(--muted); }
+.field input, .field textarea { border: 1px solid var(--line); background: var(--surface-2); border-radius: 8px; padding: 9px 12px; }
+.fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.diff { background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; font-size: 13px; display: flex; flex-direction: column; gap: 4px; }
+.diff b { font-weight: 700; }
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: #E9ECEE; padding: 12px 18px; border-radius: 10px; font-size: 13.5px; box-shadow: 0 10px 30px rgba(0,0,0,.25); z-index: 30; display: flex; gap: 10px; align-items: center; max-width: calc(100% - 32px); animation: pop .2s ease-out; }
+.toast i { width: 8px; height: 8px; border-radius: 50%; background: #3DB389; flex: none; }
+@keyframes pop { from { opacity: 0; transform: translateY(6px) scale(.99); } }
+.toast { animation-name: toast; }
+@keyframes toast { from { opacity: 0; transform: translate(-50%, 8px); } }
+.kitchen h3 { font-size: 13px; margin: 0 0 8px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.kitchen table { min-width: 0; }
+.scrim { display: none; }
+
+@media (max-width: 1180px) {
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid-2, .grid-2b { grid-template-columns: minmax(0, 1fr); }
+  .dept-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dept:nth-child(3) { border-left: 0; }
+  .dept:nth-child(n+3) { border-top: 1px solid var(--line); }
+}
+@media (max-width: 860px) {
+  .app { grid-template-columns: minmax(0, 1fr); }
+  .side { position: fixed; left: 0; top: 0; bottom: 0; width: 260px; z-index: 40; transform: translateX(-100%); transition: transform .2s; height: 100%; padding-top: calc(28px + env(safe-area-inset-top, 0px)); }
+  .app.open .side { transform: none; }
+  .app.open .scrim { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 35; }
+  .menu-btn { display: grid; }
+  .top { padding: 12px 16px; }
+  .page { padding: 20px 16px 40px; }
+  .role span, .demo-badge { display: none; }
+  h1 { font-size: 24px; }
+}
+@media (max-width: 560px) {
+  .kpis { grid-template-columns: minmax(0, 1fr); }
+  .dept-strip { grid-template-columns: minmax(0, 1fr); }
+  .dept { border-left: 0 !important; border-top: 1px solid var(--line); }
+  .dept:first-child { border-top: 0; }
+  .fields { grid-template-columns: 1fr; }
+  .kv { grid-template-columns: minmax(0, 1fr); gap: 2px 0; }
+  .kv dd { margin-bottom: 8px; }
+  .row { grid-template-columns: 60px minmax(0, 1fr); }
+  .row .depts, .row .chip { display: none; }
+  .sat { grid-template-columns: 80px repeat(8, minmax(0, 1fr)); gap: 4px; }
+  .search { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+
+<div class="app" id="app">
+  <aside class="side" id="side">
+    <div class="brand" aria-label="Emerald Luxury Events">
+      <svg viewBox="0 0 40 32" fill="none" aria-hidden="true">
+        <defs><linearGradient id="chr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F4F6F7"/><stop offset=".55" stop-color="#9AA1A7"/><stop offset="1" stop-color="#DDE1E4"/></linearGradient></defs>
+        <path d="M9 2.5h22l6.5 8L20 29.5 2.5 10.5 9 2.5Z" stroke="url(#chr)" stroke-width="2.2" stroke-linejoin="round"/>
+        <path d="M13 10.5h14L20 19l-4.2-4.6M9 2.5l4 8M31 2.5l-4 8" stroke="url(#chr)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+      </svg>
+      <div class="word">EMERALD</div>
+      <div class="word-sub">LUXURY EVENTS</div>
+    </div>
+    <nav class="nav" id="nav" aria-label="Navigare"></nav>
+    <div class="side-foot">
+      <div class="avatar">IM</div>
+      <div><b>Ioana Marin</b><span id="roleName">Manager evenimente</span></div>
+    </div>
+  </aside>
+  <div class="scrim" data-action="close-menu"></div>
+  <div class="main">
+    <header class="top">
+      <button class="menu-btn" data-action="open-menu" aria-label="Deschide meniul">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <label class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="q" type="search" placeholder="Caută eveniment, client sau sală…" autocomplete="off">
+      </label>
+      <div class="top-right">
+        <span class="demo-badge">Date demonstrative</span>
+        <label class="role"><span>Vezi ca</span>
+          <select id="role">
+            <option value="manager">Manager</option>
+            <option value="bucatarie">Bucătărie</option>
+            <option value="sala">Șef de sală</option>
+          </select>
+        </label>
+      </div>
+    </header>
+    <main class="page" id="page"></main>
+  </div>
+</div>
+<div id="layer"></div>
+
+<script>
+(() => {
+"use strict";
+
+/* ---------- Date helpers ---------- */
+const TODAY = "2026-10-13";
+const DAYS = ["Dum", "Lun", "Mar", "Mie", "Joi", "Vin", "Sâm"];
+const DAYS_FULL = ["Duminică", "Luni", "Marți", "Miercuri", "Joi", "Vineri", "Sâmbătă"];
+const MON = ["ian", "feb", "mar", "apr", "mai", "iun", "iul", "aug", "sep", "oct", "nov", "dec"];
+const MON_FULL = ["ianuarie", "februarie", "martie", "aprilie", "mai", "iunie", "iulie", "august", "septembrie", "octombrie", "noiembrie", "decembrie"];
+const toDate = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d, 12); };
+const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const addDays = (s, n) => { const d = toDate(s); d.setDate(d.getDate() + n); return iso(d); };
+const diffDays = (a, b) => Math.round((toDate(a) - toDate(b)) / 86400000);
+const fmtShort = s => { const d = toDate(s); return `${d.getDate()} ${MON[d.getMonth()]}`; };
+const fmtLong = s => { const d = toDate(s); return `${DAYS[d.getDay()]}, ${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()}`; };
+const mondayOf = s => { const d = toDate(s); const w = (d.getDay() + 6) % 7; return addDays(s, -w); };
+const lei = n => `${Math.round(n).toLocaleString("ro-RO")} lei`;
+const inDays = n => n === 0 ? "azi" : n === 1 ? "mâine" : n === -1 ? "ieri" : n > 0 ? `în ${n} zile` : `de ${-n} zile`;
+
+/* ---------- Reference data ---------- */
+const HALLS = [
+  { id: "emerald", name: "Salonul Emerald", cap: 350 },
+  { id: "jade", name: "Salonul Jade", cap: 180 },
+  { id: "crystal", name: "Terasa Crystal", cap: 120 },
+  { id: "onyx", name: "Sala Onyx", cap: 60 },
+];
+const hallName = id => HALLS.find(h => h.id === id).name;
+
+const PKG = {
+  signature: { name: "Emerald Signature", pp: 395, courses: [
+    ["Welcome", "Welcome drink și canapele", "Prosecco, limonadă, 4 tipuri de canapele"],
+    ["Aperitiv", "Platou rece Emerald", "Somon fumé, mousse de ficat, brânzeturi maturate, legume coapte"],
+    ["Pește", "File de doradă", "Piure de țelină, sos beurre blanc"],
+    ["Sarmale", "Sarmale în foi de varză", "Mămăligă, smântână, ardei iute"],
+    ["Principal", "Mușchi de vită și piept de rață", "Cartofi fondant, legume glazurate, sos de vin roșu"],
+    ["Desert", "Tort și candy bar", "Tort de la furnizor extern, fructe proaspete"],
+  ]},
+  classic: { name: "Emerald Classic", pp: 330, courses: [
+    ["Aperitiv", "Platou rece tradițional", "Mezeluri, brânzeturi, salată de vinete, zacuscă"],
+    ["Pește", "Păstrăv la cuptor", "Legume la grătar, sos de lămâie"],
+    ["Sarmale", "Sarmale cu mămăligă", "Smântână, ardei iute"],
+    ["Principal", "Platou de friptură mixtă", "Ceafă, pui, cârnăciori, cartofi țărănești"],
+    ["Desert", "Tort", "Furnizor extern sau cofetăria casei"],
+  ]},
+  botez: { name: "Botez Premium", pp: 260, courses: [
+    ["Aperitiv", "Platou rece", "Mezeluri, brânzeturi, legume"],
+    ["Sarmale", "Sarmale cu mămăligă", "Smântână"],
+    ["Principal", "Piept de pui și ceafă la grătar", "Cartofi wedges, salată"],
+    ["Desert", "Tort de botez", "Fructe, candy bar pentru copii"],
+  ]},
+  corporate: { name: "Corporate Dinner", pp: 280, courses: [
+    ["Welcome", "Cocktail de întâmpinare", "Finger food, vin spumant"],
+    ["Antreu", "Tartar de vită", "Crostini, gălbenuș confiat"],
+    ["Principal", "Mușchi de porc sous-vide", "Piure de cartofi dulci, jus"],
+    ["Desert", "Tartă cu ciocolată", "Înghețată de vanilie"],
+  ]},
+  conf: { name: "Conferință · coffee break și prânz", pp: 145, courses: [
+    ["10:30", "Coffee break", "Cafea, ceai, patiserie"],
+    ["13:00", "Prânz bufet", "2 feluri principale, garnituri, salate, desert"],
+    ["15:30", "Coffee break", "Cafea, fructe, fursecuri"],
+  ]},
+};
+
+const TYPES = { nunta: "Nuntă", botez: "Botez", corporate: "Corporate", conferinta: "Conferință", aniversare: "Aniversare" };
+
+const DEPTS = [
+  { id: "bucatarie", name: "Bucătărie", short: "B", owner: "Chef Daniel Ene" },
+  { id: "sala", name: "Sală", short: "S", owner: "Cristian Moga" },
+  { id: "bar", name: "Bar", short: "Ba", owner: "Alex Rusu" },
+  { id: "receptie", name: "Recepție", short: "R", owner: "Maria Toma" },
+];
+
+/* ---------- Events (demo) ---------- */
+const EV = [
+  { id: "e1", type: "nunta", title: "Nunta Andreea & Mihai", client: "Andreea Pavel & Mihai Stoica", phone: "0740 112 358", date: "2026-10-17", start: "18:00", end: "04:00", hall: "emerald", adults: 268, kids: 14, pkg: "signature", status: "confirmat",
+    special: [["Vegetarian", 6, "mesele 4, 9, 17"], ["Fără gluten", 2, "masa 7"], ["Alergie la nuci", 1, "masa 12 · fără sos pesto, fără desert cu nuci"], ["Meniu copii", 14, "porție redusă, fără pește"]],
+    notes: "Nașii: familia Ionescu, la masa 1. Intrarea mirilor pe melodia aleasă de formație. Tortul vine la 23:30 de la Dulce Atelier.",
+    vendors: [["Formație", "Lux Band", "sosire 16:30 · probă sunet 17:00"], ["Fotograf", "Studio Lumen", "sosire 17:30"], ["Videograf", "Frame & Co", "sosire 17:30"], ["Decor floral", "Floralia Design", "montaj 12:00–16:00"], ["Tort", "Dulce Atelier", "livrare 23:30, 6 etaje"]],
+    depts: { bucatarie: "pending", sala: "ok", bar: "pending", receptie: "ok" },
+    history: [
+      ["azi, 10:42", "Ioana Marin", "Invitați: 256 → 268 adulți. Bucătăria și barul trebuie să confirme."],
+      ["11 oct, 18:05", "Cristian Moga", "A confirmat aranjarea sălii: 29 de mese rotunde, ring central."],
+      ["9 oct, 14:20", "Andreea Pavel (client)", "A trimis lista finală de meniuri speciale."],
+      ["2 oct, 12:00", "Sistem", "Tranșa 2 a fost încasată: 43.450 lei."],
+    ] },
+  { id: "e2", type: "botez", title: "Botez Sofia", client: "Familia Georgescu", phone: "0723 448 190", date: "2026-10-17", start: "13:00", end: "19:00", hall: "jade", adults: 86, kids: 22, pkg: "botez", status: "confirmat" },
+  { id: "e3", type: "corporate", title: "Gala Nordis Logistic", client: "Nordis Logistic SRL · Raluca Neagu", phone: "0751 903 277", date: "2026-10-16", start: "19:00", end: "01:00", hall: "emerald", adults: 210, kids: 0, pkg: "corporate", status: "confirmat", incomplete: "Lipsește programul serii (discursuri, premiere)." },
+  { id: "e4", type: "conferinta", title: "Conferința MedTech Regional", client: "Asociația MedTech · Paul Iliescu", phone: "0744 610 532", date: "2026-10-15", start: "09:00", end: "17:00", hall: "onyx", adults: 55, kids: 0, pkg: "conf", status: "confirmat" },
+  { id: "e5", type: "nunta", title: "Nunta Elena & Victor", client: "Elena Dumitru & Victor Lazăr", phone: "0736 257 004", date: "2026-10-18", start: "17:00", end: "03:00", hall: "jade", adults: 164, kids: 8, pkg: "classic", status: "confirmat" },
+  { id: "e6", type: "botez", title: "Botez Luca", client: "Familia Vasilescu", phone: "0729 381 645", date: "2026-10-18", start: "13:00", end: "19:00", hall: "crystal", adults: 70, kids: 18, pkg: "botez", status: "confirmat", unpaid2: true },
+  { id: "e13", type: "conferinta", title: "Seminar Agritech", client: "Agritech Cluster · Mihai Pop", phone: "0745 220 981", date: "2026-10-13", start: "09:00", end: "16:00", hall: "onyx", adults: 42, kids: 0, pkg: "conf", status: "confirmat" },
+  { id: "e14", type: "aniversare", title: "Petrecere de logodnă Irina & Tudor", client: "Irina Matei", phone: "0752 118 406", date: "2026-10-14", start: "19:00", end: "00:00", hall: "crystal", adults: 58, kids: 0, pkg: "classic", status: "confirmat" },
+  { id: "e9", type: "corporate", title: "Cină Altis Pharma", client: "Altis Pharma · Sorina Radu", phone: "0733 905 117", date: "2026-10-22", start: "19:00", end: "23:30", hall: "onyx", adults: 48, kids: 0, pkg: "corporate", status: "discutie" },
+  { id: "e7", type: "aniversare", title: "Aniversare 50 de ani, familia Dobre", client: "Gabriel Dobre", phone: "0721 774 230", date: "2026-10-24", start: "19:00", end: "02:00", hall: "jade", adults: 95, kids: 4, pkg: "classic", status: "optiune", optionExpires: "2026-10-15" },
+  { id: "e8", type: "nunta", title: "Nunta Raluca & Andrei", client: "Raluca Mihai & Andrei Constantin", phone: "0747 330 812", date: "2026-10-24", start: "18:00", end: "04:00", hall: "emerald", adults: 240, kids: 10, pkg: "signature", status: "confirmat" },
+  { id: "e10", type: "botez", title: "Botez Matei", client: "Familia Enache", phone: "0726 115 078", date: "2026-10-25", start: "13:00", end: "19:00", hall: "crystal", adults: 80, kids: 20, pkg: "botez", status: "confirmat" },
+  { id: "e12", type: "nunta", title: "Nunta Bianca & Ștefan", client: "Bianca Florea & Ștefan Nistor", phone: "0758 640 391", date: "2026-10-31", start: "18:00", end: "04:00", hall: "emerald", adults: 220, kids: 12, pkg: "signature", status: "confirmat" },
+  { id: "e15", type: "nunta", title: "Nunta Diana & Cosmin", client: "Diana Preda & Cosmin Barbu", phone: "0749 873 160", date: "2026-11-07", start: "18:00", end: "04:00", hall: "emerald", adults: 260, kids: 16, pkg: "signature", status: "confirmat" },
+  { id: "e18", type: "nunta", title: "Nunta Teodora & Paul", client: "Teodora Ilie & Paul Marinescu", phone: "0732 448 905", date: "2026-11-14", start: "18:00", end: "04:00", hall: "emerald", adults: 230, kids: 9, pkg: "signature", status: "confirmat" },
+  { id: "e19", type: "botez", title: "Botez Eva", client: "Familia Stan", phone: "0727 551 209", date: "2026-11-14", start: "13:00", end: "19:00", hall: "jade", adults: 92, kids: 25, pkg: "botez", status: "confirmat" },
+  { id: "e21", type: "nunta", title: "Nunta Larisa & Dan", client: "Larisa Oprea & Dan Munteanu", phone: "0741 902 336", date: "2026-11-21", start: "18:00", end: "04:00", hall: "jade", adults: 150, kids: 6, pkg: "classic", status: "optiune", optionExpires: "2026-10-20" },
+  { id: "e22", type: "botez", title: "Botez David", client: "Familia Avram", phone: "0722 618 457", date: "2026-11-28", start: "13:00", end: "19:00", hall: "crystal", adults: 75, kids: 15, pkg: "botez", status: "confirmat" },
+  { id: "e23", type: "nunta", title: "Nunta Irina & Sorin", client: "Irina Cristea & Sorin Badea", phone: "0739 204 781", date: "2026-11-28", start: "18:00", end: "04:00", hall: "emerald", adults: 245, kids: 11, pkg: "signature", status: "confirmat" },
+  { id: "e20", type: "corporate", title: "Petrecerea de Crăciun Vertix", client: "Vertix Software · Ana Moldovan", phone: "0754 337 920", date: "2026-12-05", start: "19:00", end: "02:00", hall: "emerald", adults: 290, kids: 0, pkg: "corporate", status: "confirmat" },
+  { id: "e11", type: "nunta", title: "Nunta Ioana & Radu", client: "Ioana Sima & Radu Tănase", phone: "0748 190 562", date: "2027-06-12", start: "18:00", end: "04:00", hall: "emerald", adults: 300, kids: 12, pkg: "signature", status: "optiune", optionExpires: "2026-10-15" },
+  { id: "e16", type: "botez", title: "Botez Ana", client: "Familia Rusu", phone: "0725 880 314", date: "2026-10-11", start: "13:00", end: "19:00", hall: "jade", adults: 88, kids: 19, pkg: "botez", status: "confirmat" },
+  { id: "e17", type: "nunta", title: "Nunta Alexandra & George", client: "Alexandra Neagu & George Popa", phone: "0743 551 806", date: "2026-10-10", start: "18:00", end: "04:00", hall: "emerald", adults: 254, kids: 12, pkg: "signature", status: "confirmat" },
+];
+
+const value = e => { const pp = PKG[e.pkg].pp; return e.adults * pp + Math.round(e.kids * pp * 0.5); };
+
+const DEFAULT_PROGRAM = {
+  nunta: [["17:30", "Sosirea invitaților, welcome drink", "Recepție, Bar"], ["19:30", "Intrarea mirilor", "Sală, Formație"], ["20:00", "Aperitiv", "Bucătărie"], ["21:00", "Dansul mirilor", "Formație"], ["21:30", "Preparat din pește", "Bucătărie"], ["23:00", "Sarmale", "Bucătărie"], ["23:30", "Tortul", "Sală, Cofetărie"], ["00:30", "Fel principal", "Bucătărie"], ["02:00", "Aruncarea buchetului", "Formație"]],
+  botez: [["13:00", "Sosirea invitaților", "Recepție"], ["13:30", "Aperitiv", "Bucătărie"], ["15:00", "Sarmale", "Bucătărie"], ["16:00", "Ruptul turtei", "Sală"], ["16:30", "Fel principal", "Bucătărie"], ["17:30", "Tortul", "Sală"]],
+  corporate: [["19:00", "Cocktail de întâmpinare", "Bar"], ["20:00", "Discurs CEO", "Tehnic"], ["20:15", "Antreu", "Bucătărie"], ["21:00", "Fel principal", "Bucătărie"], ["22:00", "Desert și DJ", "Bucătărie, DJ"]],
+  conferinta: [["08:30", "Înregistrare participanți", "Recepție"], ["10:30", "Coffee break", "Bucătărie"], ["13:00", "Prânz bufet", "Bucătărie"], ["15:30", "Coffee break", "Bucătărie"]],
+  aniversare: [["19:00", "Sosirea invitaților", "Recepție"], ["19:30", "Aperitiv", "Bucătărie"], ["21:00", "Preparat din pește", "Bucătărie"], ["22:30", "Fel principal", "Bucătărie"], ["23:30", "Tortul", "Sală"]],
+};
+
+EV.forEach(e => {
+  e.program = e.program || (e.incomplete ? [] : DEFAULT_PROGRAM[e.type]);
+  e.special = e.special || (e.kids ? [["Meniu copii", e.kids, "porție redusă"]] : []).concat([["Vegetarian", Math.max(1, Math.round(e.adults / 45)), "de alocat pe mese"]]);
+  e.vendors = e.vendors || (e.type === "nunta" ? [["Formație", "de confirmat de client", ""], ["Fotograf", "de confirmat de client", ""]] : []);
+  e.depts = e.depts || { bucatarie: "ok", sala: "ok", bar: "ok", receptie: "ok" };
+  e.history = e.history || [["5 oct, 11:30", "Ioana Marin", "Fișa evenimentului a fost creată din contract."]];
+  e.notes = e.notes || "";
+  e.payments = buildPayments(e);
+});
+
+function buildPayments(e) {
+  if (e.status !== "confirmat") return [];
+  const total = value(e), past = e.date < TODAY;
+  const a = Math.round(total * 0.3), b = Math.round(total * 0.4), c = total - a - b;
+  const due2 = addDays(e.date, -30), due3 = addDays(e.date, -3);
+  return [
+    { label: "Avans la semnare (30%)", amount: a, due: addDays(e.date, -210), paid: true },
+    { label: "Tranșa 2 (40%)", amount: b, due: due2, paid: e.unpaid2 ? false : due2 < TODAY },
+    { label: "Sold final (30%)", amount: c, due: due3, paid: past || due3 < TODAY },
+  ];
+}
+const payState = p => p.paid ? "paid" : p.due < TODAY ? "overdue" : diffDays(p.due, TODAY) <= 14 ? "soon" : "scheduled";
+const PAY_CHIP = { paid: ["ok", "Încasat"], overdue: ["bad", "Restant"], soon: ["warn", "Scadent curând"], scheduled: ["plain", "Programat"] };
+const STATUS_CHIP = { confirmat: ["ok", "Confirmat"], optiune: ["warn", "Opțiune"], discutie: ["info", "În discuție"] };
+const paidSum = e => e.payments.filter(p => p.paid).reduce((s, p) => s + p.amount, 0);
+
+/* ---------- Sales pipeline (demo) ---------- */
+const STAGES = [["cerere", "Cerere nouă"], ["oferta", "Ofertă trimisă"], ["optiune", "Opțiune pe dată"], ["contract", "Contract semnat"]];
+const LEADS = [
+  { id: "l1", name: "Nunta Maria & Alin", date: "2027-07-17", guests: 220, value: 86900, source: "Instagram", stage: "cerere", note: "Vor Salonul Emerald, buget flexibil" },
+  { id: "l2", name: "Gala Fundației Aripi", date: "2026-12-12", guests: 160, value: 44800, source: "Recomandare", stage: "cerere", note: "Cer ofertă cu scenă și sonorizare" },
+  { id: "l3", name: "Botez Natalia", date: "2027-03-06", guests: 90, value: 23400, source: "Site", stage: "cerere", note: "Preferă Terasa Crystal" },
+  { id: "l4", name: "Nunta Cristina & Vlad", date: "2027-08-21", guests: 280, value: 110600, source: "Târg de nunți", stage: "oferta", note: "Oferta v2 trimisă pe 9 oct" },
+  { id: "l5", name: "Team building Orvia", date: "2027-04-23", guests: 120, value: 33600, source: "LinkedIn", stage: "oferta", note: "Așteaptă aprobarea bugetului" },
+  { id: "l6", name: "Nunta Ioana & Radu", date: "2027-06-12", guests: 312, value: 120870, source: "Recomandare", stage: "optiune", note: "Opțiunea expiră pe 15 oct" },
+  { id: "l7", name: "Aniversare familia Dobre", date: "2026-10-24", guests: 99, value: 32010, source: "Telefon", stage: "optiune", note: "Opțiunea expiră pe 15 oct" },
+  { id: "l8", name: "Nunta Larisa & Dan", date: "2026-11-21", guests: 156, value: 50490, source: "Facebook", stage: "optiune", note: "Opțiunea expiră pe 20 oct" },
+  { id: "l9", name: "Nunta Diana & Cosmin", date: "2026-11-07", guests: 276, value: 105860, source: "Instagram", stage: "contract", note: "Fișa evenimentului creată" },
+  { id: "l10", name: "Petrecerea de Crăciun Vertix", date: "2026-12-05", guests: 290, value: 81200, source: "Client recurent", stage: "contract", note: "Fișa evenimentului creată" },
+];
+
+/* Contracted revenue for 2027 months not listed individually above (demo). */
+const LATER_MONTHS = { "2027-01": 96000, "2027-02": 84000, "2027-03": 152000, "2027-04": 238000, "2027-05": 512000, "2027-06": 698000, "2027-07": 642000, "2027-08": 731000, "2027-09": 664000 };
+
+/* ---------- State ---------- */
+const S = { view: "dashboard", eventId: null, tab: "overview", week: mondayOf(TODAY), role: "manager", filter: "toate", q: "", modal: null };
+try { const r = localStorage.getItem("emerald-role"); if (r) S.role = r; } catch (_) {}
+
+/* ---------- Icons ---------- */
+const I = {
+  home: '<path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/>',
+  cal: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+  list: '<path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/>',
+  funnel: '<path d="M4 5h16l-6 7v6l-4 2v-8L4 5Z"/>',
+  card: '<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c1.8.8 3 2.5 3.5 5.2"/>',
+  chef: '<path d="M7 14v6h10v-6"/><path d="M7 14a4 4 0 1 1 1.2-7.8A4.5 4.5 0 0 1 16 5.4 4 4 0 1 1 17 14"/>',
+  left: '<path d="m15 6-6 6 6 6"/>',
+  right: '<path d="m9 6 6 6-6 6"/>',
+  check: '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+};
+const icon = (n, size) => `<svg viewBox="0 0 24 24" ${size ? `width="${size}" height="${size}"` : ""} fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n]}</svg>`;
+
+/* ---------- Derived ---------- */
+const upcoming = () => EV.filter(e => e.date >= TODAY).sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start));
+const weekEvents = () => { const m = mondayOf(TODAY), s = addDays(m, 6); return upcoming().filter(e => e.date >= m && e.date <= s); };
+
+function alerts() {
+  const out = [];
+  EV.filter(e => e.status === "optiune" && diffDays(e.optionExpires, TODAY) <= 3).forEach(e =>
+    out.push({ sev: "warn", t: `Opțiunea expiră ${inDays(diffDays(e.optionExpires, TODAY))}`, m: `${e.title} · ${fmtLong(e.date)} · ${hallName(e.hall)}`, id: e.id, cta: "Sună clientul" }));
+  EV.forEach(e => e.payments.forEach(p => { if (payState(p) === "overdue") out.push({ sev: "bad", t: `Plată restantă: ${lei(p.amount)}`, m: `${e.title} · ${p.label}, scadentă pe ${fmtShort(p.due)}`, id: e.id, cta: "Vezi plata" }); }));
+  upcoming().filter(e => diffDays(e.date, TODAY) <= 7).forEach(e => {
+    const pend = DEPTS.filter(d => e.depts[d.id] === "pending");
+    if (pend.length) out.push({ sev: "warn", t: `${pend.map(d => d.name).join(" și ")}: modificare neconfirmată`, m: `${e.title} · ${fmtLong(e.date)}`, id: e.id, cta: "Deschide fișa" });
+    if (e.incomplete) out.push({ sev: "info", t: "Fișă incompletă", m: `${e.title} · ${e.incomplete}`, id: e.id, cta: "Completează" });
+  });
+  return out;
+}
+
+function monthly() {
+  const months = [];
+  for (let i = 0; i < 12; i++) {
+    const d = toDate(TODAY); d.setDate(1); d.setMonth(d.getMonth() + i);
+    const key = iso(d).slice(0, 7);
+    const fromList = EV.filter(e => e.status === "confirmat" && e.date >= TODAY && e.date.startsWith(key)).reduce((s, e) => s + value(e), 0);
+    months.push({ key, label: MON[d.getMonth()], year: d.getFullYear(), v: fromList + (LATER_MONTHS[key] || 0) });
+  }
+  return months;
+}
+
+function saturdays(n) { const out = []; let d = TODAY; while (toDate(d).getDay() !== 6) d = addDays(d, 1); for (let i = 0; i < n; i++) out.push(addDays(d, i * 7)); return out; }
+
+/* ---------- Navigation ---------- */
+const NAV = [
+  { id: "dashboard", label: "Panou", icon: "home", roles: ["manager"] },
+  { id: "calendar", label: "Calendar săli", icon: "cal", roles: ["manager", "bucatarie", "sala"] },
+  { id: "events", label: "Evenimente", icon: "list", roles: ["manager", "bucatarie", "sala"] },
+  { id: "sales", label: "Vânzări și oferte", icon: "funnel", roles: ["manager"] },
+  { id: "payments", label: "Plăți", icon: "card", roles: ["manager"] },
+];
+
+function renderNav() {
+  const counts = { events: upcoming().length, sales: LEADS.filter(l => l.stage !== "contract").length, payments: EV.reduce((n, e) => n + e.payments.filter(p => payState(p) === "overdue").length, 0) };
+  const active = S.view === "event" ? "events" : S.view;
+  document.getElementById("nav").innerHTML = `<div class="nav-label">Gestiune</div>` + NAV.filter(n => n.roles.includes(S.role)).map(n =>
+    `<button class="${active === n.id ? "on" : ""}" data-action="go" data-view="${n.id}">${icon(n.icon)}<span>${n.label}</span>${counts[n.id] ? `<span class="count num">${counts[n.id]}</span>` : ""}</button>`).join("");
+  document.getElementById("roleName").textContent = { manager: "Manager evenimente", bucatarie: "Vizualizare Bucătărie", sala: "Vizualizare Șef de sală" }[S.role];
+}
+
+/* ---------- Views ---------- */
+function viewDashboard() {
+  const week = weekEvents();
+  const al = alerts();
+  const months = monthly();
+  const contracted = months.reduce((s, m) => s + m.v, 0);
+  const due14 = [], overdue = [];
+  EV.forEach(e => e.payments.forEach(p => { const st = payState(p); if (st === "overdue") overdue.push(p); if (st === "soon" || st === "overdue") due14.push(p); }));
+  const sats = saturdays(8);
+  let taken = 0;
+  HALLS.forEach(h => sats.forEach(s => { if (EV.some(e => e.hall === h.id && e.date === s && e.status === "confirmat")) taken++; }));
+  const d = toDate(TODAY);
+
+  return `
+  <div class="head">
+    <div><p class="eyebrow">${DAYS_FULL[d.getDay()]}, ${d.getDate()} ${MON_FULL[d.getMonth()]} ${d.getFullYear()}</p><h1>Bună ziua, Ioana</h1>
+    <p class="sub">${week.length} evenimente săptămâna aceasta și ${al.length} lucruri care cer atenție.</p></div>
+    <div class="actions"><button class="btn" data-action="go" data-view="calendar">${icon("cal")}Calendar</button><button class="btn primary" data-action="new-event">${icon("plus")}Eveniment nou</button></div>
+  </div>
+
+  <section class="kpis">
+    <div class="card kpi"><span class="label">Evenimente săptămâna aceasta</span><span class="value num">${week.length}</span><span class="note"><b class="num">${week.reduce((s, e) => s + e.adults + e.kids, 0).toLocaleString("ro-RO")}</b> invitați în total</span></div>
+    <div class="card kpi"><span class="label">Venit contractat · 12 luni</span><span class="value num">${(contracted / 1e6).toLocaleString("ro-RO", { maximumFractionDigits: 2 })} mil. lei</span><span class="note">Doar contracte semnate</span></div>
+    <div class="card kpi"><span class="label">De încasat în 14 zile</span><span class="value num">${lei(due14.reduce((s, p) => s + p.amount, 0))}</span><span class="note">din care <b class="num">${lei(overdue.reduce((s, p) => s + p.amount, 0))}</b> restant</span></div>
+    <div class="card kpi"><span class="label">Sâmbete ocupate · următoarele 8</span><span class="value num">${Math.round(taken / (HALLS.length * 8) * 100)}%</span><span class="note"><b class="num">${taken}</b> din ${HALLS.length * 8} săli-sâmbătă</span></div>
+  </section>
+
+  <section class="grid-2">
+    <div class="card">
+      <div class="card-h"><h2>Săptămâna aceasta</h2><button class="link" data-action="go" data-view="calendar">Vezi calendarul</button></div>
+      <div class="rows">${week.map(e => eventRow(e)).join("")}</div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h2>Necesită atenție</h2><span class="chip ${al.some(a => a.sev === "bad") ? "bad" : "warn"} num">${al.length}</span></div>
+      <div>${al.map(a => `<div class="alert ${a.sev}"><span class="bar"></span><div style="min-width:0"><div class="t">${a.t}</div><div class="m">${a.m}</div></div><button class="btn sm" data-action="open" data-id="${a.id}">${a.cta}</button></div>`).join("")}</div>
+    </div>
+  </section>
+
+  <section class="grid-2b">
+    <div class="card">
+      <div class="card-h"><h2>Venit contractat pe luni</h2><div class="legend"><span><i style="background:var(--accent)"></i>Luna curentă</span><span><i style="background:var(--accent);opacity:.35"></i>Următoarele luni</span></div></div>
+      <div class="card-b chart">${chart(months)}</div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h2>Ocupare sâmbete</h2><div class="legend"><span><i style="background:var(--accent)"></i>Confirmat</span><span><i style="background:var(--amber-soft);border:1px solid var(--amber)"></i>Opțiune</span></div></div>
+      <div class="card-b"><div class="sat"><span></span>${sats.map(s => `<span class="h num">${fmtShort(s)}</span>`).join("")}
+      ${HALLS.map(h => `<span class="n">${h.name.replace("Salonul ", "").replace("Terasa ", "").replace("Sala ", "")}</span>` + sats.map(s => {
+        const e = EV.find(x => x.hall === h.id && x.date === s);
+        return `<span class="c ${e ? (e.status === "confirmat" ? "ok" : "warn") : ""}" title="${e ? e.title : "Liber"}"></span>`;
+      }).join("")).join("")}</div>
+      <p class="sub" style="font-size:12.5px;margin-top:14px">Sâmbetele libere din noiembrie pot fi oferite pentru botezuri și evenimente corporate.</p></div>
+    </div>
+  </section>`;
+}
+
+function eventRow(e) {
+  const d = toDate(e.date);
+  return `<button class="row" data-action="open" data-id="${e.id}">
+    <span class="when"><b>${DAYS[d.getDay()]} ${d.getDate()} ${MON[d.getMonth()]}</b><span class="num">${e.start}</span></span>
+    <span style="min-width:0"><div class="t">${e.title}</div><div class="m">${hallName(e.hall)} · <span class="num">${e.adults + e.kids}</span> invitați · ${PKG[e.pkg].name}</div></span>
+    ${e.status === "confirmat" ? deptDots(e) : chip(STATUS_CHIP[e.status])}
+  </button>`;
+}
+const chip = ([c, t]) => `<span class="chip ${c}">${t}</span>`;
+const deptDots = e => `<span class="depts" aria-label="Confirmări departamente">${DEPTS.map(d => `<span class="dot ${e.depts[d.id]}" title="${d.name}: ${e.depts[d.id] === "ok" ? "confirmat" : "de confirmat"}">${d.short}</span>`).join("")}</span>`;
+
+function chart(months) {
+  const W = 640, H = 230, L = 48, B = 26, T = 12, R = 8;
+  const max = Math.max(...months.map(m => m.v));
+  const step = max > 600000 ? 200000 : 100000;
+  const top = Math.ceil(max / step) * step;
+  const y = v => T + (H - T - B) * (1 - v / top);
+  const bw = (W - L - R) / months.length;
+  let g = "";
+  for (let v = 0; v <= top; v += step) g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L - 8}" y="${y(v) + 4}" text-anchor="end">${v / 1000}k</text>`;
+  months.forEach((m, i) => {
+    const x = L + i * bw + bw * 0.18, w = bw * 0.64;
+    g += `<rect x="${x}" y="${y(m.v)}" width="${w}" height="${y(0) - y(m.v)}" rx="3" fill="var(--accent)" opacity="${i === 0 ? 1 : 0.35}"><title>${m.label} ${m.year}: ${lei(m.v)}</title></rect>`;
+    g += `<text x="${x + w / 2}" y="${H - 8}" text-anchor="middle">${m.label}${m.label === "ian" ? " ’" + String(m.year).slice(2) : ""}</text>`;
+  });
+  const peak = months.reduce((a, b) => b.v > a.v ? b : a);
+  const pi = months.indexOf(peak);
+  g += `<text x="${L + pi * bw + bw / 2}" y="${y(peak.v) - 6}" text-anchor="middle" style="fill:var(--fg);font-weight:700">${Math.round(peak.v / 1000)}k</text>`;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Venit contractat pe următoarele 12 luni, în mii de lei">${g}</svg>`;
+}
+
+function viewCalendar() {
+  const days = Array.from({ length: 7 }, (_, i) => addDays(S.week, i));
+  const end = days[6];
+  const s = toDate(S.week), e = toDate(end);
+  const range = s.getMonth() === e.getMonth() ? `${s.getDate()}–${e.getDate()} ${MON_FULL[e.getMonth()]} ${e.getFullYear()}` : `${s.getDate()} ${MON[s.getMonth()]} – ${e.getDate()} ${MON[e.getMonth()]} ${e.getFullYear()}`;
+  let cells = `<div class="dh"></div>` + days.map(d => { const dt = toDate(d); return `<div class="dh ${d === TODAY ? "today" : ""} ${dt.getDay() === 6 || dt.getDay() === 0 ? "we" : ""}">${DAYS_FULL[dt.getDay()]}<b class="num">${dt.getDate()} ${MON[dt.getMonth()]}</b></div>`; }).join("");
+  HALLS.forEach(h => {
+    cells += `<div class="hall"><b>${h.name}</b><span class="num">până la ${h.cap} persoane</span></div>`;
+    days.forEach(d => {
+      const list = EV.filter(x => x.hall === h.id && x.date === d).sort((a, b) => a.start.localeCompare(b.start));
+      cells += `<div class="cell ${d === TODAY ? "today" : ""}">${list.map(x => `<button class="ev ${x.status}" data-action="open" data-id="${x.id}"><b>${x.title}</b><span class="num">${x.start}–${x.end} · ${x.adults + x.kids} pers.</span>${x.status === "optiune" ? `<span>Opțiune până pe ${fmtShort(x.optionExpires)}</span>` : ""}</button>`).join("")}${list.length ? "" : `<button class="free" data-action="new-event" aria-label="Adaugă eveniment">+ Rezervă</button>`}</div>`;
+    });
+  });
+  return `
+  <div class="head">
+    <div><p class="eyebrow">Calendar săli</p><h1>${range}</h1></div>
+    <div class="toolbar">
+      <div class="legend"><span><i style="background:var(--accent)"></i>Confirmat</span><span><i style="background:var(--amber)"></i>Opțiune</span><span><i style="background:var(--slate)"></i>În discuție</span></div>
+      <button class="btn" data-action="week" data-d="-7" aria-label="Săptămâna anterioară">${icon("left")}</button>
+      <button class="btn" data-action="week" data-d="0">Azi</button>
+      <button class="btn" data-action="week" data-d="7" aria-label="Săptămâna următoare">${icon("right")}</button>
+    </div>
+  </div>
+  <div class="card cal-wrap"><div class="cal">${cells}</div></div>`;
+}
+
+function viewEvents() {
+  const F = {
+    toate: () => true,
+    saptamana: e => e.date <= addDays(mondayOf(TODAY), 6),
+    nunta: e => e.type === "nunta",
+    botez: e => e.type === "botez",
+    corporate: e => e.type === "corporate" || e.type === "conferinta",
+    optiuni: e => e.status !== "confirmat",
+  };
+  const q = S.q.trim().toLowerCase();
+  const list = upcoming().filter(F[S.filter]).filter(e => !q || (e.title + " " + e.client + " " + hallName(e.hall)).toLowerCase().includes(q));
+  const labels = [["toate", "Toate"], ["saptamana", "Săptămâna aceasta"], ["nunta", "Nunți"], ["botez", "Botezuri"], ["corporate", "Corporate"], ["optiuni", "Opțiuni și discuții"]];
+  return `
+  <div class="head">
+    <div><p class="eyebrow">Evenimente</p><h1>Următoarele evenimente</h1><p class="sub">${list.length} ${list.length === 1 ? "eveniment" : "evenimente"}${q ? ` pentru „${S.q}”` : ""}</p></div>
+    ${S.role === "manager" ? `<button class="btn primary" data-action="new-event">${icon("plus")}Eveniment nou</button>` : ""}
+  </div>
+  <div class="seg" role="tablist">${labels.map(([k, t]) => `<button class="${S.filter === k ? "on" : ""}" data-action="filter" data-f="${k}">${t}</button>`).join("")}</div>
+  <div class="card tbl-wrap"><table>
+    <thead><tr><th>Data</th><th>Eveniment</th><th>Sala</th><th class="right">Invitați</th>${S.role === "manager" ? `<th class="right">Valoare</th><th>Încasat</th>` : ""}<th>Status</th><th>Departamente</th></tr></thead>
+    <tbody>${list.map(e => {
+      const v = value(e), paid = paidSum(e);
+      return `<tr class="click" data-action="open" data-id="${e.id}">
+        <td><div class="t num">${fmtShort(e.date)}</div><div class="m">${DAYS[toDate(e.date).getDay()]} · ${e.start}</div></td>
+        <td><div class="t">${e.title}</div><div class="m">${TYPES[e.type]} · ${e.client}</div></td>
+        <td>${hallName(e.hall)}</td>
+        <td class="right num">${e.adults + e.kids}</td>
+        ${S.role === "manager" ? `<td class="right num">${lei(v)}</td><td>${e.payments.length ? `<div class="progress" title="${lei(paid)}"><i style="width:${Math.round(paid / v * 100)}%"></i></div>` : `<span class="m">—</span>`}</td>` : ""}
+        <td>${chip(STATUS_CHIP[e.status])}</td>
+        <td>${e.status === "confirmat" ? deptDots(e) : `<span class="m">după contract</span>`}</td>
+      </tr>`;
+    }).join("") || `<tr><td colspan="8" class="m" style="padding:28px 16px">Niciun eveniment nu se potrivește căutării.</td></tr>`}</tbody>
+  </table></div>`;
+}
+
+function viewEvent() {
+  const e = EV.find(x => x.id === S.eventId);
+  const tabsAll = [["overview", "Prezentare"], ["menu", "Meniu"], ["program", "Program"], ["room", "Sală și mese"], ["vendors", "Furnizori"], ["payments", "Plăți"], ["history", "Istoric"]];
+  const allowed = { manager: tabsAll.map(t => t[0]), bucatarie: ["menu", "program", "history"], sala: ["room", "program", "vendors", "history"] }[S.role];
+  const tabs = tabsAll.filter(t => allowed.includes(t[0]));
+  if (!allowed.includes(S.tab)) S.tab = tabs[0][0];
+  const total = e.adults + e.kids;
+  const dl = diffDays(e.date, TODAY);
+
+  return `
+  <div class="head">
+    <div style="min-width:0">
+      <button class="back" data-action="go" data-view="events">${icon("left", 16)}Evenimente</button>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px"><h1>${e.title}</h1>${chip(STATUS_CHIP[e.status])}<span class="chip plain">${TYPES[e.type]}</span></div>
+      <div class="meta"><span><b>${fmtLong(e.date)}</b> · ${inDays(dl)}</span><span><b class="num">${e.start}–${e.end}</b></span><span><b>${hallName(e.hall)}</b></span><span><b class="num">${e.adults}</b> adulți, <b class="num">${e.kids}</b> copii</span><span>Coordonator: <b>Ioana Marin</b></span></div>
+    </div>
+    <div class="actions">
+      ${S.role !== "sala" ? `<button class="btn" data-action="kitchen">${icon("chef")}Fișa pentru bucătărie</button>` : ""}
+      ${S.role === "manager" ? `<button class="btn primary" data-action="edit-guests">${icon("users")}Modifică invitații</button>` : ""}
+    </div>
+  </div>
+
+  ${e.status === "confirmat" ? `<div class="card dept-strip">${DEPTS.map(d => {
+    const ok = e.depts[d.id] === "ok";
+    const mine = (S.role === "bucatarie" && d.id === "bucatarie") || (S.role === "sala" && d.id === "sala") || S.role === "manager";
+    return `<div class="dept"><div><b>${d.name}</b><span>${ok ? "A confirmat ultima versiune" : "Are de confirmat o modificare"}</span></div>${ok ? chip(["ok", "Confirmat"]) : mine ? `<button class="btn sm" data-action="confirm-dept" data-d="${d.id}">${icon("check")}Confirmă</button>` : chip(["warn", "De confirmat"])}</div>`;
+  }).join("")}</div>` : `<div class="card card-b" style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap"><span>${e.status === "optiune" ? `Data este ținută până pe <b>${fmtLong(e.optionExpires)}</b>. După semnarea contractului, fișa ajunge automat la toate departamentele.` : "Clientul a cerut ofertă. Fișa devine activă după semnarea contractului."}</span>${S.role === "manager" ? `<button class="btn primary sm" data-action="sign" data-id="${e.id}">Marchează contractul semnat</button>` : ""}</div>`}
+
+  <div class="tabs" role="tablist">${tabs.map(([k, t]) => `<button class="${S.tab === k ? "on" : ""}" data-action="tab" data-t="${k}" role="tab" aria-selected="${S.tab === k}">${t}</button>`).join("")}</div>
+  ${tabBody(e, total)}`;
+}
+
+function tabBody(e, total) {
+  const v = value(e), paid = paidSum(e), pkg = PKG[e.pkg];
+  if (S.tab === "overview") return `
+  <section class="grid-2">
+    <div class="card"><div class="card-h"><h2>Detalii eveniment</h2></div><div class="card-b"><dl class="kv">
+      <dt>Client</dt><dd>${e.client}</dd>
+      <dt>Telefon</dt><dd class="num">${e.phone}</dd>
+      <dt>Pachet</dt><dd>${pkg.name} · <span class="num">${lei(pkg.pp)}</span> / persoană</dd>
+      <dt>Invitați</dt><dd class="num">${e.adults} adulți + ${e.kids} copii (50%) = ${total}</dd>
+      <dt>Mese</dt><dd class="num">${Math.ceil(total / 10)} mese rotunde de 10 persoane</dd>
+      <dt>Note</dt><dd style="font-weight:500">${e.notes || "<span style='color:var(--muted)'>Fără note</span>"}</dd>
+    </dl></div></div>
+    <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
+      <div class="card"><div class="card-h"><h2>Valoare și încasări</h2><button class="link" data-action="tab" data-t="payments">Detalii</button></div><div class="card-b" style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;justify-content:space-between;gap:12px"><span class="sub" style="margin:0">Valoare totală</span><b class="num" style="font-size:20px">${lei(v)}</b></div>
+        <div class="progress" style="height:8px"><i style="width:${v ? Math.round(paid / v * 100) : 0}%"></i></div>
+        <div style="display:flex;justify-content:space-between;gap:12px;font-size:13px"><span>Încasat <b class="num">${lei(paid)}</b></span><span class="sub" style="margin:0">Rămas <b class="num" style="color:var(--fg)">${lei(v - paid)}</b></span></div>
+      </div></div>
+      <div class="card"><div class="card-h"><h2>Meniuri speciale</h2></div><div class="card-b special">${e.special.map(([t, n, m]) => `<div><span><b>${t}</b> · ${m}</span><b class="num">${n}</b></div>`).join("")}</div></div>
+    </div>
+  </section>`;
+
+  if (S.tab === "menu") return `
+  <section class="grid-2">
+    <div class="card"><div class="card-h"><h2>${pkg.name}</h2><span class="chip plain num">${total} porții</span></div>
+      <div class="courses">${pkg.courses.map(([k, t, m]) => `<div class="course"><span class="time">${k}</span><span style="min-width:0"><div class="t">${t}</div><div class="m">${m}</div></span><span class="num">${e.adults} + ${e.kids}</span></div>`).join("")}</div></div>
+    <div class="card"><div class="card-h"><h2>Meniuri speciale</h2></div><div class="card-b special">${e.special.map(([t, n, m]) => `<div><span><b>${t}</b> · ${m}</span><b class="num">${n}</b></div>`).join("")}</div></div>
+  </section>`;
+
+  if (S.tab === "program") return `
+  <div class="card"><div class="card-h"><h2>Programul serii</h2><span class="sub" style="margin:0">Fiecare departament vede momentele lui</span></div>
+  ${e.program.length ? `<div class="timeline">${e.program.map(([t, w, who]) => `<div class="tl"><span class="time num">${t}</span><span class="pin"></span><span><b>${w}</b><div class="who">${who}</div></span></div>`).join("")}</div>` : `<div class="card-b"><p class="sub" style="margin:0">Programul nu a fost completat încă. ${e.incomplete || ""}</p></div>`}</div>`;
+
+  if (S.tab === "room") return `
+  <section class="grid-2">
+    <div class="card"><div class="card-h"><h2>Plan ${hallName(e.hall)}</h2><span class="chip plain num">${Math.ceil(total / 10)} mese</span></div><div class="card-b floor">${floor(e, total)}</div></div>
+    <div class="card"><div class="card-h"><h2>Aranjare</h2></div><div class="card-b"><dl class="kv">
+      <dt>Mese</dt><dd class="num">${Math.ceil(total / 10)} rotunde × 10 persoane</dd>
+      <dt>Masa principală</dt><dd>${e.type === "nunta" ? "Masa mirilor, lângă ring" : "Prezidiu"}</dd>
+      <dt>Ring de dans</dt><dd>Central, 10 × 8 m</dd>
+      <dt>Ospătari</dt><dd class="num">${Math.ceil(total / 15)} (1 la 15 invitați)</dd>
+      <dt>Montaj</dt><dd class="num">${e.start === "13:00" ? "08:00–12:00" : "12:00–16:00"}</dd>
+      <dt>Atenție</dt><dd>${e.special.filter(s => s[0].startsWith("Alergie")).map(s => s[2]).join("; ") || "Fără observații"}</dd>
+    </dl></div></div>
+  </section>`;
+
+  if (S.tab === "vendors") return `
+  <div class="card tbl-wrap"><table style="min-width:560px"><thead><tr><th>Serviciu</th><th>Furnizor</th><th>Logistică</th></tr></thead><tbody>
+    ${e.vendors.length ? e.vendors.map(([s, n, l]) => `<tr><td class="t">${s}</td><td>${n}</td><td class="m">${l || "—"}</td></tr>`).join("") : `<tr><td colspan="3" class="m" style="padding:24px 16px">Niciun furnizor extern.</td></tr>`}
+  </tbody></table></div>`;
+
+  if (S.tab === "payments") return `
+  <div class="card tbl-wrap"><table style="min-width:620px"><thead><tr><th>Tranșă</th><th>Scadență</th><th class="right">Sumă</th><th>Status</th><th></th></tr></thead><tbody>
+    ${e.payments.length ? e.payments.map((p, i) => `<tr><td class="t">${p.label}</td><td class="num">${fmtLong(p.due)}</td><td class="right num">${lei(p.amount)}</td><td>${chip(PAY_CHIP[payState(p)])}</td><td class="right">${p.paid ? "" : `<button class="btn sm" data-action="pay" data-id="${e.id}" data-i="${i}">Marchează încasat</button>`}</td></tr>`).join("") : `<tr><td colspan="5" class="m" style="padding:24px 16px">Graficul de plăți se generează la semnarea contractului.</td></tr>`}
+  </tbody></table></div>`;
+
+  return `<div class="card"><div class="card-h"><h2>Istoricul modificărilor</h2></div><div class="hist">${e.history.map(([t, w, m]) => `<div><span>${t}</span><span style="color:var(--fg)"><b>${w}</b> · ${m}</span></div>`).join("")}</div></div>`;
+}
+
+function floor(e, total) {
+  const n = Math.ceil(total / 10);
+  const pos = [];
+  [50, 110, 170].forEach(x => [100, 160, 220, 280, 340].forEach(y => pos.push([x, y])));
+  [430, 490, 550].forEach(x => [100, 160, 220, 280, 340].forEach(y => pos.push([x, y])));
+  [255, 345].forEach(x => pos.push([x, 330]));
+  pos.sort((a, b) => a[1] - b[1] || a[0] - b[0]);
+  const allergy = e.special.some(s => s[0].startsWith("Alergie")) ? 12 : -1;
+  let g = `<rect x="200" y="22" width="200" height="30" rx="6" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="300" y="41" text-anchor="middle">${e.type === "nunta" ? "Masa mirilor" : "Prezidiu"}</text>`;
+  g += `<rect x="215" y="120" width="170" height="160" rx="10" fill="var(--surface-2)" stroke="var(--line)" stroke-dasharray="4 4"/><text x="300" y="204" text-anchor="middle" style="fill:var(--muted)">Ring de dans</text>`;
+  pos.slice(0, Math.min(n, pos.length)).forEach(([x, y], i) => {
+    const k = i + 1, a = k === allergy;
+    g += `<circle cx="${x}" cy="${y}" r="21" fill="${a ? "var(--danger-soft)" : "var(--surface)"}" stroke="${a ? "var(--danger)" : "var(--chrome-dim)"}" stroke-width="${a ? 2 : 1}"/><text x="${x}" y="${y + 4}" text-anchor="middle">${k}</text>`;
+  });
+  return `<svg viewBox="0 0 600 380" role="img" aria-label="Planul sălii cu ${n} mese">${g}</svg>${allergy > 0 ? `<p class="sub" style="font-size:12.5px;margin:10px 0 0"><span class="chip bad">Masa 12</span> are un invitat cu alergie la nuci.</p>` : ""}`;
+}
+
+function viewSales() {
+  const sum = st => LEADS.filter(l => l.stage === st).reduce((s, l) => s + l.value, 0);
+  return `
+  <div class="head">
+    <div><p class="eyebrow">Vânzări și oferte</p><h1>De la cerere la contract</h1><p class="sub">Fiecare cerere are un pas următor. Contractul semnat creează automat fișa evenimentului.</p></div>
+    <button class="btn primary" data-action="new-event">${icon("plus")}Cerere nouă</button>
+  </div>
+  <div class="board">${STAGES.map(([k, t], si) => `
+    <div class="col"><div class="col-h"><b>${t}</b><span class="num">${LEADS.filter(l => l.stage === k).length} · ${lei(sum(k))}</span></div>
+    ${LEADS.filter(l => l.stage === k).map(l => `<div class="lead">
+      <div><div class="t">${l.name}</div><div class="m num">${fmtLong(l.date)} · ${l.guests} pers.</div></div>
+      <div class="m">${l.note}</div>
+      <div class="f"><span class="chip plain">${l.source}</span><b class="num">${lei(l.value)}</b></div>
+      ${si < 3 ? `<button class="btn sm" data-action="advance" data-id="${l.id}">${["Trimite oferta", "Pune opțiune pe dată", "Semnează contractul"][si]} ${icon("right")}</button>` : ""}
+    </div>`).join("")}</div>`).join("")}
+  </div>`;
+}
+
+function viewPayments() {
+  const all = [];
+  EV.forEach(e => e.payments.forEach((p, i) => all.push({ e, p, i, st: payState(p) })));
+  const open = all.filter(x => x.st !== "paid").sort((a, b) => a.p.due.localeCompare(b.p.due));
+  const month = TODAY.slice(0, 7);
+  const sumOf = arr => arr.reduce((s, x) => s + x.p.amount, 0);
+  return `
+  <div class="head"><div><p class="eyebrow">Plăți</p><h1>Încasări de urmărit</h1><p class="sub">Avansurile și tranșele tuturor evenimentelor confirmate, în ordinea scadenței.</p></div></div>
+  <section class="kpis">
+    <div class="card kpi"><span class="label">Restanțe</span><span class="value num" style="color:var(--danger)">${lei(sumOf(open.filter(x => x.st === "overdue")))}</span><span class="note">${open.filter(x => x.st === "overdue").length} tranșe</span></div>
+    <div class="card kpi"><span class="label">Scadente în 14 zile</span><span class="value num">${lei(sumOf(open.filter(x => x.st === "soon")))}</span><span class="note">${open.filter(x => x.st === "soon").length} tranșe</span></div>
+    <div class="card kpi"><span class="label">Programate</span><span class="value num">${lei(sumOf(open.filter(x => x.st === "scheduled")))}</span><span class="note">după 14 zile</span></div>
+    <div class="card kpi"><span class="label">Încasat în ${MON_FULL[toDate(TODAY).getMonth()]}</span><span class="value num">${lei(sumOf(all.filter(x => x.st === "paid" && x.p.due.startsWith(month))))}</span><span class="note">Facturile ajung în programul de facturare</span></div>
+  </section>
+  <div class="card tbl-wrap"><table><thead><tr><th>Scadență</th><th>Eveniment</th><th>Tranșă</th><th class="right">Sumă</th><th>Status</th><th></th></tr></thead><tbody>
+  ${open.map(({ e, p, i, st }) => `<tr><td><div class="t num">${fmtShort(p.due)}</div><div class="m">${inDays(diffDays(p.due, TODAY))}</div></td><td><button class="link" style="color:var(--fg);text-align:left" data-action="open" data-id="${e.id}">${e.title}</button><div class="m">${fmtLong(e.date)}</div></td><td>${p.label}</td><td class="right num">${lei(p.amount)}</td><td>${chip(PAY_CHIP[st])}</td><td class="right"><button class="btn sm" data-action="pay" data-id="${e.id}" data-i="${i}">Marchează încasat</button></td></tr>`).join("")}
+  </tbody></table></div>`;
+}
+
+/* ---------- Modals ---------- */
+function modalHTML() {
+  if (!S.modal) return "";
+  const e = EV.find(x => x.id === S.eventId);
+  if (S.modal === "guests") {
+    return `<div class="overlay" data-action="close-modal"><form class="modal" id="guestForm" role="dialog" aria-modal="true" aria-labelledby="mg">
+      <div class="modal-h"><h2 id="mg">Modifică invitații · ${e.title}</h2><button type="button" class="x" data-action="close-modal" aria-label="Închide">×</button></div>
+      <div class="modal-b">
+        <div class="fields">
+          <div class="field"><label for="fa">Adulți</label><input id="fa" type="number" min="0" max="400" value="${e.adults}"></div>
+          <div class="field"><label for="fk">Copii (50% din preț)</label><input id="fk" type="number" min="0" max="100" value="${e.kids}"></div>
+        </div>
+        <div class="field"><label for="fn">Motiv (opțional)</label><input id="fn" type="text" placeholder="De exemplu: au confirmat încă 12 invitați din diaspora"></div>
+        <div class="diff" id="diff"></div>
+      </div>
+      <div class="modal-f"><button type="button" class="btn" data-action="close-modal">Renunță</button><button type="submit" class="btn primary">Salvează și anunță departamentele</button></div>
+    </form></div>`;
+  }
+  if (S.modal === "kitchen") {
+    const total = e.adults + e.kids;
+    return `<div class="overlay" data-action="close-modal"><div class="modal wide kitchen" role="dialog" aria-modal="true" aria-labelledby="mk">
+      <div class="modal-h"><div><p class="eyebrow" style="margin:0 0 4px">Fișa pentru bucătărie</p><h2 id="mk">${e.title} · ${fmtLong(e.date)} · ${hallName(e.hall)}</h2></div><button class="x" data-action="close-modal" aria-label="Închide">×</button></div>
+      <div class="modal-b">
+        <div><h3>Porții</h3><div class="tbl-wrap"><table><thead><tr><th>Ora</th><th>Preparat</th><th class="right">Adulți</th><th class="right">Copii</th><th class="right">Total</th></tr></thead><tbody>
+        ${PKG[e.pkg].courses.map(([k, t]) => { const pr = e.program.find(p => p[1].toLowerCase().includes(k.toLowerCase().slice(0, 5))); return `<tr><td class="num">${pr ? pr[0] : /^\d/.test(k) ? k : "—"}</td><td class="t">${t}</td><td class="right num">${e.adults}</td><td class="right num">${e.kids}</td><td class="right num"><b>${total}</b></td></tr>`; }).join("")}
+        </tbody></table></div></div>
+        <div><h3>Meniuri speciale</h3><div class="special">${e.special.map(([t, n, m]) => `<div><span><b>${t}</b> · ${m}</span><b class="num">${n}</b></div>`).join("")}</div></div>
+        <p class="sub" style="margin:0;font-size:12.5px">Fișa se actualizează automat la fiecare modificare. Ultima modificare: ${e.history[0][0]}, ${e.history[0][1]}.</p>
+      </div>
+      <div class="modal-f"><button class="btn" data-action="close-modal">Închide</button></div>
+    </div></div>`;
+  }
+  if (S.modal === "new") {
+    return `<div class="overlay" data-action="close-modal"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mn">
+      <div class="modal-h"><h2 id="mn">Eveniment nou</h2><button class="x" data-action="close-modal" aria-label="Închide">×</button></div>
+      <div class="modal-b"><p style="margin:0">În versiunea finală, aici se introduce o cerere nouă: client, dată, sală, număr de invitați și pachet. Sistemul verifică pe loc dacă sala e liberă și generează oferta în PDF.</p>
+      <p class="sub" style="margin:0">În această simulare, încearcă fluxul pe un eveniment existent: deschide <b>Nunta Andreea & Mihai</b> și modifică numărul de invitați.</p></div>
+      <div class="modal-f"><button class="btn" data-action="close-modal">Închide</button><button class="btn primary" data-action="open" data-id="e1">Deschide Nunta Andreea & Mihai</button></div>
+    </div></div>`;
+  }
+  return "";
+}
+
+function updateDiff() {
+  const e = EV.find(x => x.id === S.eventId);
+  const a = Math.max(0, parseInt(document.getElementById("fa").value, 10) || 0);
+  const k = Math.max(0, parseInt(document.getElementById("fk").value, 10) || 0);
+  const nv = a * PKG[e.pkg].pp + Math.round(k * PKG[e.pkg].pp * 0.5), ov = value(e);
+  const d = nv - ov;
+  const tablesOld = Math.ceil((e.adults + e.kids) / 10), tablesNew = Math.ceil((a + k) / 10);
+  const cap = HALLS.find(h => h.id === e.hall).cap;
+  document.getElementById("diff").innerHTML = `
+    <span>Valoare nouă: <b class="num">${lei(nv)}</b> <span style="color:${d >= 0 ? "var(--accent)" : "var(--danger)"}" class="num">(${d >= 0 ? "+" : "−"}${lei(Math.abs(d))})</span></span>
+    <span>Mese: <b class="num">${tablesOld} → ${tablesNew}</b> · Ospătari: <b class="num">${Math.ceil((e.adults + e.kids) / 15)} → ${Math.ceil((a + k) / 15)}</b></span>
+    ${a + k > cap ? `<span style="color:var(--danger)"><b>Atenție:</b> ${hallName(e.hall)} are capacitate de ${cap} persoane.</span>` : `<span style="color:var(--muted)">Vor fi anunțate: Bucătăria, Sala și Barul. Diferența se adaugă la soldul final.</span>`}`;
+}
+
+/* ---------- Render ---------- */
+function render() {
+  renderNav();
+  const V = { dashboard: viewDashboard, calendar: viewCalendar, events: viewEvents, event: viewEvent, sales: viewSales, payments: viewPayments };
+  document.getElementById("page").innerHTML = V[S.view]();
+  document.getElementById("layer").innerHTML = modalHTML();
+  if (S.modal === "guests") { updateDiff(); document.getElementById("fa").focus(); }
+}
+
+let toastTimer;
+function toast(msg) {
+  clearTimeout(toastTimer);
+  const old = document.querySelector(".toast"); if (old) old.remove();
+  const t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "status"); t.innerHTML = `<i></i><span>${msg}</span>`;
+  document.body.appendChild(t);
+  toastTimer = setTimeout(() => t.remove(), 4200);
+}
+
+function go(view) { S.view = view; S.modal = null; document.getElementById("app").classList.remove("open"); render(); window.scrollTo(0, 0); }
+
+document.addEventListener("click", ev => {
+  const el = ev.target.closest("[data-action]");
+  if (!el) return;
+  const a = el.dataset.action;
+  if (a === "close-modal" && el.classList.contains("overlay") && ev.target !== el) return;
+  if (a === "go") go(el.dataset.view);
+  else if (a === "open") { S.eventId = el.dataset.id; S.tab = "overview"; go("event"); }
+  else if (a === "tab") { S.tab = el.dataset.t; render(); }
+  else if (a === "filter") { S.filter = el.dataset.f; render(); }
+  else if (a === "week") { const d = +el.dataset.d; S.week = d === 0 ? mondayOf(TODAY) : addDays(S.week, d); render(); }
+  else if (a === "open-menu") document.getElementById("app").classList.add("open");
+  else if (a === "close-menu") document.getElementById("app").classList.remove("open");
+  else if (a === "edit-guests") { S.modal = "guests"; render(); }
+  else if (a === "kitchen") { S.modal = "kitchen"; render(); }
+  else if (a === "new-event") { S.modal = "new"; render(); }
+  else if (a === "close-modal") { S.modal = null; render(); }
+  else if (a === "confirm-dept") {
+    const e = EV.find(x => x.id === S.eventId), d = DEPTS.find(x => x.id === el.dataset.d);
+    e.depts[d.id] = "ok";
+    e.history.unshift(["acum", d.owner, `${d.name}: a confirmat ultima versiune a fișei.`]);
+    render(); toast(`${d.name} a confirmat fișa evenimentului.`);
+  }
+  else if (a === "pay") {
+    const e = EV.find(x => x.id === el.dataset.id), p = e.payments[+el.dataset.i];
+    p.paid = true; e.history.unshift(["acum", "Ioana Marin", `${p.label} încasată: ${lei(p.amount)}.`]);
+    render(); toast(`${lei(p.amount)} marcat ca încasat pentru ${e.title}.`);
+  }
+  else if (a === "advance") {
+    const l = LEADS.find(x => x.id === el.dataset.id), i = STAGES.findIndex(s => s[0] === l.stage);
+    l.stage = STAGES[i + 1][0];
+    l.note = ["", "Oferta a fost trimisă azi pe email", "Data e ținută 7 zile", "Fișa evenimentului creată"][i + 1];
+    render(); toast(i + 1 === 3 ? `Contract semnat: ${l.name}. Fișa a fost trimisă departamentelor.` : `${l.name}: ${STAGES[i + 1][1].toLowerCase()}.`);
+  }
+  else if (a === "sign") {
+    const e = EV.find(x => x.id === el.dataset.id);
+    e.status = "confirmat"; e.payments = buildPayments(e); e.payments.forEach((p, i) => { p.paid = i === 0; });
+    DEPTS.forEach(d => { e.depts[d.id] = "pending"; });
+    e.history.unshift(["acum", "Ioana Marin", "Contract semnat. Fișa a fost trimisă tuturor departamentelor."]);
+    const l = LEADS.find(x => x.name.includes(e.title.replace("Nunta ", "").split(" ")[0]) && x.stage === "optiune"); if (l) l.stage = "contract";
+    render(); toast("Contract semnat. Bucătăria, Sala, Barul și Recepția au primit fișa.");
+  }
+});
+
+document.addEventListener("input", ev => { if (ev.target.id === "fa" || ev.target.id === "fk") updateDiff(); });
+document.addEventListener("keydown", ev => { if (ev.key === "Escape" && S.modal) { S.modal = null; render(); } });
+
+document.addEventListener("submit", ev => {
+  if (ev.target.id !== "guestForm") return;
+  ev.preventDefault();
+  const e = EV.find(x => x.id === S.eventId);
+  const a = Math.max(0, parseInt(document.getElementById("fa").value, 10) || 0);
+  const k = Math.max(0, parseInt(document.getElementById("fk").value, 10) || 0);
+  const note = document.getElementById("fn").value.trim();
+  if (a === e.adults && k === e.kids) { S.modal = null; render(); return; }
+  const ov = value(e), oa = e.adults, ok = e.kids;
+  e.adults = a; e.kids = k;
+  const kidsMenu = e.special.find(s => s[0] === "Meniu copii"); if (kidsMenu) kidsMenu[1] = k;
+  const last = e.payments.find(p => !p.paid); if (last) last.amount += value(e) - ov;
+  ["bucatarie", "sala", "bar"].forEach(d => { e.depts[d] = "pending"; });
+  e.history.unshift(["acum", "Ioana Marin", `Invitați: ${oa} → ${a} adulți, ${ok} → ${k} copii.${note ? " " + note + "." : ""} Bucătăria, Sala și Barul trebuie să confirme.`]);
+  S.modal = null; render();
+  toast("Modificare salvată. Bucătăria, Sala și Barul au fost anunțate.");
+});
+
+document.getElementById("q").addEventListener("input", ev => { S.q = ev.target.value; if (S.view !== "events") { S.view = "events"; S.filter = "toate"; } render(); ev.target.focus(); });
+
+const roleSel = document.getElementById("role");
+roleSel.value = S.role;
+roleSel.addEventListener("change", () => {
+  S.role = roleSel.value;
+  try { localStorage.setItem("emerald-role", S.role); } catch (_) {}
+  if (!NAV.find(n => n.id === S.view || (S.view === "event" && n.id === "events")).roles.includes(S.role)) S.view = "events";
+  render();
+  toast({ manager: "Vizualizare Manager: vezi tot.", bucatarie: "Vizualizare Bucătărie: doar meniuri, porții și program.", sala: "Vizualizare Șef de sală: mese, program și furnizori." }[S.role]);
+});
+
+if (S.role !== "manager" && S.view === "dashboard") S.view = "events";
+render();
+})();
+</script>
