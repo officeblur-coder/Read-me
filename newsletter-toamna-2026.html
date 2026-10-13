@@ -18,13 +18,19 @@
   img{border:0;display:block;outline:none;}
   @media only screen and (max-width:620px){
     .wrap{width:100% !important;}
-    .px{padding-left:22px !important;padding-right:22px !important;}
+    .px{padding-left:20px !important;padding-right:20px !important;}
     .col{display:block !important;width:100% !important;max-width:100% !important;}
     .col-pad{padding:0 0 18px 0 !important;}
     .h1{font-size:36px !important;line-height:40px !important;}
-    .big-num{font-size:30px !important;}
+    .num{width:46px !important;}
+    .big-num{font-size:28px !important;line-height:30px !important;}
     .hide-m{display:none !important;}
     .img-full{width:100% !important;max-width:100% !important;height:auto !important;}
+    .tile{padding-right:6px !important;}
+    .tile-last{padding-right:0 !important;}
+    .tile img{width:100% !important;height:auto !important;}
+    .cap{font-size:12px !important;}
+    .promo-img{width:100% !important;max-width:220px !important;}
   }
 </style>
 </head>
@@ -43,20 +49,20 @@
 
     <!-- Bara de sus -->
     <tr>
-      <td class="px" style="padding:0 6px 12px 6px;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#7a7266;">
+      <td style="padding:0 6px 12px 6px;">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
           <td style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#7a7266;">Nr. 10 &middot; Octombrie 2026</td>
-          <td align="right" style="font-family:Arial,Helvetica,sans-serif;font-size:12px;"><a href="{{web_version_url}}" style="color:#7a7266;text-decoration:underline;">Deschide în browser</a></td>
+          <td align="right" style="font-family:Arial,Helvetica,sans-serif;font-size:12px;"><a href="##NEWSMAN:view_online##" style="color:#7a7266;text-decoration:underline;">Deschide în browser</a></td>
         </tr></table>
       </td>
     </tr>
 
     <!-- Header cu logo -->
     <tr>
-      <td style="background:#ffffff;border-top:6px solid #005aab;padding:22px 32px;" class="px">
+      <td class="px" style="background:#ffffff;border-top:6px solid #005aab;padding:22px 32px;">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
           <td valign="middle">
-            <a href="https://romsafe.ro/?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026"><img src="https://romsafe.ro/images/site/logo.png" width="160" alt="RomSafe" style="width:160px;max-width:160px;height:auto;"></a>
+            <a href="https://romsafe.ro/?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026"><img src="https://cdn.jsdelivr.net/gh/officeblur-coder/Read-me@3df0b881545ebea3b847cfd37cdfae3557045b10/newsletter/img/logo.png" width="150" alt="RomSafe" style="width:150px;max-width:150px;height:auto;"></a>
           </td>
           <td valign="middle" align="right" class="hide-m" style="font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;">
             <a href="https://romsafe.ro/incaltaminte-de-protectie?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026" style="color:#1d2730;font-weight:bold;">Încălțăminte</a>
@@ -74,7 +80,12 @@
       <td style="background:#1d2730;padding:0;">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
           <tr>
-            <td class="px" style="padding:44px 40px 10px 40px;">
+            <td style="padding:0;">
+              <a href="https://romsafe.ro/imbracaminte-de-protectie/jacheta-de-lucru-de-iarna-hi-vis-reflectorizante?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026&utm_content=hero-img"><img class="img-full" src="https://cdn.jsdelivr.net/gh/officeblur-coder/Read-me@3df0b881545ebea3b847cfd37cdfae3557045b10/newsletter/img/hero.jpg" width="600" alt="Muncitor cu jachetă reflectorizantă de iarnă într-un depozit" style="width:600px;max-width:600px;height:auto;background:#1d2730;"></a>
+            </td>
+          </tr>
+          <tr>
+            <td class="px" style="padding:8px 40px 10px 40px;">
               <p style="margin:0 0 14px 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;letter-spacing:3px;text-transform:uppercase;color:#e8a33d;font-weight:bold;">Ediția de toamnă</p>
               <h1 class="h1" style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:46px;line-height:50px;color:#ffffff;font-weight:normal;">
                 Toamna nu bate<br>la ușă.<br><span style="color:#e8a33d;font-style:italic;">Bate la șantier.</span>
@@ -92,7 +103,6 @@
           </tr>
           <tr>
             <td class="px" style="padding:30px 40px 44px 40px;">
-              <!-- Buton -->
               <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
                 <td bgcolor="#e8a33d" style="background:#e8a33d;">
                   <a href="https://romsafe.ro/imbracaminte-de-protectie?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026&utm_content=hero" style="display:inline-block;padding:15px 28px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;color:#1d2730;letter-spacing:.5px;">Vezi colecția de sezon &rarr;</a>
@@ -120,19 +130,26 @@
     <tr>
       <td class="px" style="background:#ffffff;padding:26px 40px 0 40px;">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid #e6e0d6;"><tr>
-          <td width="64" valign="top" style="padding-top:20px;">
+          <td class="num" width="64" valign="top" style="padding-top:20px;">
             <p class="big-num" style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:38px;line-height:38px;color:#005aab;">01</p>
           </td>
-          <td valign="top" style="padding-top:22px;">
+          <td valign="top" style="padding:22px 0 24px 0;">
             <p style="margin:0 0 6px 0;font-family:Arial,Helvetica,sans-serif;font-size:17px;font-weight:bold;color:#1d2730;">Picioare uscate toată tura</p>
-            <p style="margin:0 0 10px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:23px;color:#5d5850;">Bocancii S1 sunt buni vara. Acum ai nevoie de S3: talpă antiperforație și fețe care nu lasă apa să treacă. Pentru noroi și apă stătătoare, cizme PVC.</p>
-            <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:22px;">
-              <a href="https://romsafe.ro/incaltaminte-de-protectie/bocanci-protectie-s3?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026" style="color:#005aab;font-weight:bold;text-decoration:underline;">Bocanci S3</a>
-              <span style="color:#c9c1b4;">&nbsp;&middot;&nbsp;</span>
-              <a href="https://romsafe.ro/incaltaminte-de-protectie/incaltaminte-protectie-de-iarna?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026" style="color:#005aab;font-weight:bold;text-decoration:underline;">Încălțăminte de iarnă</a>
-              <span style="color:#c9c1b4;">&nbsp;&middot;&nbsp;</span>
-              <a href="https://romsafe.ro/incaltaminte-de-protectie/cizme-protectie-pvc-apa-noroi-cizme-sold-cizme-pescar-galosi-pvc?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026" style="color:#005aab;font-weight:bold;text-decoration:underline;">Cizme PVC</a>
-            </p>
+            <p style="margin:0 0 16px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:23px;color:#5d5850;">Bocancii S1 sunt buni vara. Acum ai nevoie de S3: talpă antiperforație și fețe care nu lasă apa să treacă. Pentru noroi și apă stătătoare, cizme PVC.</p>
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+              <td class="tile" width="33%" valign="top" style="padding-right:12px;">
+                <a href="https://romsafe.ro/incaltaminte-de-protectie/bocanci-protectie-s3?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026"><img src="https://cdn.jsdelivr.net/gh/officeblur-coder/Read-me@3df0b881545ebea3b847cfd37cdfae3557045b10/newsletter/img/bocanci.jpg" width="136" alt="Bocanci de protecție S3" style="width:136px;max-width:100%;height:auto;"></a>
+                <p class="cap" style="margin:8px 0 0 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;"><a href="https://romsafe.ro/incaltaminte-de-protectie/bocanci-protectie-s3?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026" style="color:#005aab;font-weight:bold;">Bocanci S3 &rarr;</a></p>
+              </td>
+              <td class="tile" width="33%" valign="top" style="padding-right:12px;">
+                <a href="https://romsafe.ro/incaltaminte-de-protectie/incaltaminte-protectie-de-iarna?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026"><img src="https://cdn.jsdelivr.net/gh/officeblur-coder/Read-me@3df0b881545ebea3b847cfd37cdfae3557045b10/newsletter/img/iarna.jpg" width="136" alt="Încălțăminte de protecție de iarnă" style="width:136px;max-width:100%;height:auto;"></a>
+                <p class="cap" style="margin:8px 0 0 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;"><a href="https://romsafe.ro/incaltaminte-de-protectie/incaltaminte-protectie-de-iarna?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026" style="color:#005aab;font-weight:bold;">De iarnă &rarr;</a></p>
+              </td>
+              <td class="tile tile-last" width="33%" valign="top">
+                <a href="https://romsafe.ro/incaltaminte-de-protectie/cizme-protectie-pvc-apa-noroi-cizme-sold-cizme-pescar-galosi-pvc?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026"><img src="https://cdn.jsdelivr.net/gh/officeblur-coder/Read-me@3df0b881545ebea3b847cfd37cdfae3557045b10/newsletter/img/cizme-pvc.jpg" width="136" alt="Cizme de protecție PVC" style="width:136px;max-width:100%;height:auto;"></a>
+                <p class="cap" style="margin:8px 0 0 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;"><a href="https://romsafe.ro/incaltaminte-de-protectie/cizme-protectie-pvc-apa-noroi-cizme-sold-cizme-pescar-galosi-pvc?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026" style="color:#005aab;font-weight:bold;">Cizme PVC &rarr;</a></p>
+              </td>
+            </tr></table>
           </td>
         </tr></table>
       </td>
@@ -140,21 +157,28 @@
 
     <!-- Item 2 -->
     <tr>
-      <td class="px" style="background:#ffffff;padding:22px 40px 0 40px;">
+      <td class="px" style="background:#ffffff;padding:0 40px;">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid #e6e0d6;"><tr>
-          <td width="64" valign="top" style="padding-top:20px;">
+          <td class="num" width="64" valign="top" style="padding-top:20px;">
             <p class="big-num" style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:38px;line-height:38px;color:#005aab;">02</p>
           </td>
-          <td valign="top" style="padding-top:22px;">
+          <td valign="top" style="padding:22px 0 24px 0;">
             <p style="margin:0 0 6px 0;font-family:Arial,Helvetica,sans-serif;font-size:17px;font-weight:bold;color:#1d2730;">Să fie văzuți și pe ceață</p>
-            <p style="margin:0 0 10px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:23px;color:#5d5850;">Vesta din aprilie a trecut prin multe spălări. Uită-te pe etichetă: numărul maxim de spălări e scris acolo. Dacă banda reflectorizantă e crăpată sau gri, e timpul pentru una nouă.</p>
-            <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:22px;">
-              <a href="https://romsafe.ro/imbracaminte-de-protectie/veste-hamuri-banderole-hi-vis-reflectorizante-semnalizare?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026" style="color:#005aab;font-weight:bold;text-decoration:underline;">Veste hi-vis</a>
-              <span style="color:#c9c1b4;">&nbsp;&middot;&nbsp;</span>
-              <a href="https://romsafe.ro/imbracaminte-de-protectie/jacheta-de-lucru-de-iarna-hi-vis-reflectorizante?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026" style="color:#005aab;font-weight:bold;text-decoration:underline;">Jachete de iarnă hi-vis</a>
-              <span style="color:#c9c1b4;">&nbsp;&middot;&nbsp;</span>
-              <a href="https://romsafe.ro/imbracaminte-de-protectie/pantaloni-jachete-pelerine-costume-ploaie-impermeabile-hi-vis-reflectorizante?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026" style="color:#005aab;font-weight:bold;text-decoration:underline;">Costume de ploaie</a>
-            </p>
+            <p style="margin:0 0 16px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:23px;color:#5d5850;">Vesta din aprilie a trecut prin multe spălări. Uită-te pe etichetă: numărul maxim de spălări e scris acolo. Dacă banda reflectorizantă e crăpată sau gri, e timpul pentru una nouă.</p>
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+              <td class="tile" width="33%" valign="top" style="padding-right:12px;">
+                <a href="https://romsafe.ro/imbracaminte-de-protectie/veste-hamuri-banderole-hi-vis-reflectorizante-semnalizare?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026"><img src="https://cdn.jsdelivr.net/gh/officeblur-coder/Read-me@3df0b881545ebea3b847cfd37cdfae3557045b10/newsletter/img/vesta-hivis.jpg" width="136" alt="Vestă reflectorizantă hi-vis" style="width:136px;max-width:100%;height:auto;"></a>
+                <p class="cap" style="margin:8px 0 0 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;"><a href="https://romsafe.ro/imbracaminte-de-protectie/veste-hamuri-banderole-hi-vis-reflectorizante-semnalizare?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026" style="color:#005aab;font-weight:bold;">Veste hi-vis &rarr;</a></p>
+              </td>
+              <td class="tile" width="33%" valign="top" style="padding-right:12px;">
+                <a href="https://romsafe.ro/imbracaminte-de-protectie/jacheta-de-lucru-de-iarna-hi-vis-reflectorizante?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026"><img src="https://cdn.jsdelivr.net/gh/officeblur-coder/Read-me@3df0b881545ebea3b847cfd37cdfae3557045b10/newsletter/img/jacheta-hivis.jpg" width="136" alt="Jachetă de iarnă hi-vis" style="width:136px;max-width:100%;height:auto;"></a>
+                <p class="cap" style="margin:8px 0 0 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;"><a href="https://romsafe.ro/imbracaminte-de-protectie/jacheta-de-lucru-de-iarna-hi-vis-reflectorizante?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026" style="color:#005aab;font-weight:bold;">Jachete de iarnă &rarr;</a></p>
+              </td>
+              <td class="tile tile-last" width="33%" valign="top">
+                <a href="https://romsafe.ro/imbracaminte-de-protectie/pantaloni-jachete-pelerine-costume-ploaie-impermeabile-hi-vis-reflectorizante?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026"><img src="https://cdn.jsdelivr.net/gh/officeblur-coder/Read-me@3df0b881545ebea3b847cfd37cdfae3557045b10/newsletter/img/ploaie.jpg" width="136" alt="Costum de ploaie reflectorizant" style="width:136px;max-width:100%;height:auto;"></a>
+                <p class="cap" style="margin:8px 0 0 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;"><a href="https://romsafe.ro/imbracaminte-de-protectie/pantaloni-jachete-pelerine-costume-ploaie-impermeabile-hi-vis-reflectorizante?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026" style="color:#005aab;font-weight:bold;">De ploaie &rarr;</a></p>
+              </td>
+            </tr></table>
           </td>
         </tr></table>
       </td>
@@ -162,19 +186,25 @@
 
     <!-- Item 3 -->
     <tr>
-      <td class="px" style="background:#ffffff;padding:22px 40px 0 40px;">
+      <td class="px" style="background:#ffffff;padding:0 40px;">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid #e6e0d6;"><tr>
-          <td width="64" valign="top" style="padding-top:20px;">
+          <td class="num" width="64" valign="top" style="padding-top:20px;">
             <p class="big-num" style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:38px;line-height:38px;color:#005aab;">03</p>
           </td>
-          <td valign="top" style="padding-top:22px;">
+          <td valign="top" style="padding:22px 0 24px 0;">
             <p style="margin:0 0 6px 0;font-family:Arial,Helvetica,sans-serif;font-size:17px;font-weight:bold;color:#1d2730;">Mâini calde, dar cu priză bună</p>
-            <p style="margin:0 0 10px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:23px;color:#5d5850;">O mănușă prea groasă îl face pe om s-o scoată „doar un minut”. Alege modele căptușite, dar cu palma acoperită, ca să poată lucra cu ele pe mână.</p>
-            <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:22px;">
-              <a href="https://romsafe.ro/manusi-de-protectie/iarna?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026" style="color:#005aab;font-weight:bold;text-decoration:underline;">Mănuși de iarnă</a>
-              <span style="color:#c9c1b4;">&nbsp;&middot;&nbsp;</span>
-              <a href="https://romsafe.ro/imbracaminte-de-protectie/caciuli-iarna-fulare-cagule?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026" style="color:#005aab;font-weight:bold;text-decoration:underline;">Căciuli, fulare, cagule</a>
-            </p>
+            <p style="margin:0 0 16px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:23px;color:#5d5850;">O mănușă prea groasă îl face pe om s-o scoată „doar un minut”. Alege modele căptușite, dar cu palma acoperită, ca să poată lucra cu ele pe mână.</p>
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+              <td class="tile" width="33%" valign="top" style="padding-right:12px;">
+                <a href="https://romsafe.ro/manusi-de-protectie/iarna?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026"><img src="https://cdn.jsdelivr.net/gh/officeblur-coder/Read-me@3df0b881545ebea3b847cfd37cdfae3557045b10/newsletter/img/manusi.jpg" width="136" alt="Mănuși de protecție de iarnă" style="width:136px;max-width:100%;height:auto;"></a>
+                <p class="cap" style="margin:8px 0 0 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;"><a href="https://romsafe.ro/manusi-de-protectie/iarna?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026" style="color:#005aab;font-weight:bold;">Mănuși de iarnă &rarr;</a></p>
+              </td>
+              <td class="tile" width="33%" valign="top" style="padding-right:12px;">
+                <a href="https://romsafe.ro/imbracaminte-de-protectie/caciuli-iarna-fulare-cagule?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026"><img src="https://cdn.jsdelivr.net/gh/officeblur-coder/Read-me@3df0b881545ebea3b847cfd37cdfae3557045b10/newsletter/img/caciula.jpg" width="136" alt="Căciulă de iarnă reflectorizantă" style="width:136px;max-width:100%;height:auto;"></a>
+                <p class="cap" style="margin:8px 0 0 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;"><a href="https://romsafe.ro/imbracaminte-de-protectie/caciuli-iarna-fulare-cagule?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026" style="color:#005aab;font-weight:bold;">Căciuli, fulare &rarr;</a></p>
+              </td>
+              <td class="tile tile-last" width="33%" valign="top">&nbsp;</td>
+            </tr></table>
           </td>
         </tr></table>
       </td>
@@ -182,32 +212,39 @@
 
     <!-- Item 4 -->
     <tr>
-      <td class="px" style="background:#ffffff;padding:22px 40px 40px 40px;">
+      <td class="px" style="background:#ffffff;padding:0 40px 40px 40px;">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid #e6e0d6;border-bottom:1px solid #e6e0d6;"><tr>
-          <td width="64" valign="top" style="padding:20px 0 22px 0;">
+          <td class="num" width="64" valign="top" style="padding-top:20px;">
             <p class="big-num" style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:38px;line-height:38px;color:#005aab;">04</p>
           </td>
-          <td valign="top" style="padding:22px 0 22px 0;">
+          <td valign="top" style="padding:22px 0 24px 0;">
             <p style="margin:0 0 6px 0;font-family:Arial,Helvetica,sans-serif;font-size:17px;font-weight:bold;color:#1d2730;">Straturi, nu o singură geacă grea</p>
-            <p style="margin:0 0 10px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:23px;color:#5d5850;">Dimineața sunt 3 grade, la prânz sunt 16. Un strat termic, un fleece sau softshell și o vestă vătuită se pot da jos pe rând, după cum se încălzește ziua.</p>
-            <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:22px;">
-              <a href="https://romsafe.ro/imbracaminte-de-protectie/bluze-termice-maieuri-boxeri-colanti?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026" style="color:#005aab;font-weight:bold;text-decoration:underline;">Lenjerie termică</a>
-              <span style="color:#c9c1b4;">&nbsp;&middot;&nbsp;</span>
-              <a href="https://romsafe.ro/imbracaminte-de-protectie/jachete-fleece-softshell?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026" style="color:#005aab;font-weight:bold;text-decoration:underline;">Fleece și softshell</a>
-              <span style="color:#c9c1b4;">&nbsp;&middot;&nbsp;</span>
-              <a href="https://romsafe.ro/imbracaminte-de-protectie/veste-vatuite-de-iarna?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026" style="color:#005aab;font-weight:bold;text-decoration:underline;">Veste vătuite</a>
-            </p>
+            <p style="margin:0 0 16px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:23px;color:#5d5850;">Dimineața sunt 3 grade, la prânz sunt 16. Un strat termic, un fleece sau softshell și o vestă vătuită se pot da jos pe rând, după cum se încălzește ziua.</p>
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+              <td class="tile" width="33%" valign="top" style="padding-right:12px;">
+                <a href="https://romsafe.ro/imbracaminte-de-protectie/bluze-termice-maieuri-boxeri-colanti?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026"><img src="https://cdn.jsdelivr.net/gh/officeblur-coder/Read-me@3df0b881545ebea3b847cfd37cdfae3557045b10/newsletter/img/termic.jpg" width="136" alt="Lenjerie termică" style="width:136px;max-width:100%;height:auto;"></a>
+                <p class="cap" style="margin:8px 0 0 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;"><a href="https://romsafe.ro/imbracaminte-de-protectie/bluze-termice-maieuri-boxeri-colanti?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026" style="color:#005aab;font-weight:bold;">Lenjerie termică &rarr;</a></p>
+              </td>
+              <td class="tile" width="33%" valign="top" style="padding-right:12px;">
+                <a href="https://romsafe.ro/imbracaminte-de-protectie/jachete-fleece-softshell?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026"><img src="https://cdn.jsdelivr.net/gh/officeblur-coder/Read-me@3df0b881545ebea3b847cfd37cdfae3557045b10/newsletter/img/softshell.jpg" width="136" alt="Jachetă softshell" style="width:136px;max-width:100%;height:auto;"></a>
+                <p class="cap" style="margin:8px 0 0 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;"><a href="https://romsafe.ro/imbracaminte-de-protectie/jachete-fleece-softshell?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026" style="color:#005aab;font-weight:bold;">Fleece, softshell &rarr;</a></p>
+              </td>
+              <td class="tile tile-last" width="33%" valign="top">
+                <a href="https://romsafe.ro/imbracaminte-de-protectie/veste-vatuite-de-iarna?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026"><img src="https://cdn.jsdelivr.net/gh/officeblur-coder/Read-me@3df0b881545ebea3b847cfd37cdfae3557045b10/newsletter/img/vesta-vatuita.jpg" width="136" alt="Vestă vătuită de iarnă" style="width:136px;max-width:100%;height:auto;"></a>
+                <p class="cap" style="margin:8px 0 0 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;"><a href="https://romsafe.ro/imbracaminte-de-protectie/veste-vatuite-de-iarna?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026" style="color:#005aab;font-weight:bold;">Veste vătuite &rarr;</a></p>
+              </td>
+            </tr></table>
           </td>
         </tr></table>
       </td>
     </tr>
 
-    <!-- Două carduri cu imagini -->
+    <!-- Două carduri mari -->
     <tr>
       <td class="px" style="background:#f6f2ec;padding:36px 32px 18px 32px;">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
           <td class="col col-pad" width="50%" valign="top" style="padding:0 9px 18px 0;">
-            <a href="https://romsafe.ro/incaltaminte-de-protectie?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026&utm_content=card"><img class="img-full" src="https://romsafe.ro/storage/35024/rsf_incaltaminte.jpg" width="259" alt="Încălțăminte de protecție RomSafe" style="width:100%;max-width:259px;height:auto;background:#d8d1c5;"></a>
+            <a href="https://romsafe.ro/incaltaminte-de-protectie?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026&utm_content=card"><img class="img-full" src="https://cdn.jsdelivr.net/gh/officeblur-coder/Read-me@3df0b881545ebea3b847cfd37cdfae3557045b10/newsletter/img/incaltaminte.jpg" width="259" alt="Încălțăminte de protecție" style="width:100%;max-width:259px;height:auto;background:#f4f1ec;"></a>
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;"><tr><td style="padding:18px 18px 20px 18px;">
               <p style="margin:0 0 4px 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#a0522d;font-weight:bold;">Picioare</p>
               <p style="margin:0 0 8px 0;font-family:Georgia,'Times New Roman',serif;font-size:21px;line-height:26px;color:#1d2730;">Încălțăminte de protecție</p>
@@ -216,7 +253,7 @@
             </td></tr></table>
           </td>
           <td class="col col-pad" width="50%" valign="top" style="padding:0 0 18px 9px;">
-            <a href="https://romsafe.ro/imbracaminte-de-protectie?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026&utm_content=card"><img class="img-full" src="https://romsafe.ro/storage/35025/rsf_imbracaminte.jpg" width="259" alt="Îmbrăcăminte de protecție RomSafe" style="width:100%;max-width:259px;height:auto;background:#d8d1c5;"></a>
+            <a href="https://romsafe.ro/imbracaminte-de-protectie?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026&utm_content=card"><img class="img-full" src="https://cdn.jsdelivr.net/gh/officeblur-coder/Read-me@3df0b881545ebea3b847cfd37cdfae3557045b10/newsletter/img/imbracaminte.jpg" width="259" alt="Îmbrăcăminte de lucru" style="width:100%;max-width:259px;height:auto;background:#f4f1ec;"></a>
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;"><tr><td style="padding:18px 18px 20px 18px;">
               <p style="margin:0 0 4px 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#a0522d;font-weight:bold;">Corp</p>
               <p style="margin:0 0 8px 0;font-family:Georgia,'Times New Roman',serif;font-size:21px;line-height:26px;color:#1d2730;">Îmbrăcăminte de lucru</p>
@@ -230,21 +267,18 @@
 
     <!-- Pachete promo, bandă albastră -->
     <tr>
-      <td style="background:#005aab;" class="px">
+      <td class="px" style="background:#005aab;padding:34px 40px;">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-          <td class="px" style="padding:34px 40px;">
-            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-              <td class="col col-pad" valign="middle" style="font-family:Arial,Helvetica,sans-serif;">
-                <p style="margin:0 0 6px 0;font-size:12px;letter-spacing:3px;text-transform:uppercase;color:#bcd6ef;font-weight:bold;">Pachete PROMO</p>
-                <p style="margin:0 0 8px 0;font-family:Georgia,'Times New Roman',serif;font-size:26px;line-height:31px;color:#ffffff;">Echipezi mai mulți oameni? Ia pachetul, nu piesele.</p>
-                <p style="margin:0;font-size:15px;line-height:23px;color:#dce9f6;">Încălțăminte plus echipament, gândite să meargă împreună, la preț de pachet.</p>
-              </td>
-              <td class="col" width="170" valign="middle" align="right">
-                <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
-                  <td bgcolor="#ffffff" style="background:#ffffff;">
-                    <a href="https://romsafe.ro/incaltaminte-de-protectie/pachete-promo?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026&utm_content=promo" style="display:inline-block;padding:14px 22px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;color:#005aab;">Vezi pachetele</a>
-                  </td>
-                </tr></table>
+          <td class="col col-pad" width="200" valign="middle" align="center" style="padding-right:24px;">
+            <a href="https://romsafe.ro/incaltaminte-de-protectie/pachete-promo?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026&utm_content=promo-img"><img class="promo-img" src="https://cdn.jsdelivr.net/gh/officeblur-coder/Read-me@3df0b881545ebea3b847cfd37cdfae3557045b10/newsletter/img/winter-box.jpg" width="200" alt="Winter Box: bocanci S3, căciulă și mănuși" style="width:200px;max-width:200px;height:auto;border:4px solid #ffffff;"></a>
+          </td>
+          <td class="col" valign="middle" style="font-family:Arial,Helvetica,sans-serif;">
+            <p style="margin:0 0 6px 0;font-size:12px;letter-spacing:3px;text-transform:uppercase;color:#bcd6ef;font-weight:bold;">Pachete PROMO</p>
+            <p style="margin:0 0 8px 0;font-family:Georgia,'Times New Roman',serif;font-size:25px;line-height:30px;color:#ffffff;">Bocanci, căciulă și mănuși. Într-o singură cutie.</p>
+            <p style="margin:0 0 18px 0;font-size:15px;line-height:23px;color:#dce9f6;">Pachetele de iarnă vin gata asortate, la preț de pachet. Bune pentru echipe întregi.</p>
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+              <td bgcolor="#ffffff" style="background:#ffffff;">
+                <a href="https://romsafe.ro/incaltaminte-de-protectie/pachete-promo?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026&utm_content=promo" style="display:inline-block;padding:13px 22px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;color:#005aab;">Vezi pachetele &rarr;</a>
               </td>
             </tr></table>
           </td>
@@ -272,12 +306,17 @@
           <td style="padding-top:24px;">
             <p style="margin:0 0 6px 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;letter-spacing:3px;text-transform:uppercase;color:#7a7266;font-weight:bold;">Gândește-te la decembrie</p>
             <h2 style="margin:0 0 10px 0;font-family:Georgia,'Times New Roman',serif;font-size:26px;line-height:32px;color:#1d2730;font-weight:normal;">Cadouri de final de an, cu logo-ul firmei</h2>
-            <p style="margin:0 0 16px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:23px;color:#5d5850;">Căni termice, termosuri, hanorace, căciuli, toate personalizate. Personalizarea durează, așa că acum e momentul bun să trimiți logo-ul.</p>
-            <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:22px;">
-              <a href="https://romsafe.ro/promotionale-personalizabile-cu-logo-ul-dorit/pahare-cani-termice-sticle-sport-termosuri-cani-seturi-tacamuri-cutii?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026" style="color:#005aab;font-weight:bold;text-decoration:underline;">Căni și termosuri</a>
-              <span style="color:#c9c1b4;">&nbsp;&middot;&nbsp;</span>
-              <a href="https://romsafe.ro/promotionale-personalizabile-cu-logo-ul-dorit?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026" style="color:#005aab;font-weight:bold;text-decoration:underline;">Toate promoționalele</a>
-            </p>
+            <p style="margin:0 0 20px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:23px;color:#5d5850;">Termosuri, căni, seturi pentru vin, toate personalizate cu logo-ul vostru. Personalizarea durează, așa că acum e momentul bun să trimiți logo-ul.</p>
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+              <td class="tile" width="50%" valign="top" style="padding-right:12px;">
+                <a href="https://romsafe.ro/promotionale-personalizabile-cu-logo-ul-dorit/pahare-cani-termice-sticle-sport-termosuri-cani-seturi-tacamuri-cutii?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026"><img src="https://cdn.jsdelivr.net/gh/officeblur-coder/Read-me@3df0b881545ebea3b847cfd37cdfae3557045b10/newsletter/img/termos.jpg" width="254" alt="Termos personalizabil cu logo" style="width:254px;max-width:100%;height:auto;"></a>
+                <p class="cap" style="margin:10px 0 0 0;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:20px;"><a href="https://romsafe.ro/promotionale-personalizabile-cu-logo-ul-dorit/pahare-cani-termice-sticle-sport-termosuri-cani-seturi-tacamuri-cutii?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026" style="color:#005aab;font-weight:bold;">Căni și termosuri &rarr;</a></p>
+              </td>
+              <td class="tile tile-last" width="50%" valign="top">
+                <a href="https://romsafe.ro/promotionale-personalizabile-cu-logo-ul-dorit?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026"><img src="https://cdn.jsdelivr.net/gh/officeblur-coder/Read-me@3df0b881545ebea3b847cfd37cdfae3557045b10/newsletter/img/cutie-vin.jpg" width="254" alt="Cutie cadou din bambus pentru vin" style="width:254px;max-width:100%;height:auto;"></a>
+                <p class="cap" style="margin:10px 0 0 0;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:20px;"><a href="https://romsafe.ro/promotionale-personalizabile-cu-logo-ul-dorit?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026" style="color:#005aab;font-weight:bold;">Toate promoționalele &rarr;</a></p>
+              </td>
+            </tr></table>
           </td>
         </tr></table>
       </td>
@@ -301,7 +340,7 @@
       </td>
     </tr>
 
-    <!-- banda hi-vis -->
+    <!-- banda portocalie -->
     <tr>
       <td style="font-size:0;line-height:0;height:8px;background:#e8a33d;">&nbsp;</td>
     </tr>
@@ -309,10 +348,10 @@
     <!-- Footer -->
     <tr>
       <td class="px" style="padding:28px 40px 10px 40px;font-family:Arial,Helvetica,sans-serif;text-align:center;">
-        <p style="margin:0 0 14px 0;font-size:14px;font-weight:bold;">
+        <p style="margin:0 0 14px 0;font-size:14px;line-height:24px;font-weight:bold;">
           <a href="https://www.facebook.com/Romsafe" style="color:#1d2730;">Facebook</a>
           <span style="color:#b2a99b;">&nbsp;&nbsp;|&nbsp;&nbsp;</span>
-          <a href="http://www.instagram.com/romsafe.trade" style="color:#1d2730;">Instagram</a>
+          <a href="https://www.instagram.com/romsafe.trade" style="color:#1d2730;">Instagram</a>
           <span style="color:#b2a99b;">&nbsp;&nbsp;|&nbsp;&nbsp;</span>
           <a href="https://romsafe.ro/contact?utm_source=newsletter&utm_medium=email&utm_campaign=toamna2026" style="color:#1d2730;">Contact</a>
           <span style="color:#b2a99b;">&nbsp;&nbsp;|&nbsp;&nbsp;</span>
@@ -323,7 +362,7 @@
           Primești acest e-mail pentru că te-ai abonat la newsletterul RomSafe.
         </p>
         <p style="margin:0 0 24px 0;font-size:12px;line-height:19px;">
-          <a href="{{unsubscribe_url}}" style="color:#7a7266;text-decoration:underline;">Dezabonare</a>
+          <a href="##NEWSMAN:list_unsubscribe##" style="color:#7a7266;text-decoration:underline;">Dezabonare</a>
           <span style="color:#b2a99b;">&nbsp;&middot;&nbsp;</span>
           <a href="https://romsafe.ro/politica-de-confidentialitate" style="color:#7a7266;text-decoration:underline;">Politica de confidențialitate</a>
         </p>
