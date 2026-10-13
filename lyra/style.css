@@ -74,7 +74,7 @@ svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-l
 @keyframes rise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
 
 /* ===================== TOPBAR ===================== */
-.topbar{position:sticky;top:0;z-index:30;height:var(--top);display:flex;align-items:center;justify-content:space-between;padding:0 12px 0 16px;
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;height:var(--top);display:flex;align-items:center;justify-content:space-between;padding:0 12px 0 16px;
   background:rgba(6,18,12,.78);backdrop-filter:saturate(1.4) blur(18px);-webkit-backdrop-filter:saturate(1.4) blur(18px);border-bottom:1px solid rgba(216,180,106,.1)}
 .tb-logo img{height:38px;width:auto}
 .tb-actions{display:flex;gap:6px}
@@ -89,7 +89,7 @@ svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-l
 @keyframes bump{40%{transform:scale(1.45)}}
 
 /* ===================== CATEGORY NAV ===================== */
-.catnav{position:sticky;top:var(--top);z-index:29;height:var(--nav);display:flex;align-items:center;gap:8px;padding:0 0 0 10px;
+.catnav{position:sticky;top:calc(var(--top) + env(safe-area-inset-top,0px));z-index:29;height:var(--nav);display:flex;align-items:center;gap:8px;padding:0 0 0 10px;
   background:rgba(6,18,12,.86);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-bottom:1px solid rgba(216,180,106,.1)}
 .cat-grid-btn{flex:none;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,var(--gold),var(--gold3));color:#1b1407}
 .cat-grid-btn svg{width:20px;height:20px;stroke-width:2}
@@ -144,8 +144,8 @@ main{max-width:1240px;margin:0 auto}
 @media (min-width:1060px){.grid{grid-template-columns:1fr 1fr 1fr}}
 
 .dish{border-radius:var(--r);overflow:hidden;background:linear-gradient(180deg,var(--bg3),var(--bg2));border:1px solid rgba(216,180,106,.12);box-shadow:0 14px 40px rgba(0,0,0,.35);
-  opacity:0;transform:translateY(26px);transition:opacity .8s var(--ease),transform .8s var(--ease),box-shadow .4s;cursor:pointer;position:relative}
-.dish.in{opacity:1;transform:none}
+  transition:box-shadow .4s;cursor:pointer;position:relative}
+.dish.in,.sc.in{animation:rise .8s var(--ease) both}
 .dish.hl{box-shadow:0 0 0 3px var(--gold),0 20px 60px rgba(216,180,106,.3)}
 .dish .ph{position:relative;aspect-ratio:3/2;overflow:hidden;background:#0d1f16}
 .dish .ph img{width:100%;height:100%;object-fit:cover;transform:scale(1.08);transition:transform 1.4s var(--ease),opacity .6s;opacity:0}
@@ -177,8 +177,7 @@ main{max-width:1240px;margin:0 auto}
 @media (min-width:680px){.showcase{grid-template-columns:repeat(3,1fr)}}
 .sc{position:relative;border-radius:24px;overflow:hidden;padding:18px 18px 18px;min-height:250px;cursor:pointer;
   background:radial-gradient(circle at 70% 40%,rgba(216,120,50,.35),transparent 55%),linear-gradient(160deg,#170d06,#060403);border:1px solid rgba(216,180,106,.2);
-  opacity:0;transform:translateY(26px);transition:opacity .8s var(--ease),transform .8s var(--ease)}
-.sc.in{opacity:1;transform:none}
+}
 .sc img{position:absolute;right:-8%;top:50%;width:66%;transform:translateY(-50%) rotate(-6deg);filter:drop-shadow(0 26px 30px rgba(0,0,0,.7));animation:float 5s ease-in-out infinite}
 .sc:nth-child(2) img{animation-delay:-1.6s}.sc:nth-child(3) img{animation-delay:-3.2s}
 @keyframes float{50%{transform:translateY(-55%) rotate(-2deg)}}
