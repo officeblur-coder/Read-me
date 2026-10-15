@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mia UGC Intro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #0d0b10; --fg: #fff; }
+  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --bg: #1a1620; } }
+  html, body { margin: 0; height: 100%; background: var(--bg); overflow: hidden; }
+  body { display: grid; place-items: center; font-family: Poppins, "Arial Black", Arial, sans-serif; }
+  #wrap { position: relative; height: 100vh; aspect-ratio: 9 / 16; max-width: 100vw; }
+  @media (max-aspect-ratio: 9/16) { #wrap { height: auto; width: 100vw; } }
+  svg { display: block; width: 100%; height: 100%; }
+  #start { position: absolute; inset: 0; display: grid; place-items: center; cursor: pointer;
+    background: rgba(10, 6, 14, .35); color: #fff; font-weight: 800; font-size: clamp(16px, 3.4vh, 30px); letter-spacing: .02em; }
+  #start span { display: flex; align-items: center; gap: .6em; padding: .7em 1.3em; border-radius: 999px;
+    background: rgba(255, 255, 255, .16); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, .35); }
+  #start.hide { display: none; }
+  body.render #start { display: none; }
+  body.render #wrap { height: 1920px; width: 1080px; }
+</style>
+</head>
+<body>
+<div id="wrap">
+<svg id="s" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="wall" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f7dccf"/><stop offset=".55" stop-color="#eec3bd"/><stop offset="1" stop-color="#c99aa8"/>
+    </linearGradient>
+    <radialGradient id="ring" cx=".5" cy=".5" r=".5">
+      <stop offset=".78" stop-color="#fff" stop-opacity="0"/><stop offset=".86" stop-color="#fff" stop-opacity=".9"/>
+      <stop offset=".93" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#ff9fd1" stop-opacity=".75"/><stop offset="1" stop-color="#ff9fd1" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="keylight" cx=".42" cy=".38" r=".7">
+      <stop offset="0" stop-color="#fff6ee" stop-opacity=".16"/><stop offset="1" stop-color="#fff6ee" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="skin" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#efc2ad"/><stop offset=".35" stop-color="#f9dccb"/><stop offset=".7" stop-color="#f7d5c3"/><stop offset="1" stop-color="#e8b6a0"/>
+    </linearGradient>
+    <linearGradient id="limb" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#eab9a3"/><stop offset=".45" stop-color="#f9dccb"/><stop offset="1" stop-color="#e7b29b"/>
+    </linearGradient>
+    <linearGradient id="hair" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d8a961"/><stop offset=".35" stop-color="#ecc888"/><stop offset="1" stop-color="#f3dcaa"/>
+    </linearGradient>
+    <linearGradient id="hairBack" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#b98945"/><stop offset="1" stop-color="#d9b278"/>
+    </linearGradient>
+    <linearGradient id="top" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2b2230"/><stop offset=".5" stop-color="#3a2d40"/><stop offset="1" stop-color="#1f1823"/>
+    </linearGradient>
+    <linearGradient id="lip" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d9727c"/><stop offset="1" stop-color="#c25866"/>
+    </linearGradient>
+    <linearGradient id="shade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".55"/>
+    </linearGradient>
+    <linearGradient id="shadeTop" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#000" stop-opacity=".45"/><stop offset="1" stop-color="#000" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="blush" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#f08a95" stop-opacity=".55"/><stop offset="1" stop-color="#f08a95" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="blur18"><feGaussianBlur stdDeviation="18"/></filter>
+    <filter id="blur6"><feGaussianBlur stdDeviation="6"/></filter>
+    <filter id="soft"><feGaussianBlur stdDeviation="1.2"/></filter>
+    <filter id="cap" x="-20%" y="-40%" width="140%" height="180%">
+      <feDropShadow dx="0" dy="5" stdDeviation="6" flood-color="#000" flood-opacity=".55"/>
+    </filter>
+    <clipPath id="eyeL"><path id="eyeShapeL"/></clipPath>
+    <clipPath id="eyeR"><path id="eyeShapeR"/></clipPath>
+    <clipPath id="mouthClip"><path id="mouthClipPath"/></clipPath>
+  </defs>
+
+  <g id="scene">
+    <!-- room -->
+    <g id="room">
+      <rect x="-150" y="-150" width="1380" height="2220" fill="url(#wall)"/>
+      <g filter="url(#blur18)">
+        <rect x="-60" y="180" width="380" height="760" rx="20" fill="#fff8f0" opacity=".75"/>
+        <rect x="120" y="180" width="14" height="760" fill="#e7c9bd"/>
+        <rect x="-60" y="550" width="380" height="14" fill="#e7c9bd"/>
+        <rect x="720" y="560" width="420" height="22" rx="6" fill="#b88a7c"/>
+        <path d="M800 560 C780 470 820 420 860 400 C850 470 870 500 870 560 Z" fill="#7d9b6a"/>
+        <path d="M860 560 C880 450 940 420 980 430 C950 480 930 520 905 560 Z" fill="#6a8a5a"/>
+        <rect x="815" y="520" width="80" height="44" rx="8" fill="#e9e1d6"/>
+        <rect x="960" y="470" width="70" height="94" rx="8" fill="#f2b6c6"/>
+        <rect x="745" y="490" width="34" height="74" rx="6" fill="#fff"/>
+        <ellipse cx="900" cy="250" rx="190" ry="190" fill="url(#glow)"/>
+        <rect x="-40" y="1320" width="1160" height="700" fill="#e7b8b7"/>
+        <ellipse cx="160" cy="1500" rx="260" ry="120" fill="#f6d6d2" opacity=".8"/>
+        <ellipse cx="960" cy="1460" rx="240" ry="110" fill="#d79fb0" opacity=".8"/>
+      </g>
+      <text x="900" y="270" text-anchor="middle" font-family="Pacifico, 'Brush Script MT', cursive" font-size="78" fill="#fff" opacity=".9"
+            filter="url(#blur6)" font-style="italic" font-weight="700">glow</text>
+      <text x="900" y="270" text-anchor="middle" font-family="Pacifico, 'Brush Script MT', cursive" font-size="78" fill="#ffe8f4" opacity=".95"
+            font-style="italic" font-weight="700">glow</text>
+      <g id="bokeh" opacity=".55"></g>
+    </g>
+
+    <g id="person">
+      <ellipse cx="540" cy="1900" rx="520" ry="120" fill="#000" opacity=".12" filter="url(#blur18)"/>
+      <g id="hairBackG"><path id="hairBackP" fill="url(#hairBack)"/><path id="hairBackP2" fill="#c99b58" opacity=".55"/></g>
+
+      <!-- torso -->
+      <g id="torso">
+        <path d="M472 880 C474 960 470 1030 455 1100 L625 1100 C610 1030 606 960 608 880 Z" fill="url(#skin)"/>
+        <path d="M472 900 C500 990 580 990 608 900 L608 960 C580 1010 500 1010 472 960 Z" fill="#c98f7d" opacity=".35"/>
+        <path d="M290 1220 C300 1140 380 1115 455 1090 C500 1110 580 1110 625 1090 C700 1115 780 1140 790 1220 L830 1920 L250 1920 Z" fill="url(#skin)"/>
+        <!-- collarbones -->
+        <path d="M400 1150 C440 1160 480 1170 520 1168" stroke="#d9a28d" stroke-width="5" fill="none" stroke-linecap="round" opacity=".7"/>
+        <path d="M680 1150 C640 1160 600 1170 560 1168" stroke="#d9a28d" stroke-width="5" fill="none" stroke-linecap="round" opacity=".7"/>
+        <!-- necklace -->
+        <path d="M468 1100 C480 1180 520 1215 540 1222 C560 1215 600 1180 612 1100" stroke="#e2b955" stroke-width="3.5" fill="none"/>
+        <path d="M540 1222 l-10 16 l10 16 l10 -16 Z" fill="#f0cd6b"/>
+        <!-- top: black ribbed square-neck -->
+        <path d="M305 1250 C320 1210 360 1195 392 1188 L408 1300 C460 1290 620 1290 672 1300 L688 1188 C720 1195 760 1210 775 1250 L815 1920 L265 1920 Z" fill="url(#top)"/>
+        <g stroke="#4a3b50" stroke-width="3" opacity=".55" id="ribs"></g>
+        <path d="M408 1300 C460 1290 620 1290 672 1300" stroke="#120e15" stroke-width="6" fill="none"/>
+        <path d="M392 1188 L408 1300 M688 1188 L672 1300" stroke="#120e15" stroke-width="5" fill="none"/>
+        <path d="M440 1400 C480 1440 600 1440 640 1400" stroke="#120e15" stroke-width="4" fill="none" opacity=".45"/>
+      </g>
+
+      <!-- head -->
+      <g id="head">
+        <path d="M-150 120 C-120 230 -40 270 0 272 C40 270 120 230 150 120" fill="#b97d6a" opacity=".35" filter="url(#blur6)" transform="translate(0,40)"/>
+        <ellipse cx="-176" cy="0" rx="26" ry="48" fill="#efc0aa"/>
+        <ellipse cx="176" cy="0" rx="26" ry="48" fill="#efc0aa"/>
+        <circle cx="-178" cy="66" r="20" fill="none" stroke="#e8c05e" stroke-width="6"/>
+        <circle cx="178" cy="66" r="20" fill="none" stroke="#e8c05e" stroke-width="6"/>
+        <path id="face" d="M-178 -60 C-182 -270 182 -270 178 -60 C175 70 110 210 0 240 C-110 210 -175 70 -178 -60 Z" fill="url(#skin)"/>
+        <path d="M-178 -60 C-175 70 -110 210 0 240 C-60 200 -150 120 -178 -60 Z" fill="#d79c86" opacity=".25"/>
+        <ellipse cx="-100" cy="62" rx="62" ry="40" fill="url(#blush)" id="blushL"/>
+        <ellipse cx="100" cy="62" rx="62" ry="40" fill="url(#blush)" id="blushR"/>
+        <!-- eyes -->
+        <g id="eyeGL" transform="translate(-78,-14)"></g>
+        <g id="eyeGR" transform="translate(78,-14)"></g>
+        <path id="browL" fill="#9a6c3f"/>
+        <path id="browR" fill="#9a6c3f"/>
+        <!-- nose -->
+        <path d="M10 10 C16 45 24 70 20 86" stroke="#d29a85" stroke-width="5" fill="none" stroke-linecap="round" opacity=".8"/>
+        <path d="M-22 90 C-12 100 12 100 22 90" stroke="#c98a76" stroke-width="5" fill="none" stroke-linecap="round" opacity=".75"/>
+        <ellipse cx="-2" cy="74" rx="9" ry="6" fill="#fff" opacity=".35"/>
+        <!-- mouth -->
+        <g id="mouth" transform="translate(0,150)">
+          <path id="mOpen" fill="#5a1f2a"/>
+          <g clip-path="url(#mouthClip)"><rect id="teeth" x="-60" width="120" height="16" rx="6" fill="#fbf7f2"/>
+            <ellipse id="tongue" cx="0" rx="28" ry="12" fill="#c75a68"/></g>
+          <path id="lipU" fill="url(#lip)"/>
+          <path id="lipL" fill="url(#lip)"/>
+          <ellipse id="lipShine" cx="8" rx="16" ry="4" fill="#fff" opacity=".45"/>
+        </g>
+        <!-- front hair -->
+        <g id="hairFront">
+          <path id="strandL" fill="url(#hair)"/>
+          <path id="strandR" fill="url(#hair)"/>
+          <path d="M-196 -30 C-222 -240 -110 -318 20 -312 C160 -306 226 -220 198 -30 C186 -120 160 -175 110 -200 C60 -150 -10 -150 -70 -168 C-120 -150 -170 -110 -196 -30 Z" fill="url(#hair)"/>
+          <path d="M20 -306 C-60 -240 -140 -170 -190 -60 C-170 -110 -120 -160 -70 -168 C-20 -190 10 -250 40 -300 Z" fill="#dcb06a" opacity=".8"/>
+          <g fill="none" stroke="#fff3cf" stroke-width="5" stroke-linecap="round" opacity=".55">
+            <path d="M-20 -290 C-90 -240 -140 -180 -170 -90"/>
+            <path d="M60 -296 C120 -270 170 -210 185 -110"/>
+            <path d="M10 -260 C-40 -220 -80 -190 -110 -160"/>
+          </g>
+          <g fill="none" stroke="#b98a47" stroke-width="4" stroke-linecap="round" opacity=".5">
+            <path d="M30 -300 C80 -260 120 -230 140 -180"/>
+            <path d="M-60 -270 C-110 -220 -150 -160 -175 -100"/>
+          </g>
+        </g>
+      </g>
+
+      <!-- arms -->
+      <g id="armL"></g>
+      <g transform="translate(1080,0) scale(-1,1)"><g id="armR"></g></g>
+    </g>
+    <rect width="1080" height="1920" fill="url(#keylight)" pointer-events="none"/>
+  </g>
+
+  <!-- social UI overlay -->
+  <g id="ui" font-family="Poppins, 'Arial Black', Arial, sans-serif">
+    <rect width="1080" height="260" fill="url(#shadeTop)"/>
+    <rect y="1560" width="1080" height="360" fill="url(#shade)"/>
+    <g fill="#fff" font-size="36" text-anchor="middle">
+      <text x="430" y="130" opacity=".65" font-weight="600">Following</text>
+      <text x="650" y="130" font-weight="800">For You</text>
+      <rect x="610" y="150" width="80" height="6" rx="3"/>
+    </g>
+    <g id="rail" fill="#fff" text-anchor="middle" font-weight="700" font-size="30" filter="url(#cap)">
+      <circle cx="990" cy="1010" r="52" fill="#f2c27a" stroke="#fff" stroke-width="5"/>
+      <text x="990" y="1028" font-size="44" font-weight="900" fill="#fff">M</text>
+      <circle cx="990" cy="1066" r="20" fill="#fe2c55"/><path d="M980 1066 h20 M990 1056 v20" stroke="#fff" stroke-width="5"/>
+      <path id="heart" d="M990 1215 C950 1185 940 1160 960 1145 C975 1135 988 1145 990 1155 C992 1145 1005 1135 1020 1145 C1040 1160 1030 1185 990 1215 Z" fill="#fff"/>
+      <text x="990" y="1258" id="likes">248.1K</text>
+      <path d="M960 1320 h60 a12 12 0 0 1 12 12 v34 a12 12 0 0 1 -12 12 h-30 l-18 16 v-16 h-12 a12 12 0 0 1 -12 -12 v-34 a12 12 0 0 1 12 -12 Z" fill="#fff"/>
+      <text x="990" y="1438">3,912</text>
+      <path d="M1022 1520 l-34 -32 v18 c-30 0 -46 18 -50 46 c14 -18 30 -22 50 -22 v18 Z" fill="#fff"/>
+      <text x="990" y="1594">Share</text>
+    </g>
+    <g fill="#fff" filter="url(#cap)">
+      <text x="44" y="1716" font-size="40" font-weight="800">@mia.glows</text>
+      <text x="44" y="1772" font-size="32" font-weight="500">hi, i'm mia! let's work together</text>
+      <text x="44" y="1816" font-size="32" font-weight="700" fill="#ffe08a">#ugc #ugccreator #skincare #glowup</text>
+      <text x="44" y="1866" font-size="28" font-weight="500" opacity=".9">&#9835; original sound &#183; mia.glows</text>
+    </g>
+    <rect x="0" y="1908" width="1080" height="6" fill="#fff" opacity=".25"/>
+    <rect id="prog" x="0" y="1908" width="0" height="6" fill="#fff"/>
+    <g id="captions" text-anchor="middle" font-weight="900" font-size="74"></g>
+  </g>
+</svg>
+<div id="start"><span><svg width="1em" height="1em" viewBox="0 0 10 10"><path d="M2 1 L9 5 L2 9 Z" fill="#fff"/></svg>Tap to play</span></div>
+</div>
+<audio id="aud" preload="auto" src="/*AUDIO*/"></audio>
+<script>
+const DATA = /*DATA*/;
+const $ = id => document.getElementById(id);
+const NS = 'http://www.w3.org/2000/svg';
+const el = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const ss = x => x * x * (3 - 2 * x);
+const f = n => n.toFixed(1);
+
+// ---------- static decor ----------
+for (let i = 0; i < 14; i++) {
+  const x = (i * 337) % 1080, y = 120 + (i * 523) % 1250, r = 14 + (i * 7) % 34;
+  el('circle', { cx: x, cy: y, r, fill: i % 3 ? '#fff' : '#ffc4e3', opacity: .25 + (i % 4) * .1, filter: 'url(#blur6)' }, $('bokeh'));
+}
+for (let x = 300; x < 800; x += 22) el('path', { d: `M${x} 1310 L${x + (x - 540) * .08} 1920` }, $('ribs'));
+
+// ---------- eyes ----------
+const EYE = 'M-52 4 C-36 -40 32 -42 52 -4 C36 26 -32 28 -52 4 Z';
+const eyes = {};
+for (const side of ['L', 'R']) {
+  const g = $('eyeG' + side), m = side === 'L' ? 1 : -1;     // outer corner is -x for L
+  $('eyeShape' + side).setAttribute('d', EYE);
+  el('path', { d: `M${-62 * m} -46 C${-30 * m} -74 ${30 * m} -72 ${56 * m} -44`, stroke: '#c98d7a', 'stroke-width': 4, fill: 'none', opacity: .55 }, g); // crease
+  el('ellipse', { cx: 0, cy: -26, rx: 60, ry: 22, fill: '#c9907f', opacity: .28, filter: 'url(#blur6)' }, g); // shadow
+  const lid = el('g', {}, g);
+  el('path', { d: EYE, fill: '#fbf6f2' }, lid);
+  const iris = el('g', { 'clip-path': `url(#eye${side})` }, lid);
+  const irisIn = el('g', {}, iris);
+  el('circle', { r: 27, fill: '#4d86b8' }, irisIn);
+  el('circle', { r: 26, fill: 'none', stroke: '#22445f', 'stroke-width': 4 }, irisIn);
+  el('circle', { r: 16, fill: '#6fa8d2', opacity: .6 }, irisIn);
+  el('circle', { r: 11, fill: '#141018' }, irisIn);
+  el('circle', { cx: -8, cy: -9, r: 7, fill: 'none', stroke: '#fff', 'stroke-width': 3.5 }, irisIn); // ring light catchlight
+  el('circle', { cx: 9, cy: 8, r: 3, fill: '#fff', opacity: .8 }, irisIn);
+  el('path', { d: 'M-52 4 C-36 -40 32 -42 52 -4', stroke: '#000', 'stroke-opacity': .16, 'stroke-width': 10, fill: 'none' }, iris);
+  // lash line + wing
+  el('path', { d: `M${52 * m} -6 C${32 * m} -40 ${-34 * m} -38 ${-52 * m} 3 L${-70 * m} -14 L${-50 * m} 8 Z`, fill: '#1c1418', stroke: '#1c1418', 'stroke-width': 4, 'stroke-linejoin': 'round' }, lid);
+  for (let k = 0; k < 5; k++) {
+    const x = (-42 + k * 15) * m, y = -33 + Math.abs(k - 2.2) * 4;
+    el('path', { d: `M${x} ${y} q${-6 * m} -10 ${-12 * m} -14`, stroke: '#1c1418', 'stroke-width': 3.5, fill: 'none', 'stroke-linecap': 'round' }, lid);
+  }
+  el('path', { d: 'M-46 8 C-30 26 30 26 46 0', stroke: '#b98577', 'stroke-width': 2.5, fill: 'none', opacity: .7 }, lid);
+  eyes[side] = { lid, irisIn };
+}
+
+// ---------- arms ----------
+function buildArm(root) {
+  el('circle', { cx: 0, cy: 10, r: 46, fill: '#f3cdb9' }, root);
+  el('path', { d: 'M-46 0 C-48 110 -38 220 -32 300 L32 300 C38 220 46 110 46 0 Z', fill: 'url(#limb)' }, root);
+  const fore = el('g', {}, root);
+  el('circle', { r: 33, fill: '#f1c9b4' }, fore);
+  const foreArm = el('path', { fill: 'url(#limb)' }, fore);
+  const hand = el('g', {}, fore);
+  el('rect', { x: -27, y: -8, width: 54, height: 12, rx: 6, fill: '#e2b955' }, hand); // bracelet
+  el('path', { d: 'M-36 2 C-42 40 -40 70 -36 92 L36 92 C40 70 42 40 34 2 Z', fill: '#f7d6c4' }, hand);
+  const fingers = [];
+  const spec = [[-27, 66], [-9, 74], [9, 70], [26, 56]];
+  for (const [x, len] of spec) {
+    const fg = el('g', { transform: `translate(${x},86)` }, hand);
+    const p = el('rect', { x: -10, y: -8, width: 20, height: len, rx: 10, fill: '#f7d6c4' }, fg);
+    const nail = el('rect', { x: -6.5, width: 13, height: 17, rx: 6.5, fill: '#e98c9a' }, fg);
+    fingers.push({ p, nail, len });
+  }
+  el('path', { d: 'M-18 92 C-10 88 10 88 18 92', stroke: '#e0ab96', 'stroke-width': 3, fill: 'none' }, hand);
+  const thumb = el('g', {}, hand);
+  el('rect', { x: -10, y: -4, width: 21, height: 58, rx: 10.5, fill: '#f3cfbc' }, thumb);
+  const tnail = el('rect', { x: -7, width: 14, height: 16, rx: 7, fill: '#e98c9a' }, thumb);
+  return { fore, foreArm, hand, fingers, thumb, tnail };
+}
+const arms = { L: buildArm($('armL')), R: buildArm($('armR')) };
+
+function drawArm(a, root, p, side) {
+  const sx = 300, sy = 1190;
+  root.setAttribute('transform', `translate(${sx},${sy}) rotate(${f(p[side + 's'])})`);
+  const fl = p[side + 'fl'];
+  a.fore.setAttribute('transform', `translate(0,300) rotate(${f(p[side + 'e'] + p[side + 'wv'] * 16 * Math.sin(T * 13))})`);
+  a.foreArm.setAttribute('d', `M-33 0 C-32 ${f(100 * fl)} -27 ${f(200 * fl)} -23 ${f(268 * fl)} L23 ${f(268 * fl)} C27 ${f(200 * fl)} 32 ${f(100 * fl)} 33 0 Z`);
+  a.hand.setAttribute('transform', `translate(0,${f(262 * fl)}) rotate(${f(p[side + 'w'] + p[side + 'wv'] * 10 * Math.sin(T * 13 - .6))}) scale(${f(p[side + 'hs'] * 100) / 100})`);
+  a.fingers.forEach((fg, i) => {
+    const c = clamp(p[side + 'c' + i], 0, 1), L = fg.len * (1 - .72 * c);
+    fg.p.setAttribute('height', f(L));
+    fg.nail.setAttribute('y', f(L - 23));
+    fg.nail.setAttribute('opacity', f(1 - c));
+  });
+  const tc = clamp(p[side + 't'], 0, 1);
+  a.thumb.setAttribute('transform', `translate(-34,24) rotate(${f(32 - 50 * tc)}) scale(1,${f(1 - .45 * tc)})`);
+}
+
+// ---------- pose timeline ----------
+const REST = { Ls: 6, Le: -12, Lw: 0, Lfl: 1, Lhs: 1.3, Lc0: .35, Lc1: .35, Lc2: .35, Lc3: .4, Lt: .3, Lwv: 0,
+  hr: 0, hx: 0, brow: 0, smile: .55, gx: 0, gy: 0, squint: 0, wink: 0, zoom: 1, cx: 0, cy: 0 };
+for (const k in { ...REST }) if (k[0] === 'L') REST['R' + k.slice(1)] = REST[k];
+const arm = (side, o) => Object.fromEntries(Object.entries(o).map(([k, v]) => [side + k, v]));
+const both = o => ({ ...arm('L', o), ...arm('R', o) });
+const hand = (c, t) => ({ c0: c[0], c1: c[1], c2: c[2], c3: c[3], t });
+const WAVE = { s: 24, e: 166, w: -12, fl: 1, hs: 1.35, ...hand([0, 0, 0, .05], 0), wv: 1 };
+const POSES = {
+  wave: { ...arm('R', WAVE), hr: -5, brow: .9, smile: 1, gx: 0 },
+  open: { ...both({ s: 4, e: 128, w: -25, fl: .62, hs: 1.4, ...hand([.05, .05, .05, .1], 0) }), hr: 3, brow: .6, smile: .85, zoom: 1.0 },
+  count: { ...arm('L', { s: 16, e: -176, w: -18, fl: 1, hs: 1.4, ...hand([1, 1, 1, 1], 1) }), hr: 5, brow: .3, smile: .8, gx: -.55, gy: -.1, zoom: 1.04, cx: 20 },
+  heart: { ...both({ s: -7, e: -126, w: -30, hs: 1.3, ...hand([.12, .12, .12, .15], .15) }), hr: 7, brow: .4, smile: 1, zoom: 1.0 },
+  point: { ...arm('R', { s: 10, e: 178, w: 4, fl: .7, hs: 1.7, ...hand([0, 1, 1, 1], .95) }), hr: -4, brow: 1, smile: .8, zoom: 1.09, cy: -30 },
+  clasp: { ...both({ s: -9, e: -121, w: -18, hs: 1.3, ...hand([.15, .15, .15, .2], .2) }), hr: 0, brow: .7, smile: 1, zoom: 1.02 },
+  bye: { ...arm('R', WAVE), hr: -6, brow: .8, smile: 1, zoom: 1.0 },
+};
+const tracks = {};
+const key = (t, o) => { for (const k in o) (tracks[k] ||= []).push([t, o[k]]); };
+key(0, REST); key(.35, REST);
+const lines = DATA.lines;
+const wordT = (li, w) => { const x = lines[li].words.find(q => q.w.toLowerCase().startsWith(w)); return x ? x.t : lines[li].start; };
+lines.forEach((ln, i) => {
+  const P = { ...REST, ...POSES[ln.gesture] };   // end-of-line hold pose; sub-gestures update it
+  const nextStart = i + 1 < lines.length ? lines[i + 1].start : ln.end + .8;
+  key(Math.min(ln.start + .45, ln.end), P);
+  if (ln.gesture === 'wave' && i === 0) {           // "I'm Mia" — hand to chest
+    const t = wordT(0, "i'm");
+    key(t - .25, arm('L', { s: REST.Ls, e: REST.Le, w: 0, c0: .35, c1: .35, c2: .35, c3: .4, t: .3 }));
+    key(t + .15, arm('L', { s: -6, e: -128, w: -36, c0: .05, c1: .05, c2: .05, c3: .1, t: .1 }));
+    Object.assign(P, arm('L', { s: -6, e: -128, w: -36, c0: .05, c1: .05, c2: .05, c3: .1, t: .1 }), { Rwv: .3 });
+    key(t - .1, { Rwv: 1 }); key(t + .3, { Rwv: .3 });
+  }
+  if (ln.gesture === 'count') {
+    const ws = ['skincare', 'travel', 'everyday'];
+    ws.forEach((w, k) => {
+      const t = wordT(i, w);
+      const cur = [0, 1, 2, 3].map(j => (j < k ? 0 : 1));
+      const nxt = [0, 1, 2, 3].map(j => (j <= k ? 0 : 1));
+      key(t - .12, arm('L', hand(cur, 1))); key(t + .08, arm('L', hand(nxt, 1)));
+    });
+    key(wordT(i, 'travel') - .2, { gx: -.55, gy: -.1 }); key(wordT(i, 'travel') + .1, { gx: 0, gy: 0 });
+    Object.assign(P, arm('L', hand([0, 0, 0, 1], 1)));
+  }
+  if (ln.gesture === 'heart') {
+    const t = wordT(i, 'love');
+    key(t - .2, { squint: 0, hr: 7 }); key(t + .1, { squint: .65, hr: 10 }); Object.assign(P, { squint: .65, hr: 10 });
+  }
+  if (ln.gesture === 'bye') {
+    const t = wordT(i, 'bye');
+    key(t - .2, { wink: 0, Rwv: 1 }); key(t + .05, { wink: 1 }); key(t + .45, { wink: 1 }); key(t + .65, { wink: 0 });
+    key(t - .3, arm('L', { s: REST.Ls, e: REST.Le, w: 0, wv: 0 }));
+    key(t + .1, arm('L', { ...WAVE, wv: 0 })); key(t + .2, { Lwv: 1 });
+    Object.assign(P, arm('L', WAVE));
+  }
+  if (i + 1 < lines.length) key(ln.end - .02, P);
+  else key(ln.end + .6, P);
+});
+for (const k in tracks) tracks[k].sort((a, b) => a[0] - b[0]);
+function sample(k, t) {
+  const tr = tracks[k]; if (!tr) return REST[k];
+  if (t <= tr[0][0]) return tr[0][1];
+  for (let i = 1; i < tr.length; i++) if (t < tr[i][0]) {
+    const [t0, v0] = tr[i - 1], [t1, v1] = tr[i];
+    return v0 + (v1 - v0) * ss((t - t0) / (t1 - t0 || 1));
+  }
+  return tr[tr.length - 1][1];
+}
+
+// blinks
+const BLINKS = []; for (let t = 1.7, i = 0; t < DATA.duration; i++) { BLINKS.push(t); t += 2.4 + ((i * 7919) % 17) / 10; }
+const blinkAt = t => { let v = 0; for (const b of BLINKS) { const d = (t - b) / .16; if (d > -1 && d < 1) v = Math.max(v, 1 - Math.abs(d)); } return v; };
+const envAt = t => { const e = DATA.env, x = t * DATA.fps, i = Math.floor(x); return i < 0 || i >= e.length - 1 ? 0 : e[i] + (e[i + 1] - e[i]) * (x - i); };
+const mouthAt = t => Math.max(envAt(t), envAt(t - .03) * .9, envAt(t + .03) * .8);
+
+// ---------- captions ----------
+const chunks = [];
+lines.forEach(ln => {
+  for (let i = 0; i < ln.words.length; i += 3) {
+    const ws = ln.words.slice(i, i + 3);
+    chunks.push({ start: ws[0].t, words: ws, lineEnd: ln.end });
+  }
+});
+chunks.forEach((c, i) => c.end = Math.min(i + 1 < chunks.length ? chunks[i + 1].start : 1e9, c.lineEnd + .25));
+let curChunk = null;
+function drawCaptions(t) {
+  const g = $('captions');
+  const c = chunks.find(c => t >= c.start - .02 && t < c.end);
+  if (c !== curChunk) {
+    g.textContent = '';
+    if (c) {
+      const tx = el('text', { x: 540, y: 1495, filter: 'url(#cap)' }, g);
+      c.words.forEach((w, i) => { const s = el('tspan', { 'data-t': w.t }, tx); s.textContent = (i ? ' ' : '') + w.w.toUpperCase(); });
+      tx.setAttribute('stroke', '#111'); tx.setAttribute('stroke-width', 14); tx.setAttribute('paint-order', 'stroke'); tx.setAttribute('stroke-linejoin', 'round');
+    }
+    curChunk = c;
+  }
+  if (!c) return;
+  const tx = g.firstChild, age = t - c.start;
+  const sc = age < .09 ? .75 + .37 * (age / .09) : age < .2 ? 1.12 - .12 * ((age - .09) / .11) : 1;
+  tx.setAttribute('transform', `translate(540,1470) scale(${sc.toFixed(3)}) translate(-540,-1470)`);
+  const spoken = [...tx.children].filter(q => t >= +q.dataset.t - .03);
+  for (const q of tx.children) q.setAttribute('fill', q === spoken[spoken.length - 1] ? '#ffe14d' : '#fff');
+}
+
+// ---------- frame ----------
+let T = 0;
+const hairState = { sway: 0 };
+function render(t) {
+  T = t;
+  const p = {}; for (const k in REST) p[k] = sample(k, t);
+  const talk = mouthAt(t);
+  // camera
+  const zoom = p.zoom * (1 + .006 * Math.sin(t * .7));
+  const camX = p.cx + 4 * Math.sin(t * 1.3) + 2 * Math.sin(t * 3.1), camY = p.cy + 3 * Math.sin(t * 1.1 + 1);
+  $('scene').setAttribute('transform', `translate(540,820) scale(${zoom.toFixed(4)}) translate(${f(-540 + camX)},${f(-820 + camY)})`);
+  // body sway + breathing
+  const sway = 1.4 * Math.sin(t * .9) + .6 * Math.sin(t * 2.1);
+  const breath = 1 + .007 * Math.sin(t * 2.2);
+  $('person').setAttribute('transform', `rotate(${f(sway)} 540 1900) translate(540 1900) scale(1 ${breath.toFixed(4)}) translate(-540 -1900)`);
+  // head
+  const hr = p.hr + 2.2 * Math.sin(t * 1.6) + talk * 2.4 * Math.sin(t * 6.3);
+  const nod = talk * 6 * Math.sin(t * 8.1) + 3 * Math.sin(t * 1.2);
+  const headT = `translate(${f(540 + p.hx)},950) rotate(${f(hr)}) translate(0,${f(-190 + nod)})`;
+  $('head').setAttribute('transform', headT);
+  // hair back follows head with lag
+  hairState.sway = hr;
+  const hs = sway * 6 + Math.sin(t * 1.4) * 8;
+  const hb = (w) => `M-205 -150 C-270 -350 270 -350 205 -150 C${f(262 + w)} 60 ${f(250 + w)} 300 ${f(300 + w)} 500 C${f(330 + w)} 650 ${f(270 + w)} 780 ${f(240 + w)} 820 C${f(140 + w)} 860 -140 860 ${f(-240 + w)} 820 C${f(-270 + w)} 780 ${f(-330 + w)} 650 ${f(-300 + w)} 500 C${f(-250 + w)} 300 -262 60 -205 -150 Z`;
+  $('hairBackG').setAttribute('transform', headT);
+  $('hairBackP').setAttribute('d', hb(hs));
+  $('hairBackP2').setAttribute('d', `M-150 120 C-190 300 -170 500 -230 700 L-170 720 C-140 520 -130 330 -120 150 Z M150 120 C190 300 170 500 ${f(230 + hs)} 700 L${f(170 + hs)} 720 C140 520 130 330 120 150 Z`);
+  // front strands (over shoulders)
+  const st = (m, w) => `M${-196 * m} -110 C${f((-236 + w) * m)} 60 ${f((-214 + w) * m)} 230 ${f((-176 + w) * m)} 390 C${f((-152 + w) * m)} 480 ${f((-186 + w) * m)} 560 ${f((-150 + w) * m)} 640 C${f((-118 + w) * m)} 610 ${f((-104 + w) * m)} 520 ${f((-122 + w) * m)} 430 C${f((-140 + w) * m)} 320 ${-162 * m} 170 ${-150 * m} 40 C${-148 * m} -20 ${-160 * m} -80 ${-196 * m} -110 Z`;
+  $('strandL').setAttribute('d', st(1, -hr * .9 + Math.sin(t * 1.7) * 5));
+  $('strandR').setAttribute('d', st(-1, hr * .9 + Math.sin(t * 1.5 + 1) * 5));
+  // eyes
+  const blink = blinkAt(t);
+  for (const side of ['L', 'R']) {
+    const close = Math.max(blink, p.squint * .55, side === 'L' ? p.wink * .92 : p.wink * .25);
+    eyes[side].lid.setAttribute('transform', `translate(0,${f(close * 6)}) scale(1,${Math.max(.08, 1 - close).toFixed(3)})`);
+    eyes[side].irisIn.setAttribute('transform', `translate(${f(p.gx * 14)},${f(p.gy * 8 - 5)})`);
+  }
+  const bu = p.brow * 12 + talk * 4;
+  const brow = (m, r) => `M${-24 * m} ${f(-84 - r)} C${-60 * m} ${f(-106 - r * 1.2)} ${-110 * m} ${f(-116 - r * 1.2)} ${-146 * m} ${f(-82 - r * .6)} C${-108 * m} ${f(-102 - r * 1.1)} ${-60 * m} ${f(-94 - r)} ${-26 * m} ${f(-70 - r)} Z`;
+  $('browL').setAttribute('d', brow(1, bu - p.wink * 6));
+  $('browR').setAttribute('d', brow(-1, bu + p.wink * 4));
+  $('blushL').setAttribute('opacity', f(.75 + p.squint * .3 + p.smile * .1)); $('blushR').setAttribute('opacity', f(.75 + p.squint * .3 + p.smile * .1));
+  // mouth
+  const o = clamp(talk * 1.15, 0, 1), sm = clamp(p.smile + p.squint * .3, 0, 1.2);
+  const w = 52 + 10 * sm - 8 * o, cy = -7 * sm + 2 * o;
+  const ui = -1 - 5 * o - 1.5 * sm * o, li = 1 + 46 * o + 8 * sm * o;
+  const open = `M${-w} ${f(cy)} C${f(-w * .5)} ${f(ui)} ${f(w * .5)} ${f(ui)} ${w} ${f(cy)} C${f(w * .5)} ${f(li)} ${f(-w * .5)} ${f(li)} ${-w} ${f(cy)} Z`;
+  $('mOpen').setAttribute('d', open); $('mouthClipPath').setAttribute('d', open);
+  $('teeth').setAttribute('y', f(ui - 2)); $('tongue').setAttribute('cy', f(li * .82)); $('tongue').setAttribute('opacity', f(clamp((o - .25) * 3, 0, 1))); $('teeth').setAttribute('opacity', f(clamp(o * 4, 0, 1)));
+  $('lipU').setAttribute('d', `M${-w - 2} ${f(cy)} C${f(-w * .5)} -16 -13 -20 0 -13 C13 -20 ${f(w * .5)} -16 ${w + 2} ${f(cy)} C${f(w * .5)} ${f(ui)} ${f(-w * .5)} ${f(ui)} ${-w - 2} ${f(cy)} Z`);
+  $('lipL').setAttribute('d', `M${-w} ${f(cy)} C${f(-w * .5)} ${f(li)} ${f(w * .5)} ${f(li)} ${w} ${f(cy)} C${f(w * .5)} ${f(li + 30)} ${f(-w * .5)} ${f(li + 30)} ${-w} ${f(cy)} Z`);
+  $('lipShine').setAttribute('cy', f(li + 13));
+  // arms
+  drawArm(arms.L, $('armL'), p, 'L'); drawArm(arms.R, $('armR'), p, 'R');
+  // ui
+  $('prog').setAttribute('width', f(1080 * t / DATA.duration));
+  $('heart').setAttribute('fill', t > 21 ? '#fe2c55' : '#fff');
+  $('likes').textContent = (248.1 + Math.max(0, t - 21) * .7).toFixed(1) + 'K';
+  drawCaptions(t);
+}
+
+// ---------- playback ----------
+const params = new URLSearchParams(location.search);
+window.STAGE = { render, duration: DATA.duration, fps: DATA.fps, ready: document.fonts.ready };
+if (params.has('render')) { document.body.classList.add('render'); render(0); }
+else {
+  render(0);
+  const aud = $('aud'), start = $('start');
+  let t0 = 0, playing = false;
+  const loop = () => {
+    if (!playing) return;
+    const t = aud.duration && !aud.paused ? aud.currentTime : (performance.now() - t0) / 1000;
+    if (t >= DATA.duration) { playing = false; start.classList.remove('hide'); start.firstChild.lastChild.textContent = 'Replay'; render(DATA.duration - .01); return; }
+    render(t); requestAnimationFrame(loop);
+  };
+  start.addEventListener('click', () => {
+    start.classList.add('hide'); aud.currentTime = 0; t0 = performance.now(); playing = true;
+    aud.play().catch(() => {}); requestAnimationFrame(loop);
+  });
+}
+</script>
+</body>
+</html>
