@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Venuo – film de prezentare 9:16</title>
+<style>
+/*FONTS*/
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#0B0D12}
+body{display:flex;align-items:center;justify-content:center}
+canvas{display:block;max-width:100vw;max-height:100vh;width:auto;height:auto}
+</style>
+</head>
+<body>
+<canvas id="film"></canvas>
+<script>
+/* Venuo · film 9:16. Randare deterministă: FILM.renderFrame(t) desenează cadrul de la secunda t.
+   Deschis normal în browser, rulează în buclă, în timp real. Timpii scenelor urmează textul de voice-over. */
+const W = 1080, H = 1920;
+const cv = document.getElementById('film'); cv.width = W; cv.height = H;
+const ctx = cv.getContext('2d');
+
+const C = { ink: '#0B0D12', ink2: '#141821', line: 'rgba(255,255,255,.06)', white: '#FFFFFF', text: '#E8ECF4', muted: '#8E97A8',
+  accent: '#2D5BD7', accent2: '#5B82F0', accentSoft: 'rgba(45,91,215,.18)', red: '#F0675A', green: '#25D366', veg: '#7DBA4C' };
+const FD = '"Sora", "Segoe UI", sans-serif', FB = '"Manrope", "Segoe UI", sans-serif';
+
+/* ---------- easing & helpers ---------- */
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const prog = (t, a, d) => clamp((t - a) / d);
+const eOut = t => 1 - Math.pow(1 - t, 3);
+const eInOut = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const eBack = t => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
+
+function rr(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
+function font(size, weight = 700, fam = FD) { ctx.font = `${weight} ${size}px ${fam}`; }
+function text(s, x, y, { size = 40, weight = 600, fam = FB, color = C.text, align = 'left', alpha = 1, ls = 0 } = {}) {
+  ctx.save(); ctx.globalAlpha *= alpha; font(size, weight, fam); ctx.fillStyle = color; ctx.textAlign = align; ctx.textBaseline = 'alphabetic';
+  ctx.letterSpacing = ls + 'px'; ctx.fillText(s, x, y); ctx.restore();
+}
+function check(x, y, s, color = C.white, lw = 4) {
+  ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = lw; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.beginPath(); ctx.moveTo(x - s * .45, y); ctx.lineTo(x - s * .1, y + s * .35); ctx.lineTo(x + s * .5, y - s * .35); ctx.stroke(); ctx.restore();
+}
+function logo(cx, cy, s, alpha = 1) {
+  ctx.save(); ctx.globalAlpha *= alpha; ctx.translate(cx - s / 2, cy - s / 2);
+  const g = ctx.createLinearGradient(0, 0, s, s); g.addColorStop(0, '#3A6BF0'); g.addColorStop(1, '#2248B8');
+  ctx.fillStyle = g; rr(0, 0, s, s, s * .28); ctx.fill();
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = s * .095; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.beginPath(); ctx.moveTo(s * .3, s * .33); ctx.lineTo(s * .5, s * .7); ctx.lineTo(s * .7, s * .33); ctx.stroke(); ctx.restore();
+}
+function pill(label, cx, cy, { bg = C.ink2, fg = C.white, border = 'rgba(255,255,255,.14)', size = 34, padX = 30, h = 76, icon = null, alpha = 1, scale = 1 } = {}) {
+  ctx.save(); ctx.globalAlpha *= alpha; font(size, 600, FB);
+  const iw = icon ? h * .42 + 14 : 0, w = ctx.measureText(label).width + padX * 2 + iw;
+  ctx.translate(cx, cy); ctx.scale(scale, scale);
+  rr(-w / 2, -h / 2, w, h, h / 2); ctx.fillStyle = bg; ctx.fill(); if (border) { ctx.strokeStyle = border; ctx.lineWidth = 2; ctx.stroke(); }
+  if (icon) icon(-w / 2 + padX + h * .21, 0, h * .42);
+  ctx.fillStyle = fg; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText(label, -w / 2 + padX + iw, 2); ctx.restore();
+  return w;
+}
+function shadowCard(x, y, w, h, r, draw, { alpha = 1, shadow = 60 } = {}) {
+  ctx.save(); ctx.globalAlpha *= alpha;
+  ctx.shadowColor = 'rgba(0,0,0,.55)'; ctx.shadowBlur = shadow; ctx.shadowOffsetY = shadow * .4;
+  rr(x, y, w, h, r); ctx.fillStyle = '#fff'; ctx.fill(); ctx.shadowColor = 'transparent';
+  ctx.save(); rr(x, y, w, h, r); ctx.clip(); draw(); ctx.restore(); ctx.restore();
+}
+function img(name, sx, sy, sw, sh, dx, dy, dw, dh) { const im = IMG[name]; ctx.drawImage(im, sx, sy, sw, sh, dx, dy, dw, dh); }
+
+/* Kinetic headline: lines of words, *accent* spans, per-word rise with stagger */
+function headline(lines, t0, lt, { y = 330, size = 78, lh = 96, color = C.white, accent = C.accent2, stagger = .07, alpha = 1 } = {}) {
+  font(size, 700, FD);
+  let k = 0;
+  lines.forEach((line, li) => {
+    const words = line.split(' ');
+    let acc = false;
+    const parts = words.map(w => { let a = acc || w.startsWith('*'); if (w.startsWith('*')) acc = true; if (w.endsWith('*')) { a = true; acc = false; } return { w: w.replace(/\*/g, ''), a }; });
+    ctx.letterSpacing = '-1.5px';
+    const sp = ctx.measureText(' ').width;
+    const widths = parts.map(p => ctx.measureText(p.w).width);
+    const total = widths.reduce((s, v) => s + v, 0) + sp * (parts.length - 1);
+    let x = W / 2 - total / 2;
+    parts.forEach((p, i) => {
+      const pr = eOut(prog(lt, t0 + k * stagger, .55)); k++;
+      ctx.save(); ctx.globalAlpha *= pr * alpha; ctx.fillStyle = p.a ? accent : color; ctx.textBaseline = 'alphabetic';
+      ctx.fillText(p.w, x, y + li * lh + (1 - pr) * 46); ctx.restore();
+      x += widths[i] + sp;
+    });
+  });
+  ctx.letterSpacing = '0px';
+}
+
+/* ---------- background ---------- */
+function background(t) {
+  ctx.fillStyle = C.ink; ctx.fillRect(0, 0, W, H);
+  const blobs = [[.25, .22, 620, 'rgba(45,91,215,.30)', .11], [.85, .62, 700, 'rgba(76,60,200,.20)', .08], [.35, .92, 560, 'rgba(32,140,190,.16)', .13]];
+  blobs.forEach(([bx, by, r, c, sp], i) => {
+    const x = W * bx + Math.sin(t * sp * 2 + i) * 120, y = H * by + Math.cos(t * sp * 1.6 + i * 2) * 140;
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, c); g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  });
+  ctx.save(); ctx.strokeStyle = C.line; ctx.lineWidth = 1; const off = (t * 12) % 90;
+  for (let x = -90 + off; x < W; x += 90) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+  for (let y = -90 + off; y < H; y += 90) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+  ctx.restore();
+  const v = ctx.createRadialGradient(W / 2, H / 2, H * .3, W / 2, H / 2, H * .75); v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,.55)');
+  ctx.fillStyle = v; ctx.fillRect(0, 0, W, H);
+}
+function corner(alpha) { if (alpha <= 0) return; logo(92, 150, 54, alpha); text('venuo', 134, 166, { size: 40, weight: 700, color: C.white, alpha }); }
+
+/* ---------- icons ---------- */
+const icChef = (x, y, s) => { ctx.save(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x - s * .2, y - s * .1, s * .28, Math.PI * .8, Math.PI * 1.9); ctx.arc(x + s * .2, y - s * .1, s * .28, Math.PI * 1.1, Math.PI * .2); ctx.lineTo(x + s * .32, y + s * .45); ctx.lineTo(x - s * .32, y + s * .45); ctx.closePath(); ctx.stroke(); ctx.restore(); };
+const icTable = (x, y, s) => { ctx.save(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y, s * .3, 0, 7); ctx.stroke(); for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3; ctx.beginPath(); ctx.arc(x + Math.cos(a) * s * .52, y + Math.sin(a) * s * .52, s * .08, 0, 7); ctx.fillStyle = '#fff'; ctx.fill(); } ctx.restore(); };
+const icLock = (x, y, s) => { ctx.save(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; rr(x - s * .38, y - s * .05, s * .76, s * .55, 5); ctx.stroke(); ctx.beginPath(); ctx.arc(x, y - s * .05, s * .24, Math.PI, 0); ctx.stroke(); ctx.restore(); };
+const icCheck = (x, y, s) => check(x, y, s * .9, '#fff', 4);
+const icWa = (x, y, s) => { ctx.save(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y, s * .45, Math.PI * .75, Math.PI * .65 + Math.PI * 2 - .2); ctx.lineTo(x - s * .5, y + s * .5); ctx.closePath(); ctx.stroke(); ctx.restore(); };
+
+/* ---------- scenes (timings match the voice-over script) ---------- */
+const S = [];
+const scene = (start, end, draw) => S.push({ start, end, draw });
+
+// 1 · Hook — "Organizezi nunți, botezuri sau evenimente corporate?"
+scene(0, 4.0, lt => {
+  headline(['Organizezi', '*evenimente?*'], .15, lt, { y: 800, size: 104, lh: 124 });
+  [['Nunți', 1.0, 300], ['Botezuri', 1.35, 540], ['Corporate', 1.7, 780]].forEach(([l, d, x]) => {
+    const p = prog(lt, d, .5); if (p <= 0) return;
+    pill(l, x, 1110, { scale: eBack(p), alpha: clamp(p * 2), size: 36, h: 84, bg: 'rgba(45,91,215,.16)', border: 'rgba(91,130,240,.6)' });
+  });
+});
+
+// 2 · Problem — "liste în Excel, zeci de mesaje pe WhatsApp… și bucătăria care află ultima."
+scene(4.0, 10.5, lt => {
+  headline(['Liste în Excel.'], .0, lt, { y: 330, size: 72 });
+  headline(['Zeci de mesaje.'], 1.7, lt, { y: 426, size: 72 });
+  headline(['*Bucătăria află ultima.*'], 4.0, lt, { y: 522, size: 72, accent: C.red });
+  // spreadsheet
+  const sp = eOut(prog(lt, .2, .7));
+  if (sp > 0) {
+    ctx.save(); ctx.translate(320, 1000 + (1 - sp) * 120); ctx.rotate(-.07 + Math.sin(lt * 1.3) * .015); ctx.globalAlpha = sp;
+    shadowCard(-230, -260, 460, 520, 22, () => {
+      ctx.fillStyle = '#fff'; ctx.fillRect(-230, -260, 460, 520); ctx.fillStyle = '#1D7044'; ctx.fillRect(-230, -260, 460, 64);
+      text('lista_invitati_FINAL_v7.xlsx', -205, -218, { size: 22, weight: 700, color: '#fff' });
+      ctx.strokeStyle = '#D9DEE6'; ctx.lineWidth = 2;
+      for (let r = 0; r < 9; r++) { ctx.beginPath(); ctx.moveTo(-230, -196 + r * 50); ctx.lineTo(230, -196 + r * 50); ctx.stroke(); }
+      [-120, 40, 130].forEach(cx => { ctx.beginPath(); ctx.moveTo(cx, -196); ctx.lineTo(cx, 260); ctx.stroke(); });
+      for (let r = 0; r < 8; r++) { ctx.fillStyle = r === 3 ? '#FDE2E0' : '#EEF1F5'; ctx.fillRect(-110, -184 + r * 50, 140 - (r * 37) % 60, 24); ctx.fillRect(50, -184 + r * 50, 60, 24); ctx.fillRect(-215, -184 + r * 50, 80, 24); }
+    }, { shadow: 50 });
+    ctx.restore();
+  }
+  // WhatsApp bubbles
+  const msgs = ['Mai venim 12 persoane!', 'Masa 7 are vegetarieni?', 'Schimbăm aperitivul?', 'Ați primit lista finală?'];
+  msgs.forEach((m, i) => {
+    const p = prog(lt, 1.6 + i * .45, .45); if (p <= 0) return;
+    const y = 820 + i * 128, x = 1020;
+    ctx.save(); ctx.globalAlpha = clamp(p * 2); ctx.translate(x, y); ctx.scale(eBack(p), eBack(p));
+    font(30, 600, FB); const w = ctx.measureText(m).width + 56;
+    ctx.shadowColor = 'rgba(0,0,0,.4)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 10;
+    rr(-w, -42, w, 84, 22); ctx.fillStyle = '#1F2C34'; ctx.fill(); ctx.shadowColor = 'transparent';
+    ctx.fillStyle = C.green; ctx.beginPath(); ctx.arc(-w + 4, -38, 10, 0, 7); ctx.fill();
+    ctx.fillStyle = '#E9EDEF'; ctx.textBaseline = 'middle'; ctx.fillText(m, -w + 28, 2); ctx.restore();
+  });
+  const bp = eBack(prog(lt, 3.3, .4));
+  if (bp > 0) pill('27 mesaje necitite', 780, 1390, { scale: bp, bg: C.green, border: null, fg: '#062B16', size: 32, h: 72 });
+  // the kitchen finds out last
+  const kp = prog(lt, 4.1, .45);
+  if (kp > 0) { const sh = Math.sin(lt * 40) * 8 * (1 - prog(lt, 4.4, .8)); pill('Bucătăria: „Câte porții?!”', 540 + sh, 1560, { scale: eBack(kp), bg: 'rgba(240,103,90,.18)', border: C.red, size: 36, h: 84 }); }
+});
+
+// 3 · Reveal — "Fă cunoștință cu Venuo: aplicația de gestiune pentru săli de evenimente."
+scene(10.5, 15.0, lt => {
+  const fl = 1 - prog(lt, 0, .35); if (fl > 0) { ctx.fillStyle = `rgba(255,255,255,${fl * .5})`; ctx.fillRect(0, 0, W, H); }
+  for (let i = 0; i < 3; i++) { const p = prog(lt, .2 + i * .25, 1.6); if (p > 0 && p < 1) { ctx.save(); ctx.strokeStyle = `rgba(91,130,240,${(1 - p) * .6})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(540, 780, 130 + eOut(p) * 420, 0, 7); ctx.stroke(); ctx.restore(); } }
+  const lp = prog(lt, .15, .7); if (lp > 0) { ctx.save(); ctx.translate(540, 780); ctx.scale(eBack(lp), eBack(lp)); ctx.rotate((1 - eOut(lp)) * -.5); logo(0, 0, 230); ctx.restore(); }
+  const wp = eOut(prog(lt, .7, .7));
+  text('venuo', 540, 1090 + (1 - wp) * 40, { size: 168, weight: 700, color: C.white, align: 'center', alpha: wp, ls: -5 });
+  const s1 = eOut(prog(lt, 1.5, .6)), s2 = eOut(prog(lt, 1.75, .6));
+  text('Aplicația de gestiune', 540, 1220 + (1 - s1) * 30, { size: 50, weight: 600, color: C.text, align: 'center', alpha: s1 });
+  text('pentru săli de evenimente', 540, 1290 + (1 - s2) * 30, { size: 50, weight: 600, color: C.accent2, align: 'center', alpha: s2 });
+});
+
+// 4 · Calendar — "Toate saloanele, într-un singur calendar. Rezervi rapid, fără suprapuneri."
+scene(15.0, 20.5, lt => {
+  headline(['Toate saloanele.', '*Un singur calendar.*'], 0, lt, { y: 360 });
+  // halls column + Thursday–Sunday, where the weekend events are
+  const ep = eOut(prog(lt, .2, .8)), ih = IMG.cal.height, hw = 320, d0 = 1154, dwSrc = IMG.cal.width - d0;
+  const k = 960 / (hw + dwSrc), ch = ih * k, y = 590 + (1 - ep) * 160, z = lerp(1, 1.05, eInOut(prog(lt, .5, 5)));
+  shadowCard(60, y, 960, ch, 28, () => {
+    ctx.save(); ctx.translate(540, y + ch / 2); ctx.scale(z, z); ctx.translate(-540, -(y + ch / 2));
+    ctx.drawImage(IMG.cal, 0, 0, hw, ih, 60, y, hw * k, ch);
+    ctx.drawImage(IMG.cal, d0, 0, dwSrc, ih, 60 + hw * k, y, dwSrc * k, ch);
+    ctx.restore();
+  }, { alpha: ep });
+  const cp = prog(lt, 2.4, .5); if (cp > 0) pill('Fără rezervări suprapuse', 540, 1545, { scale: eBack(cp), icon: icCheck, bg: C.accent, border: null, size: 36, h: 86 });
+});
+
+// 5 · Menu — "Alegi meniul, schimbi orice preparat, iar prețul final se calculează singur."
+scene(20.5, 27.0, lt => {
+  headline(['Meniul, exact cum', 'îl vrea *clientul.*'], 0, lt, { y: 360 });
+  const ep = eOut(prog(lt, .2, .8)), sw = 1240, sh = 740, dw = 960, dh = sh * dw / sw, y0 = 590 + (1 - ep) * 160;
+  shadowCard(60, y0, dw, dh, 26, () => {
+    img('aperitiv', 0, 0, sw, sh, 60, y0, dw, dh);
+    const hp = prog(lt, 1.4, .5);
+    if (hp > 0) { const ry = y0 + 440 * dh / sh, rh = 90 * dh / sh; ctx.save(); ctx.globalAlpha = hp * (.55 + .45 * Math.sin(lt * 5)); ctx.strokeStyle = C.accent; ctx.lineWidth = 6; rr(68, ry, dw - 16, rh, 10); ctx.stroke(); ctx.restore(); }
+  }, { alpha: ep });
+  const sp = prog(lt, 1.5, .5);
+  if (sp > 0) pill('Schimbat din alt meniu', 760, y0 + dh + 6, { scale: eBack(sp), icon: icCheck, bg: '#A86A12', border: null, size: 30, h: 70 });
+  // price widget
+  const pp = eOut(prog(lt, 2.4, .6)); if (pp <= 0) return;
+  const py = 1300 + (1 - pp) * 80;
+  ctx.save(); ctx.globalAlpha = pp;
+  rr(60, py, 960, 250, 28); ctx.fillStyle = '#141B2B'; ctx.fill(); ctx.strokeStyle = 'rgba(91,130,240,.45)'; ctx.lineWidth = 2; ctx.stroke();
+  text('Preț standard', 110, py + 78, { size: 30, weight: 600, color: C.muted });
+  text('500 lei', 110, py + 170, { size: 72, weight: 700, color: '#C9CFDA', fam: FD });
+  const strike = eOut(prog(lt, 3.4, .4)); if (strike > 0) { ctx.strokeStyle = C.red; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(105, py + 146); ctx.lineTo(105 + 270 * strike, py + 146); ctx.stroke(); }
+  text('Preț final / pers.', 970, py + 78, { size: 30, weight: 600, color: C.muted, align: 'right' });
+  const v = Math.round(lerp(500, 510, eInOut(prog(lt, 3.4, 1.2))));
+  text(`${v} lei`, 970, py + 170, { size: 88, weight: 700, color: C.accent2, align: 'right', fam: FD });
+  const done = prog(lt, 4.7, .4); if (done > 0) text('Calculat automat', 970, py + 222, { size: 26, weight: 600, color: C.veg, align: 'right', alpha: done });
+  ctx.restore();
+});
+
+// 6 · Notes — "Alergiile și meniurile vegetariene ajung direct la bucătărie și la șeful de sală."
+scene(27.0, 33.0, lt => {
+  headline(['Fiecare notă ajunge', '*unde trebuie.*'], 0, lt, { y: 360 });
+  const ep = eOut(prog(lt, .2, .8)), out = eInOut(prog(lt, 3.3, .7));
+  const nw = 960, nh = IMG.notes.height * nw / IMG.notes.width, ny = 590 + (1 - ep) * 160 - out * 60;
+  if (out < 1) shadowCard(60, ny, nw, nh, 26, () => img('notes', 0, 0, IMG.notes.width, IMG.notes.height, 60, ny, nw, nh), { alpha: ep * (1 - out) });
+  const kp = eOut(prog(lt, 3.5, .7));
+  if (kp > 0) { const kh = IMG.kitchen.height * nw / IMG.kitchen.width, ky = 620 + (1 - kp) * 120; shadowCard(60, ky, nw, kh, 26, () => img('kitchen', 0, 0, IMG.kitchen.width, IMG.kitchen.height, 60, ky, nw, kh), { alpha: kp }); }
+  // destinations
+  const d1 = eBack(prog(lt, 1.2, .5)), d2 = eBack(prog(lt, 1.4, .5));
+  const pulse = k => 1 + .08 * Math.max(0, Math.sin((lt - k) * 9)) * (lt > k && lt < k + .5 ? 1 : 0);
+  if (d1 > 0) pill('Bucătărie', 300, 1480, { scale: d1 * pulse(2.35), icon: icChef, bg: 'rgba(45,91,215,.22)', border: C.accent2, size: 34, h: 84 });
+  if (d2 > 0) pill('Șef de sală', 780, 1480, { scale: d2 * pulse(2.65), icon: icTable, bg: 'rgba(45,91,215,.22)', border: C.accent2, size: 34, h: 84 });
+  // flying notes
+  [[1.6, 330, 300, C.red], [1.8, 360, 780, C.red], [2.0, 560, 300, C.veg]].forEach(([d, sy, tx, col]) => {
+    const p = prog(lt, d, .75); if (p <= 0 || p >= 1) return; const e = eInOut(p);
+    const x0 = 360, y0 = 590 + sy * nw / 1322 * .9, x = lerp(x0, tx, e), y = lerp(y0, 1440, e) - Math.sin(e * Math.PI) * 120;
+    ctx.save(); ctx.fillStyle = col; ctx.shadowColor = col; ctx.shadowBlur = 24; ctx.beginPath(); ctx.arc(x, y, 16, 0, 7); ctx.fill(); ctx.restore();
+  });
+});
+
+// 7 · Seating — "Aranjezi mesele în jurul ringului și trimiți planul clientului, pe WhatsApp."
+scene(33.0, 39.5, lt => {
+  headline(['Planul de mese,', '*gata în câteva minute.*'], 0, lt, { y: 360, size: 74 });
+  const ep = eOut(prog(lt, .2, .8)), z = lerp(1, 1.1, eInOut(prog(lt, .6, 3)));
+  const pw = 960, ph = IMG.plan.height * pw / IMG.plan.width, py = 590 + (1 - ep) * 160;
+  shadowCard(60, py, pw, ph, 26, () => { ctx.save(); ctx.translate(540, py + ph / 2); ctx.scale(z, z); ctx.drawImage(IMG.plan, -pw / 2, -ph / 2, pw, ph); ctx.restore(); }, { alpha: ep });
+  const mp = eOut(prog(lt, 2.6, .7));
+  if (mp > 0) { ctx.save(); ctx.globalAlpha = mp * .5; ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H); ctx.restore();
+    const sw = 900, sh = IMG.share.height * sw / IMG.share.width, sy = 760 + (1 - mp) * 220;
+    shadowCard(90, sy, sw, sh, 26, () => img('share', 0, 0, IMG.share.width, IMG.share.height, 90, sy, sw, sh), { alpha: mp, shadow: 80 }); }
+  const wp = prog(lt, 4.0, .5);
+  if (wp > 0) pill('Trimis clientului pe WhatsApp', 540, 1560, { scale: eBack(wp), icon: icWa, bg: C.green, border: null, fg: '#fff', size: 34, h: 86 });
+});
+
+// 8 · Client — "Iar mirii își așază invitații de pe telefon, până cu trei zile înainte."
+scene(39.5, 45.5, lt => {
+  headline(['Mirii își așază invitații', '*de pe telefon.*'], 0, lt, { y: 360, size: 72 });
+  const ep = eOut(prog(lt, .2, .8)), fw = 500, fh = 980, fx = 290, fy = 560 + (1 - ep) * 200, b = 16;
+  ctx.save(); ctx.globalAlpha = ep;
+  ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 70; ctx.shadowOffsetY = 30; rr(fx, fy, fw, fh, 70); ctx.fillStyle = '#05070A'; ctx.fill(); ctx.shadowColor = 'transparent';
+  ctx.strokeStyle = '#2A303B'; ctx.lineWidth = 3; ctx.stroke();
+  ctx.save(); rr(fx + b, fy + b, fw - b * 2, fh - b * 2, 56); ctx.clip();
+  const scale = (fw - b * 2) / IMG.client.width, total = IMG.client.height * scale, view = fh - b * 2;
+  const scroll = eInOut(prog(lt, 1.0, 3.8)) * Math.min(total - view, 1300);
+  ctx.fillStyle = '#F3F4F3'; ctx.fillRect(fx + b, fy + b, fw - b * 2, view);
+  ctx.drawImage(IMG.client, fx + b, fy + b - scroll, fw - b * 2, total);
+  ctx.restore();
+  rr(fx + fw / 2 - 70, fy + 30, 140, 34, 17); ctx.fillStyle = '#05070A'; ctx.fill();
+  ctx.restore();
+  const bp = prog(lt, 2.6, .5);
+  if (bp > 0) pill('Editabil până cu 3 zile înainte', 540, 1590, { scale: eBack(bp), icon: icLock, bg: C.accent, border: null, size: 34, h: 86 });
+});
+
+// 9 · Benefits — "Mai puține telefoane. Nicio informație pierdută. Fiecare om din echipă știe exact ce are de făcut."
+scene(45.5, 51.0, lt => {
+  text('REZULTATUL', 540, 620, { size: 30, weight: 700, color: C.accent2, align: 'center', ls: 6, alpha: eOut(prog(lt, 0, .5)) });
+  [['Mai puține telefoane.', .2], ['Nicio informație pierdută.', 1.5], ['Echipa știe ce are de făcut.', 2.9]].forEach(([l, d], i) => {
+    const p = eOut(prog(lt, d, .6)); if (p <= 0) return;
+    const y = 800 + i * 190;
+    ctx.save(); ctx.globalAlpha = p; ctx.translate((1 - p) * -60, 0);
+    ctx.fillStyle = C.accent; ctx.beginPath(); ctx.arc(150, y - 22, 40, 0, 7); ctx.fill(); check(150, y - 22, 34, '#fff', 6);
+    text(l, 225, y, { size: 58, weight: 700, color: C.white, fam: FD, ls: -1 });
+    ctx.restore();
+  });
+});
+
+// 10 · CTA — "Venuo. Cere un demo gratuit pe bluradvertising.ro."
+scene(51.0, 57.0, lt => {
+  const lp = prog(lt, .1, .7); if (lp > 0) { ctx.save(); ctx.translate(540, 700); ctx.scale(eBack(lp), eBack(lp)); logo(0, 0, 180); ctx.restore(); }
+  const wp = eOut(prog(lt, .4, .6));
+  text('venuo', 540, 950 + (1 - wp) * 30, { size: 140, weight: 700, color: C.white, align: 'center', alpha: wp, ls: -4 });
+  const cp = eOut(prog(lt, 1.2, .6));
+  text('Cere un demo gratuit', 540, 1120 + (1 - cp) * 30, { size: 64, weight: 700, color: C.white, fam: FD, align: 'center', alpha: cp, ls: -1 });
+  const up = prog(lt, 1.7, .6);
+  if (up > 0) { const glow = .5 + .5 * Math.sin(lt * 3); ctx.save(); ctx.shadowColor = `rgba(45,91,215,${.5 + glow * .4})`; ctx.shadowBlur = 50; pill('bluradvertising.ro', 540, 1270, { scale: eBack(up), bg: C.accent, border: null, size: 44, h: 104, padX: 44 }); ctx.restore(); }
+  text('Dezvoltat de Blur Advertising', 540, 1420, { size: 28, weight: 600, color: C.muted, align: 'center', alpha: eOut(prog(lt, 2.4, .6)) });
+});
+
+const DURATION = 57.0, FADE = .4;
+function renderFrame(t) {
+  background(t);
+  corner(t > 15.0 && t < 51.0 ? clamp(Math.min((t - 15.0) / .5, (51.0 - t) / .4)) : 0);
+  S.forEach(s => {
+    if (t < s.start || t >= s.end + FADE) return;
+    const lt = t - s.start, a = t < s.end ? 1 : 1 - (t - s.end) / FADE;
+    ctx.save(); ctx.globalAlpha = a;
+    if (a < 1) { const k = 1 + (1 - a) * .04; ctx.translate(W / 2, H / 2); ctx.scale(k, k); ctx.translate(-W / 2, -H / 2); }
+    s.draw(lt); ctx.restore();
+  });
+  const fin = prog(t, DURATION - .5, .5); if (fin > 0) { ctx.fillStyle = `rgba(11,13,18,${fin})`; ctx.fillRect(0, 0, W, H); }
+}
+
+/* ---------- assets ---------- */
+const IMG = {};
+const NAMES = ['cal', 'aperitiv', 'notes', 'kitchen', 'plan', 'share', 'client'];
+const ready = Promise.all([
+  ...NAMES.map(n => new Promise((res, rej) => { const i = new Image(); i.onload = () => { IMG[n] = i; res(); }; i.onerror = rej; i.src = `assets/${n}.png`; })),
+  ...['700 40px Sora', '600 40px Sora', '500 40px Manrope', '600 40px Manrope', '700 40px Manrope'].map(f => document.fonts.load(f, 'ăâîșțĂÎȘȚ')),
+]);
+window.FILM = { ready, renderFrame, DURATION, canvas: cv };
+if (!new URLSearchParams(location.search).has('render')) {
+  ready.then(() => { const t0 = performance.now(); const loop = () => { renderFrame(((performance.now() - t0) / 1000) % DURATION); requestAnimationFrame(loop); }; loop(); });
+}
+</script>
+</body>
+</html>
