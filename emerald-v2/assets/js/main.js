@@ -10,6 +10,20 @@
     if (!win) w.location.href = url;
   }
 
+  /* header turns solid once the opening photo has scrolled away */
+  var header = d.querySelector(".site-header");
+  if (header && d.body.classList.contains("has-hero")) {
+    var onScroll = function () { header.classList.toggle("solid", w.scrollY > 260); };
+    w.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+  }
+
+  /* photo rail arrows */
+  var rail = d.getElementById("rail");
+  d.querySelectorAll("[data-rail]").forEach(function (b) {
+    b.addEventListener("click", function () { rail.scrollBy({ left: +b.dataset.rail * rail.clientWidth * 0.8, behavior: reduce ? "auto" : "smooth" }); });
+  });
+
   /* mobile menu */
   var burger = d.querySelector(".burger");
   if (burger) {
@@ -29,7 +43,7 @@
   });
 
   /* hero video: smaller file on phones, none when motion is reduced */
-  var vid = d.querySelector(".hero-media video");
+  var vid = d.querySelector(".hero-bg video");
   if (vid && !reduce) {
     vid.src = w.innerWidth < 760 ? vid.dataset.sm : vid.dataset.lg;
     var pr = vid.play && vid.play();

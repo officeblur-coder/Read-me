@@ -138,7 +138,7 @@ def header(p, active):
 </div></div>
 <header class="site-header">
   <div class="wrap bar">
-    <a class="brand" href="{p or './'}" aria-label="{BRAND}, pagina principală"><img src="{p}img/logo-dark.webp" alt="{BRAND}" width="700" height="292"></a>
+    <a class="brand" href="{p or './'}" aria-label="{BRAND}, pagina principală"><img class="logo-dark" src="{p}img/logo-dark.webp" alt="{BRAND}" width="700" height="292"><img class="logo-light" src="{p}img/logo.webp" alt="" width="700" height="292"></a>
     <nav class="nav" aria-label="Meniu principal"><ul>
       <li class="has-sub{' active' if active == 'spatii' else ''}"><button type="button" aria-expanded="false">Saloane{ic("chev")}</button><div class="sub">{sub}</div></li>
       {items}
@@ -190,7 +190,7 @@ def footer(p):
 </div>'''
 
 
-def page(slug, title, desc, body, graph, active="", og="facade-night"):
+def page(slug, title, desc, body, graph, active="", og="facade-night", hero=True):
     p = "../" * slug.count("/")
     url = f"{SITE}/{slug}"
     ld = json.dumps({"@context": "https://schema.org", "@graph": graph}, ensure_ascii=False, separators=(",", ":"))
@@ -218,7 +218,7 @@ def page(slug, title, desc, body, graph, active="", og="facade-night"):
 <link rel="stylesheet" href="{p}assets/css/style.css">
 <script type="application/ld+json">{ld}</script>
 </head>
-<body>
+<body class="{'has-hero' if hero else ''}">
 {header(p, active)}
 <main id="main">
 {body(p)}
@@ -233,11 +233,13 @@ def page(slug, title, desc, body, graph, active="", og="facade-night"):
 # ---------------------------------------------------------------- shared blocks
 def page_head(p, here, h1, intro, photo, alt, cap=None):
     capline = f'<div class="cap-line"><strong>{cap}</strong><span>de locuri</span></div>' if cap else ""
-    return f'''<section class="page-head"><div class="wrap">
-  {crumbs(p, here)}
-  <div class="head-grid"><h1>{h1}</h1><div><p class="intro">{intro}</p>{capline}</div></div>
-</div></section>
-<figure class="page-photo">{img(p, photo, alt, eager=True, sizes="100vw")}</figure>'''
+    return f'''<section class="page-hero">
+  {img(p, photo, alt, eager=True, sizes="100vw")}
+  <div class="wrap">
+    {crumbs(p, here)}
+    <div class="head-grid"><h1>{h1}</h1><div><p class="intro">{intro}</p>{capline}</div></div>
+  </div>
+</section>'''
 
 
 def faq_block(items, title="Întrebări frecvente", cls="", link=None):
@@ -319,8 +321,8 @@ def home():
         halls = ""
         for s in HALLS:
             halls += f'''<article class="hall">
-  <a class="hall-photo" href="{p}{s["slug"]}/">{img(p, s["img"], s["name"] + ", salon de evenimente în Târgu Mureș")}</a>
-  <div><h3>{s["name"]}</h3><p class="seats">Până la {s["cap"]} de locuri</p><p>{s["body"][0]}</p>
+  <a class="hall-photo zoom" href="{p}{s["slug"]}/">{img(p, s["img"], s["name"] + ", salon de evenimente în Târgu Mureș", sizes="(max-width: 860px) 100vw, 60vw")}</a>
+  <div><p class="cap-big">{s["cap"]}<small>de locuri</small></p><h3>{s["name"]}</h3><p>{s["body"][0]}</p>
   <p class="ideal">Potrivit pentru: {", ".join(x[0].lower() + x[1:] for x in s["ideal"])}.</p>
   <a class="more" href="{p}{s["slug"]}/">Fotografii și detalii despre {s["name"]}</a></div>
 </article>'''
@@ -330,28 +332,31 @@ def home():
                  "prefer": {"botez": ["gourmet", "diamond"], "majorat": ["gourmet", "diamond"], "corporate": ["diamond", "gold", "sapphire"]}}
         alts = {g[0]: g[1] for g in base.GALLERY}
         grid_names = ["g03", "dance-1", "sapphire-6", "g16", "terasa-2", "cake-1", "g13", "gradina-8"]
-        grid = "".join(photo_btn(p, n, alts.get(n, "Eveniment la Emerald"), "home") for i, n in enumerate(grid_names))
+        grid_names = ["g03", "dance-1", "g16", "sapphire-6", "g13", "terasa-2", "cake-1", "g10", "gradina-8", "g21", "hotel-2", "g01"]
+        grid = "".join(f'<button type="button" data-full="{p}img/{n}.webp" data-group="home" data-alt="{e(alts.get(n, "Eveniment la Emerald"))}" aria-label="Mărește: {e(alts.get(n, "Eveniment la Emerald"))}">{img(p, n, alts.get(n, "Eveniment la Emerald"), sizes="560px")}</button>' for n in grid_names)
         return f'''
-<section class="hero"><div class="wrap">
-  <div>
+<section class="hero">
+  <figure class="hero-bg">
+    <video muted loop playsinline autoplay preload="none" poster="{p}media/hero-poster.webp" data-lg="{p}media/hero.mp4" data-sm="{p}media/hero-sm.mp4" aria-label="Filmare din Sapphire Ballroom"></video>
+  </figure>
+  <div class="wrap">
+  <div class="hero-text">
     <p class="label">Târgu Mureș, str. Gheorghe Doja 155</p>
     <h1>Nunți, botezuri și evenimente în Târgu Mureș</h1>
     <p class="intro">Emerald are patru saloane, de la 120 la 550 de locuri, plus terasă, grădină pentru fotografii și hotel, toate în aceeași curte. Pachetul all inclusive acoperă meniul, băuturile, tortul și decorul.</p>
-    <div class="actions"><a class="btn btn-green" href="{p}contact/">Programează o vizionare</a><a class="btn btn-line" href="tel:{PHONE_E}">{ic("phone")}{PHONE_H}</a></div>
+    <div class="actions"><a class="btn btn-green" href="{p}contact/">Programează o vizionare</a><a class="btn btn-light" href="tel:{PHONE_E}">{ic("phone")}{PHONE_H}</a></div>
+  </div>
     <dl class="quick">
       <div><dt>Saloane</dt><dd>4, între 120 și 550 de locuri</dd></div>
       <div><dt>În aer liber</dt><dd>Terasă și grădină</dd></div>
       <div><dt>Cazare</dt><dd><a href="{p}emerald-boutique-hotel/">Emerald Boutique Hotel</a></dd></div>
+      <div><dt>Vizionări</dt><dd><a href="tel:{PHONE_E}">{PHONE_H}</a></dd></div>
     </dl>
   </div>
-  <figure class="hero-media">
-    <video muted loop playsinline autoplay preload="none" poster="{p}media/hero-poster.webp" data-lg="{p}media/hero.mp4" data-sm="{p}media/hero-sm.mp4" aria-label="Filmare din Sapphire Ballroom"></video>
-    <figcaption>Filmare din Sapphire Ballroom.</figcaption>
-  </figure>
-</div></section>
+</section>
 
-<section class="section stone" id="saloane"><div class="wrap">
-  <div class="head"><div><h2>Saloanele</h2><p class="muted">Fiecare salon are intrare, ring de dans și decor propriu. Alegeți după numărul de invitați.</p></div></div>
+<section class="section deep" id="saloane"><div class="wrap">
+  <div class="head"><div><p class="label">Patru saloane</p><h2>Alegeți salonul după numărul de invitați</h2></div></div>
   {halls}
 </div></section>
 
@@ -359,6 +364,12 @@ def home():
   <div class="head"><div><h2>Terasă, grădină și hotel</h2><p class="muted">Ședința foto, cina în aer liber și cazarea se fac fără să plecați de la locație.</p></div></div>
   {cols(p, ["terasa", "gradina", "hotel"])}
 </div></section>
+
+<section class="band zoom">
+  {img(p, "dance-2", "Dansul mirilor în fum greu la Emerald", sizes="100vw")}
+  <div class="wrap"><blockquote>Unele zile trec. Altele rămân cu voi.</blockquote>
+  <p>Fum greu și artificii la dansul mirilor sunt incluse în pachetul de nuntă.</p></div>
+</section>
 
 <section class="section green"><div class="wrap included">
   <figure class="included-photo" style="margin:0">{img(p, "food-1", "Masă servită la un eveniment Emerald")}</figure>
@@ -408,7 +419,10 @@ def home():
 
 <section class="section"><div class="wrap">
   <div class="head"><div><h2>Fotografii de la evenimente</h2><p class="muted">Nunți și petreceri organizate la Emerald.</p></div><a class="more" href="{p}galeria-foto-video/">Toată galeria</a></div>
-  <div class="photo-grid">{grid}</div>
+</div>
+  <div class="rail-wrap"><div class="rail" id="rail">{grid}</div>
+  <div class="wrap rail-nav"><button type="button" data-rail="-1" aria-label="Fotografiile anterioare">{ic("left")}</button><button type="button" data-rail="1" aria-label="Fotografiile următoare">{ic("right")}</button></div></div>
+  <div>
 </div></section>
 
 <section class="section stone"><div class="wrap">
@@ -701,7 +715,7 @@ def not_found():
         return f'''<section class="section"><div class="wrap"><h1>Pagina nu există</h1>
 <p class="intro">Adresa poate fi greșită sau pagina a fost mutată.</p>
 <div class="actions"><a class="btn btn-green" href="/">Pagina principală</a><a class="btn btn-line" href="/contact/">Contact</a></div></div></section>'''
-    h = page("", "Pagina nu a fost găsită | Emerald Luxury Events", "Pagina căutată nu există.", body, [org_node()])
+    h = page("", "Pagina nu a fost găsită | Emerald Luxury Events", "Pagina căutată nu există.", body, [org_node()], hero=False)
     h = h.replace('index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1', 'noindex, follow')
     h = h.replace('<link rel="canonical" href="https://emeraldluxuryevents.ro/">', '').replace('href="./"', 'href="/"')
     h = re.sub(r'(href|src)="((?:assets|img|media)/)', r'\1="/\2', h).replace(", img/", ", /img/").replace('href="site.webmanifest"', 'href="/site.webmanifest"')
