@@ -242,15 +242,17 @@ for i in range(3): P(pop(520 + i * 90), 29.65 + i * 0.12, 0.45, (i - 1) * 0.5)
 sfx = np.stack([reverb(sfx[:, 0], 1.2, .18), reverb(sfx[:, 1], 1.25, .18)], 1)
 
 # ---------------------------------------------------------------- voice + mix
-def load(path):
+def load(path, af="anull"):
     import subprocess
-    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(path), "-ac", "2", "-ar", str(SR), "-f", "s16le", "-"], capture_output=True, check=True).stdout
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(path), "-af", af, "-ac", "2", "-ar", str(SR), "-f", "s16le", "-"], capture_output=True, check=True).stdout
     return np.frombuffer(raw, np.int16).reshape(-1, 2).astype(float) / 32768
 
-vo = np.zeros((N, 2)); v = load(HERE / "vo.mp3")[:N]; vo[:len(v)] = v
+vo = np.zeros((N, 2)); # voice polish: rumble cut, even level, a little presence so it sits on top of the music
+v = load(HERE / "vo.mp3", "highpass=f=90,equalizer=f=220:t=q:w=1:g=-1.5,equalizer=f=3200:t=q:w=1.2:g=2.5,"
+         "acompressor=threshold=-22dB:ratio=3:attack=5:release=90:makeup=2")[:N]; vo[:len(v)] = v
 # the music ducks under the voice
 lvl = np.sqrt(np.convolve(vo.mean(1) ** 2, np.ones(2205) / 2205, "same"))
-duck = 1 - 0.5 * np.clip(lvl / 0.06, 0, 1)
+duck = 1 - 0.6 * np.clip(lvl / 0.05, 0, 1)
 duck = np.convolve(duck, np.ones(4410) / 4410, "same")
 def norm(x, peak): return x / (np.abs(x).max() + 1e-9) * peak
 music_n = norm(music, 0.5); sfx_n = norm(sfx, 0.6); vo_n = norm(vo, 0.9)
