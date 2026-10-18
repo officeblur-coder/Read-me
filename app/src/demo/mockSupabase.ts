@@ -35,15 +35,15 @@ function seedOrders(): Row[] {
     };
   };
   return [
-    mk(1036, { name: "Andreea M.", phone: "0745 112 908", address: "Str. Trandafirilor 12, Acățari", status: "new", created_at: iso(now - 0.6 * m), source: "ig",
+    mk(1036, { name: "Andreea M.", phone: "0745 112 908", address: "Str. Trandafirilor 12", status: "new", created_at: iso(now - 0.6 * m), source: "ig",
       items: [line("double-smash", 2), line("cartofi", 2)], note: "Fără ceapă la un burger, vă rog", allergies: ["lactoza"] }),
-    mk(1035, { name: "Bogdan P.", phone: "0722 455 019", address: "Str. Principală 88, Gornești", status: "prep", eta_min: 35, accepted_at: iso(now - 9 * m), created_at: iso(now - 10 * m),
+    mk(1035, { name: "Bogdan P.", phone: "0722 455 019", address: "Str. Principală 88", status: "prep", eta_min: 35, accepted_at: iso(now - 9 * m), created_at: iso(now - 10 * m),
       items: [line("spicy-smash"), line("smash"), line("cartofi")] }),
     mk(1034, { name: "Ioana R.", phone: "0758 302 771", mode: "ridicare", address: "Ridicare din restaurant", status: "prep", eta_min: 20, accepted_at: iso(now - 14 * m), created_at: iso(now - 15 * m), payment: "cash",
       items: [line("papanas", 2)] }),
-    mk(1033, { name: "Csaba K.", phone: "0740 980 114", address: "Str. Morii 4, Corunca", status: "road", eta_min: 40, accepted_at: iso(now - 31 * m), road_at: iso(now - 6 * m), created_at: iso(now - 32 * m),
+    mk(1033, { name: "Csaba K.", phone: "0740 980 114", address: "Str. Morii 4", status: "road", eta_min: 40, accepted_at: iso(now - 31 * m), road_at: iso(now - 6 * m), created_at: iso(now - 32 * m),
       courier_id: STAFF_USER, courier_name: "Vlad", items: [line("double-smash"), line("duo-vinete")] }),
-    mk(1032, { name: "Maria S.", phone: "0733 640 210", address: "Str. Libertății 21, Târgu Mureș", status: "done", eta_min: 40, accepted_at: iso(now - 80 * m), road_at: iso(now - 55 * m), done_at: iso(now - 41 * m), created_at: iso(now - 81 * m),
+    mk(1032, { name: "Maria S.", phone: "0733 640 210", address: "Str. Libertății 21", status: "done", eta_min: 40, accepted_at: iso(now - 80 * m), road_at: iso(now - 55 * m), done_at: iso(now - 41 * m), created_at: iso(now - 81 * m),
       courier_id: STAFF_USER, courier_name: "Vlad", rating: 5, items: [line("smash", 3), line("cartofi", 3)] }),
     mk(1031, { name: "Radu T.", phone: "0766 010 332", mode: "ridicare", address: "Ridicare din restaurant", status: "done", eta_min: 25, accepted_at: iso(now - 130 * m), done_at: iso(now - 100 * m), created_at: iso(now - 131 * m),
       rating: 4, items: [line("spicy-smash", 2)] }),
