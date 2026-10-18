@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<title>Promo · aplicație de comenzi</title>
+<link rel="stylesheet" href="assets/fonts.css">
+<style>
+/* 1080×1920 promo, rendered frame by frame (render.js seeks every animation to the frame time) */
+:root{--bg:#120c08;--ink:#fff7ef;--mut:#c9b6a5;--brand:#f04e23;--brand2:#ff8a3d;--gold:#f6b13b;--ok:#17b67c}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:var(--bg)}
+body{font-family:Figtree,sans-serif;color:var(--ink);position:relative}
+.abs{position:absolute}
+.glow{position:absolute;border-radius:50%;filter:blur(60px);opacity:.55}
+.g1{width:900px;height:900px;left:-300px;top:-200px;background:radial-gradient(closest-side,#ff6a2b,transparent)}
+.g2{width:1000px;height:1000px;right:-420px;bottom:-300px;background:radial-gradient(closest-side,#c2261a,transparent)}
+.g3{width:700px;height:700px;left:200px;top:700px;background:radial-gradient(closest-side,#f6b13b55,transparent)}
+.grain{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.035) 1px,transparent 1px);background-size:6px 6px}
+.scene{position:absolute;inset:0;opacity:0}
+
+.cap{position:absolute;left:70px;right:70px;top:150px;text-align:center;font:800 92px/1.02 "Bricolage Grotesque",sans-serif;letter-spacing:-.035em;z-index:30}
+.cap.low{top:auto;bottom:170px}
+.cap .w{display:inline-block;margin:0 .12em;opacity:0}
+.cap .hl{background:linear-gradient(110deg,var(--brand2),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{font:600 40px/1.25 Figtree,sans-serif;letter-spacing:0;color:var(--mut);margin-top:22px}
+
+/* phone */
+.phone{position:absolute;left:240px;top:470px;width:600px;height:1298px;border-radius:84px;background:#0b0b0b;padding:18px;
+  box-shadow:0 0 0 3px #2f2a26 inset,0 0 0 10px rgba(255,255,255,.07),0 80px 120px -40px rgba(0,0,0,.8),0 0 160px -20px rgba(240,78,35,.45);z-index:10}
+.phone:before{content:"";position:absolute;top:34px;left:50%;width:170px;height:46px;margin-left:-85px;border-radius:30px;background:#0b0b0b;z-index:5}
+.screen{position:absolute;inset:18px;border-radius:68px;overflow:hidden;background:#faf6f1}
+.screen img{position:absolute;left:0;top:0;width:100%;opacity:0}
+.tap{position:absolute;width:110px;height:110px;margin:-55px 0 0 -55px;border-radius:50%;border:6px solid #fff;background:rgba(255,255,255,.25);opacity:0;z-index:6}
+
+.card{position:absolute;background:#fff;color:#1d1712;border-radius:34px;padding:26px 32px;display:flex;align-items:center;gap:22px;box-shadow:0 40px 80px -30px rgba(0,0,0,.7);font:600 30px/1.2 Figtree,sans-serif;z-index:20;opacity:0;white-space:nowrap}
+.card i{width:76px;height:76px;border-radius:24px;display:grid;place-items:center;font-style:normal;font-size:40px}
+.card b{display:block;font:800 38px/1.1 "Bricolage Grotesque",sans-serif;letter-spacing:-.02em}
+.card small{font-size:26px;color:#7a6b5e}
+
+/* hook */
+.big{position:absolute;left:0;right:0;top:640px;text-align:center;font:800 430px/1 "Bricolage Grotesque",sans-serif;letter-spacing:-.06em}
+.big span{background:linear-gradient(180deg,#fff,#ffd2b8);-webkit-background-clip:text;background-clip:text;color:transparent}
+.strike{position:absolute;left:150px;top:840px;width:780px;height:34px;border-radius:20px;background:var(--brand);transform-origin:left center;transform:rotate(-8deg) scaleX(0);box-shadow:0 0 60px rgba(240,78,35,.8)}
+.tag{position:absolute;left:0;right:0;top:1150px;text-align:center;font:700 46px/1.2 Figtree;color:var(--mut)}
+.apps{position:absolute;left:0;right:0;top:1290px;display:flex;justify-content:center;gap:26px}
+.apps div{width:150px;height:150px;border-radius:40px;background:#2a1f18;border:2px solid #3b2d23;display:grid;place-items:center;font:800 64px "Bricolage Grotesque";color:#6b5646}
+
+.logo{position:absolute;left:390px;top:300px;width:300px;height:300px;border-radius:80px;box-shadow:0 40px 100px -20px rgba(240,78,35,.8);z-index:12}
+
+/* reception */
+.laptop{position:absolute;left:40px;top:640px;width:1000px;z-index:10}
+.win{border-radius:26px;overflow:hidden;background:#231c17;border:2px solid #3a3029;box-shadow:0 60px 120px -40px rgba(0,0,0,.9),0 0 140px -30px rgba(240,78,35,.5)}
+.win .bar{display:flex;gap:10px;padding:18px 22px;background:#1c1612}
+.win .bar i{width:16px;height:16px;border-radius:50%;background:#4a3d33}
+.win .bar i:nth-child(1){background:#ff5f57}.win .bar i:nth-child(2){background:#febc2e}.win .bar i:nth-child(3){background:#28c840}
+.win .view{height:625px;overflow:hidden;position:relative}
+.win .view img{width:1000px;position:absolute;left:0;top:0;transform-origin:0 0}
+.bell{position:absolute;left:440px;top:1380px;width:200px;height:200px;border-radius:60px;background:linear-gradient(135deg,var(--gold),#f08a1c);display:grid;place-items:center;box-shadow:0 30px 80px -20px rgba(246,177,59,.8);z-index:15}
+.bell svg{width:110px;height:110px}
+.wave{position:absolute;left:540px;top:1480px;width:200px;height:200px;margin:-100px 0 0 -100px;border-radius:50%;border:6px solid var(--gold);opacity:0;z-index:14}
+.stamp{position:absolute;left:170px;top:1390px;width:740px;padding:34px;white-space:nowrap;border-radius:999px;background:var(--ok);text-align:center;font:800 64px/1 "Bricolage Grotesque";letter-spacing:-.02em;box-shadow:0 30px 80px -20px rgba(23,182,124,.8);z-index:16;opacity:0}
+
+/* courier */
+.route{position:absolute;inset:0;z-index:2}
+.pin{position:absolute;width:90px;height:90px;margin:-90px 0 0 -45px;z-index:3}
+
+/* club */
+.club{position:absolute;left:90px;top:700px;width:900px;height:550px;border-radius:56px;overflow:hidden;z-index:10;
+  background:linear-gradient(120deg,#cfd3d0,#f4f5f2 40%,#b9bfba 70%,#e9ebe7);box-shadow:0 60px 120px -40px rgba(0,0,0,.9);color:#1d1712;padding:64px 70px}
+.club .sheen{position:absolute;inset:-50% auto -50% -60%;width:40%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.75),transparent);transform:skewX(-20deg)}
+.club .brand{font:800 54px/1 "Bricolage Grotesque";letter-spacing:.32em}
+.club .tier{position:absolute;right:70px;top:70px;font:800 30px/1 Figtree;letter-spacing:.2em}
+.club .lbl{margin-top:80px;font:700 28px/1 Figtree;letter-spacing:.2em}
+.club .pts{font:800 190px/1 "Bricolage Grotesque";letter-spacing:-.05em;margin-top:14px}
+.club .eq{font:700 34px/1 Figtree;margin-top:10px}
+.stars{position:absolute;left:0;right:0;top:1330px;display:flex;justify-content:center;gap:26px;z-index:10}
+.stars svg{width:110px;height:110px}
+.plus{position:absolute;right:80px;top:600px;padding:22px 34px;border-radius:999px;background:linear-gradient(135deg,var(--brand),var(--brand2));font:800 58px/1 "Bricolage Grotesque";z-index:12;opacity:0;box-shadow:0 30px 70px -20px rgba(240,78,35,.9)}
+
+/* end */
+.zero{position:absolute;left:0;right:0;top:420px;text-align:center;font:800 360px/1 "Bricolage Grotesque";letter-spacing:-.06em}
+.zero span{background:linear-gradient(110deg,var(--brand2),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+.zero small{display:block;font:800 76px/1 "Bricolage Grotesque";letter-spacing:-.03em;color:#fff;margin-top:6px}
+.own{position:absolute;left:0;right:0;top:960px;text-align:center;font:700 58px/1.2 Figtree;color:var(--mut)}
+.cta{position:absolute;left:150px;right:150px;top:1180px;padding:44px;border-radius:999px;text-align:center;background:linear-gradient(135deg,var(--brand),var(--brand2));font:800 64px/1 "Bricolage Grotesque";letter-spacing:-.02em;box-shadow:0 40px 90px -20px rgba(240,78,35,.9)}
+.url{position:absolute;left:0;right:0;top:1380px;text-align:center;font:800 76px/1 "Bricolage Grotesque";letter-spacing:-.02em}
+.mini{position:absolute;top:1530px;width:250px;border-radius:30px;border:6px solid #0b0b0b;box-shadow:0 30px 60px -20px rgba(0,0,0,.9)}
+.conf{position:absolute;width:20px;height:34px;border-radius:5px;z-index:25}
+</style>
+</head>
+<body>
+<div class="glow g1" id="g1"></div><div class="glow g2" id="g2"></div><div class="glow g3" id="g3"></div><div class="grain"></div>
+
+<!-- 1 · hook -->
+<div class="scene" id="s1">
+  <div class="big" id="pct"><span>0%</span></div>
+  <div class="strike" id="strike"></div>
+  <div class="tag" id="tag">comision la fiecare comandă</div>
+  <div class="apps" id="apps"><div>%</div><div>€</div><div>%</div><div>€</div></div>
+</div>
+
+<!-- 2–4 · client: logo, phone with the app -->
+<div class="scene" id="s2">
+  <img class="logo" id="logo" src="assets/logo-demo.svg" alt="">
+  <div class="phone" id="phone">
+    <div class="screen" id="screen">
+      <img id="sc-pop" src="assets/client-popup.jpg" alt="">
+      <img id="sc-menu" src="assets/menu-long.jpg" alt="">
+      <img id="sc-prod" src="assets/client-product.jpg" alt="">
+      <img id="sc-cart" src="assets/client-cart.jpg" alt="">
+      <img id="sc-track" src="assets/client-track.jpg" alt="">
+      <div class="tap" id="tap1"></div><div class="tap" id="tap2"></div>
+    </div>
+  </div>
+  <div class="card" id="n1" style="left:60px;top:1500px"><i style="background:#fff1e9">🛵</i><div><b>Curierul e pe drum</b><small>Sosește la 20:41</small></div></div>
+  <div class="card" id="n2" style="right:60px;top:760px"><i style="background:#e7f7f0">✅</i><div><b>Comandă acceptată</b><small>Gata în 35 de minute</small></div></div>
+</div>
+
+<!-- 5 · reception -->
+<div class="scene" id="s5">
+  <div class="laptop" id="laptop"><div class="win"><div class="bar"><i></i><i></i><i></i></div><div class="view"><img id="rec" src="assets/staff-reception.jpg" alt=""></div></div></div>
+  <div class="wave" id="w1"></div><div class="wave" id="w2"></div>
+  <div class="bell" id="bell"><svg viewBox="0 0 24 24" fill="none" stroke="#1d1712" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15zM10 20a2 2 0 0 0 4 0"/></svg></div>
+  <div class="stamp" id="stamp">✓ Acceptată · 40 min</div>
+</div>
+
+<!-- 6 · courier -->
+<div class="scene" id="s6">
+  <svg class="route" viewBox="0 0 1080 1920"><path id="routePath" d="M120 1700 C 260 1500, 120 1250, 330 1120 S 760 980, 820 760 S 960 520, 960 420" fill="none" stroke="#f6b13b" stroke-width="12" stroke-linecap="round" stroke-dasharray="1 0"/></svg>
+  <svg class="pin" id="pinA" style="left:120px;top:1700px" viewBox="0 0 24 24"><path d="M12 22s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12z" fill="#f04e23"/><circle cx="12" cy="10" r="3" fill="#fff"/></svg>
+  <svg class="pin" id="pinB" style="left:960px;top:420px" viewBox="0 0 24 24"><path d="M12 22s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12z" fill="#17b67c"/><circle cx="12" cy="10" r="3" fill="#fff"/></svg>
+  <div class="phone" id="phone2" style="left:240px;top:600px"><div class="screen"><img src="assets/staff-courier.jpg" style="opacity:1" alt=""><div class="tap" id="tap3"></div></div></div>
+  <div class="card" id="n3" style="right:50px;top:1560px"><i style="background:#e7f7f0">🏠</i><div><b>Livrată!</b><small>De încasat: 85 lei · card</small></div></div>
+</div>
+
+<!-- 7 · club -->
+<div class="scene" id="s7">
+  <div class="club" id="club"><div class="sheen" id="sheen"></div>
+    <div class="brand">SAVORO</div><div class="tier">MEMBRU ARGINT</div>
+    <div class="lbl">PUNCTE DISPONIBILE</div><div class="pts" id="pts">340</div><div class="eq">= reducere la comanda următoare</div>
+  </div>
+  <div class="plus" id="plus">+88 puncte</div>
+  <div class="stars" id="stars"></div>
+</div>
+
+<!-- 8 · end card -->
+<div class="scene" id="s8">
+  <div class="zero" id="zero"><span>0%</span><small>comision.</small></div>
+  <div class="own" id="own">Clienții sunt ai tăi.</div>
+  <div class="cta" id="cta">Încearcă demo-ul live</div>
+  <div class="url" id="url">vluradvertising.ro</div>
+  <img class="mini" id="m1" src="assets/client-popup.jpg" style="left:80px" alt="">
+  <img class="mini" id="m2" src="assets/client-track.jpg" style="left:415px" alt="">
+  <img class="mini" id="m3" src="assets/client-club.jpg" style="left:750px" alt="">
+</div>
+
+<div id="caps"></div>
+<div id="confetti"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const S = s => s * 1000;
+const OUT = "cubic-bezier(.16,1,.3,1)", POP = "cubic-bezier(.34,1.56,.64,1)";
+const hooks = [];
+function A(el, frames, start, dur, easing = OUT) {
+  return (typeof el === "string" ? $(el) : el).animate(frames, { delay: S(start), duration: S(dur), fill: "both", easing });
+}
+// a scene fades in at `a`, out at `b`
+function scene(id, a, b, f = .3) {
+  const d = b - a;
+  A(id, [{ opacity: 0, offset: 0 }, { opacity: 1, offset: f / d }, { opacity: 1, offset: 1 - f / d }, { opacity: 0, offset: 1 }], a, d, "linear");
+}
+// kinetic caption: words pop in one by one; *word* gets the gradient
+function cap(text, a, b, cls = "") {
+  const el = document.createElement("div"); el.className = "cap " + cls;
+  const [main, sub] = text.split("|");
+  main.trim().split(/\s+/).forEach((w, i) => {
+    const s = document.createElement("span"); s.className = "w" + (w.startsWith("*") ? " hl" : "");
+    s.textContent = w.replace(/\*/g, ""); el.appendChild(s);
+    A(s, [{ opacity: 0, transform: "translateY(50px) scale(.85)", filter: "blur(10px)" }, { opacity: 1, transform: "none", filter: "blur(0)" }], a + i * .08, .45, POP);
+  });
+  if (sub) { const d = document.createElement("div"); d.className = "sub"; d.textContent = sub; el.appendChild(d); A(d, [{ opacity: 0, transform: "translateY(20px)" }, { opacity: 1, transform: "none" }], a + .35, .5); }
+  $("caps").appendChild(el);
+  A(el, [{ opacity: 1, transform: "none" }, { opacity: 0, transform: "translateY(-40px)" }], b - .25, .25, "ease-in");
+}
+const lerp = (a, b, t) => a + (b - a) * t, clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const ease = t => 1 - Math.pow(1 - t, 3);
+
+// ---------- background drift ----------
+A("g1", [{ transform: "translate(0,0)" }, { transform: "translate(380px,700px)" }, { transform: "translate(80px,1100px)" }], 0, 32, "ease-in-out");
+A("g2", [{ transform: "translate(0,0)" }, { transform: "translate(-420px,-900px)" }, { transform: "translate(-100px,-300px)" }], 0, 32, "ease-in-out");
+A("g3", [{ transform: "scale(1)" }, { transform: "scale(1.6)" }, { transform: "scale(1)" }], 0, 32, "ease-in-out");
+
+// ---------- 1 · hook (0 – 3.2) ----------
+scene("s1", 0, 3.3, .15);
+cap("Încă dai *30%* din fiecare comandă?", .1, 3.2);
+A("pct", [{ transform: "scale(.4)", opacity: 0 }, { transform: "scale(1)", opacity: 1 }], .1, .6, POP);
+hooks.push(t => { $("pct").firstChild.textContent = Math.round(30 * ease(clamp((t - .1) / 1.2))) + "%"; });
+A("strike", [{ transform: "rotate(-8deg) scaleX(0)" }, { transform: "rotate(-8deg) scaleX(1)" }], 1.9, .35);
+A("tag", [{ opacity: 0, transform: "translateY(30px)" }, { opacity: 1, transform: "none" }], .7, .5);
+[...$("apps").children].forEach((d, i) => A(d, [{ opacity: 0, transform: "translateY(60px) rotate(-10deg)" }, { opacity: 1, transform: "none" }], .9 + i * .1, .5, POP));
+A("apps", [{ transform: "none", opacity: 1 }, { transform: "translateY(40px)", opacity: .25 }], 2.0, .4);
+
+// ---------- 2 · your own app (3.2 – 7.0) ----------
+scene("s2", 3.2, 15.2, .2);
+cap("Propria ta *aplicație* de comenzi.|Cu numele și logo-ul restaurantului tău.", 3.3, 7.0);
+A("logo", [{ transform: "translateY(380px) scale(0) rotate(-30deg)", opacity: 0 }, { transform: "translateY(380px) scale(1.15) rotate(6deg)", opacity: 1, offset: .35 },
+  { transform: "translateY(380px) scale(1) rotate(0)", opacity: 1, offset: .55 }, { transform: "translateY(1300px) scale(.4)", opacity: 0 }], 3.4, 1.9, "ease-in-out");
+// the phone rises, then shifts down a bit to make room for captions, and leaves at the end of scene 4
+A("phone", [
+  { transform: "translateY(1500px) rotate(8deg)", offset: 0 },
+  { transform: "translateY(60px) rotate(-2deg)", offset: .07 },
+  { transform: "translateY(40px) rotate(0deg)", offset: .12 },
+  { transform: "translateY(40px) rotate(0deg) scale(1)", offset: .62 },
+  { transform: "translateY(10px) rotate(0deg) scale(1.03)", offset: .66 },
+  { transform: "translateY(40px) rotate(0deg) scale(1)", offset: .95 },
+  { transform: "translateY(1600px) rotate(-6deg)", offset: 1 }], 4.6, 10.6, "ease-in-out");
+const show = (id, a, b) => A(id, [{ opacity: 0, offset: 0 }, { opacity: 1, offset: .2 / (b - a) }, { opacity: 1, offset: 1 - .01 }, { opacity: 0, offset: 1 }], a, b - a, "linear");
+$("sc-pop").style.opacity = 1;
+A("sc-pop", [{ opacity: 1 }, { opacity: 0 }], 7.0, .25);
+show("sc-menu", 7.0, 9.7);
+A("sc-menu", [{ transform: "translateY(0)" }, { transform: "translateY(-2350px)" }], 7.2, 2.4, "cubic-bezier(.45,0,.2,1)");
+show("sc-prod", 9.6, 10.75);
+show("sc-cart", 10.65, 11.7);
+$("sc-track").style.opacity = 0;
+A("sc-track", [{ opacity: 0 }, { opacity: 1 }], 11.6, .25);
+const tap = (id, x, y, at) => { $(id).style.left = x + "px"; $(id).style.top = y + "px";
+  A(id, [{ opacity: 0, transform: "scale(.4)" }, { opacity: 1, transform: "scale(1)", offset: .4 }, { opacity: 0, transform: "scale(1.5)" }], at, .55); };
+tap("tap1", 367, 1146, 10.2);   // "Adaugă în coș"
+tap("tap2", 282, 1153, 11.25);  // "Trimite comanda"
+cap("Clienții comandă din *două* atingeri.|Poze mari, coș rapid, plată la livrare.", 7.1, 11.5);
+cap("Și urmăresc comanda *live*, până la ușă.", 11.6, 15.1);
+A("n2", [{ opacity: 0, transform: "translateX(200px) scale(.8)" }, { opacity: 1, transform: "none" }], 12.0, .5, POP);
+A("n1", [{ opacity: 0, transform: "translateX(-200px) scale(.8)" }, { opacity: 1, transform: "none" }], 13.2, .5, POP);
+// confetti when the order is sent
+const conf = [];
+for (let i = 0; i < 70; i++) {
+  const d = document.createElement("div"); d.className = "conf";
+  d.style.background = ["#f04e23", "#ff8a3d", "#f6b13b", "#17b67c", "#fff"][i % 5];
+  $("confetti").appendChild(d);
+  const r = Math.sin(i * 12.9898) * 43758.5453, rnd = r - Math.floor(r), r2 = (Math.sin(i * 78.233) * 43758.5453) % 1;
+  conf.push({ d, ang: -Math.PI / 2 + (rnd - .5) * 2.2, v: 900 + Math.abs(r2) * 900, spin: (rnd - .5) * 1400 });
+}
+hooks.push(t => {
+  const k = t - 11.65;
+  conf.forEach(c => {
+    if (k < 0 || k > 2.2) { c.d.style.opacity = 0; return; }
+    const x = 540 + Math.cos(c.ang) * c.v * k, y = 1100 + Math.sin(c.ang) * c.v * k + 1400 * k * k;
+    c.d.style.opacity = clamp(2.2 - k); c.d.style.transform = `translate(${x}px,${y}px) rotate(${c.spin * k}deg)`;
+  });
+});
+
+// ---------- 5 · reception (15 – 19) ----------
+scene("s5", 15.0, 19.1, .25);
+cap("La recepție, soneria *sună* imediat.", 15.1, 17.2);
+cap("Un click și comanda e *acceptată*.", 17.2, 19.0);
+A("laptop", [{ transform: "perspective(1800px) rotateX(18deg) translateY(300px) scale(.8)", opacity: 0 }, { transform: "perspective(1800px) rotateX(0) translateY(0) scale(1)", opacity: 1 }], 15.0, .8);
+A("rec", [{ transform: "scale(1)" }, { transform: "scale(1)", offset: .25 }, { transform: "translate(-640px,-200px) scale(1.75)" }], 15.3, 2.4, "cubic-bezier(.65,0,.35,1)");
+A("bell", [{ transform: "scale(0)" }, { transform: "scale(1)" }], 15.4, .45, POP);
+hooks.push(t => { const k = t - 15.8; $("bell").style.rotate = k > 0 && k < 1.6 ? `${Math.sin(k * 38) * 16 * (1 - k / 1.6)}deg` : "0deg"; });
+A("w1", [{ opacity: .9, transform: "scale(.6)" }, { opacity: 0, transform: "scale(2.4)" }], 15.8, .9);
+A("w2", [{ opacity: .9, transform: "scale(.6)" }, { opacity: 0, transform: "scale(2.4)" }], 16.4, .9);
+A("bell", [{ opacity: 1 }, { opacity: 0 }], 17.3, .15);
+A("stamp", [{ opacity: 0, transform: "scale(1.8) rotate(-6deg)" }, { opacity: 1, transform: "scale(1) rotate(-3deg)" }], 17.4, .4, POP);
+
+// ---------- 6 · courier (19 – 22.5) ----------
+scene("s6", 19.0, 22.6, .25);
+cap("Curierul o *preia*, navighează și livrează.", 19.1, 22.5);
+const rp = $("routePath"), len = rp.getTotalLength(); rp.style.strokeDasharray = `${len}`;
+A(rp, [{ strokeDashoffset: len }, { strokeDashoffset: 0 }], 19.2, 2.6, "ease-in-out");
+A("pinA", [{ transform: "translateY(-80px)", opacity: 0 }, { transform: "none", opacity: 1 }], 19.2, .4, POP);
+A("pinB", [{ transform: "translateY(-80px) scale(.5)", opacity: 0 }, { transform: "none", opacity: 1 }], 21.6, .45, POP);
+A("phone2", [{ transform: "translateX(900px) rotate(12deg)" }, { transform: "rotate(-3deg) scale(.92)" }], 19.1, .8);
+tap("tap3", 282, 703, 20.3);  // "Am preluat comanda"
+A("n3", [{ opacity: 0, transform: "translateY(80px) scale(.8)" }, { opacity: 1, transform: "none" }], 21.6, .5, POP);
+
+// ---------- 7 · loyalty (22.5 – 26.5) ----------
+scene("s7", 22.5, 26.6, .25);
+cap("Puncte, niveluri și *cadouri*.|Clienții se întorc.", 22.6, 26.5);
+A("club", [{ transform: "perspective(1600px) rotateY(-40deg) rotateX(12deg) scale(.7)", opacity: 0 }, { transform: "perspective(1600px) rotateY(-6deg) rotateX(4deg)", opacity: 1 },
+  ], 22.6, .9);
+A("sheen", [{ transform: "skewX(-20deg) translateX(0)" }, { transform: "skewX(-20deg) translateX(1100px)" }], 23.3, 1.1, "ease-in-out");
+A("plus", [{ opacity: 0, transform: "translateY(40px) scale(.6)" }, { opacity: 1, transform: "none" }], 23.9, .45, POP);
+hooks.push(t => { $("pts").textContent = Math.round(340 + 88 * ease(clamp((t - 24.0) / .9))); });
+const STAR = '<svg viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z" fill="FILL"/></svg>';
+for (let i = 0; i < 6; i++) {
+  const w = document.createElement("div"); w.innerHTML = STAR.replace("FILL", i < 4 ? "#f6b13b" : "#3a2d24"); $("stars").appendChild(w);
+  A(w, [{ opacity: 0, transform: "scale(0)" }, { opacity: 1, transform: "scale(1)" }], 23.2 + i * .08, .4, POP);
+  if (i === 4) { const on = document.createElement("div"); on.style.cssText = "position:absolute"; on.innerHTML = STAR.replace("FILL", "#f6b13b");
+    w.style.position = "relative"; w.appendChild(on); on.style.inset = "0";
+    A(on, [{ opacity: 0, transform: "scale(2.2) rotate(-90deg)" }, { opacity: 1, transform: "scale(1) rotate(0)" }], 24.6, .5, POP); }
+}
+
+// ---------- 8 · end card (26.5 – 32) ----------
+scene("s8", 26.5, 32.4, .25);
+A("zero", [{ opacity: 0, transform: "scale(.5)" }, { opacity: 1, transform: "none" }], 26.6, .6, POP);
+A("own", [{ opacity: 0, transform: "translateY(30px)" }, { opacity: 1, transform: "none" }], 27.6, .5);
+A("cta", [{ opacity: 0, transform: "translateY(60px) scale(.9)" }, { opacity: 1, transform: "none" }], 28.9, .55, POP);
+hooks.push(t => { const k = t - 29.6; $("cta").style.scale = k > 0 ? String(1 + Math.sin(k * 5) * .025) : "1"; });
+A("url", [{ opacity: 0, transform: "translateY(30px)" }, { opacity: 1, transform: "none" }], 29.3, .5);
+["m1", "m2", "m3"].forEach((m, i) => A(m, [{ opacity: 0, transform: `translateY(300px) rotate(${(i - 1) * 8}deg)` }, { opacity: 1, transform: `translateY(0) rotate(${(i - 1) * 5}deg)` }], 29.6 + i * .12, .7, POP));
+
+// ---------- frame control ----------
+const anims = document.getAnimations();
+anims.forEach(a => a.pause());
+window.DURATION = 32.4;
+window.render = t => { anims.forEach(a => (a.currentTime = S(t))); hooks.forEach(h => h(t)); };
+window.render(0);
+</script>
+</body>
+</html>

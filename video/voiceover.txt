@@ -1,0 +1,14 @@
+VOICE OVER · video promo aplicație de comenzi (9:16, 32 s)
+ElevenLabs: voce masculină sau feminină energică, română; Stability ~40, Similarity ~75, Style ~30, Speed 1.05
+
+[0:00 – 0:03]  Încă dai treizeci la sută din fiecare comandă?
+[0:03 – 0:07]  Ia-ți propria aplicație de comenzi. Cu numele și logo-ul restaurantului tău.
+[0:07 – 0:11]  Clienții comandă din două atingeri. Poze mari, coș rapid, plată la livrare.
+[0:11 – 0:15]  Și urmăresc comanda live, până la ușă.
+[0:15 – 0:19]  La recepție, soneria sună imediat. Un click, și comanda e acceptată.
+[0:19 – 0:22]  Curierul o preia, navighează și livrează.
+[0:22 – 0:26]  Puncte, niveluri și cadouri. Clienții se întorc.
+[0:26 – 0:32]  Zero comision. Clienții sunt ai tăi. Încearcă demo-ul pe vlur advertising punct ro.
+
+Text continuu (de lipit în ElevenLabs):
+Încă dai treizeci la sută din fiecare comandă? <break time="0.4s" /> Ia-ți propria aplicație de comenzi. Cu numele și logo-ul restaurantului tău. <break time="0.3s" /> Clienții comandă din două atingeri. Poze mari, coș rapid, plată la livrare. <break time="0.3s" /> Și urmăresc comanda live, până la ușă. <break time="0.4s" /> La recepție, soneria sună imediat. Un click, și comanda e acceptată. <break time="0.3s" /> Curierul o preia, navighează și livrează. <break time="0.3s" /> Puncte, niveluri și cadouri. Clienții se întorc. <break time="0.5s" /> Zero comision. Clienții sunt ai tăi. <break time="0.3s" /> Încearcă demo-ul pe vlur advertising punct ro.
