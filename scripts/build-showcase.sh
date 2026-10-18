@@ -16,5 +16,5 @@ rm -f "$OUT/app/_redirects"
 sed -i 's|<head>|<head>\n    <meta name="robots" content="noindex">|' "$OUT/app/index.html"
 cp showcase/index.html "$OUT/"
 cp -r showcase/img "$OUT/img"
-(cd showcase-dist && zip -qr aplicatie-comenzi-restaurant.zip aplicatie-comenzi-restaurant)
-du -sh "$OUT" showcase-dist/aplicatie-comenzi-restaurant.zip
+(cd showcase-dist && zip -qr aplicatie-comenzi-restaurant.zip aplicatie-comenzi-restaurant && tar -czf aplicatie-comenzi-restaurant.tar.gz aplicatie-comenzi-restaurant)
+du -sh "$OUT" showcase-dist/*.zip showcase-dist/*.tar.gz
