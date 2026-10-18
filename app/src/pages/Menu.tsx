@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import type { Banner, CartLine, Category, Item, Promo, Settings } from "../lib/types";
 import { ALLERGENS, MEAT, TAGS, imgUrl, lei, rememberOrder } from "../lib/format";
@@ -162,9 +162,10 @@ export default function Menu({ source }: { source?: string }) {
     }));
   }, [customer?.id]);
   // ?cart=1 opens the cart (used by "comandă din nou" and the bottom bar)
+  const rloc = useLocation();
   useEffect(() => {
-    if (new URLSearchParams(location.search).get("cart") === "1") { setCartOpen(true); history.replaceState(null, "", location.pathname); }
-  }, []);
+    if (new URLSearchParams(rloc.search).get("cart") === "1") { setCartOpen(true); nav(rloc.pathname, { replace: true }); }
+  }, [rloc.search]);
 
   // hero carousel: auto-advance, pause on touch
   const shownBanners = banners.slice(0, 4);
@@ -253,7 +254,7 @@ export default function Menu({ source }: { source?: string }) {
       p: {
         name: form.name, phone: form.phone, email: form.email, address: form.address, mode, payment: pay,
         note: orderNote, code: code?.code || "", use_points: ptsVal > 0,
-        source: source || new URLSearchParams(location.search).get("s") || "site",
+        source: source || new URLSearchParams(rloc.search).get("s") || "site",
         items: validCart.map(l => ({ id: l.id, qty: l.qty, vi: l.vi, extras: l.extras, note: l.note, promo: l.promo })),
       },
     });

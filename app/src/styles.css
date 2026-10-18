@@ -817,3 +817,9 @@ h1,h2,h3,h4{margin:0;font-weight:700;text-wrap:balance}
 .brand .wm span{font-size:12px;letter-spacing:.32em;text-transform:uppercase;font-family:var(--f-body);margin-top:3px}
 .sf-brand .wm{font-size:18px}
 @media (max-width:860px){.brand .wm{font-size:18px}.tb-hello small{display:none}.tb-hello{flex:1}}
+
+/* ---------- showcase build ---------- */
+.demo-bar{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:90;display:flex;align-items:center;gap:8px;white-space:nowrap;padding:5px 5px 5px 12px;border-radius:999px;background:#111;color:#fff;font:500 11.5px/1.2 Figtree,system-ui,sans-serif;box-shadow:0 8px 28px rgba(0,0,0,.25)}
+.demo-bar b{color:#ffcf5a;letter-spacing:.08em;text-transform:uppercase;font-size:10.5px;margin-right:4px}
+.demo-bar button{flex:none;width:20px;height:20px;border-radius:50%;border:0;background:rgba(255,255,255,.14);color:#fff;font-size:13px;line-height:1;cursor:pointer;padding:0}
+@media (min-width:900px){.demo-bar{bottom:18px}}
