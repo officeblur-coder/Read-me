@@ -99,7 +99,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .mobile-menu li a{display:block;padding:9px 0;font-family:var(--display);font-size:1.6rem;text-decoration:none}
 .mobile-menu li a small{display:none}
 
-/* home hero: invitation + three arches */
+/* home hero: invitation + three framed prints */
 .hero{padding-block:clamp(40px,6vw,80px) clamp(60px,8vw,110px);text-align:center;position:relative;overflow:hidden}
 .hero::before{content:"";position:absolute;left:50%;top:-30%;width:120vw;height:90%;transform:translateX(-50%);background:radial-gradient(closest-side,var(--blush),transparent);opacity:.7;z-index:-1}
 .hero h1{margin:0 auto 26px}
@@ -153,7 +153,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .head p{margin:0}
 .head .more{margin-top:18px}
 
-/* halls: four arches in a row */
+/* halls: four framed prints in a row */
 .halls{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(16px,2.4vw,30px)}
 .hall-card{text-align:center;text-decoration:none;display:block}
 .hall-card .arch{aspect-ratio:3/4.2;animation:none}
