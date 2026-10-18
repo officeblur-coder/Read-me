@@ -194,7 +194,7 @@ def home():
 <section class="hero"><div class="wrap">
   <p class="label">Târgu Mureș · str. Gheorghe Doja 155</p>
   <h1><span class="big">Evenimente</span><span class="script">care rămân</span><span class="sub-h">Nunți, botezuri și evenimente în Târgu Mureș</span></h1>
-  <div class="arches">
+  <div class="frames">
     {arch(p, "g03", "Mireasă în Grădina Emerald", sizes="(max-width: 600px) 30vw, 320px", eager=True)}
     <figure class="arch mid"><video muted loop playsinline autoplay preload="none" poster="{p}media/hero-poster.webp" data-lg="{p}media/hero.mp4" data-sm="{p}media/hero-sm.mp4" aria-label="Filmare din Sapphire Ballroom"></video></figure>
     {arch(p, "dance-1", "Dansul mirilor în fum greu", sizes="(max-width: 600px) 30vw, 320px", eager=True)}
