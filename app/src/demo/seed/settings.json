@@ -1,1 +1,1 @@
-[{"id":1,"accepting_orders":true,"delivery_fee":10.00,"free_delivery_over":100.00,"min_order":0.00,"points_per_leu":1,"stars_for_gift":6,"gift_item_id":"papanas","site_url":"https://lyrago.netlify.app","email_from":"Lyra <onboarding@resend.dev>","review_url":"https://g.page/r/Cb92kT0SuXLSEAE/review"}]
+[{"id": 1, "accepting_orders": true, "delivery_fee": 10.0, "free_delivery_over": 100.0, "min_order": 0.0, "points_per_leu": 1, "stars_for_gift": 6, "gift_item_id": "tiramisu", "site_url": "https://savoro.ro", "email_from": "Savoro <demo@savoro.ro>", "review_url": null}]
