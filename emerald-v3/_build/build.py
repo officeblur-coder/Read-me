@@ -191,16 +191,18 @@ def home():
         rail_names = ["g03", "dance-1", "g16", "sapphire-6", "g13", "terasa-2", "cake-1", "g10", "gradina-8", "g21", "hotel-2", "g01"]
         rail = "".join(f'<button type="button" data-full="{p}img/{n}.webp" data-group="home" data-alt="{e(alts.get(n, "Eveniment la Emerald"))}" aria-label="Mărește: {e(alts.get(n, "Eveniment la Emerald"))}">{img(p, n, alts.get(n, "Eveniment la Emerald"), sizes="480px")}</button>' for n in rail_names)
         return f'''
-<section class="hero"><div class="wrap">
-  <p class="label">Târgu Mureș · str. Gheorghe Doja 155</p>
-  <h1><span class="big">Evenimente</span><span class="script">care rămân</span><span class="sub-h">Nunți, botezuri și evenimente în Târgu Mureș</span></h1>
-  <div class="frames">
-    {arch(p, "g03", "Mireasă în Grădina Emerald", sizes="(max-width: 600px) 30vw, 320px", eager=True)}
-    <figure class="arch mid"><video muted loop playsinline autoplay preload="none" poster="{p}media/hero-poster.webp" data-lg="{p}media/hero.mp4" data-sm="{p}media/hero-sm.mp4" aria-label="Filmare din Sapphire Ballroom"></video></figure>
-    {arch(p, "dance-1", "Dansul mirilor în fum greu", sizes="(max-width: 600px) 30vw, 320px", eager=True)}
+<section class="hero">
+  {img(p, "g03", "Mireasă cu voal în Grădina Emerald, Târgu Mureș", sizes="100vw", eager=True)}
+  <div class="wrap">
+    <p class="label">Târgu Mureș · str. Gheorghe Doja 155</p>
+    <h1><span class="big">Evenimente</span><span class="script">care rămân</span><span class="sub-h">Nunți, botezuri și evenimente în Târgu Mureș</span></h1>
+    <div class="actions"><a class="btn btn-ivory" href="{p}contact/">Programează o vizionare</a><a class="btn btn-light" href="tel:{PHONE_E}">{PHONE_H}</a></div>
   </div>
+</section>
+
+<section class="hero-after"><div class="wrap">
+  {ORN}
   <p class="intro">Patru saloane de la 120 la 550 de locuri, o terasă, o grădină pentru fotografii și un hotel, toate în aceeași curte. Pachetul all inclusive cuprinde meniul, băuturile, tortul și decorul.</p>
-  <div class="actions" style="justify-content:center"><a class="btn btn-green" href="{p}contact/">Programează o vizionare</a><a class="btn btn-line" href="tel:{PHONE_E}">{PHONE_H}</a></div>
   <div class="hero-facts"><span>4 saloane</span><span>Până la 550 de invitați</span><span>Terasă & grădină</span><span>Boutique hotel</span></div>
 </div></section>
 
