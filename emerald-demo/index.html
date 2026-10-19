@@ -1,0 +1,1424 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Emerald Demo</title>
+<meta name="description" content="Emerald Demo: aplicația de gestiune a evenimentelor pentru Emerald Luxury Events.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600&family=Manrope:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: graphite brand sidebar + calm working area. The event sheet and the seating plan are the heart of the product. */
+:root {
+  --ink: #121416; --ink-2: #1B1E21; --chrome: #C8CDD1; --chrome-dim: #858C92;
+  --bg: #F3F4F3; --surface: #FFFFFF; --surface-2: #F7F8F7; --fg: #1A1D1F; --muted: #69706C; --line: #E2E5E3;
+  --accent: #0E6B50; --accent-fg: #FFFFFF; --accent-soft: #E2F0EA;
+  --veg: #4E7D22; --veg-soft: #EAF3DF;
+  --amber: #A86A12; --amber-soft: #FBF0DC; --slate: #4F6480; --slate-soft: #E8EDF3; --danger: #B42318; --danger-soft: #FCEAE8;
+  --wa: #1F8F4E;
+  --shadow: 0 1px 2px rgba(18,20,22,.05), 0 4px 16px rgba(18,20,22,.04);
+  --font-display: "Josefin Sans", "Futura", "Century Gothic", system-ui, sans-serif;
+  --font-body: "Manrope", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ink: #0B0C0D; --ink-2: #15181A; --chrome: #C8CDD1; --chrome-dim: #7D858B;
+    --bg: #101213; --surface: #171A1C; --surface-2: #1C2022; --fg: #E7EAE8; --muted: #9AA19D; --line: #2A2F2F;
+    --accent: #3DB389; --accent-fg: #0B0C0D; --accent-soft: #15322A; --veg: #93C35F; --veg-soft: #22301A;
+    --amber: #E3AA4D; --amber-soft: #382B15; --slate: #A3B4C8; --slate-soft: #1F2731; --danger: #F2806F; --danger-soft: #3A1B17;
+    --wa: #3CC274; --shadow: 0 1px 2px rgba(0,0,0,.3); color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --ink: #0B0C0D; --ink-2: #15181A; --chrome: #C8CDD1; --chrome-dim: #7D858B;
+  --bg: #101213; --surface: #171A1C; --surface-2: #1C2022; --fg: #E7EAE8; --muted: #9AA19D; --line: #2A2F2F;
+  --accent: #3DB389; --accent-fg: #0B0C0D; --accent-soft: #15322A; --veg: #93C35F; --veg-soft: #22301A;
+  --amber: #E3AA4D; --amber-soft: #382B15; --slate: #A3B4C8; --slate-soft: #1F2731; --danger: #F2806F; --danger-soft: #3A1B17;
+  --wa: #3CC274; --shadow: 0 1px 2px rgba(0,0,0,.3); color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 500 14px/1.5 var(--font-body); -webkit-font-smoothing: antialiased; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.num { font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+
+.app { display: grid; grid-template-columns: 244px minmax(0, 1fr); min-height: 100%; }
+.side { background: var(--ink); color: var(--chrome); display: flex; flex-direction: column; gap: 26px; padding: 28px 16px 18px; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+.brand { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 4px 0; }
+.brand svg { width: 38px; height: 30px; flex: none; }
+.word { font-family: var(--font-display); font-weight: 300; font-size: 23px; letter-spacing: .32em; margin-right: -.32em; color: #E9ECEE; line-height: 1; }
+.word-sub { font-family: var(--font-display); font-weight: 400; font-size: 9.5px; letter-spacing: .42em; margin-right: -.42em; color: var(--chrome-dim); }
+.nav { display: flex; flex-direction: column; gap: 2px; }
+.nav-label { font-family: var(--font-display); font-size: 10.5px; letter-spacing: .2em; text-transform: uppercase; color: var(--chrome-dim); padding: 0 12px 8px; }
+.nav button { display: flex; align-items: center; gap: 12px; width: 100%; background: none; border: 0; color: var(--chrome); padding: 9px 12px; border-radius: 8px; text-align: left; font-weight: 500; transition: background .15s, color .15s; }
+.nav button:hover { background: var(--ink-2); color: #fff; }
+.nav button.on { background: var(--ink-2); color: #fff; box-shadow: inset 0 0 0 1px #2A2F33; }
+.nav button svg { width: 18px; height: 18px; flex: none; opacity: .85; }
+.nav .count { margin-left: auto; font-size: 11.5px; background: #2A2F33; color: #E9ECEE; border-radius: 999px; padding: 1px 8px; }
+.side-foot { margin-top: auto; display: flex; flex-direction: column; gap: 12px; padding: 12px; border-top: 1px solid #23272A; }
+.who { display: flex; align-items: center; gap: 10px; }
+.avatar { width: 32px; height: 32px; border-radius: 50%; background: #2A2F33; color: #E9ECEE; display: grid; place-items: center; font-size: 12px; font-weight: 600; flex: none; }
+.who b { display: block; color: #E9ECEE; font-weight: 600; font-size: 13px; }
+.who span { font-size: 12px; color: var(--chrome-dim); }
+.reset { background: none; border: 1px solid #2A2F33; color: var(--chrome-dim); border-radius: 8px; padding: 6px 10px; font-size: 12px; }
+.reset:hover { color: #fff; }
+
+.main { min-width: 0; display: flex; flex-direction: column; }
+.top { display: flex; align-items: center; gap: 12px; padding: 14px 32px; border-bottom: 1px solid var(--line); background: var(--surface); position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; }
+.menu-btn { display: none; background: none; border: 1px solid var(--line); border-radius: 8px; width: 36px; height: 36px; place-items: center; }
+.search { flex: 1; max-width: 420px; display: flex; align-items: center; gap: 8px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 0 12px; height: 38px; }
+.search input { border: 0; background: none; outline: none; width: 100%; min-width: 0; }
+.search svg { width: 16px; height: 16px; color: var(--muted); flex: none; }
+.top-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.demo-badge { font-size: 11.5px; font-weight: 600; color: var(--amber); background: var(--amber-soft); padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+.role { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--muted); }
+select, .input { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; height: 38px; padding: 0 10px; color: var(--fg); min-width: 0; }
+.role select { font-weight: 600; }
+textarea.input { height: auto; padding: 9px 10px; resize: vertical; }
+
+.page { padding: 28px 32px 56px; display: flex; flex-direction: column; gap: 22px; max-width: 1380px; width: 100%; }
+.head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.eyebrow { font-family: var(--font-display); font-size: 11.5px; letter-spacing: .22em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
+h1 { font-family: var(--font-display); font-weight: 400; font-size: 30px; letter-spacing: .01em; line-height: 1.15; margin: 0; text-wrap: balance; }
+h2 { font-size: 15px; font-weight: 700; margin: 0; }
+.sub { color: var(--muted); margin: 4px 0 0; }
+.small { font-size: 12.5px; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--shadow); min-width: 0; }
+.card-h { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 15px 20px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.card-b { padding: 16px 20px; }
+.stack { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.rowflex { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.link { background: none; border: 0; color: var(--accent); font-weight: 600; font-size: 13px; padding: 0; text-align: left; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 38px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); font-weight: 600; font-size: 13.5px; white-space: nowrap; text-decoration: none; transition: background .15s, border-color .15s, filter .15s; }
+.btn:hover { background: var(--surface-2); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+.btn.primary:hover { filter: brightness(1.07); }
+.btn.wa { background: var(--wa); border-color: var(--wa); color: #fff; }
+.btn.wa:hover { filter: brightness(1.07); }
+.btn.danger { color: var(--danger); }
+.btn.solid-danger { background: var(--danger); border-color: var(--danger); color: #fff; }
+.btn.sm { height: 30px; padding: 0 10px; font-size: 12.5px; }
+.btn svg { width: 16px; height: 16px; flex: none; }
+.btn[disabled] { opacity: .45; cursor: not-allowed; }
+.x { background: none; border: 0; font-size: 20px; line-height: 1; color: var(--muted); padding: 2px 6px; border-radius: 6px; }
+.x:hover { color: var(--danger); background: var(--danger-soft); }
+
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.kpi { padding: 18px 20px; display: flex; flex-direction: column; gap: 6px; }
+.kpi .label { color: var(--muted); font-size: 12.5px; font-weight: 600; }
+.kpi .value { font-size: 25px; font-weight: 700; letter-spacing: -.01em; line-height: 1.2; }
+.kpi .kpi-note { font-size: 12.5px; color: var(--muted); }
+.kpi .kpi-note b { color: var(--fg); font-weight: 600; }
+.grid-2 { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: start; }
+
+.side-panel .chip { white-space: normal; }
+.chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+.chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.chip.ok { color: var(--accent); background: var(--accent-soft); }
+.chip.warn { color: var(--amber); background: var(--amber-soft); }
+.chip.info { color: var(--slate); background: var(--slate-soft); }
+.chip.bad { color: var(--danger); background: var(--danger-soft); }
+.chip.veg { color: var(--veg); background: var(--veg-soft); }
+.chip.plain { color: var(--muted); background: var(--surface-2); border: 1px solid var(--line); }
+.chip.plain::before, .chip.nodot::before { display: none; }
+
+.rows { display: flex; flex-direction: column; }
+.row { display: grid; grid-template-columns: 78px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 13px 20px; border: 0; border-top: 1px solid var(--line); background: none; text-align: left; width: 100%; }
+.row:first-child { border-top: 0; }
+.row:hover { background: var(--surface-2); }
+.when { display: flex; flex-direction: column; line-height: 1.25; }
+.when b { font-size: 13px; }
+.when span { font-size: 12px; color: var(--muted); }
+.t { font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
+.row .t, .row .m { white-space: nowrap; }
+.m { color: var(--muted); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; }
+.empty { padding: 26px 20px; color: var(--muted); }
+
+.alert { display: grid; grid-template-columns: 4px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 13px 20px 13px 0; border-top: 1px solid var(--line); }
+.alert:first-child { border-top: 0; }
+.alert .bar { align-self: stretch; border-radius: 0 3px 3px 0; }
+.alert.bad .bar { background: var(--danger); } .alert.warn .bar { background: var(--amber); } .alert.info .bar { background: var(--slate); }
+.alert .t { font-size: 13.5px; }
+
+.sat { display: grid; grid-template-columns: 96px repeat(8, minmax(0, 1fr)); gap: 6px; align-items: center; font-size: 12.5px; }
+.sat .h { color: var(--muted); font-size: 11px; text-align: center; }
+.sat .n { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sat .c { height: 26px; border-radius: 6px; background: var(--surface-2); border: 1px dashed var(--line); }
+.sat .c.ok { background: var(--accent); border: 0; } .sat .c.warn { background: var(--amber-soft); border: 1px solid var(--amber); }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); align-items: center; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+
+.cal-wrap { overflow-x: auto; }
+.cal { display: grid; grid-template-columns: 160px repeat(7, minmax(128px, 1fr)); min-width: 1060px; }
+.cal > div { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); min-width: 0; }
+.cal > div:nth-child(8n) { border-right: 0; }
+.cal .dh { padding: 12px; font-size: 12px; color: var(--muted); background: var(--surface-2); }
+.cal .dh b { display: block; font-size: 17px; color: var(--fg); font-weight: 700; }
+.cal .dh.today { background: var(--accent-soft); } .cal .dh.today b { color: var(--accent); }
+.cal .hall { padding: 14px 12px; display: flex; flex-direction: column; gap: 2px; }
+.cal .hall b { font-size: 13.5px; } .cal .hall span { font-size: 12px; color: var(--muted); }
+.cal .cell { padding: 8px; display: flex; flex-direction: column; gap: 6px; min-height: 104px; }
+.cal .cell.today { background: color-mix(in srgb, var(--accent-soft) 40%, transparent); }
+.ev { text-align: left; border: 0; border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; font-size: 12px; line-height: 1.35; width: 100%; color: var(--fg); transition: transform .15s; }
+.ev:hover { transform: translateY(-1px); }
+.ev b { font-size: 12.5px; font-weight: 700; }
+.ev span { color: var(--muted); }
+.ev.confirmat { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
+.ev.optiune { background: var(--amber-soft); box-shadow: inset 3px 0 0 var(--amber); }
+.free { flex: 1; min-height: 40px; border: 1px dashed var(--line); border-radius: 8px; background: none; color: var(--muted); font-size: 12px; opacity: .45; transition: opacity .15s; }
+.cell:hover .free, .free:focus-visible { opacity: 1; }
+@media (hover: none) { .free { opacity: .7; } }
+
+.toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.seg { display: inline-flex; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 3px; gap: 2px; flex-wrap: wrap; align-self: flex-start; }
+.seg button { border: 0; background: none; padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 13px; color: var(--muted); }
+.seg button.on { background: var(--accent-soft); color: var(--accent); }
+
+.tbl-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; min-width: 820px; }
+th { text-align: left; font-size: 11.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; padding: 12px 16px; border-bottom: 1px solid var(--line); background: var(--surface-2); }
+td { padding: 13px 16px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+tr:last-child td { border-bottom: 0; }
+tbody tr.click { cursor: pointer; } tbody tr.click:hover td { background: var(--surface-2); }
+.right { text-align: right; }
+.progress { height: 6px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); overflow: hidden; min-width: 80px; }
+.progress i { display: block; height: 100%; background: var(--accent); }
+
+.back { background: none; border: 0; color: var(--muted); font-weight: 600; padding: 0; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
+.back svg { width: 16px; height: 16px; }
+.back:hover { color: var(--fg); }
+.meta { display: flex; flex-wrap: wrap; gap: 8px 22px; color: var(--muted); font-size: 13.5px; margin-top: 10px; }
+.meta b { color: var(--fg); font-weight: 600; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.tabs button { border: 0; background: none; padding: 10px 14px; font-weight: 600; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+.tabs button.on { color: var(--fg); border-bottom-color: var(--accent); }
+.kv { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 10px 16px; font-size: 13.5px; margin: 0; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+.counts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.count-box { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; background: var(--surface-2); min-width: 0; }
+.count-box b { display: block; font-size: 20px; font-weight: 700; }
+.count-box span { font-size: 12px; color: var(--muted); }
+.contact-line { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.contact-line .val { font-weight: 600; overflow-wrap: anywhere; min-width: 0; }
+
+.variants { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.variant { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 10px 12px; text-align: left; display: flex; flex-direction: column; gap: 2px; }
+.variant b { font-size: 13px; } .variant span { font-size: 12px; color: var(--muted); }
+.variant.on { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent); }
+.items { display: flex; flex-direction: column; }
+.item { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 9px 20px; border-top: 1px solid var(--line); }
+.item:first-child { border-top: 0; }
+.item .i { color: var(--muted); font-size: 12px; font-weight: 700; }
+.item .name { font-weight: 600; font-size: 13.5px; min-width: 0; }
+.item .from { margin-left: 8px; }
+.item .tools { display: flex; gap: 4px; align-items: center; }
+.item input.input { width: 100%; height: 34px; }
+.price-box { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; align-items: end; }
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.field label, .lbl { font-size: 12.5px; font-weight: 600; color: var(--muted); }
+.field .input, .field select, .field textarea { width: 100%; }
+.big { font-size: 22px; font-weight: 700; line-height: 1.2; }
+.strike { text-decoration: line-through; color: var(--muted); font-weight: 500; font-size: 14px; margin-left: 6px; }
+
+.note { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; padding: 14px 20px; border-top: 1px solid var(--line); }
+.note:first-child { border-top: 0; }
+.note p { margin: 6px 0 8px; }
+.toggle { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 600; color: var(--muted); display: inline-flex; gap: 6px; align-items: center; }
+.toggle.on { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.checks { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; }
+.checks label { display: inline-flex; gap: 6px; align-items: center; font-weight: 600; }
+
+.plan-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; align-items: start; }
+.plan { width: 100%; height: auto; display: block; background: var(--surface-2); border-radius: 8px; user-select: none; -webkit-user-select: none; }
+.plan.edit { touch-action: none; }
+.plan text { font-family: var(--font-body); }
+.plan .tbl { cursor: pointer; }
+.plan.edit .tbl { cursor: grab; }
+.side-panel { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.adds { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.adds .btn { padding: 0 6px; }
+.guest { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); font-size: 13px; }
+.guest:first-child { border-top: 0; }
+.guest .gn { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.banner { border-radius: var(--r); padding: 14px 18px; display: flex; gap: 14px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.banner.ok { background: var(--accent-soft); } .banner.warn { background: var(--amber-soft); }
+.banner svg { width: 18px; height: 18px; vertical-align: -3px; margin-right: 6px; }
+
+.client-top { background: var(--ink); color: var(--chrome); padding: 18px 22px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; border-radius: var(--r); }
+.client-top .brand { flex-direction: row; gap: 14px; padding: 0; }
+.client-top .brand-text { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.client-top .word { font-size: 18px; }
+.client-mode .side, .client-mode .top { display: none; }
+.client-mode.app { grid-template-columns: minmax(0, 1fr); }
+.exit { background: none; border: 1px solid #2A2F33; color: var(--chrome); border-radius: 8px; padding: 6px 12px; font-size: 12.5px; }
+
+.cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); gap: 16px; align-items: start; }
+.cat-sec { padding: 12px 20px 4px; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); display: flex; justify-content: space-between; align-items: center; }
+
+.overlay { position: fixed; inset: 0; background: rgba(10,12,13,.45); display: grid; place-items: center; padding: 16px; z-index: 50; }
+.modal { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; width: min(600px, 100%); max-height: calc(100% - 32px); overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.25); animation: pop .18s ease-out; }
+.modal.wide { width: min(780px, 100%); }
+.modal-h { padding: 18px 22px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 12px; position: sticky; top: 0; background: var(--surface); z-index: 1; }
+.modal-b { padding: 20px 22px; display: flex; flex-direction: column; gap: 14px; }
+.modal-f { padding: 14px 22px; border-top: 1px solid var(--line); display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; position: sticky; bottom: 0; background: var(--surface); }
+.fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.fields.three { grid-template-columns: 1fr 1fr 1fr; }
+.err { color: var(--danger); font-weight: 600; font-size: 13px; margin: 0; }
+.pick-list { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.pick-list button { text-align: left; border: 0; border-top: 1px solid var(--line); background: var(--surface); padding: 10px 14px; font-weight: 600; font-size: 13.5px; display: flex; justify-content: space-between; gap: 10px; }
+.pick-list button:first-child { border-top: 0; }
+.pick-list button:hover { background: var(--accent-soft); }
+.msg { background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; font-size: 13px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: #E9ECEE; padding: 12px 18px; border-radius: 10px; font-size: 13.5px; box-shadow: 0 10px 30px rgba(0,0,0,.25); z-index: 60; display: flex; gap: 10px; align-items: center; max-width: calc(100% - 32px); animation: toast .2s ease-out; }
+.toast i { width: 8px; height: 8px; border-radius: 50%; background: #3DB389; flex: none; }
+@keyframes pop { from { opacity: 0; transform: translateY(6px) scale(.99); } }
+@keyframes toast { from { opacity: 0; transform: translate(-50%, 8px); } }
+.scrim { display: none; }
+
+
+/* Interactive tutorial */
+#tour { position: fixed; inset: 0; z-index: 70; pointer-events: none; }
+.tour-back { position: absolute; inset: 0; background: rgba(8,10,12,.62); pointer-events: auto; }
+.tour-hl { position: absolute; border-radius: 12px; box-shadow: 0 0 0 9999px rgba(8,10,12,.5); outline: 2px solid var(--accent); outline-offset: 0; transition: left .25s, top .25s, width .25s, height .25s; pointer-events: none; }
+.tour-hl::after { content: ""; position: absolute; inset: -6px; border-radius: 16px; border: 2px solid var(--accent); animation: tourPulse 1.5s ease-out infinite; }
+@keyframes tourPulse { from { transform: scale(.97); opacity: .9; } to { transform: scale(1.05); opacity: 0; } }
+.tour-card { position: absolute; width: min(360px, calc(100vw - 32px)); background: var(--surface); color: var(--fg); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,.35); padding: 18px 18px 14px; pointer-events: auto; display: flex; flex-direction: column; gap: 10px; animation: pop .2s ease-out; }
+.tour-card.center { width: min(480px, calc(100vw - 32px)); padding: 28px; }
+.tour-card h3 { font-family: var(--font-display); font-weight: 600; font-size: 19px; margin: 0; padding-right: 24px; text-wrap: balance; }
+.tour-card p { margin: 0; color: var(--muted); font-size: 13.5px; line-height: 1.6; }
+.tour-step { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+.tour-bar { height: 4px; border-radius: 4px; background: var(--surface-2); border: 1px solid var(--line); overflow: hidden; }
+.tour-bar i { display: block; height: 100%; background: var(--accent); }
+.tour-hint { display: flex; gap: 8px; align-items: center; font-size: 12.5px; font-weight: 700; color: var(--accent); }
+.tour-hint::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: tourDot .8s ease-in-out infinite alternate; flex: none; }
+@keyframes tourDot { from { opacity: .3; } to { opacity: 1; } }
+.tour-actions { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 2px; }
+.tour-x { position: absolute; top: 10px; right: 10px; }
+.tour-btn { border-color: var(--accent); color: var(--accent); }
+
+@media (max-width: 1180px) {
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid-2, .grid-3 { grid-template-columns: minmax(0, 1fr); }
+  .plan-wrap { grid-template-columns: minmax(0, 1fr); }
+  .variants { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .price-box { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 860px) {
+  .app { grid-template-columns: minmax(0, 1fr); }
+  .side { position: fixed; left: 0; top: 0; bottom: 0; width: 260px; z-index: 40; transform: translateX(-100%); transition: transform .2s; height: 100%; padding-top: calc(28px + env(safe-area-inset-top, 0px)); }
+  .app.open .side { transform: none; }
+  .app.open .scrim { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 35; }
+  .menu-btn { display: grid; }
+  .top { padding: 12px 16px; }
+  .page { padding: 20px 16px 48px; }
+  .role > span, .demo-badge { display: none; }
+  .role select { max-width: 190px; }
+  h1 { font-size: 24px; }
+  .counts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+  .kpis { grid-template-columns: minmax(0, 1fr); }
+  .fields, .fields.three { grid-template-columns: 1fr; }
+  .kv { grid-template-columns: minmax(0, 1fr); gap: 2px 0; }
+  .kv dd { margin-bottom: 8px; }
+  .row { grid-template-columns: 62px minmax(0, 1fr); }
+  .row > :nth-child(3) { display: none; }
+  .sat { grid-template-columns: 70px repeat(8, minmax(0, 1fr)); gap: 4px; }
+  .search { display: none; }
+  .variants { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .price-box { grid-template-columns: minmax(0, 1fr); }
+  .item { padding: 9px 14px; grid-template-columns: 20px minmax(0, 1fr); }
+  .item .tools { grid-column: 2; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <aside class="side" id="side">
+    <div class="brand" aria-label="Emerald Luxury Events">
+      <svg viewBox="0 0 40 32" fill="none" aria-hidden="true">
+        <path d="M9 2.5h22l6.5 8L20 29.5 2.5 10.5 9 2.5Z" stroke="#C8CDD1" stroke-width="2.2" stroke-linejoin="round"/>
+        <path d="M13 10.5h14L20 19l-4.2-4.6M9 2.5l4 8M31 2.5l-4 8" stroke="#C8CDD1" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+      </svg>
+      <div class="word">EMERALD</div>
+      <div class="word-sub">LUXURY EVENTS</div>
+    </div>
+    <nav class="nav" id="nav" aria-label="Navigare"></nav>
+    <div class="side-foot">
+      <div class="who"><div class="avatar" id="avatar">M</div><div><b id="whoName">Manager</b><span id="roleName">Manager</span></div></div>
+      <button class="reset" data-action="reset">Șterge toate datele</button>
+    </div>
+  </aside>
+  <div class="scrim" data-action="close-menu"></div>
+  <div class="main">
+    <header class="top">
+      <button class="menu-btn" data-action="open-menu" aria-label="Deschide meniul">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <label class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="q" type="search" placeholder="Caută eveniment, client sau salon…" autocomplete="off">
+      </label>
+      <div class="top-right">
+        <button class="btn sm tour-btn" data-action="tour" aria-label="Pornește tutorialul">? Tutorial</button>
+        <span class="demo-badge">Emerald Demo</span>
+        <label class="role"><span>Vezi ca</span>
+          <select id="role">
+            <option value="manager">Manager</option>
+            <option value="bucatarie">Bucătărie</option>
+            <option value="sapphire">Șef sală Sapphire</option>
+            <option value="gold">Șef sală Gold</option>
+            <option value="diamond">Șef sală Diamond</option>
+            <option value="gourmet">Șef sală Gourmet</option>
+          </select>
+        </label>
+      </div>
+    </header>
+    <main class="page" id="page"></main>
+  </div>
+</div>
+<div id="layer"></div>
+
+<script>
+(() => {
+"use strict";
+
+/* ===== Dates ===== */
+const DAYS = ["Dum", "Lun", "Mar", "Mie", "Joi", "Vin", "Sâm"];
+const DAYS_FULL = ["Duminică", "Luni", "Marți", "Miercuri", "Joi", "Vineri", "Sâmbătă"];
+const MON = ["ian", "feb", "mar", "apr", "mai", "iun", "iul", "aug", "sep", "oct", "nov", "dec"];
+const MON_FULL = ["ianuarie", "februarie", "martie", "aprilie", "mai", "iunie", "iulie", "august", "septembrie", "octombrie", "noiembrie", "decembrie"];
+const toDate = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d, 12); };
+const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const addDays = (s, n) => { const d = toDate(s); d.setDate(d.getDate() + n); return iso(d); };
+const diffDays = (a, b) => Math.round((toDate(a) - toDate(b)) / 86400000);
+const NOW = new Date();
+const TODAY = iso(new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate(), 12));
+const fmtShort = s => { const d = toDate(s); return `${d.getDate()} ${MON[d.getMonth()]}`; };
+const fmtLong = s => { const d = toDate(s); return `${DAYS[d.getDay()]}, ${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()}`; };
+const fmtFull = s => { const d = toDate(s); return `${DAYS_FULL[d.getDay()].toLowerCase()}, ${d.getDate()} ${MON_FULL[d.getMonth()]} ${d.getFullYear()}`; };
+const mondayOf = s => addDays(s, -((toDate(s).getDay() + 6) % 7));
+const inDays = n => n === 0 ? "azi" : n === 1 ? "mâine" : n === -1 ? "ieri" : n > 0 ? `în ${n} zile` : `acum ${-n} zile`;
+const stamp = () => { const d = new Date(); return `${d.getDate()} ${MON[d.getMonth()]}, ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; };
+const toMin = t => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
+const lei = n => `${Math.round(n).toLocaleString("ro-RO")} lei`;
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const uid = p => p + Math.random().toString(36).slice(2, 8);
+
+/* ===== Reference data (from Emerald's brochures) ===== */
+const HALLS = [
+  { id: "sapphire", name: "Sapphire Ballroom", short: "Sapphire", cap: 550, chief: "Șef sală Sapphire", W: 1300, H: 880 },
+  { id: "gold", name: "Gold Ballroom", short: "Gold", cap: 300, chief: "Șef sală Gold", W: 1060, H: 740 },
+  { id: "diamond", name: "Diamond Ballroom", short: "Diamond", cap: 200, chief: "Șef sală Diamond", W: 1000, H: 720 },
+  { id: "gourmet", name: "Salonul Gourmet", short: "Gourmet", cap: 120, chief: "Șef sală Gourmet", W: 860, H: 620 },
+];
+const hall = id => HALLS.find(h => h.id === id);
+const SECTIONS = [["aperitiv", "Aperitiv"], ["principal", "Fel principal"], ["cina", "Cina"]];
+const VARIANTS = ["classic", "premium", "heritage", "royale", "signature"];
+const SEED_CATALOG = {
+  classic: { name: "Emerald Classic", price: 450,
+    aperitiv: ["Vol-au-vent cu pui BBQ", "Ruladă din jambon de porc marinat", "Selecție de brânzeturi fine cu struguri și trio de ardei", "Yorkshire pudding cu salată fină de icre", "Wrap cu legume proaspete", "Chifteluțe fragede în mantie de semințe", "Bărcuțe de roșii cu salată de vinete și telemea", "Măsline Kalamata marinate", "Duo de roșii cherry și castraveți proaspeți", "Mini-șnițele din piept de pui cu sos Royal", "Mix de salată verde cu dressing de ulei de măsline extravirgin"],
+    principal: ["Balotină de pasăre cu ierburi aromate și spanac baby", "Specialitate de porc slow-cooked cu sos fin de piper verde", "Piure de cartofi cremos", "Legume franțuzești sote", "Salată de castraveți murați, rețetă tradițională"],
+    cina: ["Sărmăluțe în frunză de varză, cu jambon afumat", "Mămăliguță aurie", "Smântână fină și ardei iute"] },
+  premium: { name: "Emerald Premium", price: 475,
+    aperitiv: ["Balotină de pui în mantie de bresaola", "Pârjoale fragede de porc cu mousse de muștar Dijon", "Ruladă de brânzeturi Quattro Formaggi în crustă de alune de pădure", "Crostini cu somon fumé, caviar, lime și spumă fină de brânză", "Mușchiuleț de porc Royal cu mousse de Gorgonzola", "Canapele cu spumă de șuncă Parma și roșii uscate, texturate cu semințe", "Frigărui cu roșii cherry, bocconcini și petale de busuioc", "Mini-șnițele din piept de pui cu sos Royal", "Turnuleț de castravete proaspăt", "Măsline Kalamata marinate", "Roll de legume cu rucola"],
+    principal: ["Galantină de pasăre în mantie de Prosciutto, glazurată cu sweet chilli", "Mușchiuleț de porc în stil mediteranean, cu sos de vin Emerald", "Cartofi gratinați", "Legume Lyonnaise", "Salată de ardei copți"],
+    cina: ["Rulou de curcan în crustă de pesmet și Parmezan", "Cartofi copți cu ierburi fine și unt", "Salată de castraveți murați"] },
+  heritage: { name: "Emerald Heritage", price: 490,
+    aperitiv: ["Coppa de porc, selecție artizanală", "Dobos cu cheddar maturat", "Salată boeuf, rețetă tradițională", "Mini-șnițel de pui", "Chifteluțe tradiționale, după rețetă de casă", "Bruschetă rustică cu jumări și ceapă verde", "Caltaboș crocant cu mousse de muștar", "Turnuleț de castravete proaspăt cu cremă de hrean", "Coșuleț cu slăninuță de casă, brânză de burduf și roșii proaspete", "Măsline Kalamata marinate", "Salată de vinete, rețetă tradițională"],
+    principal: ["Portofel de pui umplut cu telemea, servit cu crutoane crocante de slănină", "Ciolan de porc rotisat, glazurat cu sos de muștar Dijon", "Varză călită, rețetă tradițională", "Cartofi copți cu ierburi fine și unt", "Murătură de ardei umpluți cu varză"],
+    cina: ["Friptură de vițel tip gulaș, gătită lent", "Piure de cartofi cremos", "Murături asortate"] },
+  royale: { name: "Emerald Royale", price: 500,
+    aperitiv: ["Balotină de porc în mantie de ierburi fine", "Duet de pui și mușchiuleț de porc în crustă aromatică", "Yorkshire pudding cu friptură fragedă de curcan", "Ruladă cu somon fumé, cremă fină de brânză, roșii uscate, caviar și lime", "Canapele cu pastramă din piept de rață afumat și dulceață de ceapă", "Mini cheesecake sărat cu brânzeturi fine și spanac", "Pralină cu bresaola și brânză de capră", "Wrap cu legume proaspete", "Chifteluțe scoțiene cu ou de prepeliță în crustă aurie", "Măsline Kalamata marinate", "Roll de legume cu rucola proaspătă"],
+    principal: ["Pansetă fină de curcan cu brunoise de ardei copți și sos de Gorgonzola", "Aripioară de porc la cuptor cu sos Chimichurri", "Cartofi țărănești", "Legume Lyonnaise", "Salată de murături asortate"],
+    cina: ["Tomahawk de porc la cuptor cu sos de hrean", "Piure de cartofi cu Parmezan", "Salată de castraveți murați"] },
+  signature: { name: "Emerald Signature", price: 525,
+    aperitiv: ["Friptură de curcan marinată, în mantie de kataif", "Galantină din mușchiuleț de porc cu tartar fin de mango", "Chips crocant din semințe cu vitello tonnato", "Soufflé de brânzeturi fine cu nucă Macadamia, merișoare și ierburi aromate", "Parfait de ficat de gâscă cu fistic copt", "Creveți Butterfly cu sos Chimichurri", "Ruladă de chorizo cu pepper drops, baby castraveți și cremă fină de brânzeturi", "Balotină din pește alb cu brunoise de legume", "Duo de roșii cherry și castraveți proaspeți", "Salată Prosciutto & Melone", "Măsline Kalamata marinate"],
+    principal: ["Pulpă de rață confiată pe varză roșie sote, cu sos de vin roșu", "Mușchiuleț de porc venețian, aromatizat cu roșii uscate și duxelles de ciuperci", "Arancini de cartofi cu pancetta crocantă", "Mix de ciuperci de pădure marinate, cu rucola și pepper drops"],
+    cina: ["File de biban de mare în crustă crocantă de fistic", "Arancini de orez risotto", "Piure fin de morcov dulce (sweet carrot)", "Sos de șampanie cu capere și lămâie"] },
+};
+const TYPES = { nunta: "Nuntă", botez: "Botez", corporate: "Corporate", aniversare: "Aniversare", altul: "Alt eveniment" };
+const NOTE_CATS = ["Alergeni", "Vegetarieni", "Meniu copii", "Aranjare sală", "Altele"];
+const DIETS = { standard: ["ok", "Standard"], vegetarian: ["veg", "Vegetarian"], copil: ["info", "Copil"], alergie: ["bad", "Alergie"] };
+const SEATS_R = { 6: 30, 8: 34, 10: 38, 12: 42 };
+const MANAGER = { name: "Manager", phone: "" };
+// The client link points at wherever this file is hosted (e.g. bluradvertising.ro/emerald-demo/).
+const SHARE_BASE = location.href.split("#")[0];
+
+/* ===== Seed (dates relative to today, so the demo never goes stale) ===== */
+const sat0 = (6 - toDate(TODAY).getDay() + 7) % 7;
+const rel = n => addDays(TODAY, n);
+
+function menuFrom(cat, v) {
+  const m = { base: v, std: cat[v].price, sections: {} };
+  SECTIONS.forEach(([s]) => { m.sections[s] = cat[v][s].map(name => ({ name, from: v })); });
+  return m;
+}
+function autoTables(hallId, guests, seats, withHead) {
+  const h = hall(hallId), cx = h.W / 2, cy = h.H / 2 + 30;
+  const tables = [];
+  if (withHead) { tables.push({ id: uid("t"), kind: "head", seats: 8, x: cx, y: 70, num: 0 }); guests -= 8; }
+  const need = Math.max(0, Math.ceil(guests / seats));
+  const r = SEATS_R[seats] || 38;
+  let pos = [];
+  // Space tables so their chairs never touch; tighten only if the room would otherwise run out of places.
+  for (let step = 2 * (r + 17) + 6; step >= 2 * (r + 12); step -= 6) {
+    pos = [];
+    for (let y = 165; y <= h.H - 60; y += step) for (let x = 75; x <= h.W - 60; x += step) {
+      if (Math.abs(x - cx) < 150 + r + 25 && Math.abs(y - cy) < 110 + r + 25) continue;
+      pos.push([x, y]);
+    }
+    if (pos.length >= need) break;
+  }
+  pos.sort((a, b) => Math.hypot(a[0] - cx, (a[1] - cy) * 1.25) - Math.hypot(b[0] - cx, (b[1] - cy) * 1.25));
+  let n = 1;
+  pos.slice(0, need).sort((a, b) => a[1] - b[1] || a[0] - b[0]).forEach(([x, y]) => tables.push({ id: uid("t"), kind: "round", seats, x, y, num: n++ }));
+  return tables;
+}
+function buildPayments(e) {
+  const total = value(e);
+  const a = Math.round(total * 0.3), b = Math.round(total * 0.4), c = total - a - b;
+  const due1 = addDays(e.date, -180), due2 = addDays(e.date, -30), due3 = addDays(e.date, -3);
+  return [
+    { label: "Avans la semnare (30%)", amount: a, due: due1 < TODAY ? due1 : TODAY, paid: true },
+    { label: "Tranșa 2 (40%)", amount: b, due: due2, paid: due2 < TODAY },
+    { label: "Sold final (30%)", amount: c, due: due3, paid: due3 < TODAY },
+  ];
+}
+function makeEvent(cat, f) {
+  const e = {
+    id: f.id || uid("e"), title: f.title, type: f.type, status: f.status || "confirmat", date: f.date, start: f.start, end: f.end, hall: f.hall,
+    adults: f.adults, kids: f.kids || 0, kidsPct: 50, contact: f.contact || { name: "", phone: "", email: "" },
+    menu: menuFrom(cat, f.variant), customPrice: f.customPrice || null, vegCount: f.vegCount || 0,
+    notes: f.notes || [], layout: { tables: [], guests: [], sharedAt: null, clientUnlock: false },
+    payments: [], optionExpires: f.optionExpires || null, history: [[stamp(), MANAGER.name, "Eveniment creat."]],
+  };
+  if (e.status === "confirmat") e.payments = buildPayments(e);
+  return e;
+}
+function seed() {
+  return { v: 1, catalog: JSON.parse(JSON.stringify(SEED_CATALOG)), events: [], settings: { name: "Manager", phone: "" } };
+}
+
+/* ===== Store (this browser only) ===== */
+const KEY = "emerald-live-demo-v1";
+let DB = null;
+try { DB = JSON.parse(localStorage.getItem(KEY)); } catch (_) { DB = null; }
+if (!DB || DB.v !== 1 || !Array.isArray(DB.events)) DB = seed();
+DB.settings = DB.settings || { name: "Manager", phone: "" };
+Object.assign(MANAGER, DB.settings);
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(DB)); } catch (_) {} };
+const EV = () => DB.events;
+const getEv = id => DB.events.find(e => e.id === id);
+
+/* ===== Money ===== */
+function price(e) { return e.customPrice ?? e.menu.std; }
+function value(e) { return Math.round(e.adults * price(e) + e.kids * price(e) * e.kidsPct / 100); }
+const paidSum = e => e.payments.filter(p => p.paid).reduce((s, p) => s + p.amount, 0);
+const payState = p => p.paid ? "paid" : p.due < TODAY ? "overdue" : diffDays(p.due, TODAY) <= 14 ? "soon" : "scheduled";
+const PAY_CHIP = { paid: ["ok", "Încasat"], overdue: ["bad", "Restant"], soon: ["warn", "Scadent curând"], scheduled: ["plain", "Programat"] };
+const STATUS_CHIP = { confirmat: ["ok", "Confirmat"], optiune: ["warn", "Opțiune"] };
+function syncPayments(e) {
+  if (e.status !== "confirmat" || !e.payments.length) return;
+  const remaining = value(e) - paidSum(e);
+  const open = e.payments.filter(p => !p.paid);
+  if (!open.length) { if (remaining > 0) e.payments.push({ label: "Diferență după modificare", amount: remaining, due: addDays(e.date, -3) < TODAY ? TODAY : addDays(e.date, -3), paid: false }); return; }
+  const cur = open.reduce((s, p) => s + p.amount, 0);
+  let left = remaining;
+  open.forEach((p, i) => { p.amount = i === open.length - 1 ? left : Math.round(cur ? p.amount / cur * remaining : remaining / open.length); left -= p.amount; });
+}
+const log = (e, who, text) => e.history.unshift([stamp(), who, text]);
+
+/* ===== Roles ===== */
+function initials(n) { return String(n || "M").split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("") || "M"; }
+const ROLES = {
+  manager: { label: "Manager", name: MANAGER.name, init: initials(MANAGER.name) },
+  bucatarie: { label: "Bucătărie", name: "Bucătărie", init: "B" },
+  sapphire: { label: "Șef sală Sapphire", name: "Șef sală Sapphire", init: "SA", hall: "sapphire" },
+  gold: { label: "Șef sală Gold", name: "Șef sală Gold", init: "GO", hall: "gold" },
+  diamond: { label: "Șef sală Diamond", name: "Șef sală Diamond", init: "DI", hall: "diamond" },
+  gourmet: { label: "Șef sală Gourmet", name: "Șef sală Gourmet", init: "GU", hall: "gourmet" },
+};
+
+/* ===== State ===== */
+const S = { view: "dashboard", eventId: null, tab: "overview", week: mondayOf(TODAY), role: "manager", filter: "toate", q: "", modal: null, sel: null, secFrom: {}, client: null, clientSel: null, clientPreview: false };
+try { const r = localStorage.getItem("emerald-demo-role"); if (r && ROLES[r]) S.role = r; } catch (_) {}
+const isManager = () => S.role === "manager";
+const roleHall = () => ROLES[S.role].hall;
+const canSeeEvent = e => S.role === "manager" || S.role === "bucatarie" || roleHall() === e.hall;
+const visibleNotes = e => S.role === "manager" ? e.notes : e.notes.filter(n => n.to.includes(S.role === "bucatarie" ? "bucatarie" : "sala"));
+const canArrange = e => S.role === "manager" || roleHall() === e.hall;
+
+/* ===== Icons ===== */
+const I = {
+  home: '<path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/>',
+  cal: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+  list: '<path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/>',
+  menu: '<path d="M7 3v8a2 2 0 0 0 2 2v8M11 3v6M7 7h4M17 21V3c-2 1.5-3 4-3 7v4h3"/>',
+  card: '<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  left: '<path d="m15 6-6 6 6 6"/>', right: '<path d="m9 6 6 6-6 6"/>',
+  edit: '<path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/>',
+  share: '<circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="m8.2 10.8 7.6-4.6M8.2 13.2l7.6 4.6"/>',
+  eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>',
+  swap: '<path d="M7 7h12l-3-3M17 17H5l3 3"/>',
+  copy: '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>',
+  wand: '<path d="m4 20 11-11M14 4l1 2 2 1-2 1-1 2-1-2-2-1 2-1 1-2ZM19 11l.7 1.3L21 13l-1.3.7L19 15l-.7-1.3L17 13l1.3-.7L19 11Z"/>',
+  wa: '<path d="M4 20l1.3-3.9A8 8 0 1 1 8.6 19L4 20Z"/><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5l1.2-1.4-1.8-.9-.8.8c-1-.4-2-1.4-2.4-2.4l.8-.8-.9-1.8L9.2 9.7"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/>',
+  lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+};
+const icon = n => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n]}</svg>`;
+const chip = ([c, t]) => `<span class="chip ${c}">${esc(t)}</span>`;
+
+/* ===== Phone / WhatsApp ===== */
+const normPhone = p => { let d = String(p || "").replace(/\D/g, ""); if (d.startsWith("00")) d = d.slice(2); if (d.startsWith("0")) d = "4" + d; return d; };
+const waLink = (phone, text) => `https://wa.me/${normPhone(phone)}?text=${encodeURIComponent(text)}`;
+const clientLink = e => `${SHARE_BASE}#client-${e.id}`;
+const editDeadline = e => addDays(e.date, -3);
+const clientLocked = e => !e.layout.clientUnlock && diffDays(e.date, TODAY) <= 3;
+const shareText = e => `Bună ziua, ${e.contact.name || ""}!\n\nPlanul sălii pentru ${e.title} (${fmtFull(e.date)}, ${hall(e.hall).name}) este gata. Puteți adăuga invitații la mese aici:\n${clientLink(e)}\n\nModificările se pot face până pe ${fmtFull(editDeadline(e))}. După această dată, vă rugăm să contactați managerul de eveniment.\n\nCu drag,\nEchipa Emerald Luxury Events`;
+
+/* ===== Derived ===== */
+const upcoming = () => EV().filter(e => e.date >= TODAY && canSeeEvent(e)).sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start));
+const guestTotal = e => e.adults + e.kids;
+const seatCount = L => L.tables.reduce((s, t) => s + t.seats, 0);
+const guestsAt = (L, tid) => L.guests.filter(g => g.table === tid);
+const dietCount = (e, d) => e.layout.guests.filter(g => g.diet === d).length;
+const menuName = e => DB.catalog[e.menu.base] ? DB.catalog[e.menu.base].name : "";
+const countSwaps = e => SECTIONS.reduce((n, [s]) => n + e.menu.sections[s].filter(i => i.from !== e.menu.base).length, 0);
+const noteCatChip = c => chip([{ Alergeni: "bad", Vegetarieni: "veg", "Meniu copii": "info" }[c] || "plain", c]);
+const tableName = t => t.kind === "head" ? "Masa mirilor" : `Masa ${t.num}`;
+function alerts() {
+  const out = [];
+  EV().filter(e => e.status === "optiune" && e.optionExpires && diffDays(e.optionExpires, TODAY) <= 3).forEach(e =>
+    out.push({ sev: "warn", t: `Opțiunea expiră ${inDays(diffDays(e.optionExpires, TODAY))}`, m: `${e.title} · ${fmtLong(e.date)} · ${hall(e.hall).short}`, id: e.id, cta: "Deschide" }));
+  EV().forEach(e => e.payments.forEach(p => { if (payState(p) === "overdue") out.push({ sev: "bad", t: `Plată restantă: ${lei(p.amount)}`, m: `${e.title} · ${p.label}, scadentă pe ${fmtShort(p.due)}`, id: e.id, cta: "Vezi plata", tab: "payments" }); }));
+  EV().filter(e => e.status === "confirmat" && e.date >= TODAY && diffDays(e.date, TODAY) <= 21).forEach(e => {
+    if (!e.layout.tables.length) out.push({ sev: "info", t: "Aranjarea sălii nu e făcută", m: `${e.title} · ${fmtLong(e.date)} · ${hall(e.hall).short}`, id: e.id, cta: "Aranjează", tab: "seating" });
+    else if (!e.layout.sharedAt) out.push({ sev: "info", t: "Planul de mese nu a fost trimis clientului", m: `${e.title} · ${fmtLong(e.date)}`, id: e.id, cta: "Distribuie", tab: "seating" });
+  });
+  return out;
+}
+const saturdays = n => Array.from({ length: n }, (_, i) => rel(sat0 + i * 7));
+
+/* ===== Navigation ===== */
+const NAV = [
+  { id: "dashboard", label: "Panou", icon: "home", roles: ["manager"] },
+  { id: "calendar", label: "Calendar saloane", icon: "cal", roles: "all" },
+  { id: "events", label: "Evenimente", icon: "list", roles: "all" },
+  { id: "menus", label: "Meniuri standard", icon: "menu", roles: ["manager"] },
+  { id: "payments", label: "Plăți", icon: "card", roles: ["manager"] },
+  { id: "settings", label: "Setări", icon: "gear", roles: ["manager"] },
+];
+const navAllowed = n => n.roles === "all" || n.roles.includes(S.role);
+function renderNav() {
+  const counts = { events: upcoming().length, payments: EV().reduce((n, e) => n + e.payments.filter(p => payState(p) === "overdue").length, 0) };
+  const active = S.view === "event" ? "events" : S.view;
+  document.getElementById("nav").innerHTML = `<div class="nav-label">${ROLES[S.role].label}</div>` + NAV.filter(navAllowed).map(n =>
+    `<button class="${active === n.id ? "on" : ""}" data-action="go" data-view="${n.id}">${icon(n.icon)}<span>${n.label}</span>${counts[n.id] ? `<span class="count num">${counts[n.id]}</span>` : ""}</button>`).join("");
+  document.getElementById("roleName").textContent = ROLES[S.role].label;
+  document.getElementById("whoName").textContent = ROLES[S.role].name;
+  document.getElementById("avatar").textContent = ROLES[S.role].init;
+}
+
+/* ===== Dashboard ===== */
+function viewDashboard() {
+  const sun = addDays(mondayOf(TODAY), 6);
+  const week = upcoming().filter(e => e.date <= sun);
+  const al = alerts();
+  const contracted = EV().filter(e => e.status === "confirmat" && e.date >= TODAY).reduce((s, e) => s + value(e), 0);
+  const due = [], overdue = [];
+  EV().forEach(e => e.payments.forEach(p => { const st = payState(p); if (st === "overdue") overdue.push(p); if (st === "overdue" || st === "soon") due.push(p); }));
+  const sats = saturdays(8);
+  let taken = 0;
+  HALLS.forEach(h => sats.forEach(s => { if (EV().some(e => e.hall === h.id && e.date === s && e.status === "confirmat")) taken++; }));
+  const d = toDate(TODAY);
+  return `
+  <div class="head">
+    <div><p class="eyebrow">${DAYS_FULL[d.getDay()]}, ${d.getDate()} ${MON_FULL[d.getMonth()]} ${d.getFullYear()}</p><h1>${MANAGER.name && MANAGER.name !== "Manager" ? "Bună ziua, " + esc(MANAGER.name.split(" ")[0]) : "Bun venit în Emerald"}</h1>
+    <p class="sub">${week.length} ${week.length === 1 ? "eveniment" : "evenimente"} săptămâna aceasta și ${al.length} lucruri care cer atenție.</p></div>
+    <div class="actions"><button class="btn" data-action="go" data-view="calendar">${icon("cal")}Calendar</button><button class="btn primary" data-action="new-event">${icon("plus")}Eveniment nou</button></div>
+  </div>
+  <section class="kpis">
+    <div class="card kpi"><span class="label">Evenimente săptămâna aceasta</span><span class="value num">${week.length}</span><span class="kpi-note"><b class="num">${week.reduce((s, e) => s + guestTotal(e), 0).toLocaleString("ro-RO")}</b> invitați în total</span></div>
+    <div class="card kpi"><span class="label">Venit contractat</span><span class="value num">${lei(contracted)}</span><span class="kpi-note">Evenimente confirmate, de azi înainte</span></div>
+    <div class="card kpi"><span class="label">De încasat în 14 zile</span><span class="value num">${lei(due.reduce((s, p) => s + p.amount, 0))}</span><span class="kpi-note">din care <b class="num">${lei(overdue.reduce((s, p) => s + p.amount, 0))}</b> restant</span></div>
+    <div class="card kpi"><span class="label">Sâmbete ocupate · următoarele 8</span><span class="value num">${Math.round(taken / 32 * 100)}%</span><span class="kpi-note"><b class="num">${taken}</b> din 32 saloane-sâmbătă</span></div>
+  </section>
+  <section class="grid-2">
+    <div class="card"><div class="card-h"><h2>Săptămâna aceasta</h2><button class="link" data-action="go" data-view="calendar">Vezi calendarul</button></div>
+      <div class="rows">${week.map(eventRow).join("") || `<div class="empty">Niciun eveniment săptămâna aceasta. <button class="link" data-action="new-event">Adaugă un eveniment</button></div>`}</div></div>
+    <div class="card"><div class="card-h"><h2>Necesită atenție</h2>${al.length ? `<span class="chip ${al.some(a => a.sev === "bad") ? "bad" : "warn"} num">${al.length}</span>` : ""}</div>
+      <div>${al.map(a => `<div class="alert ${a.sev}"><span class="bar"></span><div style="min-width:0"><div class="t">${esc(a.t)}</div><div class="m">${esc(a.m)}</div></div><button class="btn sm" data-action="open" data-id="${a.id}" data-tab="${a.tab || "overview"}">${a.cta}</button></div>`).join("") || `<div class="empty">Totul e în regulă.</div>`}</div></div>
+  </section>
+  <div class="card"><div class="card-h"><h2>Ocupare sâmbete</h2><div class="legend"><span><i style="background:var(--accent)"></i>Confirmat</span><span><i style="background:var(--amber-soft);border:1px solid var(--amber)"></i>Opțiune</span></div></div>
+    <div class="card-b"><div class="sat"><span></span>${sats.map(s => `<span class="h num">${fmtShort(s)}</span>`).join("")}
+    ${HALLS.map(h => `<span class="n">${h.short}</span>` + sats.map(s => { const e = EV().find(x => x.hall === h.id && x.date === s); return `<span class="c ${e ? (e.status === "confirmat" ? "ok" : "warn") : ""}" title="${e ? esc(e.title) : "Liber"}"></span>`; }).join("")).join("")}</div></div></div>`;
+}
+function eventRow(e) {
+  const d = toDate(e.date);
+  return `<button class="row" data-action="open" data-id="${e.id}">
+    <span class="when"><b>${DAYS[d.getDay()]} ${d.getDate()} ${MON[d.getMonth()]}</b><span class="num">${e.start}</span></span>
+    <span style="min-width:0"><div class="t">${esc(e.title)}</div><div class="m">${hall(e.hall).name} · <span class="num">${guestTotal(e)}</span> invitați · ${esc(menuName(e))}</div></span>
+    ${chip(STATUS_CHIP[e.status])}</button>`;
+}
+
+/* ===== Calendar ===== */
+function viewCalendar() {
+  const days = Array.from({ length: 7 }, (_, i) => addDays(S.week, i));
+  const s = toDate(days[0]), en = toDate(days[6]);
+  const range = s.getMonth() === en.getMonth() ? `${s.getDate()}–${en.getDate()} ${MON_FULL[en.getMonth()]} ${en.getFullYear()}` : `${s.getDate()} ${MON[s.getMonth()]} – ${en.getDate()} ${MON[en.getMonth()]} ${en.getFullYear()}`;
+  const halls = roleHall() ? HALLS.filter(h => h.id === roleHall()) : HALLS;
+  let cells = `<div class="dh"></div>` + days.map(d => { const dt = toDate(d); return `<div class="dh ${d === TODAY ? "today" : ""}">${DAYS_FULL[dt.getDay()]}<b class="num">${dt.getDate()} ${MON[dt.getMonth()]}</b></div>`; }).join("");
+  halls.forEach(h => {
+    cells += `<div class="hall"><b>${h.name}</b><span class="num">${h.cap} locuri</span></div>`;
+    days.forEach(d => {
+      const list = EV().filter(x => x.hall === h.id && x.date === d).sort((a, b) => a.start.localeCompare(b.start));
+      cells += `<div class="cell ${d === TODAY ? "today" : ""}">${list.map(x => `<button class="ev ${x.status}" data-action="open" data-id="${x.id}"><b>${esc(x.title)}</b><span class="num">${x.start}–${x.end} · ${guestTotal(x)} pers.</span>${x.status === "optiune" ? `<span>Opțiune până pe ${fmtShort(x.optionExpires)}</span>` : ""}</button>`).join("")}${isManager() && d >= TODAY ? `<button class="free" data-action="new-event" data-date="${d}" data-hall="${h.id}">+ Rezervă</button>` : ""}</div>`;
+    });
+  });
+  return `
+  <div class="head">
+    <div><p class="eyebrow">Calendar ${roleHall() ? hall(roleHall()).name : "saloane"}</p><h1>${range}</h1></div>
+    <div class="toolbar">
+      <div class="legend"><span><i style="background:var(--accent)"></i>Confirmat</span><span><i style="background:var(--amber)"></i>Opțiune</span></div>
+      <button class="btn" data-action="week" data-d="-7" aria-label="Săptămâna anterioară">${icon("left")}</button>
+      <button class="btn" data-action="week" data-d="0">Azi</button>
+      <button class="btn" data-action="week" data-d="7" aria-label="Săptămâna următoare">${icon("right")}</button>
+      ${isManager() ? `<button class="btn primary" data-action="new-event">${icon("plus")}Eveniment nou</button>` : ""}
+    </div>
+  </div>
+  <div class="card cal-wrap"><div class="cal">${cells}</div></div>
+  ${isManager() ? `<p class="sub small">Apasă pe o zi liberă dintr-un salon ca să rezervi direct acolo. Ca să muți un eveniment, deschide-l și schimbă data sau salonul.</p>` : ""}`;
+}
+
+/* ===== Events list ===== */
+function viewEvents() {
+  const F = { toate: () => true, saptamana: e => e.date <= addDays(mondayOf(TODAY), 6), nunta: e => e.type === "nunta", botez: e => e.type === "botez", corporate: e => e.type === "corporate", optiuni: e => e.status !== "confirmat" };
+  const q = S.q.trim().toLowerCase();
+  const list = upcoming().filter(F[S.filter] || F.toate).filter(e => !q || `${e.title} ${e.contact.name} ${hall(e.hall).name}`.toLowerCase().includes(q));
+  const labels = [["toate", "Toate"], ["saptamana", "Săptămâna aceasta"], ["nunta", "Nunți"], ["botez", "Botezuri"], ["corporate", "Corporate"], ["optiuni", "Opțiuni"]];
+  const M = isManager();
+  return `
+  <div class="head">
+    <div><p class="eyebrow">Evenimente${roleHall() ? " · " + hall(roleHall()).name : ""}</p><h1>Următoarele evenimente</h1><p class="sub">${list.length} ${list.length === 1 ? "eveniment" : "evenimente"}${q ? ` pentru „${esc(S.q)}”` : ""}</p></div>
+    ${M ? `<button class="btn primary" data-action="new-event">${icon("plus")}Eveniment nou</button>` : ""}
+  </div>
+  <div class="seg">${labels.map(([k, t]) => `<button class="${S.filter === k ? "on" : ""}" data-action="filter" data-f="${k}">${t}</button>`).join("")}</div>
+  <div class="card tbl-wrap"><table>
+    <thead><tr><th>Data</th><th>Eveniment</th><th>Salon</th><th class="right">Invitați</th><th>Meniu</th>${M ? `<th class="right">Valoare</th><th>Încasat</th>` : ""}<th>Status</th></tr></thead>
+    <tbody>${list.map(e => { const v = value(e), p = paidSum(e); return `<tr class="click" data-action="open" data-id="${e.id}">
+      <td><div class="t num">${fmtShort(e.date)}</div><div class="m">${DAYS[toDate(e.date).getDay()]} · ${e.start}</div></td>
+      <td><div class="t">${esc(e.title)}</div><div class="m">${TYPES[e.type]}${M ? ` · ${esc(e.contact.name)}` : ""}</div></td>
+      <td>${hall(e.hall).name}</td><td class="right num">${guestTotal(e)}</td>
+      <td><div class="t">${esc(menuName(e))}</div>${M ? `<div class="m num">${lei(price(e))}/pers.${e.customPrice ? " · ajustat" : ""}</div>` : ""}</td>
+      ${M ? `<td class="right num">${lei(v)}</td><td>${e.payments.length ? `<div class="progress"><i style="width:${Math.min(100, Math.round(p / v * 100))}%"></i></div>` : `<span class="m">—</span>`}</td>` : ""}
+      <td>${chip(STATUS_CHIP[e.status])}</td></tr>`; }).join("") || `<tr><td colspan="8" class="empty">${EV().length ? "Niciun eveniment nu se potrivește." : "Încă nu ai niciun eveniment. Apasă „Eveniment nou” ca să-l adaugi pe primul."}</td></tr>`}</tbody>
+  </table></div>`;
+}
+
+/* ===== Event sheet ===== */
+function viewEvent() {
+  const e = getEv(S.eventId);
+  if (!e || !canSeeEvent(e)) { S.view = "events"; return viewEvents(); }
+  const M = isManager();
+  const all = { overview: "Prezentare", menu: M ? "Meniu și preț" : "Meniu", notes: M ? "Note și departamente" : "Note", seating: "Aranjare sală", payments: "Plăți", history: "Istoric" };
+  const allowed = M ? Object.keys(all) : S.role === "bucatarie" ? ["overview", "menu", "notes"] : ["overview", "menu", "notes", "seating"];
+  if (!allowed.includes(S.tab)) S.tab = "overview";
+  return `
+  <div class="head">
+    <div style="min-width:0">
+      <button class="back" data-action="go" data-view="events">${icon("left")}Evenimente</button>
+      <div class="rowflex" style="margin-top:10px;gap:10px"><h1>${esc(e.title)}</h1>${chip(STATUS_CHIP[e.status])}<span class="chip plain">${TYPES[e.type]}</span></div>
+      <div class="meta"><span><b>${fmtLong(e.date)}</b> · ${inDays(diffDays(e.date, TODAY))}</span><span><b class="num">${e.start}–${e.end}</b></span><span><b>${hall(e.hall).name}</b></span><span><b class="num">${e.adults}</b> adulți, <b class="num">${e.kids}</b> copii</span></div>
+    </div>
+    <div class="actions">
+      ${M ? `<button class="btn" data-action="edit-event">${icon("edit")}Editează detaliile</button>` : ""}
+      ${canArrange(e) ? `<button class="btn primary" data-action="share" ${e.layout.tables.length ? "" : "disabled"} title="${e.layout.tables.length ? "Trimite planul de mese clientului" : "Aranjează mai întâi mesele"}">${icon("share")}Distribuie așezarea</button>` : ""}
+    </div>
+  </div>
+  ${e.status === "optiune" && M ? `<div class="banner warn"><span>Data este ținută până pe <b>${fmtLong(e.optionExpires)}</b> (${inDays(diffDays(e.optionExpires, TODAY))}).</span><button class="btn primary sm" data-action="sign">Marchează contractul semnat</button></div>` : ""}
+  <div class="tabs" role="tablist">${allowed.map(k => `<button class="${S.tab === k ? "on" : ""}" data-action="tab" data-t="${k}" role="tab" aria-selected="${S.tab === k}">${all[k]}</button>`).join("")}</div>
+  ${({ overview: tabOverview, menu: tabMenu, notes: tabNotes, seating: tabSeating, payments: tabPayments, history: tabHistory })[S.tab](e)}`;
+}
+
+function countsHTML(e) {
+  const vegS = dietCount(e, "vegetarian"), allS = e.layout.guests.filter(g => g.diet === "alergie");
+  return `<div class="counts">
+    <div class="count-box"><b class="num">${e.adults}</b><span>Adulți</span></div>
+    <div class="count-box"><b class="num">${e.kids}</b><span>Copii · meniu copii</span></div>
+    <div class="count-box"><b class="num">${Math.max(e.vegCount, vegS)}</b><span>Vegetarieni${vegS ? ` · ${vegS} în lista de mese` : ""}</span></div>
+    <div class="count-box"><b class="num">${allS.length}</b><span>Alergii în lista de mese</span></div>
+  </div>
+  ${allS.length ? `<div class="stack small">${allS.map(g => { const t = e.layout.tables.find(x => x.id === g.table); return `<div class="rowflex">${chip(["bad", "Alergie"])}<span><b>${esc(g.name)}</b>${g.note ? ` · ${esc(g.note)}` : ""} · ${t ? tableName(t).toLowerCase() : "fără masă"}</span></div>`; }).join("")}</div>` : ""}`;
+}
+
+function tabOverview(e) {
+  const notes = visibleNotes(e);
+  const M = isManager();
+  const contact = M ? `<div class="card"><div class="card-h"><h2>Persoana de contact</h2></div><div class="card-b stack">
+      <div class="contact-line"><span class="muted small">Nume</span><span class="val">${esc(e.contact.name) || "—"}</span></div>
+      <div class="contact-line"><span class="val num">${esc(e.contact.phone) || "Fără telefon"}</span>${e.contact.phone ? `<span class="rowflex"><button class="btn sm" data-action="copy" data-text="${esc(e.contact.phone)}">${icon("copy")}Copiază</button><a class="btn wa sm" href="${waLink(e.contact.phone, `Bună ziua, ${e.contact.name}! Vă scriem de la Emerald Luxury Events în legătură cu ${e.title} din ${fmtFull(e.date)}.`)}" target="_blank" rel="noopener">${icon("wa")}WhatsApp</a></span>` : ""}</div>
+      <div class="contact-line"><span class="val">${esc(e.contact.email) || "Fără email"}</span>${e.contact.email ? `<button class="btn sm" data-action="copy" data-text="${esc(e.contact.email)}">${icon("copy")}Copiază emailul</button>` : ""}</div>
+    </div></div>` : "";
+  const money = M ? `<div class="card"><div class="card-h"><h2>Valoare și încasări</h2><button class="link" data-action="tab" data-t="payments">Detalii</button></div><div class="card-b stack">
+      <div class="contact-line"><span class="muted">Preț final</span><b class="num">${lei(price(e))} / pers.${e.customPrice ? `<span class="strike">${lei(e.menu.std)}</span>` : ""}</b></div>
+      <div class="contact-line"><span class="muted">Valoare totală</span><b class="num" style="font-size:18px">${lei(value(e))}</b></div>
+      ${e.payments.length ? `<div class="progress" style="height:8px"><i style="width:${Math.min(100, Math.round(paidSum(e) / value(e) * 100))}%"></i></div><div class="contact-line small"><span>Încasat <b class="num">${lei(paidSum(e))}</b></span><span class="muted">Rămas <b class="num" style="color:var(--fg)">${lei(value(e) - paidSum(e))}</b></span></div>` : `<span class="muted small">Plățile se generează la semnarea contractului.</span>`}
+    </div></div>` : "";
+  return `<section class="grid-2">
+    <div class="stack">
+      <div class="card"><div class="card-h"><h2>Invitați și meniuri speciale</h2></div><div class="card-b stack">${countsHTML(e)}</div></div>
+      <div class="card"><div class="card-h"><h2>Detalii eveniment</h2></div><div class="card-b"><dl class="kv">
+        <dt>Data și ora</dt><dd>${fmtFull(e.date)}, ${e.start}–${e.end}</dd>
+        <dt>Salon</dt><dd>${hall(e.hall).name} · ${hall(e.hall).cap} locuri</dd>
+        <dt>Meniu</dt><dd>${esc(menuName(e))}${countSwaps(e) ? ` · ${countSwaps(e)} ${countSwaps(e) === 1 ? "componentă schimbată" : "componente schimbate"}` : ""}</dd>
+        <dt>Mese</dt><dd>${e.layout.tables.length ? `${e.layout.tables.length} mese · ${seatCount(e.layout)} locuri` : "Nearanjate încă"}</dd>
+        <dt>Plan pentru client</dt><dd>${e.layout.sharedAt ? `Trimis pe ${fmtShort(e.layout.sharedAt)} · ${clientLocked(e) ? "blocat pentru modificări" : `editabil până pe ${fmtShort(editDeadline(e))}`}` : "Netrimis"}</dd>
+      </dl></div></div>
+    </div>
+    <div class="stack">
+      ${contact}${money}
+      <div class="card"><div class="card-h"><h2>${M ? "Note" : "Note pentru tine"}</h2><button class="link" data-action="tab" data-t="notes">${M ? "Gestionează" : "Toate"}</button></div>
+        ${notes.length ? `<div>${notes.map(n => `<div class="note" style="grid-template-columns:minmax(0,1fr)"><div>${noteCatChip(n.cat)}<p>${esc(n.text)}</p></div></div>`).join("")}</div>` : `<div class="empty">Nicio notă.</div>`}</div>
+    </div>
+  </section>`;
+}
+
+function tabMenu(e) {
+  const M = isManager();
+  const total = guestTotal(e);
+  const vname = v => DB.catalog[v] ? DB.catalog[v].name.replace("Emerald ", "") : v;
+  const sections = SECTIONS.map(([s, label]) => {
+    const items = e.menu.sections[s];
+    return `<div class="card"><div class="card-h"><h2>${label}</h2>
+      ${M ? `<div class="rowflex"><select id="sf-${s}" data-change="sec-from" data-s="${s}" aria-label="Meniul din care preiei secțiunea">${VARIANTS.map(v => `<option value="${v}" ${(S.secFrom[s] || e.menu.base) === v ? "selected" : ""}>${esc(DB.catalog[v].name)}</option>`).join("")}</select><button class="btn sm" data-action="sec-replace" data-s="${s}">${icon("swap")}Preia secțiunea</button></div>` : `<span class="chip plain num">${total} porții</span>`}</div>
+      <div class="items">${items.map((it, i) => `<div class="item"><span class="i num">${i + 1}.</span><span class="name">${esc(it.name)}${it.from !== e.menu.base ? `<span class="chip ${it.from === "custom" ? "info" : "warn"} nodot from">${it.from === "custom" ? "personalizat" : "din " + esc(vname(it.from))}</span>` : ""}</span>
+        ${M ? `<span class="tools"><button class="btn sm" data-action="pick" data-s="${s}" data-i="${i}">${icon("swap")}Schimbă</button><button class="x" data-action="item-del" data-s="${s}" data-i="${i}" aria-label="Elimină ${esc(it.name)}">×</button></span>` : "<span></span>"}</div>`).join("") || `<div class="empty">Nicio componentă.</div>`}</div>
+      ${M ? `<div class="card-b" style="border-top:1px solid var(--line);padding-block:10px"><button class="link" data-action="pick" data-s="${s}" data-i="-1">+ Adaugă componentă</button></div>` : ""}</div>`;
+  }).join("");
+  if (!M) return `<div class="card"><div class="card-h"><h2>${esc(menuName(e))}</h2></div><div class="card-b">${countsHTML(e)}</div></div><div class="grid-3">${sections}</div>`;
+  return `
+  <div class="card"><div class="card-h"><h2>Varianta de meniu</h2><span class="muted small">Alegerea unei variante înlocuiește tot meniul cu cel standard.</span></div>
+    <div class="card-b"><div class="variants">${VARIANTS.map(v => `<button class="variant ${e.menu.base === v ? "on" : ""}" data-action="base-pick" data-v="${v}"><b>${esc(DB.catalog[v].name)}</b><span class="num">${lei(DB.catalog[v].price)} / pers.</span></button>`).join("")}</div></div></div>
+  <div class="card"><div class="card-h"><h2>Preț</h2>${e.customPrice ? `<button class="link" data-action="price-reset">Revino la prețul standard</button>` : ""}</div>
+    <div class="card-b"><div class="price-box">
+      <div class="field"><span class="lbl">Preț standard</span><span class="big num">${lei(e.menu.std)}</span></div>
+      <div class="field"><label for="p-custom">Preț ajustat (lei / pers.)</label><input class="input num" id="p-custom" type="number" min="0" step="5" value="${e.customPrice ?? ""}" placeholder="${e.menu.std}" data-change="price"></div>
+      <div class="field"><label for="p-kids">Copii (% din preț)</label><input class="input num" id="p-kids" type="number" min="0" max="100" step="5" value="${e.kidsPct}" data-change="kids-pct"></div>
+      <div class="field"><span class="lbl">Preț final</span><span class="big num" style="color:var(--accent)">${lei(price(e))}${e.customPrice ? `<span class="strike">${lei(e.menu.std)}</span>` : ""}</span><span class="muted small num">Total: ${lei(value(e))} pentru ${e.adults} adulți și ${e.kids} copii</span></div>
+    </div></div></div>
+  <div class="stack" style="gap:16px">${sections}</div>`;
+}
+
+function tabNotes(e) {
+  const M = isManager();
+  const notes = visibleNotes(e);
+  const chief = hall(e.hall).chief;
+  const list = notes.length ? notes.map(n => `<div class="note"><div style="min-width:0">${noteCatChip(n.cat)}<p>${esc(n.text)}</p>
+      <div class="rowflex"><span class="muted small">${M ? "Trimisă la:" : "Primită de:"}</span>
+      ${M ? `<button class="toggle ${n.to.includes("bucatarie") ? "on" : ""}" data-action="note-to" data-n="${n.id}" data-to="bucatarie">${n.to.includes("bucatarie") ? "✓ " : ""}Bucătărie</button><button class="toggle ${n.to.includes("sala") ? "on" : ""}" data-action="note-to" data-n="${n.id}" data-to="sala">${n.to.includes("sala") ? "✓ " : ""}${chief}</button>${n.to.length ? "" : `<span class="muted small">doar manager</span>`}`
+        : n.to.map(t => `<span class="chip plain">${t === "bucatarie" ? "Bucătărie" : chief}</span>`).join("")}</div></div>
+      ${M ? `<button class="x" data-action="note-del" data-n="${n.id}" aria-label="Șterge nota">×</button>` : ""}</div>`).join("") : `<div class="empty">${M ? "Nicio notă încă. Adaug-o în formularul de alături." : "Nu ai primit nicio notă pentru acest eveniment."}</div>`;
+  return `<section class="grid-2">
+    <div class="card"><div class="card-h"><h2>${M ? "Note" : "Note primite"}</h2><span class="muted small">${notes.length} ${notes.length === 1 ? "notă" : "note"}</span></div><div>${list}</div></div>
+    ${M ? `<form class="card" id="noteForm"><div class="card-h"><h2>Notă nouă</h2></div><div class="card-b stack">
+      <div class="field"><label for="n-cat">Categorie</label><select id="n-cat">${NOTE_CATS.map(c => `<option>${c}</option>`).join("")}</select></div>
+      <div class="field"><label for="n-text">Text</label><textarea class="input" id="n-text" rows="4" placeholder="De exemplu: 2 invitați fără gluten, la masa 7." required></textarea></div>
+      <div class="field"><span class="lbl">Trimite către</span><div class="checks"><label><input type="checkbox" id="n-k" checked> Bucătărie</label><label><input type="checkbox" id="n-s" checked> ${chief}</label></div></div>
+      <div><button class="btn primary" type="submit">Salvează și trimite</button></div>
+    </div></form>` : `<div class="card"><div class="card-h"><h2>Invitați și meniuri speciale</h2></div><div class="card-b stack">${countsHTML(e)}</div></div>`}
+  </section>`;
+}
+
+function tabPayments(e) {
+  if (!e.payments.length) return `<div class="card"><div class="empty">Graficul de plăți se generează când contractul e semnat.</div></div>`;
+  return `<div class="card tbl-wrap"><table style="min-width:620px"><thead><tr><th>Tranșă</th><th>Scadență</th><th class="right">Sumă</th><th>Status</th><th></th></tr></thead><tbody>
+    ${e.payments.map((p, i) => `<tr><td class="t">${esc(p.label)}</td><td class="num">${fmtLong(p.due)}</td><td class="right num">${lei(p.amount)}</td><td>${chip(PAY_CHIP[payState(p)])}</td><td class="right">${p.paid ? "" : `<button class="btn sm" data-action="pay" data-id="${e.id}" data-i="${i}">Marchează încasat</button>`}</td></tr>`).join("")}
+    <tr><td class="t">Total</td><td></td><td class="right num"><b>${lei(value(e))}</b></td><td colspan="2" class="m">Încasat ${lei(paidSum(e))}</td></tr>
+  </tbody></table></div>`;
+}
+function tabHistory(e) {
+  return `<div class="card"><div class="card-h"><h2>Istoricul modificărilor</h2></div><div>${e.history.map(([t, w, m]) => `<div class="note" style="grid-template-columns:120px minmax(0,1fr)"><span class="muted small">${esc(t)}</span><span><b>${esc(w)}</b> · ${esc(m)}</span></div>`).join("")}</div></div>`;
+}
+
+/* ===== Seating plan ===== */
+function planSVG(e, mode, sel) {
+  const h = hall(e.hall), L = e.layout, cx = h.W / 2, cy = h.H / 2 + 30;
+  let g = `<rect x="${cx - 150}" y="${cy - 110}" width="300" height="220" rx="14" fill="var(--surface)" stroke="var(--line)" stroke-width="2" stroke-dasharray="8 6"/>
+    <text x="${cx}" y="${cy + 6}" text-anchor="middle" font-size="18" font-weight="600" fill="var(--muted)">Ring de dans</text>`;
+  const dotFill = gu => !gu ? "var(--surface)" : gu.diet === "vegetarian" ? "var(--veg)" : gu.diet === "copil" ? "var(--slate)" : gu.diet === "alergie" ? "var(--danger)" : "var(--accent)";
+  L.tables.forEach(t => {
+    const gs = guestsAt(L, t.id);
+    const veg = gs.some(x => x.diet === "vegetarian"), alg = gs.some(x => x.diet === "alergie");
+    const on = sel === t.id;
+    let inner = "";
+    if (t.kind === "head") {
+      const w = Math.max(200, t.seats * 30);
+      inner += `<rect x="${-w / 2}" y="-24" width="${w}" height="48" rx="8" fill="${on ? "var(--accent-soft)" : "var(--surface)"}" stroke="${on ? "var(--accent)" : "var(--chrome-dim)"}" stroke-width="${on ? 3 : 1.5}"/>
+        <text y="6" text-anchor="middle" font-size="15" font-weight="700" fill="var(--fg)">Masa mirilor</text>`;
+      for (let i = 0; i < t.seats; i++) inner += `<circle cx="${-w / 2 + (i + 0.5) * (w / t.seats)}" cy="36" r="7" fill="${dotFill(gs[i])}" stroke="var(--chrome-dim)" stroke-width="1"/>`;
+    } else {
+      const r = SEATS_R[t.seats] || 38;
+      inner += `<circle r="${r}" fill="${on ? "var(--accent-soft)" : veg ? "var(--veg-soft)" : "var(--surface)"}" stroke="${on ? "var(--accent)" : alg ? "var(--danger)" : "var(--chrome-dim)"}" stroke-width="${on || alg ? 3 : 1.5}"/>
+        <text y="3" text-anchor="middle" font-size="17" font-weight="700" fill="var(--fg)">${t.num}</text>
+        <text y="19" text-anchor="middle" font-size="11" fill="var(--muted)">${gs.length}/${t.seats}</text>`;
+      for (let i = 0; i < t.seats; i++) { const a = -Math.PI / 2 + i * 2 * Math.PI / t.seats; inner += `<circle cx="${(Math.cos(a) * (r + 11)).toFixed(1)}" cy="${(Math.sin(a) * (r + 11)).toFixed(1)}" r="6.5" fill="${dotFill(gs[i])}" stroke="var(--chrome-dim)" stroke-width="1"/>`; }
+      if (veg) inner += `<circle cx="${r * .8}" cy="${-r * .8}" r="11" fill="var(--veg)"/><text x="${r * .8}" y="${-r * .8 + 4}" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">V</text>`;
+      if (alg) inner += `<circle cx="${-r * .8}" cy="${-r * .8}" r="11" fill="var(--danger)"/><text x="${-r * .8}" y="${-r * .8 + 4.5}" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">!</text>`;
+    }
+    g += `<g class="tbl" data-tid="${t.id}" transform="translate(${t.x} ${t.y})" tabindex="0" role="button" aria-label="${tableName(t)}, ${gs.length} din ${t.seats} locuri">${inner}</g>`;
+  });
+  if (!L.tables.length) g += `<text x="${cx}" y="${cy - 150}" text-anchor="middle" font-size="16" fill="var(--muted)">Adaugă mese din panoul alăturat sau generează-le automat.</text>`;
+  return `<svg class="plan ${mode === "edit" ? "edit" : ""}" id="plan" data-mode="${mode}" viewBox="0 0 ${h.W} ${h.H}" role="img" aria-label="Planul salonului ${h.name}">${g}</svg>`;
+}
+const LEGEND = `<div class="legend"><span><i style="background:var(--accent);border-radius:50%"></i>Invitat</span><span><i style="background:var(--veg);border-radius:50%"></i>Vegetarian</span><span><i style="background:var(--slate);border-radius:50%"></i>Copil</span><span><i style="background:var(--danger);border-radius:50%"></i>Alergie</span><span><i style="background:var(--surface);border:1px solid var(--chrome-dim);border-radius:50%"></i>Loc liber</span></div>`;
+
+function tabSeating(e) {
+  const L = e.layout, sel = L.tables.find(t => t.id === S.sel);
+  const seats = seatCount(L), need = guestTotal(e);
+  return `
+  <div class="plan-wrap">
+    <div class="card"><div class="card-h"><h2>${hall(e.hall).name}</h2>${LEGEND}</div><div class="card-b">${planSVG(e, "edit", S.sel)}
+      <p class="muted small" style="margin:10px 0 0">Trage mesele ca să le muți. Apasă pe o masă ca s-o selectezi. Ringul rămâne în mijloc.</p></div></div>
+    <div class="side-panel">
+      <div class="card"><div class="card-h"><h2>Adaugă mese</h2></div><div class="card-b stack">
+        <div class="adds">${[6, 8, 10, 12].map(n => `<button class="btn sm" data-action="add-table" data-n="${n}">+ ${n} loc.</button>`).join("")}</div>
+        <button class="btn sm" data-action="add-head" ${L.tables.some(t => t.kind === "head") ? "disabled" : ""}>+ Masa mirilor</button>
+        <div class="rowflex"><select id="auto-n" aria-label="Locuri pe masă">${[6, 8, 10, 12].map(n => `<option value="${n}" ${n === 10 ? "selected" : ""}>Mese de ${n}</option>`).join("")}</select><button class="btn sm" data-action="auto">${icon("wand")}Generează automat</button></div>
+        <div class="contact-line small"><span class="muted">Mese / locuri</span><b class="num">${L.tables.length} / ${seats}</b></div>
+        <div class="contact-line small"><span class="muted">Invitați declarați</span><b class="num" style="color:${seats >= need ? "var(--accent)" : "var(--danger)"}">${need}${seats < need && L.tables.length ? ` · lipsesc ${need - seats} locuri` : ""}</b></div>
+        <div class="contact-line small"><span class="muted">Așezați de client</span><b class="num">${L.guests.filter(g => g.table).length} din ${L.guests.length}</b></div>
+      </div></div>
+      ${sel ? `<div class="card"><div class="card-h"><h2>${tableName(sel)}</h2><button class="x" data-action="desel" aria-label="Deselectează">×</button></div><div class="card-b stack">
+        <div class="field"><label for="t-seats">Locuri</label><select id="t-seats" data-change="seats">${(sel.kind === "head" ? [4, 6, 8, 10, 12, 14] : [6, 8, 10, 12]).map(n => `<option value="${n}" ${sel.seats === n ? "selected" : ""}>${n} locuri</option>`).join("")}</select></div>
+        <div class="stack small">${guestsAt(L, sel.id).map(g => `<div class="rowflex">${chip(DIETS[g.diet])}<span>${esc(g.name)}${g.note ? ` · ${esc(g.note)}` : ""}</span></div>`).join("") || `<span class="muted">Nimeni așezat încă.</span>`}</div>
+        <button class="btn sm danger" data-action="del-table">Șterge masa</button>
+      </div></div>` : ""}
+      <div class="card"><div class="card-h"><h2>Pentru client</h2></div><div class="card-b stack">
+        <span class="small">${L.sharedAt ? `Trimis pe <b>${fmtShort(L.sharedAt)}</b>.` : "Planul nu a fost trimis încă."} Clientul poate adăuga invitați până pe <b>${fmtShort(editDeadline(e))}</b>.</span>
+        ${clientLocked(e) ? `<span class="chip warn">Blocat pentru client: au rămas 3 zile sau mai puțin</span>` : ""}
+        <label class="small rowflex" style="font-weight:600"><input type="checkbox" id="unlock" data-change="unlock" ${L.clientUnlock ? "checked" : ""}> Permite modificări și după termen</label>
+        <button class="btn primary" data-action="share" ${L.tables.length ? "" : "disabled"}>${icon("share")}Distribuie clientului</button>
+        <button class="btn" data-action="as-client">${icon("eye")}Vezi ce vede clientul</button>
+      </div></div>
+    </div>
+  </div>`;
+}
+
+/* ===== Client view ===== */
+function clientTop() {
+  return `<div class="client-top">
+    <div class="brand"><svg viewBox="0 0 40 32" fill="none" aria-hidden="true"><path d="M9 2.5h22l6.5 8L20 29.5 2.5 10.5 9 2.5Z" stroke="#C8CDD1" stroke-width="2.2" stroke-linejoin="round"/><path d="M13 10.5h14L20 19l-4.2-4.6M9 2.5l4 8M31 2.5l-4 8" stroke="#C8CDD1" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/></svg>
+    <div class="brand-text"><div class="word">EMERALD</div><div class="word-sub">LUXURY EVENTS</div></div></div>
+    ${S.clientPreview ? `<button class="exit" data-action="exit-client">Închide previzualizarea</button>` : ""}
+  </div>`;
+}
+function viewClient() {
+  const e = getEv(S.client);
+  if (!e) return `<div class="card"><div class="empty">Linkul nu mai este valid. Contactați managerul de eveniment: ${MANAGER.name}, ${MANAGER.phone}.</div></div>`;
+  const L = e.layout, locked = clientLocked(e);
+  const sel = L.tables.find(t => t.id === S.clientSel);
+  const unseated = L.guests.filter(g => !g.table);
+  const at = sel ? guestsAt(L, sel.id) : [];
+  const free = sel && at.length < sel.seats;
+  return `
+  <div class="head"><div><p class="eyebrow">Planul meselor</p><h1>${esc(e.title)}</h1>
+    <div class="meta"><span><b>${fmtFull(e.date)}</b>, ${e.start}</span><span><b>${hall(e.hall).name}</b></span><span><b class="num">${L.guests.filter(g => g.table).length}</b> din ${seatCount(L)} locuri ocupate</span></div></div></div>
+  ${locked ? `<div class="banner warn"><span>${icon("lock")}Până la eveniment au rămas 3 zile sau mai puțin, așa că lista nu mai poate fi modificată aici. Pentru schimbări, scrieți-i managerului: <b>${MANAGER.name}</b>, <span class="num">${MANAGER.phone || ""}</span>.</span>
+      ${MANAGER.phone ? `<a class="btn wa" href="${waLink(MANAGER.phone, `Bună ziua! Sunt ${e.contact.name}, de la ${e.title} (${fmtFull(e.date)}). Aș vrea să fac o modificare la așezarea invitaților.`)}" target="_blank" rel="noopener">${icon("wa")}Scrie managerului</a>` : ""}</div>`
+    : `<div class="banner ok"><span>Puteți adăuga și muta invitații până pe <b>${fmtFull(editDeadline(e))}</b>. Apăsați pe o masă, apoi adăugați invitații.</span></div>`}
+  <div class="plan-wrap">
+    <div class="card"><div class="card-h"><h2>Planul salonului</h2>${LEGEND}</div><div class="card-b">${planSVG(e, "client", S.clientSel)}</div></div>
+    <div class="side-panel">
+      ${sel ? `<div class="card"><div class="card-h"><h2>${tableName(sel)}</h2><span class="chip plain num">${at.length}/${sel.seats}</span></div><div class="card-b">
+        <div>${at.map(g => `<div class="guest"><span style="min-width:0"><div class="gn">${esc(g.name)}</div>${chip(DIETS[g.diet])}${g.note ? ` <span class="muted small">${esc(g.note)}</span>` : ""}</span>${locked ? "" : `<button class="btn sm" data-action="g-unseat" data-g="${g.id}">Scoate</button>`}</div>`).join("") || `<p class="muted small" style="margin:0">Masa e liberă.</p>`}</div>
+        ${!locked && free ? `<form id="guestForm" class="stack" style="margin-top:14px;border-top:1px solid var(--line);padding-top:14px">
+          <div class="field"><label for="g-name">Nume invitat</label><input class="input" id="g-name" required autocomplete="off" placeholder="De exemplu: Maria Ionescu"></div>
+          <div class="fields"><div class="field"><label for="g-diet">Meniu</label><select id="g-diet">${Object.entries(DIETS).map(([k, [, t]]) => `<option value="${k}">${t}</option>`).join("")}</select></div>
+          <div class="field"><label for="g-note">Observații</label><input class="input" id="g-note" placeholder="alergie, scaun de copil…"></div></div>
+          <button class="btn primary" type="submit">${icon("plus")}Adaugă la masă</button></form>` : !locked ? `<p class="muted small" style="margin:12px 0 0">Masa este completă.</p>` : ""}
+      </div></div>` : `<div class="card"><div class="card-b"><p style="margin:0">Apăsați pe o masă din plan ca să vedeți cine stă acolo și să adăugați invitați.</p></div></div>`}
+      <div class="card"><div class="card-h"><h2>Invitați fără masă</h2><span class="chip plain num">${unseated.length}</span></div><div class="card-b">
+        ${unseated.map(g => `<div class="guest"><span style="min-width:0"><div class="gn">${esc(g.name)}</div>${chip(DIETS[g.diet])}</span>${locked ? "" : `<span class="rowflex">${free ? `<button class="btn sm" data-action="g-seat" data-g="${g.id}">La ${tableName(sel).toLowerCase()}</button>` : ""}<button class="x" data-action="g-del" data-g="${g.id}" aria-label="Șterge invitatul">×</button></span>`}</div>`).join("") || `<p class="muted small" style="margin:0">Toți invitații au masă.</p>`}
+      </div></div>
+      <div class="card"><div class="card-b small muted">Vegetarieni: <b style="color:var(--fg)">${dietCount(e, "vegetarian")}</b> · Copii: <b style="color:var(--fg)">${dietCount(e, "copil")}</b> · Alergii: <b style="color:var(--fg)">${dietCount(e, "alergie")}</b>. Bucătăria și șeful de sală văd automat aceste informații.</div></div>
+    </div>
+  </div>`;
+}
+
+/* ===== Standard menus ===== */
+function viewMenus() {
+  return `
+  <div class="head"><div><p class="eyebrow">Meniuri standard</p><h1>Variantele de meniu Emerald</h1><p class="sub">Prețurile și componentele de aici se folosesc la evenimentele noi. Evenimentele existente își păstrează meniul ales.</p></div></div>
+  <div class="cat-grid">${VARIANTS.map(v => { const c = DB.catalog[v]; return `<div class="card">
+    <div class="card-h"><h2>${esc(c.name)}</h2><label class="rowflex small muted">Preț standard <input class="input num" style="width:100px" type="number" min="0" step="5" value="${c.price}" data-change="cat-price" data-v="${v}" aria-label="Preț standard ${esc(c.name)}"> lei</label></div>
+    ${SECTIONS.map(([s, label]) => `<div class="cat-sec"><span>${label}</span><button class="link" data-action="cat-add" data-v="${v}" data-s="${s}">+ Adaugă</button></div>
+      <div class="items">${c[s].map((name, i) => `<div class="item"><span class="i num">${i + 1}.</span><input class="input" value="${esc(name)}" data-change="cat-item" data-v="${v}" data-s="${s}" data-i="${i}" aria-label="${label} ${i + 1}"><span class="tools"><button class="x" data-action="cat-del" data-v="${v}" data-s="${s}" data-i="${i}" aria-label="Șterge">×</button></span></div>`).join("")}</div>`).join("")}
+  </div>`; }).join("")}</div>`;
+}
+
+/* ===== Payments ===== */
+function viewPayments() {
+  const all = [];
+  EV().forEach(e => e.payments.forEach((p, i) => all.push({ e, p, i, st: payState(p) })));
+  const open = all.filter(x => x.st !== "paid").sort((a, b) => a.p.due.localeCompare(b.p.due));
+  const sum = arr => arr.reduce((s, x) => s + x.p.amount, 0);
+  const f = st => open.filter(x => x.st === st);
+  return `
+  <div class="head"><div><p class="eyebrow">Plăți</p><h1>Încasări de urmărit</h1><p class="sub">Tranșele tuturor evenimentelor confirmate, în ordinea scadenței.</p></div></div>
+  <section class="kpis">
+    <div class="card kpi"><span class="label">Restanțe</span><span class="value num" style="color:var(--danger)">${lei(sum(f("overdue")))}</span><span class="kpi-note">${f("overdue").length} tranșe</span></div>
+    <div class="card kpi"><span class="label">Scadente în 14 zile</span><span class="value num">${lei(sum(f("soon")))}</span><span class="kpi-note">${f("soon").length} tranșe</span></div>
+    <div class="card kpi"><span class="label">Programate</span><span class="value num">${lei(sum(f("scheduled")))}</span><span class="kpi-note">după 14 zile</span></div>
+    <div class="card kpi"><span class="label">Încasat total</span><span class="value num">${lei(sum(all.filter(x => x.st === "paid")))}</span><span class="kpi-note">pentru evenimentele din listă</span></div>
+  </section>
+  <div class="card tbl-wrap"><table><thead><tr><th>Scadență</th><th>Eveniment</th><th>Tranșă</th><th class="right">Sumă</th><th>Status</th><th></th></tr></thead><tbody>
+  ${open.map(({ e, p, i, st }) => `<tr><td><div class="t num">${fmtShort(p.due)}</div><div class="m">${inDays(diffDays(p.due, TODAY))}</div></td><td><button class="link" style="color:var(--fg)" data-action="open" data-id="${e.id}" data-tab="payments">${esc(e.title)}</button><div class="m">${fmtLong(e.date)}</div></td><td>${esc(p.label)}</td><td class="right num">${lei(p.amount)}</td><td>${chip(PAY_CHIP[st])}</td><td class="right"><button class="btn sm" data-action="pay" data-id="${e.id}" data-i="${i}">Marchează încasat</button></td></tr>`).join("") || `<tr><td colspan="6" class="empty">Nicio plată de urmărit.</td></tr>`}
+  </tbody></table></div>`;
+}
+
+/* ===== Settings ===== */
+function viewSettings() {
+  return `
+  <div class="head"><div><p class="eyebrow">Setări</p><h1>Setări Emerald</h1><p class="sub">Numele și telefonul managerului apar la clienți, pe planul meselor, când lista de invitați se blochează.</p></div></div>
+  <form class="card" id="settingsForm" style="max-width:680px"><div class="card-h"><h2>Managerul de eveniment</h2></div><div class="card-b stack">
+    <div class="fields">
+      <div class="field"><label for="st-name">Nume</label><input class="input" id="st-name" value="${esc(MANAGER.name === "Manager" ? "" : MANAGER.name)}" placeholder="De exemplu: Ana Popescu" autocomplete="off"></div>
+      <div class="field"><label for="st-phone">Telefon (WhatsApp)</label><input class="input" id="st-phone" type="tel" value="${esc(MANAGER.phone)}" placeholder="07xx xxx xxx" autocomplete="off"></div>
+    </div>
+    <div><button class="btn primary" type="submit">Salvează</button></div>
+  </div></form>
+  <div class="card" style="max-width:680px"><div class="card-h"><h2>Saloane</h2></div><div class="card-b"><dl class="kv">${HALLS.map(h => `<dt>${h.name}</dt><dd class="num">${h.cap} locuri · ${h.chief}</dd>`).join("")}</dl></div></div>
+  <div class="card" style="max-width:680px"><div class="card-h"><h2>Datele salvate</h2></div><div class="card-b stack">
+    <p class="sub" style="margin:0">În această versiune demo, datele se salvează doar în browserul în care lucrezi. Pe alt calculator sau telefon aplicația pornește goală.</p>
+    <div class="rowflex"><button class="btn" type="button" data-action="tour">? Reia tutorialul</button><button class="btn danger" type="button" data-action="reset">Șterge toate datele</button></div>
+  </div></div>`;
+}
+
+/* ===== Modals ===== */
+function modalHTML() {
+  const M = S.modal;
+  if (!M) return "";
+  const e = getEv(S.eventId);
+  const wrap = (title, body, foot, wide, tag = "div", id = "") => `<div class="overlay" data-action="close-modal"><${tag} class="modal ${wide ? "wide" : ""}" ${id ? `id="${id}"` : ""} role="dialog" aria-modal="true" aria-label="${esc(title)}">
+    <div class="modal-h"><h2>${esc(title)}</h2><button type="button" class="x" data-action="close-modal" aria-label="Închide">×</button></div>
+    <div class="modal-b">${body}</div><div class="modal-f">${foot}</div></${tag}></div>`;
+
+  if (M.kind === "event") {
+    const x = M.id ? getEv(M.id) : null;
+    const v = x || { title: "", type: "nunta", status: "confirmat", date: M.date || addDays(TODAY, 30), start: "18:00", end: "04:00", hall: M.hall || "gold", adults: 150, kids: 0, contact: { name: "", phone: "", email: "" }, optionExpires: addDays(TODAY, 7) };
+    return wrap(x ? "Editează evenimentul" : "Eveniment nou", `
+      <div class="field"><label for="f-title">Numele evenimentului</label><input class="input" id="f-title" required value="${esc(v.title)}" placeholder="De exemplu: Nunta Maria & Alin"></div>
+      <div class="fields three">
+        <div class="field"><label for="f-type">Tip</label><select id="f-type">${Object.entries(TYPES).map(([k, t]) => `<option value="${k}" ${v.type === k ? "selected" : ""}>${t}</option>`).join("")}</select></div>
+        <div class="field"><label for="f-status">Status</label><select id="f-status">${Object.entries(STATUS_CHIP).map(([k, [, t]]) => `<option value="${k}" ${v.status === k ? "selected" : ""}>${t}</option>`).join("")}</select></div>
+        <div class="field"><label for="f-opt">Opțiune valabilă până</label><input class="input" id="f-opt" type="date" value="${v.optionExpires || addDays(TODAY, 7)}"></div>
+      </div>
+      <div class="fields three">
+        <div class="field"><label for="f-date">Data</label><input class="input" id="f-date" type="date" required value="${v.date}"></div>
+        <div class="field"><label for="f-start">Ora de început</label><input class="input" id="f-start" type="time" required value="${v.start}"></div>
+        <div class="field"><label for="f-end">Ora de final</label><input class="input" id="f-end" type="time" required value="${v.end}"></div>
+      </div>
+      <div class="fields three">
+        <div class="field"><label for="f-hall">Salon</label><select id="f-hall">${HALLS.map(h => `<option value="${h.id}" ${v.hall === h.id ? "selected" : ""}>${h.name} (${h.cap})</option>`).join("")}</select></div>
+        <div class="field"><label for="f-adults">Adulți</label><input class="input num" id="f-adults" type="number" min="0" required value="${v.adults}"></div>
+        <div class="field"><label for="f-kids">Copii</label><input class="input num" id="f-kids" type="number" min="0" value="${v.kids}"></div>
+      </div>
+      ${x ? "" : `<div class="field"><label for="f-menu">Meniu</label><select id="f-menu">${VARIANTS.map(k => `<option value="${k}" ${k === "classic" ? "selected" : ""}>${esc(DB.catalog[k].name)} · ${lei(DB.catalog[k].price)}/pers.</option>`).join("")}</select><span class="muted small">Componentele și prețul se pot ajusta după salvare, în tabul „Meniu și preț”.</span></div>`}
+      <div class="fields three">
+        <div class="field"><label for="f-cname">Persoana de contact</label><input class="input" id="f-cname" value="${esc(v.contact.name)}" autocomplete="off"></div>
+        <div class="field"><label for="f-cphone">Telefon (WhatsApp)</label><input class="input" id="f-cphone" type="tel" value="${esc(v.contact.phone)}" placeholder="07xx xxx xxx" autocomplete="off"></div>
+        <div class="field"><label for="f-cemail">Email</label><input class="input" id="f-cemail" type="email" value="${esc(v.contact.email)}" autocomplete="off"></div>
+      </div>
+      <p class="err" id="f-err" hidden></p>`,
+      `${x ? `<button type="button" class="btn danger" data-action="ask-delete" style="margin-right:auto">Șterge evenimentul</button>` : ""}<button type="button" class="btn" data-action="close-modal">Renunță</button><button type="submit" class="btn primary">${x ? "Salvează" : "Creează evenimentul"}</button>`, true, "form", "evForm");
+  }
+  if (M.kind === "delete") return wrap("Ștergi evenimentul?", `<p style="margin:0"><b>${esc(e.title)}</b> din ${fmtFull(e.date)} va fi șters împreună cu meniul, notele, planul de mese și plățile. Acțiunea nu poate fi anulată.</p>`, `<button class="btn" data-action="close-modal">Renunță</button><button class="btn solid-danger" data-action="do-delete">Șterge definitiv</button>`);
+  if (M.kind === "base") return wrap(`Treci pe ${DB.catalog[M.v].name}?`, `<p style="margin:0">Tot meniul acestui eveniment va fi înlocuit cu varianta standard <b>${esc(DB.catalog[M.v].name)}</b>, la ${lei(DB.catalog[M.v].price)} / pers. Componentele schimbate și prețul ajustat se pierd.</p>`, `<button class="btn" data-action="close-modal">Renunță</button><button class="btn primary" data-action="do-base">Înlocuiește meniul</button>`);
+  if (M.kind === "pick") {
+    const label = SECTIONS.find(s => s[0] === M.s)[1];
+    const cur = M.i >= 0 ? e.menu.sections[M.s][M.i] : null;
+    const tabV = M.v || VARIANTS.find(v => v !== e.menu.base);
+    const items = DB.catalog[tabV][M.s];
+    return wrap(cur ? `Schimbă: ${cur.name}` : `Adaugă la ${label}`, `
+      <p class="muted small" style="margin:0">Alege componenta din oricare variantă de meniu. Apare marcată în meniul evenimentului.</p>
+      <div class="seg">${VARIANTS.map(v => `<button class="${v === tabV ? "on" : ""}" data-action="pick-tab" data-v="${v}">${esc(DB.catalog[v].name.replace("Emerald ", ""))}</button>`).join("")}</div>
+      <div class="pick-list">${items.map((n, i) => `<button data-action="pick-do" data-v="${tabV}" data-k="${i}"><span>${esc(n)}</span><span class="muted small">${label}</span></button>`).join("")}</div>
+      <div class="field"><label for="pk-custom">Sau scrie o componentă personalizată</label><div class="rowflex"><input class="input" id="pk-custom" style="flex:1" placeholder="De exemplu: Tartă cu ciuperci de pădure"><button class="btn" data-action="pick-custom">Folosește</button></div></div>`,
+      `<button class="btn" data-action="close-modal">Renunță</button>`, true);
+  }
+  if (M.kind === "share") {
+    const txt = shareText(e);
+    return wrap("Distribuie așezarea clientului", `
+      <p style="margin:0">Clientul primește un link spre planul salonului, unde poate adăuga invitații la mese până pe <b>${fmtFull(editDeadline(e))}</b>.</p>
+      <dl class="kv"><dt>Către</dt><dd>${esc(e.contact.name) || "—"} · <span class="num">${esc(e.contact.phone) || "fără telefon"}</span></dd></dl>
+      <div class="msg">${esc(txt)}</div>
+      ${e.contact.phone ? "" : `<p class="err">Adaugă un număr de telefon la persoana de contact ca să poți trimite pe WhatsApp.</p>`}`,
+      `<button class="btn" data-action="copy" data-text="${esc(txt)}">${icon("copy")}Copiază mesajul</button><button class="btn" data-action="as-client">${icon("eye")}Vezi ca client</button>${e.contact.phone ? `<a class="btn wa" href="${waLink(e.contact.phone, txt)}" target="_blank" rel="noopener" data-action="shared">${icon("wa")}Trimite pe WhatsApp</a>` : ""}`, true);
+  }
+  if (M.kind === "reset") return wrap("Ștergi toate datele?", `<p style="margin:0">Toate evenimentele, notele, planurile de mese și plățile salvate în acest browser se șterg, iar meniurile revin la variantele standard Emerald. Acțiunea nu poate fi anulată.</p>`, `<button class="btn" data-action="close-modal">Renunță</button><button class="btn solid-danger" data-action="do-reset">Șterge tot</button>`);
+  return "";
+}
+
+/* ===== Render ===== */
+function render() {
+  const app = document.getElementById("app");
+  app.classList.toggle("client-mode", S.view === "client");
+  if (S.view === "client") {
+    document.getElementById("page").innerHTML = clientTop() + viewClient();
+  } else {
+    if (!NAV.some(n => (n.id === S.view || (S.view === "event" && n.id === "events")) && navAllowed(n))) S.view = "events";
+    renderNav();
+    const V = { dashboard: viewDashboard, calendar: viewCalendar, events: viewEvents, event: viewEvent, menus: viewMenus, payments: viewPayments, settings: viewSettings };
+    document.getElementById("page").innerHTML = V[S.view]();
+  }
+  document.getElementById("layer").innerHTML = modalHTML();
+  tourUpdate();
+  if (S.modal && S.modal.kind === "event") { const f = document.getElementById("f-title"); if (f) f.focus(); }
+}
+
+let toastTimer;
+function toast(msg) {
+  clearTimeout(toastTimer);
+  const old = document.querySelector(".toast"); if (old) old.remove();
+  const t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "status"); t.innerHTML = `<i></i><span>${esc(msg)}</span>`;
+  document.body.appendChild(t); toastTimer = setTimeout(() => t.remove(), 4200);
+}
+function go(view) { S.view = view; S.modal = null; S.sel = null; document.getElementById("app").classList.remove("open"); render(); window.scrollTo(0, 0); }
+function commit(msg) { save(); render(); if (msg) toast(msg); }
+
+/* ===== Actions ===== */
+const ACTIONS = {
+  "go": el => go(el.dataset.view),
+  "open": el => { S.eventId = el.dataset.id; S.tab = el.dataset.tab || "overview"; S.secFrom = {}; go("event"); },
+  "tab": el => { S.tab = el.dataset.t; S.sel = null; render(); },
+  "filter": el => { S.filter = el.dataset.f; render(); },
+  "week": el => { const d = +el.dataset.d; S.week = d === 0 ? mondayOf(TODAY) : addDays(S.week, d); render(); },
+  "open-menu": () => document.getElementById("app").classList.add("open"),
+  "close-menu": () => document.getElementById("app").classList.remove("open"),
+  "close-modal": () => { S.modal = null; render(); },
+  "new-event": el => { S.modal = { kind: "event", date: el.dataset.date, hall: el.dataset.hall }; render(); },
+  "edit-event": () => { S.modal = { kind: "event", id: S.eventId }; render(); },
+  "ask-delete": () => { S.modal = { kind: "delete" }; render(); },
+  "do-delete": () => { const e = getEv(S.eventId); DB.events = DB.events.filter(x => x.id !== S.eventId); save(); go("events"); toast(`${e.title} a fost șters.`); },
+  "reset": () => { S.modal = { kind: "reset" }; render(); },
+  "do-reset": () => { DB = seed(); Object.assign(MANAGER, DB.settings); ROLES.manager.name = MANAGER.name; ROLES.manager.init = initials(MANAGER.name); save(); go(isManager() ? "dashboard" : "events"); toast("Toate datele au fost șterse."); },
+  "tour": () => tourStart(),
+  "sign": () => { const e = getEv(S.eventId); e.status = "confirmat"; e.payments = buildPayments(e); e.payments.forEach((p, i) => { p.paid = i === 0; }); log(e, MANAGER.name, "Contract semnat. S-a generat graficul de plăți."); commit("Contract semnat. Graficul de plăți a fost generat."); },
+  "pay": el => { const e = getEv(el.dataset.id), p = e.payments[+el.dataset.i]; p.paid = true; log(e, MANAGER.name, `${p.label} încasată: ${lei(p.amount)}.`); commit(`${lei(p.amount)} marcat ca încasat.`); },
+  "copy": el => {
+    const text = el.dataset.text;
+    const fallback = () => { const ta = document.createElement("textarea"); ta.value = text; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select(); let ok = false; try { ok = document.execCommand("copy"); } catch (_) {} ta.remove(); toast(ok ? "Copiat." : "Selectează textul și copiază-l manual."); };
+    try { navigator.clipboard.writeText(text).then(() => toast("Copiat."), fallback); } catch (_) { fallback(); }
+  },
+  "base-pick": el => { const e = getEv(S.eventId); if (e.menu.base === el.dataset.v && !countSwaps(e) && !e.customPrice) return; S.modal = { kind: "base", v: el.dataset.v }; render(); },
+  "do-base": () => { const e = getEv(S.eventId), v = S.modal.v; e.menu = menuFrom(DB.catalog, v); e.customPrice = null; syncPayments(e); log(e, MANAGER.name, `Meniul a fost schimbat în ${DB.catalog[v].name} (${lei(e.menu.std)}/pers.).`); S.modal = null; commit(`Meniul este acum ${DB.catalog[v].name}.`); },
+  "sec-replace": el => { const e = getEv(S.eventId), s = el.dataset.s, sel = document.getElementById("sf-" + s), v = sel ? sel.value : e.menu.base; e.menu.sections[s] = DB.catalog[v][s].map(name => ({ name, from: v })); const label = SECTIONS.find(x => x[0] === s)[1]; log(e, MANAGER.name, `${label}: preluat integral din ${DB.catalog[v].name}.`); commit(`${label} preluat din ${DB.catalog[v].name}.`); },
+  "pick": el => { S.modal = { kind: "pick", s: el.dataset.s, i: +el.dataset.i }; render(); },
+  "pick-tab": el => { S.modal.v = el.dataset.v; render(); },
+  "pick-do": el => applyPick({ name: DB.catalog[el.dataset.v][S.modal.s][+el.dataset.k], from: el.dataset.v }),
+  "pick-custom": () => { const inp = document.getElementById("pk-custom"), v = inp.value.trim(); if (!v) { inp.focus(); return; } applyPick({ name: v, from: "custom" }); },
+  "item-del": el => { const e = getEv(S.eventId), it = e.menu.sections[el.dataset.s].splice(+el.dataset.i, 1)[0]; log(e, MANAGER.name, `Componentă eliminată: ${it.name}.`); commit(`Eliminat: ${it.name}.`); },
+  "price-reset": () => { const e = getEv(S.eventId); e.customPrice = null; syncPayments(e); log(e, MANAGER.name, `Preț readus la standard: ${lei(e.menu.std)}/pers.`); commit("Prețul a revenit la cel standard."); },
+  "note-to": el => { const e = getEv(S.eventId), n = e.notes.find(x => x.id === el.dataset.n), to = el.dataset.to; n.to = n.to.includes(to) ? n.to.filter(x => x !== to) : n.to.concat(to); const who = to === "bucatarie" ? "Bucătărie" : hall(e.hall).chief; const on = n.to.includes(to); log(e, MANAGER.name, `Nota „${n.cat}” ${on ? "trimisă la" : "retrasă de la"} ${who}.`); commit(on ? `Nota a fost trimisă la ${who}.` : `Nota nu mai e vizibilă pentru ${who}.`); },
+  "note-del": el => { const e = getEv(S.eventId); e.notes = e.notes.filter(x => x.id !== el.dataset.n); log(e, MANAGER.name, "Notă ștearsă."); commit("Nota a fost ștearsă."); },
+  "add-table": el => { const e = getEv(S.eventId), n = +el.dataset.n, L = e.layout, h = hall(e.hall); const num = Math.max(0, ...L.tables.map(t => t.num)) + 1; const t = { id: uid("t"), kind: "round", seats: n, x: 80 + ((num - 1) * 97) % (h.W - 160), y: h.H - 60, num }; L.tables.push(t); S.sel = t.id; commit(`Masa ${num} (${n} locuri) a fost adăugată jos. Trage-o unde vrei.`); },
+  "add-head": () => { const e = getEv(S.eventId), h = hall(e.hall); const t = { id: uid("t"), kind: "head", seats: 8, x: h.W / 2, y: 70, num: 0 }; e.layout.tables.push(t); S.sel = t.id; commit("Masa mirilor a fost adăugată."); },
+  "auto": () => { const e = getEv(S.eventId), n = +document.getElementById("auto-n").value; e.layout.tables = autoTables(e.hall, guestTotal(e), n, e.type === "nunta"); const ids = new Set(e.layout.tables.map(t => t.id)); e.layout.guests.forEach(g => { if (!ids.has(g.table)) g.table = null; }); S.sel = null; log(e, ROLES[S.role].name, `Plan generat automat: ${e.layout.tables.length} mese de ${n}.`); commit(`Am așezat ${e.layout.tables.length} mese în jurul ringului.`); },
+  "desel": () => { S.sel = null; render(); },
+  "del-table": () => { const e = getEv(S.eventId), L = e.layout; L.guests.forEach(g => { if (g.table === S.sel) g.table = null; }); L.tables = L.tables.filter(t => t.id !== S.sel); S.sel = null; commit("Masa a fost ștearsă. Invitații ei au rămas fără masă."); },
+  "share": () => { S.modal = { kind: "share" }; render(); },
+  "shared": () => { const e = getEv(S.eventId); e.layout.sharedAt = TODAY; log(e, ROLES[S.role].name, `Planul de mese a fost trimis pe WhatsApp către ${e.contact.name}.`); save(); setTimeout(() => { S.modal = null; render(); toast("Planul a fost marcat ca trimis."); }, 300); },
+  "as-client": () => { S.client = S.eventId; S.clientSel = null; S.clientPreview = true; S.modal = null; S.view = "client"; render(); window.scrollTo(0, 0); },
+  "exit-client": () => { S.clientPreview = false; S.eventId = S.client; S.tab = "seating"; S.view = "event"; render(); window.scrollTo(0, 0); },
+  "g-unseat": el => { const e = getEv(S.client), g = e.layout.guests.find(x => x.id === el.dataset.g); g.table = null; commit(`${g.name} nu mai are masă.`); },
+  "g-seat": el => { const e = getEv(S.client), g = e.layout.guests.find(x => x.id === el.dataset.g); g.table = S.clientSel; commit(`${g.name} a fost așezat la masă.`); },
+  "g-del": el => { const e = getEv(S.client), g = e.layout.guests.find(x => x.id === el.dataset.g); e.layout.guests = e.layout.guests.filter(x => x.id !== g.id); commit(`${g.name} a fost șters din listă.`); },
+  "cat-add": el => { DB.catalog[el.dataset.v][el.dataset.s].push("Componentă nouă"); commit(); const inputs = document.querySelectorAll(`[data-change="cat-item"][data-v="${el.dataset.v}"][data-s="${el.dataset.s}"]`); const last = inputs[inputs.length - 1]; if (last) { last.focus(); last.select(); } },
+  "cat-del": el => { const n = DB.catalog[el.dataset.v][el.dataset.s].splice(+el.dataset.i, 1)[0]; commit(`Eliminat din ${DB.catalog[el.dataset.v].name}: ${n}.`); },
+};
+function applyPick(item) {
+  const e = getEv(S.eventId), s = S.modal.s, i = S.modal.i, label = SECTIONS.find(x => x[0] === s)[1];
+  if (i >= 0) { const old = e.menu.sections[s][i]; e.menu.sections[s][i] = item; log(e, MANAGER.name, `${label}: „${old.name}” înlocuit cu „${item.name}”.`); }
+  else { e.menu.sections[s].push(item); log(e, MANAGER.name, `${label}: adăugat „${item.name}”.`); }
+  S.modal = null; commit(i >= 0 ? "Componenta a fost schimbată." : "Componenta a fost adăugată.");
+}
+function selectTable(tid) {
+  if (S.view === "client") S.clientSel = S.clientSel === tid ? null : tid;
+  else S.sel = S.sel === tid ? null : tid;
+  render();
+}
+
+document.addEventListener("click", ev => {
+  if (dragMoved) { dragMoved = false; return; }
+  const el = ev.target.closest("[data-action]");
+  if (el) {
+    const a = el.dataset.action;
+    if (a === "close-modal" && el.classList.contains("overlay") && ev.target !== el) return;
+    if (el.disabled) return;
+    const fn = ACTIONS[a];
+    if (fn) { if (el.tagName !== "A") ev.preventDefault(); fn(el); }
+    return;
+  }
+  const t = ev.target.closest(".tbl");
+  if (t) selectTable(t.dataset.tid);
+});
+document.addEventListener("keydown", ev => {
+  if (ev.key === "Escape" && S.modal) { S.modal = null; render(); return; }
+  if ((ev.key === "Enter" || ev.key === " ") && ev.target.classList && ev.target.classList.contains("tbl")) { ev.preventDefault(); selectTable(ev.target.dataset.tid); }
+});
+
+document.addEventListener("change", ev => {
+  const el = ev.target, c = el.dataset.change;
+  if (!c) return;
+  const e = getEv(S.eventId);
+  if (c === "price") { const v = el.value === "" ? null : Math.max(0, Math.round(+el.value)); e.customPrice = v === e.menu.std ? null : v; syncPayments(e); log(e, MANAGER.name, e.customPrice ? `Preț ajustat: ${lei(e.customPrice)}/pers. (standard ${lei(e.menu.std)}).` : "Preț readus la standard."); commit(e.customPrice ? `Preț final: ${lei(e.customPrice)} / pers.` : "Se aplică din nou prețul standard."); }
+  else if (c === "kids-pct") { e.kidsPct = Math.min(100, Math.max(0, Math.round(+el.value || 0))); syncPayments(e); commit(`Copiii plătesc ${e.kidsPct}% din preț.`); }
+  else if (c === "sec-from") { S.secFrom[el.dataset.s] = el.value; }
+  else if (c === "seats") { const t = e.layout.tables.find(x => x.id === S.sel); t.seats = +el.value; guestsAt(e.layout, t.id).slice(t.seats).forEach(g => { g.table = null; }); commit(`${tableName(t)} are acum ${t.seats} locuri.`); }
+  else if (c === "unlock") { e.layout.clientUnlock = el.checked; log(e, ROLES[S.role].name, el.checked ? "Clientul poate modifica și după termen." : "Modificările clientului se blochează cu 3 zile înainte."); commit(el.checked ? "Clientul poate modifica lista și după termen." : "Lista se blochează cu 3 zile înainte de eveniment."); }
+  else if (c === "cat-price") { DB.catalog[el.dataset.v].price = Math.max(0, Math.round(+el.value || 0)); commit(`${DB.catalog[el.dataset.v].name}: preț standard ${lei(DB.catalog[el.dataset.v].price)}.`); }
+  else if (c === "cat-item") { const v = el.value.trim(); if (v) { DB.catalog[el.dataset.v][el.dataset.s][+el.dataset.i] = v; save(); toast("Componenta a fost salvată."); } }
+});
+
+document.addEventListener("submit", ev => {
+  ev.preventDefault();
+  const id = ev.target.id;
+  if (id === "evForm") { submitEvent(); return; }
+  if (id === "settingsForm") {
+    MANAGER.name = document.getElementById("st-name").value.trim() || "Manager";
+    MANAGER.phone = document.getElementById("st-phone").value.trim();
+    DB.settings = { name: MANAGER.name, phone: MANAGER.phone };
+    ROLES.manager.name = MANAGER.name; ROLES.manager.init = initials(MANAGER.name);
+    commit("Setările au fost salvate."); return;
+  }
+  if (id === "noteForm") {
+    const e = getEv(S.eventId), text = document.getElementById("n-text").value.trim();
+    if (!text) return;
+    const to = []; if (document.getElementById("n-k").checked) to.push("bucatarie"); if (document.getElementById("n-s").checked) to.push("sala");
+    const n = { id: uid("n"), cat: document.getElementById("n-cat").value, text, to };
+    e.notes.push(n);
+    const who = to.map(t => t === "bucatarie" ? "Bucătărie" : hall(e.hall).chief).join(" și ");
+    log(e, MANAGER.name, `Notă nouă (${n.cat})${who ? ", trimisă la " + who : ""}.`);
+    commit(who ? `Nota a fost trimisă la ${who}.` : "Nota a fost salvată doar pentru manager.");
+    return;
+  }
+  if (id === "guestForm") {
+    const e = getEv(S.client), name = document.getElementById("g-name").value.trim();
+    if (!name || clientLocked(e)) return;
+    const t = e.layout.tables.find(x => x.id === S.clientSel);
+    if (!t || guestsAt(e.layout, t.id).length >= t.seats) return;
+    e.layout.guests.push({ id: uid("g"), name, diet: document.getElementById("g-diet").value, note: document.getElementById("g-note").value.trim(), table: t.id });
+    commit(`${name} a fost adăugat la ${tableName(t).toLowerCase()}.`);
+    const n = document.getElementById("g-name"); if (n) n.focus();
+  }
+});
+
+function submitEvent() {
+  const val = id => document.getElementById(id).value;
+  const err = msg => { const p = document.getElementById("f-err"); p.textContent = msg; p.hidden = false; };
+  const f = { title: val("f-title").trim(), type: val("f-type"), status: val("f-status"), optionExpires: val("f-opt"), date: val("f-date"), start: val("f-start"), end: val("f-end"), hall: val("f-hall"),
+    adults: Math.max(0, parseInt(val("f-adults"), 10) || 0), kids: Math.max(0, parseInt(val("f-kids"), 10) || 0),
+    contact: { name: val("f-cname").trim(), phone: val("f-cphone").trim(), email: val("f-cemail").trim() } };
+  if (!f.title) return err("Scrie numele evenimentului.");
+  if (!f.date || !f.start || !f.end) return err("Completează data și orele.");
+  const h = hall(f.hall);
+  if (f.adults + f.kids > h.cap) return err(`${h.name} are ${h.cap} de locuri, iar evenimentul are ${f.adults + f.kids} de invitați.`);
+  const span = x => { const s = toMin(x.start); let en = toMin(x.end); if (en <= s) en += 1440; return [s, en]; };
+  const [s1, e1] = span(f);
+  const clash = EV().find(x => x.id !== S.modal.id && x.hall === f.hall && x.date === f.date && (([s2, e2]) => s1 < e2 && s2 < e1)(span(x)));
+  if (clash) return err(`${h.name} este ocupat atunci: ${clash.title}, ${clash.start}–${clash.end}.`);
+  if (S.modal.id) {
+    const e = getEv(S.modal.id);
+    const changes = [];
+    if (e.date !== f.date) changes.push(`data ${fmtShort(e.date)} → ${fmtShort(f.date)}`);
+    if (e.hall !== f.hall) changes.push(`salonul ${hall(e.hall).short} → ${h.short}`);
+    if (e.adults !== f.adults || e.kids !== f.kids) changes.push(`invitați ${guestTotal(e)} → ${f.adults + f.kids}`);
+    if (e.hall !== f.hall) { e.layout.tables = []; e.layout.guests.forEach(g => { g.table = null; }); e.layout.sharedAt = null; }
+    const wasOption = e.status === "optiune";
+    Object.assign(e, f);
+    if (wasOption && e.status === "confirmat" && !e.payments.length) { e.payments = buildPayments(e); e.payments.forEach((p, i) => { p.paid = i === 0; }); }
+    syncPayments(e);
+    log(e, MANAGER.name, changes.length ? `Detalii modificate: ${changes.join(", ")}.` : "Detaliile evenimentului au fost actualizate.");
+    S.modal = null; commit("Evenimentul a fost salvat.");
+  } else {
+    const e = makeEvent(DB.catalog, Object.assign(f, { variant: val("f-menu") }));
+    e.payments.forEach(p => { p.paid = false; if (p.due < TODAY) p.due = TODAY; });
+    DB.events.push(e);
+    S.eventId = e.id; S.tab = "overview"; save(); go("event"); toast(`${e.title} a fost creat în ${h.name}.`);
+  }
+}
+
+/* ===== Dragging tables ===== */
+let drag = null, dragMoved = false;
+const svgPoint = (svg, ev) => { const p = svg.createSVGPoint(); p.x = ev.clientX; p.y = ev.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()); };
+document.addEventListener("pointerdown", ev => {
+  const g = ev.target.closest && ev.target.closest(".tbl");
+  const svg = g && g.ownerSVGElement;
+  if (!g || !svg || svg.dataset.mode !== "edit") return;
+  const e = getEv(S.eventId), t = e.layout.tables.find(x => x.id === g.dataset.tid);
+  const p = svgPoint(svg, ev);
+  drag = { g, svg, t, e, dx: p.x - t.x, dy: p.y - t.y, sx: ev.clientX, sy: ev.clientY, moved: false };
+  try { svg.setPointerCapture(ev.pointerId); } catch (_) {}
+});
+document.addEventListener("pointermove", ev => {
+  if (!drag) return;
+  if (!drag.moved && Math.hypot(ev.clientX - drag.sx, ev.clientY - drag.sy) < 4) return;
+  drag.moved = true;
+  const h = hall(drag.e.hall), p = svgPoint(drag.svg, ev);
+  const pad = drag.t.kind === "head" ? 110 : (SEATS_R[drag.t.seats] || 38) + 18;
+  drag.t.x = Math.round(Math.min(h.W - pad, Math.max(pad, p.x - drag.dx)));
+  drag.t.y = Math.round(Math.min(h.H - 50, Math.max(50, p.y - drag.dy)));
+  drag.g.setAttribute("transform", `translate(${drag.t.x} ${drag.t.y})`);
+});
+const endDrag = () => { if (!drag) return; if (drag.moved) { dragMoved = true; save(); setTimeout(() => { dragMoved = false; }, 0); } drag = null; };
+document.addEventListener("pointerup", endDrag);
+document.addEventListener("pointercancel", endDrag);
+
+/* ===== Top bar ===== */
+document.getElementById("q").addEventListener("input", ev => { S.q = ev.target.value; if (S.view !== "events") { S.view = "events"; S.filter = "toate"; } render(); ev.target.focus(); });
+const roleSel = document.getElementById("role");
+roleSel.addEventListener("change", () => {
+  S.role = roleSel.value; S.sel = null;
+  try { localStorage.setItem("emerald-demo-role", S.role); } catch (_) {}
+  if (S.view === "event") { const e = getEv(S.eventId); if (!e || !canSeeEvent(e)) S.view = "events"; }
+  if (!isManager() && ["dashboard", "menus", "payments", "settings"].includes(S.view)) S.view = "events";
+  render();
+  toast({ manager: "Manager: acces complet.", bucatarie: "Bucătărie: toate evenimentele, doar informațiile despre mâncare." }[S.role] || `${ROLES[S.role].label}: doar evenimentele din ${hall(roleHall()).name}.`);
+});
+
+/* ===== Interactive tutorial ===== */
+const TOUR_KEY = "emerald-demo-tour-done";
+const curEv = () => getEv(S.eventId);
+const TOUR = [
+  { center: true, title: "Bun venit în Emerald Demo", next: "Începe tutorialul", body: "Aceasta este aplicația de gestiune a evenimentelor pentru Emerald Luxury Events. Cele 4 saloane și cele 5 meniuri Emerald sunt deja configurate, iar calendarul e gol, gata de folosit.<br><br>În 2–3 minute te ghidez pas cu pas: creezi primul eveniment, îi ajustezi meniul, trimiți o notă bucătăriei, aranjezi sala și vezi ce primește clientul." },
+  { title: "Calendarul saloanelor", body: "Aici vezi toate saloanele, zi cu zi. Apasă pe „Calendar saloane”.", target: '.nav [data-view="calendar"]', done: () => S.view === "calendar" },
+  { title: "Primul eveniment", body: "Apasă „Eveniment nou”. Poți rezerva și direct, apăsând pe o zi liberă din dreptul unui salon.", target: '.head [data-action="new-event"]', done: () => S.modal && S.modal.kind === "event" },
+  { title: "Detaliile evenimentului", body: "Completează numele, data, ora, salonul, invitații, meniul și persoana de contact (telefonul e folosit pentru WhatsApp). Apoi apasă „Creează evenimentul”.", target: "#evForm", dock: true, done: () => S.view === "event" && !!curEv() },
+  { title: "Fișa evenimentului", body: "Tot ce ține de eveniment e în aceste taburi: prezentare, meniu și preț, note, aranjarea sălii, plăți și istoricul modificărilor.", target: ".tabs" },
+  { title: "Meniul", body: "Apasă pe „Meniu și preț”.", target: '[data-t="menu"]', done: () => S.tab === "menu" },
+  { title: "Varianta de meniu", body: "Pornești de la una dintre cele 5 variante Emerald. Dacă alegi alta, tot meniul se înlocuiește cu cel standard.", target: ".variants" },
+  { title: "Schimbă orice preparat", body: "Cu „Schimbă” înlocuiești un preparat cu unul din alt meniu sau cu unul scris de tine. Cu „Preia secțiunea” iei tot aperitivul, felul principal sau cina din altă variantă.", target: '.item [data-action="pick"]' },
+  { title: "Prețul final", body: "Prețul standard rămâne la vedere. Dacă scrii aici un preț ajustat, el devine prețul final și se aplică automat în valoarea evenimentului și în tranșele de plată.", target: "#p-custom" },
+  { title: "Note pentru departamente", body: "Apasă pe „Note și departamente”.", target: '[data-t="notes"]', done: () => S.tab === "notes" },
+  { title: "Trimite o notă", body: "Scrie o notă (de exemplu „2 invitați fără gluten la masa 5”), alege cui o trimiți — Bucătăriei, șefului de sală sau amândurora — și apasă „Salvează și trimite”.", target: "#noteForm", done: () => { const e = curEv(); return !!e && e.notes.length > 0; } },
+  { title: "Aranjarea sălii", body: "Apasă pe „Aranjare sală”.", target: '[data-t="seating"]', done: () => S.tab === "seating" },
+  { title: "Pune mesele", body: "Adaugă mese de 6, 8, 10 sau 12 locuri, sau apasă „Generează automat” ca să le așezi în jurul ringului, pentru toți invitații.", target: ".side-panel > .card", done: () => { const e = curEv(); return !!e && e.layout.tables.length > 0; } },
+  { title: "Mută mesele", body: "Trage orice masă cu mouse-ul sau cu degetul. Apasă pe o masă ca să-i schimbi numărul de locuri sau s-o ștergi.", target: "#plan" },
+  { title: "Trimite clientului", body: "Când planul e gata, „Distribuie clientului” trimite pe WhatsApp un link spre planul salonului. Clientul își adaugă invitații până cu 3 zile înainte de eveniment.", target: '.side-panel [data-action="share"]' },
+  { title: "Ce vede clientul", body: "Apasă „Vezi ce vede clientul”.", target: '.side-panel [data-action="as-client"]', done: () => S.view === "client" },
+  { title: "Pagina clientului", body: "Clientul apasă pe o masă și adaugă invitații: standard, vegetarian, copil sau cu alergie. Încearcă și tu, apoi apasă „Închide previzualizarea”.", target: '[data-action="exit-client"]', done: () => S.view !== "client" },
+  { title: "Fiecare vede ce îl privește", body: "Din „Vezi ca” treci în rolul Bucătăriei sau al unui șef de sală. Bucătăria vede doar mâncarea, porțiile și alergiile; fiecare șef de sală vede doar evenimentele din salonul lui.", target: "#role" },
+  { title: "Meniurile standard", body: "Aici modifici prețurile și componentele celor 5 meniuri Emerald. Schimbările se aplică evenimentelor noi.", target: '.nav [data-view="menus"]' },
+  { title: "Setări", body: "Completează numele și telefonul managerului. Clienții le văd când lista de invitați se blochează.", target: '.nav [data-view="settings"]' },
+  { center: true, title: "Gata, poți începe!", next: "Încheie tutorialul", body: "Ai parcurs tot fluxul. Evenimentul creat acum rămâne salvat; îl poți păstra sau șterge.<br><br>Poți relua tutorialul oricând din butonul „Tutorial” din dreapta sus." },
+];
+let tour = null;
+function tourStart() {
+  tour = { i: 0, shown: -1 };
+  S.modal = null;
+  if (S.view === "client") { S.clientPreview = false; S.view = "dashboard"; }
+  if (S.role !== "manager") { S.role = "manager"; roleSel.value = "manager"; try { localStorage.setItem("emerald-demo-role", "manager"); } catch (_) {} }
+  go(S.view === "event" ? "event" : "dashboard");
+}
+function tourEnd() {
+  tour = null; try { localStorage.setItem(TOUR_KEY, "1"); } catch (_) {}
+  const el = document.getElementById("tour"); if (el) el.remove();
+}
+function tourTarget(st) {
+  if (!st.target) return null;
+  const el = document.querySelector(st.target); if (!el) return null;
+  const r = el.getBoundingClientRect();
+  if (r.width < 2 || r.height < 2 || r.right <= 0 || r.left >= innerWidth) return null;
+  return el;
+}
+function tourUpdate() {
+  let box = document.getElementById("tour");
+  if (!tour) { if (box) box.remove(); return; }
+  let guard = 0;
+  while (TOUR[tour.i] && TOUR[tour.i].done && TOUR[tour.i].done() && guard++ < 30) tour.i++;
+  const st = TOUR[tour.i];
+  if (!st) { tourEnd(); return; }
+  if (!box) { box = document.createElement("div"); box.id = "tour"; document.body.appendChild(box); box.addEventListener("click", tourClick); }
+  const steps = TOUR.length - 2, n = Math.min(Math.max(tour.i, 1), steps);
+  const el = tourTarget(st);
+  if (tour.shown !== tour.i) { tour.shown = tour.i; if (el && !st.dock) el.scrollIntoView({ block: "center", inline: "nearest" }); }
+  const action = !!st.done;
+  box.innerHTML = `${st.center ? '<div class="tour-back"></div>' : ""}${el ? '<div class="tour-hl"></div>' : ""}
+    <div class="tour-card ${st.center ? "center" : ""}" role="dialog" aria-label="${esc(st.title)}">
+      <button class="x tour-x" data-tour="end" aria-label="Închide tutorialul">×</button>
+      ${st.center ? "" : `<span class="tour-step">Pasul ${n} din ${steps}</span><div class="tour-bar"><i style="width:${Math.round(n / steps * 100)}%"></i></div>`}
+      <h3>${esc(st.title)}</h3><p>${st.body}</p>
+      ${action ? `<span class="tour-hint">${el ? "Fă pasul evidențiat ca să continui" : "Pasul următor apare după ce faci acțiunea"}</span>` : ""}
+      <div class="tour-actions">
+        <button class="link" data-tour="end" style="color:var(--muted)">${tour.i === 0 ? "Mai târziu" : "Închide tutorialul"}</button>
+        ${action ? `<button class="btn sm" data-tour="next">Sari peste pas</button>` : `<button class="btn primary sm" data-tour="next">${st.next || "Mai departe"}</button>`}
+      </div>
+    </div>`;
+  tourPos();
+}
+function tourPos() {
+  const box = document.getElementById("tour"); if (!box || !tour) return;
+  const st = TOUR[tour.i]; if (!st) return;
+  const card = box.querySelector(".tour-card"), hl = box.querySelector(".tour-hl"), el = tourTarget(st);
+  const cw = card.offsetWidth, ch = card.offsetHeight, m = 16;
+  if (st.center || !el) { card.style.left = (innerWidth - cw) / 2 + "px"; card.style.top = Math.max(m, (innerHeight - ch) / 2) + "px"; return; }
+  const r = el.getBoundingClientRect(), p = 6;
+  if (hl) Object.assign(hl.style, { left: r.left - p + "px", top: r.top - p + "px", width: r.width + p * 2 + "px", height: r.height + p * 2 + "px" });
+  let x, y;
+  const below = r.bottom + p + 14, above = r.top - p - 14 - ch;
+  if (st.dock) { x = m; y = innerHeight - ch - m; }
+  else if (below + ch < innerHeight - m) { y = below; x = r.left + r.width / 2 - cw / 2; }
+  else if (above > m) { y = above; x = r.left + r.width / 2 - cw / 2; }
+  else if (r.right + 14 + cw < innerWidth - m) { x = r.right + 14; y = r.top; }
+  else if (r.left - 14 - cw > m) { x = r.left - 14 - cw; y = r.top; }
+  else { x = m; y = innerHeight - ch - m; }
+  card.style.left = Math.min(Math.max(m, x), innerWidth - cw - m) + "px";
+  card.style.top = Math.min(Math.max(m, y), innerHeight - ch - m) + "px";
+}
+function tourClick(ev) {
+  const b = ev.target.closest("[data-tour]"); if (!b) return;
+  ev.preventDefault(); ev.stopPropagation();
+  if (b.dataset.tour === "end") return tourEnd();
+  tour.i++; if (!TOUR[tour.i]) return tourEnd();
+  tourUpdate();
+}
+let tourRaf = 0;
+const tourSchedule = () => { if (!tour || tourRaf) return; tourRaf = requestAnimationFrame(() => { tourRaf = 0; tourPos(); }); };
+window.addEventListener("resize", tourSchedule);
+window.addEventListener("scroll", tourSchedule, true);
+document.addEventListener("pointerup", () => setTimeout(tourSchedule, 30));
+
+/* ===== Boot ===== */
+function fromHash() {
+  const m = /^#client-([A-Za-z0-9_-]+)$/.exec(location.hash || "");
+  if (m && getEv(m[1])) { S.client = m[1]; S.clientSel = null; S.clientPreview = false; S.view = "client"; return true; }
+  return false;
+}
+roleSel.value = S.role;
+if (!fromHash() && !isManager()) S.view = "events";
+window.addEventListener("hashchange", () => { if (fromHash()) render(); });
+render();
+let tourSeen = false; try { tourSeen = localStorage.getItem(TOUR_KEY) === "1"; } catch (_) {}
+if (!tourSeen && S.view !== "client") setTimeout(tourStart, 400);
+})();
+</script>
+
+</body>
+</html>
