@@ -1,0 +1,898 @@
+<title>AUTOFLOW</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: sidebar antracit fix + zonă de lucru pe gri foarte deschis; carduri albe; accent albastru electric. */
+:root {
+  --bg:#f5f6f8; --surface:#ffffff; --surface-2:#f0f2f5; --surface-3:#e7eaee;
+  --line:#e3e6eb; --line-strong:#cfd4db; --fg:#0f1318; --fg-2:#49515c; --muted:#6d7580;
+  --accent:#2a78d6; --accent-strong:#1c5cab; --accent-soft:#e8f1fc;
+  --side:#14171c; --side-2:#1d2128; --side-fg:#c9ced6; --side-muted:#7d8591;
+  --good:#0f7b4b; --good-soft:#e6f4ec; --warn:#a0620a; --warn-soft:#fbf1df; --bad:#c0352f; --bad-soft:#fbe9e8;
+  --info:#1c5cab; --info-soft:#e8f1fc; --grid:#e8ebef; --axis:#6d7580;
+  --shadow:0 1px 2px rgb(16 24 40/.04),0 1px 3px rgb(16 24 40/.06); --pop:0 12px 32px -8px rgb(16 24 40/.2);
+  --font:"Geist",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"Geist Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg:#0c0e11; --surface:#14171b; --surface-2:#1a1e23; --surface-3:#22272d; --line:#252a31; --line-strong:#343a43;
+  --fg:#eef0f3; --fg-2:#b0b7c2; --muted:#858d99; --accent:#3987e5; --accent-strong:#5598e7; --accent-soft:#15253a;
+  --side:#0f1114; --side-2:#181b20; --good:#3fb67c; --good-soft:#10261b; --warn:#e0a23a; --warn-soft:#2a2010; --bad:#ec6b65; --bad-soft:#2d1514;
+  --info:#6da7ec; --info-soft:#15253a; --grid:#22272d; --axis:#858d99; --shadow:0 1px 2px rgb(0 0 0/.4); --pop:0 16px 40px -8px rgb(0 0 0/.6); color-scheme:dark } }
+:root[data-theme="dark"] {
+  --bg:#0c0e11; --surface:#14171b; --surface-2:#1a1e23; --surface-3:#22272d; --line:#252a31; --line-strong:#343a43;
+  --fg:#eef0f3; --fg-2:#b0b7c2; --muted:#858d99; --accent:#3987e5; --accent-strong:#5598e7; --accent-soft:#15253a;
+  --side:#0f1114; --side-2:#181b20; --good:#3fb67c; --good-soft:#10261b; --warn:#e0a23a; --warn-soft:#2a2010; --bad:#ec6b65; --bad-soft:#2d1514;
+  --info:#6da7ec; --info-soft:#15253a; --grid:#22272d; --axis:#858d99; --shadow:0 1px 2px rgb(0 0 0/.4); --pop:0 16px 40px -8px rgb(0 0 0/.6); color-scheme:dark }
+
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--fg)}
+body{font:14px/1.55 var(--font);-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:40;background:var(--bg)}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tab{font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)} .fg2{color:var(--fg-2)} .good{color:var(--good)} .bad{color:var(--bad)} .warn{color:var(--warn)}
+
+/* shell */
+.side{position:fixed;inset:0 auto 0 0;width:248px;background:var(--side);color:var(--side-fg);display:flex;flex-direction:column;z-index:30;padding-top:env(safe-area-inset-top,0px);padding-left:env(safe-area-inset-left,0px)}
+.brand{display:flex;align-items:center;gap:10px;height:60px;padding:0 20px}
+.brand b{color:#fff;font-weight:600;letter-spacing:.14em;font-size:15px}
+.dealer{margin:0 12px 14px;background:var(--side-2);border-radius:10px;padding:9px 12px}
+.dealer small{display:block;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--side-muted)}
+.dealer span{color:#fff;font-weight:500;font-size:13.5px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nav{flex:1;overflow:auto;padding:0 12px 16px;display:grid;gap:2px;align-content:start}
+.nav h6{margin:16px 12px 6px;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--side-muted);font-weight:600}
+.nav button{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:12px;height:36px;padding:0 12px;border-radius:8px;font-size:13.5px;cursor:pointer;position:relative}
+.nav button:hover{background:rgb(255 255 255/.05);color:#fff}
+.nav button.on{background:rgb(255 255 255/.09);color:#fff;font-weight:500}
+.nav button.on::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0;background:var(--accent)}
+.nav .soon{display:flex;align-items:center;gap:12px;height:36px;padding:0 12px;font-size:13.5px;color:rgb(125 133 145/.75)}
+.nav .soon em{margin-left:auto;font-style:normal;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;border:1px solid rgb(255 255 255/.1);border-radius:4px;padding:0 5px}
+.nav svg,.ic{width:17px;height:17px;flex:none;stroke:currentColor;fill:none;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.side-foot{padding:14px 20px 18px;font-size:11px;color:var(--side-muted)}
+.wrap{padding-left:248px;min-height:100vh}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;height:60px;display:flex;align-items:center;gap:10px;justify-content:flex-end;border-bottom:1px solid var(--line);background:color-mix(in oklab,var(--bg) 88%,transparent);backdrop-filter:blur(8px);padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px))}
+.demo-pill{margin-right:auto;font-size:12px;color:var(--warn);background:var(--warn-soft);border:1px solid color-mix(in oklab,var(--warn) 25%,transparent);border-radius:999px;padding:3px 10px;white-space:nowrap}
+.seg{display:flex;background:var(--surface-2);border:1px solid var(--line);border-radius:9px;padding:2px}
+.seg button{all:unset;display:grid;place-items:center;width:28px;height:28px;border-radius:7px;color:var(--muted);cursor:pointer}
+.seg button[aria-checked="true"]{background:var(--surface);color:var(--fg);box-shadow:var(--shadow)}
+.who{display:flex;align-items:center;gap:8px;border-left:1px solid var(--line);padding-left:12px}
+.who select{height:32px;border:1px solid var(--line-strong);background:var(--surface);border-radius:8px;padding:0 8px;font-size:12.5px}
+.who label{font-size:11.5px;color:var(--muted)}
+.top .burger{display:none}
+main{max-width:1400px;margin:0 auto;padding-block:28px 64px;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px))}
+
+/* components */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+.pad{padding:20px}
+.ph{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:22px}
+.ph h1{margin:0;font-size:24px;line-height:1.2;font-weight:600;letter-spacing:-.015em;text-wrap:balance}
+.ph p{margin:4px 0 0;color:var(--fg-2)}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:38px;padding:0 15px;border-radius:9px;border:1px solid transparent;font-size:13.5px;font-weight:500;cursor:pointer;white-space:nowrap;text-decoration:none;transition:background .15s}
+.btn:disabled{opacity:.5;pointer-events:none}
+.btn.p{background:var(--accent);color:#fff}.btn.p:hover{background:var(--accent-strong)}
+.btn.s{background:var(--surface);border-color:var(--line-strong)}.btn.s:hover{background:var(--surface-2)}
+.btn.g{background:transparent;color:var(--fg-2)}.btn.g:hover{background:var(--surface-2);color:var(--fg)}
+.btn.d{background:var(--surface);border-color:var(--line-strong);color:var(--bad)}.btn.d:hover{background:var(--bad-soft)}
+.btn.sm{height:30px;padding:0 11px;font-size:12.5px;border-radius:7px}
+.btn .ic{width:16px;height:16px}
+.alert{border-radius:9px;padding:10px 14px;font-size:13px;border:1px solid}
+.alert.bad{background:var(--bad-soft);color:var(--bad);border-color:color-mix(in oklab,var(--bad) 25%,transparent)}
+.alert.good{background:var(--good-soft);color:var(--good);border-color:color-mix(in oklab,var(--good) 25%,transparent)}
+.alert.warn{background:var(--warn-soft);color:var(--warn);border-color:color-mix(in oklab,var(--warn) 25%,transparent)}
+.alert.info{background:var(--info-soft);color:var(--info);border-color:color-mix(in oklab,var(--info) 25%,transparent)}
+.badge{display:inline-flex;align-items:center;gap:6px;height:23px;padding:0 9px;border-radius:999px;font-size:12px;font-weight:500;white-space:nowrap}
+.badge::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.b-preparation{background:var(--surface-2);color:var(--fg-2)} .b-available{background:var(--good-soft);color:var(--good)}
+.b-reserved{background:var(--warn-soft);color:var(--warn)} .b-sold{background:var(--info-soft);color:var(--info)} .b-withdrawn{background:var(--surface-2);color:var(--muted)}
+.ex{font-size:9.5px;font-weight:600;letter-spacing:.06em;color:var(--warn);border:1px solid color-mix(in oklab,var(--warn) 40%,transparent);border-radius:4px;padding:0 4px;vertical-align:2px}
+
+.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.kpi{padding:18px}
+.kpi h4{margin:0;font-size:12.5px;font-weight:500;color:var(--fg-2)}
+.kpi .v{font-size:24px;font-weight:600;letter-spacing:-.015em;margin-top:5px;line-height:1.2}
+.kpi .s{font-size:12.5px;color:var(--muted);margin-top:3px}
+.kpi .lock{font-size:12.5px;color:var(--muted);margin-top:9px}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.panel{padding:20px;min-width:0}
+.panel h3{margin:0;font-size:14.5px;font-weight:600}
+.panel .sub{font-size:12.5px;color:var(--muted);margin:1px 0 16px}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart text{fill:var(--axis);font-size:11px;font-family:var(--font)}
+.rank{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.rank .r{display:flex;justify-content:space-between;gap:10px;font-size:13px;margin-bottom:4px}
+.rank .bar{height:6px;border-radius:99px;background:var(--surface-2)} .rank .bar i{display:block;height:100%;border-radius:99px;background:var(--accent)}
+.aging{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.aging div{background:var(--surface-2);border-radius:9px;padding:9px 12px}
+.aging small{font-size:12px;color:var(--fg-2)} .aging b{display:block;font-size:20px;font-weight:600}
+.list{list-style:none;margin:0;padding:0}
+.list li+li{border-top:1px solid var(--line)}
+.rowlink{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:12px;width:100%;padding:9px 8px;border-radius:9px;cursor:pointer}
+.rowlink:hover{background:var(--surface-2)}
+.thumb{width:64px;height:44px;border-radius:7px;background:var(--surface-2);display:grid;place-items:center;color:var(--muted);flex:none;overflow:hidden}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.ellip{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.empty{text-align:center;padding:52px 20px}
+.empty .ico{width:44px;height:44px;border-radius:12px;background:var(--surface-2);display:grid;place-items:center;color:var(--muted);margin:0 auto 14px}
+.empty p{max-width:380px;margin:4px auto 0;font-size:13px;color:var(--fg-2)}
+
+/* list */
+.tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:4px;width:max-content}
+.tabs button{all:unset;padding:6px 12px;border-radius:7px;font-size:13px;color:var(--fg-2);cursor:pointer;white-space:nowrap}
+.tabs button.on{background:var(--surface-3);color:var(--fg);font-weight:500}
+.scroll-x{overflow-x:auto;margin-bottom:14px}
+.filters{display:grid;grid-template-columns:minmax(200px,1fr) repeat(4,minmax(0,165px));gap:8px;padding:12px;margin-bottom:14px}
+.input{height:38px;width:100%;border:1px solid var(--line-strong);background:var(--surface);border-radius:9px;padding:0 12px;font-size:13.5px;outline:none;transition:border-color .15s,box-shadow .15s}
+.input:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in oklab,var(--accent) 18%,transparent)}
+textarea.input{height:auto;padding:9px 12px;resize:vertical}
+.input.err{border-color:var(--bad)}
+.search{position:relative} .search .ic{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);width:16px;height:16px} .search .input{padding-left:34px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+thead th{text-align:left;font-weight:500;font-size:12px;color:var(--fg-2);background:color-mix(in oklab,var(--surface-2) 60%,transparent);padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+tbody td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+tbody tr{cursor:pointer;transition:background .12s} tbody tr:hover{background:color-mix(in oklab,var(--surface-2) 70%,transparent)}
+tbody tr:last-child td{border-bottom:0}
+.r{text-align:right}
+.cards{display:none}
+
+/* form */
+.sec{display:grid;grid-template-columns:220px minmax(0,1fr);gap:32px;padding:24px;margin-bottom:14px}
+.sec h2{margin:0;font-size:14.5px;font-weight:600}
+.sec .d{font-size:12.5px;color:var(--muted);margin-top:4px}
+.fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.f label{display:block;font-size:13px;font-weight:500;color:var(--fg-2);margin-bottom:6px}
+.f .e{color:var(--bad);font-size:12.5px;margin-top:4px}
+.f .h{color:var(--muted);font-size:12.5px;margin-top:4px}
+.f.span2{grid-column:span 2} .f.span3{grid-column:1/-1}
+.unit{position:relative} .unit span{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--muted);pointer-events:none} .unit .input{padding-right:44px}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.eqgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
+.eqgrid legend{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;padding:0}
+.eqgrid fieldset{border:0;margin:0;padding:0}
+.chk{display:flex;align-items:center;gap:9px;padding:4px 6px;border-radius:6px;font-size:13.5px;cursor:pointer}
+.chk:hover{background:var(--surface-2)}
+.chk input{width:16px;height:16px;accent-color:var(--accent)}
+.calc{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px;padding:16px;border-radius:10px;background:var(--surface-2)}
+.calc small{font-size:12px;color:var(--fg-2)} .calc b{display:block;font-size:17px;font-weight:600}
+.savebar{position:fixed;left:248px;right:0;bottom:0;z-index:15;border-top:1px solid var(--line);background:color-mix(in oklab,var(--surface) 92%,transparent);backdrop-filter:blur(8px);padding-block:12px calc(12px + env(safe-area-inset-bottom,0px));padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px))}
+.savebar div{max-width:1400px;margin:0 auto;display:flex;justify-content:flex-end;gap:8px}
+
+/* detail */
+.det{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:14px;align-items:start}
+.stack{display:grid;gap:14px;min-width:0}
+.hero{aspect-ratio:16/10;max-width:100%;width:100%;border-radius:10px;background:var(--surface-2);overflow:hidden;display:grid;place-items:center;color:var(--muted);cursor:zoom-in;border:0;padding:0}
+.hero img{width:100%;height:100%;object-fit:cover}
+.thumbs{list-style:none;margin:12px 0 0;padding:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.thumbs li{position:relative;aspect-ratio:4/3;border-radius:7px;overflow:hidden;background:var(--surface-2);cursor:grab}
+.thumbs li.prim{outline:2px solid var(--accent);outline-offset:2px}
+.thumbs li.dragging{opacity:.4}
+.thumbs img{width:100%;height:100%;object-fit:cover;display:block}
+.thumbs .tools{position:absolute;inset:4px 4px auto;display:flex;justify-content:space-between;opacity:0;transition:opacity .15s}
+.thumbs li:hover .tools,.thumbs li:focus-within .tools{opacity:1}
+.thumbs .tools button{all:unset;width:24px;height:24px;border-radius:5px;background:rgb(0 0 0/.62);color:#fff;display:grid;place-items:center;cursor:pointer}
+.thumbs .tools .ic{width:14px;height:14px}
+.drop{margin-top:12px;border:1px dashed var(--line-strong);border-radius:10px;padding:22px 16px;text-align:center;font-size:13px;transition:background .15s,border-color .15s}
+.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.drop .link{all:unset;color:var(--accent);font-weight:500;cursor:pointer}
+.prog{height:6px;border-radius:99px;background:var(--surface-3);max-width:260px;margin:8px auto 0}.prog i{display:block;height:100%;border-radius:99px;background:var(--accent);transition:width .2s}
+.specs{display:grid;grid-template-columns:1fr 1fr;column-gap:32px;margin:0}
+.specs div{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding:8px 0;font-size:13.5px}
+.specs dt{color:var(--fg-2)} .specs dd{margin:0;font-weight:500;text-align:right}
+.eqshow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.eqshow ul{list-style:none;margin:0;padding:0;font-size:13.5px;display:grid;gap:4px}
+.eqshow li::before{content:"";display:inline-block;width:4px;height:4px;border-radius:50%;background:var(--accent);margin:0 8px 3px 0}
+.rows{margin:0;font-size:13.5px}
+.rows div{display:flex;justify-content:space-between;gap:16px;padding:5px 0}
+.rows dt{color:var(--fg-2)} .rows dd{margin:0;text-align:right}
+.price{font-size:28px;font-weight:600;letter-spacing:-.02em;line-height:1.2;margin-top:4px}
+.timeline{list-style:none;margin:0;padding:0 0 0 16px;border-left:1px solid var(--line);display:grid;gap:14px;font-size:13px}
+.timeline li{position:relative}
+.timeline li::before{content:"";position:absolute;left:-21px;top:6px;width:9px;height:9px;border-radius:50%;background:var(--accent);border:2px solid var(--surface)}
+.sellbox{display:grid;gap:10px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)}
+.mono{font-family:var(--mono);font-size:12.5px;letter-spacing:.02em}
+
+/* modal / lightbox / toast */
+.overlay{position:fixed;inset:0;z-index:50;background:rgb(0 0 0/.55);display:grid;place-items:center;padding:20px}
+.modal{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--pop);max-width:420px;width:100%;padding:22px}
+.modal h3{margin:0 0 6px;font-size:16px}
+.modal p{margin:0 0 18px;color:var(--fg-2);font-size:13.5px}
+.modal .acts{display:flex;justify-content:flex-end;gap:8px}
+.lb{position:fixed;inset:0;z-index:60;background:rgb(0 0 0/.92);display:grid;place-items:center;padding:20px}
+.lb img{max-width:100%;max-height:88vh;border-radius:6px}
+.lb button{all:unset;position:absolute;color:#fff;cursor:pointer;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:rgb(255 255 255/.1)}
+.lb .x{top:calc(14px + env(safe-area-inset-top,0px));right:max(14px,env(safe-area-inset-right,0px))} .lb .pv{left:max(14px,env(safe-area-inset-left,0px))} .lb .nx{right:max(14px,env(safe-area-inset-right,0px))}
+.lb .cnt{position:absolute;bottom:calc(16px + env(safe-area-inset-bottom,0px));color:rgb(255 255 255/.7);font-size:13px}
+.toast{position:fixed;z-index:70;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:9px;font-size:13px;box-shadow:var(--pop)}
+.fade{animation:fade .25s ease-out}
+@keyframes fade{from{opacity:.4;transform:translateY(3px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* responsive */
+@media (max-width:1180px){.grid4{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:1fr 1fr}.fields,.eqgrid,.eqshow{grid-template-columns:1fr 1fr}.filters{grid-template-columns:1fr 1fr}.filters .search{grid-column:1/-1}.det{grid-template-columns:1fr}.hide-l{display:none}}
+@media (max-width:900px){
+  .side{transform:translateX(-100%);transition:transform .2s}
+  .side.open{transform:none;box-shadow:var(--pop)}
+  .scrim{position:fixed;inset:0;background:rgb(0 0 0/.45);z-index:25}
+  .wrap{padding-left:0}.savebar{left:0}
+  .top .burger{display:grid;margin-right:auto}
+  .demo-pill{display:none}
+  .g2,.g3{grid-template-columns:1fr}
+  .sec{grid-template-columns:1fr;gap:16px;padding:18px}
+  table.vt{display:none}.cards{display:block}
+  .who label{display:none}
+}
+@media (max-width:560px){
+  .grid4{gap:10px}.kpi{padding:14px}.kpi .v{font-size:20px}
+  .fields,.eqgrid,.eqshow,.specs{grid-template-columns:1fr}.f.span2{grid-column:auto}
+  .thumbs{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .top{gap:8px}.ph h1{font-size:21px}
+  .calc{grid-template-columns:1fr 1fr 1fr;padding:12px}.calc b{font-size:15px}
+}
+</style>
+
+<aside class="side" id="side"></aside>
+<div class="wrap">
+  <header class="top" id="top"></header>
+  <main id="main">
+    <div class="card empty"><div class="ico">…</div><b>Se încarcă AUTOFLOW</b><p>Pregătim spațiul de lucru al parcului auto.</p></div>
+  </main>
+</div>
+<div id="layer"></div>
+
+<script>
+(() => {
+"use strict";
+// ───────────── Nomenclatoare (identice cu aplicația server) ─────────────
+const FUEL={petrol:"Benzină",diesel:"Diesel",hybrid:"Hibrid",plugin_hybrid:"Hibrid plug-in",electric:"Electric",lpg:"Benzină + GPL",cng:"Benzină + CNG"};
+const TRANS={manual:"Manuală",automatic:"Automată"};
+const DRIVE={fwd:"Față",rwd:"Spate",awd:"Integrală (4x4)"};
+const EMIS={euro3:"Euro 3",euro4:"Euro 4",euro5:"Euro 5",euro6:"Euro 6",euro6d:"Euro 6d",euro7:"Euro 7",na:"Nu se aplică (electric)"};
+const BODY={sedan:"Sedan",hatchback:"Hatchback",wagon:"Break",suv:"SUV",coupe:"Coupe",convertible:"Cabrio",mpv:"Monovolum",pickup:"Pickup",van:"Utilitară"};
+const ORIGIN={ro_new:"Cumpărată nouă din România",ro_used:"Rulată în România",imported:"Import",trade_in:"Preluată în schimb (buy-back)",leasing:"Ex-leasing"};
+const EQUIPMENT=[
+ {key:"comfort",label:"Confort",items:{ac_manual:"Aer condiționat manual",climate_auto:"Climatronic",climate_multi:"Climatronic multi-zonă",heated_seats:"Scaune încălzite",ventilated_seats:"Scaune ventilate",electric_seats:"Scaune reglabile electric",seat_memory:"Memorie scaune",heated_wheel:"Volan încălzit",keyless:"Keyless entry / start",power_tailgate:"Hayon electric",panoramic_roof:"Trapă / plafon panoramic",aux_heating:"Încălzire auxiliară (Webasto)"}},
+ {key:"safety",label:"Siguranță",items:{abs:"ABS",esp:"ESP",airbags_front:"Airbag-uri frontale",airbags_side:"Airbag-uri laterale",airbags_curtain:"Airbag-uri cortină",isofix:"Isofix",tpms:"Senzori presiune anvelope",alarm:"Alarmă",emergency_call:"Apel de urgență (eCall)"}},
+ {key:"multimedia",label:"Multimedia",items:{navigation:"Navigație",carplay:"Apple CarPlay",android_auto:"Android Auto",bluetooth:"Bluetooth",digital_cockpit:"Bord digital",head_up:"Head-up display",premium_audio:"Sistem audio premium",wireless_charging:"Încărcare wireless telefon",usb:"Porturi USB"}},
+ {key:"exterior",label:"Exterior",items:{alloy_wheels:"Jante aliaj",led_headlights:"Faruri LED",matrix_led:"Faruri Matrix LED",xenon:"Faruri xenon",tow_hook:"Cârlig remorcare",roof_rails:"Bare longitudinale",tinted_windows:"Geamuri fumurii",electric_mirrors:"Oglinzi rabatabile electric"}},
+ {key:"interior",label:"Interior",items:{leather:"Tapițerie piele",alcantara:"Tapițerie Alcantara",sport_seats:"Scaune sport",ambient_light:"Iluminare ambientală",multifunction_wheel:"Volan multifuncțional",paddle_shifters:"Padele schimbător",split_rear_seats:"Banchetă rabatabilă fracționat"}},
+ {key:"assist",label:"Asistență șofer",items:{cruise:"Pilot automat",acc:"Pilot automat adaptiv",lane_assist:"Asistent menținere bandă",blind_spot:"Monitorizare unghi mort",park_front:"Senzori parcare față",park_rear:"Senzori parcare spate",camera_rear:"Cameră marșarier",camera_360:"Camere 360°",self_parking:"Parcare automată",traffic_sign:"Recunoaștere indicatoare",auto_brake:"Frânare automată de urgență",hill_assist:"Asistent pornire în rampă"}},
+];
+const EQ_KEYS=new Set(EQUIPMENT.flatMap(c=>Object.keys(c.items)));
+const MAKES=["Alfa Romeo","Audi","BMW","Citroën","Cupra","Dacia","Fiat","Ford","Honda","Hyundai","Jaguar","Jeep","Kia","Land Rover","Lexus","Mazda","Mercedes-Benz","Mini","Mitsubishi","Nissan","Opel","Peugeot","Porsche","Renault","Seat","Skoda","Subaru","Suzuki","Tesla","Toyota","Volkswagen","Volvo"];
+const STATUS={preparation:"În pregătire",available:"Disponibil",reserved:"Rezervat",sold:"Vândut",withdrawn:"Retras"};
+const IN_STOCK=["preparation","available","reserved"];
+
+// ───────────── Permisiuni (aceeași matrice ca pe server) ─────────────
+const ROLE_LABEL={owner:"Proprietar",manager:"Manager",sales:"Agent vânzări",operator:"Operator"};
+const ROLE_PERSON={owner:null,manager:"Ioana Manager",sales:"Andrei Agent",operator:"Radu Operator"};
+const P={
+ "vehicle.create":["owner","manager","sales","operator"],"vehicle.update":["owner","manager","sales","operator"],"vehicle.delete":["owner","manager"],
+ "vehicle.price.write":["owner","manager"],"vehicle.costs.read":["owner","manager"],"vehicle.costs.write":["owner","manager"],
+ "vehicle.minPrice.read":["owner","manager","sales"],"vehicle.minPrice.write":["owner","manager"],"vehicle.sell":["owner","manager","sales"],
+ "vehicle.sell.override":["owner","manager"],"media.write":["owner","manager","sales","operator"],"dashboard.financials":["owner","manager"],"company.update":["owner","manager"],
+};
+const can=(role,p)=>P[p].includes(role);
+const TRANSITIONS={preparation:["available","withdrawn"],available:["preparation","reserved","sold","withdrawn"],reserved:["available","sold","withdrawn"],sold:["available"],withdrawn:["preparation","available"]};
+function checkTransition(role,from,to,v){
+  if(from===to) return "Autoturismul are deja acest status.";
+  if(!TRANSITIONS[from].includes(to)) return `Tranziția ${STATUS[from]} → ${STATUS[to]} nu este permisă.`;
+  if((to==="reserved"||to==="sold")&&!can(role,"vehicle.sell")) return "Doar agenții de vânzări și managerii pot rezerva sau vinde.";
+  if(from==="sold"&&!can(role,"vehicle.sell.override")) return "Doar proprietarul sau managerul poate anula o vânzare.";
+  if(to==="withdrawn"&&!can(role,"vehicle.delete")) return "Doar proprietarul sau managerul poate retrage un autoturism.";
+  if(to==="available"&&v.listPrice==null) return "Setați prețul de listare înainte de a marca autoturismul disponibil.";
+  return null;
+}
+const allowed=(role,from,v)=>TRANSITIONS[from].filter(t=>!checkTransition(role,from,t,v));
+
+// ───────────── Finanțe (sume în cenți) ─────────────
+function totalCost(v){ if(v.purchasePrice==null) return null; return v.purchasePrice+(v.transportCost||0)+(v.repairCost||0)+(v.preparationCost||0)+(v.otherCosts||0); }
+function estProfit(v){ const c=totalCost(v); return c==null||v.listPrice==null?null:v.listPrice-c; }
+function realProfit(v){ const c=totalCost(v); return c==null||v.salePrice==null?null:v.salePrice-c; }
+const marginPct=(p,price)=>p==null||!price?null:Math.round(p/price*1000)/10;
+const daysBetween=(a,b)=>Math.max(0,Math.floor((new Date(b)-new Date(a))/864e5));
+function parseMoney(input){
+  if(input==null) return null;
+  let s=String(input).trim().replace(/\s|€|eur|ron|lei/gi,"");
+  if(s==="") return null;
+  const lc=s.lastIndexOf(","), ld=s.lastIndexOf(".");
+  if(lc>-1&&ld>-1) s=lc>ld?s.replace(/\./g,"").replace(",","."):s.replace(/,/g,"");
+  else if(lc>-1) s=/^\d{1,3}(,\d{3})+$/.test(s)?s.replace(/,/g,""):s.replace(",",".");
+  else if(ld>-1&&/^\d{1,3}(\.\d{3})+$/.test(s)) s=s.replace(/\./g,"");
+  if(!/^\d+(\.\d{1,2})?$/.test(s)) throw new Error("Sumă invalidă.");
+  const [w,f=""]=s.split(".");
+  return Number(w)*100+Number(f.padEnd(2,"0"));
+}
+const safeMoney=s=>{try{return parseMoney(s)}catch{return null}};
+
+// ───────────── Formatare ─────────────
+const nf=new Intl.NumberFormat("ro-RO");
+const money=(c,o={})=>c==null?"—":new Intl.NumberFormat("ro-RO",{style:"currency",currency:"EUR",maximumFractionDigits:0,notation:o.compact?"compact":"standard"}).format(c/100);
+const num=(n,suf="")=>n==null||n===""?"—":nf.format(n)+suf;
+const fdate=d=>d?new Intl.DateTimeFormat("ro-RO",{day:"2-digit",month:"short",year:"numeric"}).format(new Date(d)):"—";
+const fdt=d=>d?new Intl.DateTimeFormat("ro-RO",{dateStyle:"medium",timeStyle:"short"}).format(new Date(d)):"—";
+const stock=n=>"AF-"+String(n).padStart(5,"0");
+const toInput=c=>c==null?"":(c%100===0?String(c/100):(c/100).toFixed(2));
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const today=()=>new Date().toISOString().slice(0,10);
+const uid=()=>(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2)).replace(/-/g,"");
+
+// ───────────── Icoane ─────────────
+const I={
+ dash:'<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>',
+ car:'<path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9L18 10l-2.7-3.4A2 2 0 0 0 13.7 6H8.4a2 2 0 0 0-1.7.9L4 10l-1.4.7C1.7 11.2 1 12 1 13v3c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/><path d="M9 17h6"/>',
+ users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>',
+ cal:'<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+ mega:'<path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>',
+ doc:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>',
+ chart:'<path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/>',
+ globe:'<circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
+ bldg:'<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"/>',
+ shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+ plus:'<path d="M12 5v14M5 12h14"/>', search:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+ back:'<path d="m15 18-6-6 6-6"/>', next:'<path d="m9 18 6-6-6-6"/>', x:'<path d="M18 6 6 18M6 6l12 12"/>',
+ star:'<path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/>',
+ trash:'<path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+ img:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/>',
+ edit:'<path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/>', sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M6.3 17.7l-1.4 1.4M19.1 4.9l-1.4 1.4"/>',
+ moon:'<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/>', mon:'<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>',
+ menu:'<path d="M4 6h16M4 12h16M4 18h16"/>', inbox:'<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1z"/>',
+ check:'<path d="M22 11.1V12a10 10 0 1 1-5.9-9.1"/><path d="m9 11 3 3L22 4"/>',
+};
+const ic=(n,cls="ic")=>`<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${I[n]}</svg>`;
+const LOGO=`<svg width="28" height="28" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="var(--accent)"/><path d="M8 22.5 14.2 9.5h3.6L24 22.5" fill="none" stroke="#fff" stroke-width="2.4" stroke-linejoin="round"/><path d="M11.2 17.5h9.6" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".55"/></svg>`;
+
+// ───────────── Stare ─────────────
+const S={mode:"loading",role:"owner",route:{name:"dashboard"},vehicles:[],photos:{},profile:null,fullCache:{},
+  filters:{status:"",q:"",make:"",fuel:"",transmission:"",sort:"newest"},form:null,flash:null,ui:{}};
+function store_get(k,d){try{return localStorage.getItem(k)??d}catch{return d}}
+function store_set(k,v){try{localStorage.setItem(k,v)}catch{}}
+S.role=store_get("af_role","owner"); if(!ROLE_LABEL[S.role]) S.role="owner";
+const actor=()=>ROLE_PERSON[S.role]||S.profile?.ownerName||"Proprietar";
+
+// ───────────── Persistență: db privat per utilizator, cu rezervă în memorie ─────────────
+let DB=null, BASE=null;
+const col=n=>DB.collection(`${BASE}/inv/${n}`);
+const Store={
+  async init(){
+    try{
+      if(window.claude?.use){
+        const [db,user]=await Promise.all([claude.use("db"),claude.use("user")]);
+        const id=user?await user.id():null;
+        if(db&&id){ DB=db; BASE=`data/users/${id}`; }
+      }
+    }catch{}
+    if(!DB){ S.mode="memory"; S.profile=defaultProfile(); return; }
+    S.mode="db";
+    const prof=await DB.collection(BASE).doc("profile").get().catch(()=>null);
+    S.profile=prof?.exists?{...defaultProfile(),...prof.data()}:null;
+    await new Promise(res=>{
+      let a=false,b=false; const done=()=>a&&b&&res();
+      col("vehicles").onSnapshot(s=>{S.vehicles=s.docs.map(d=>({id:d.id,...d.data()}));a=true;done();if(S.ready)refresh();},e=>{toast("Eroare la citirea datelor: "+e.message);a=true;done();});
+      col("photos").onSnapshot(s=>{const m={};for(const d of s.docs){const p={id:d.id,...d.data()};(m[p.vehicleId]??=[]).push(p);}for(const k in m)m[k].sort((x,y)=>x.position-y.position);S.photos=m;b=true;done();if(S.ready)refresh();},()=>{b=true;done();});
+    });
+    if(!S.profile){ S.profile=defaultProfile(); await this.saveProfile(S.profile); await loadExamples(); }
+  },
+  async saveProfile(p){ S.profile=p; if(DB) await DB.collection(BASE).doc("profile").set(p); },
+  async saveVehicle(v){ const i=S.vehicles.findIndex(x=>x.id===v.id); if(i>-1)S.vehicles[i]=v; else S.vehicles.push(v); if(DB){const {id,...data}=v; await col("vehicles").doc(id).set(data);} },
+  async deleteVehicle(id){ S.vehicles=S.vehicles.filter(v=>v.id!==id); const ph=S.photos[id]||[]; delete S.photos[id];
+    if(DB){ await col("vehicles").doc(id).delete(); for(const p of ph){ await col("photos").doc(p.id).delete(); await col("photofull").doc(p.id).delete().catch(()=>{}); } } },
+  async savePhoto(p,full){ (S.photos[p.vehicleId]??=[]).push(p); S.fullCache[p.id]=full; if(DB){const {id,...d}=p; await col("photofull").doc(id).set({data:full}); await col("photos").doc(id).set(d);} },
+  async updatePhoto(p){ if(DB){const {id,...d}=p; await col("photos").doc(id).set(d);} },
+  async deletePhoto(p){ S.photos[p.vehicleId]=(S.photos[p.vehicleId]||[]).filter(x=>x.id!==p.id); if(DB){ await col("photos").doc(p.id).delete(); await col("photofull").doc(p.id).delete().catch(()=>{});} },
+  async full(id){ if(S.fullCache[id]) return S.fullCache[id]; if(!DB) return null; const s=await col("photofull").doc(id).get(); const d=s.exists?s.data().data:null; if(d)S.fullCache[id]=d; return d; },
+};
+function defaultProfile(){ return {name:"Parcul meu auto",legalName:"",cui:"",regCom:"",address:"",city:"",county:"",phone:"",email:"",website:"",ownerName:"Proprietar",stockSeq:0}; }
+
+// ───────────── Date de exemplu (marcate ca exemple) ─────────────
+async function loadExamples(){
+  const base=[
+   ["Volkswagen","Passat","2.0 TDI Highline",2019,"diesel","automatic",148000,150,"wagon",14000,18900,["navigation","acc","climate_multi","led_headlights","park_rear"]],
+   ["Skoda","Octavia","1.5 TSI Style",2021,"petrol","manual",62000,150,"wagon",13500,17900,["carplay","android_auto","climate_auto","park_rear"]],
+   ["BMW","Seria 5","520d xDrive",2020,"diesel","automatic",118000,190,"sedan",24500,31900,["navigation","leather","head_up","camera_rear","acc"]],
+   ["Dacia","Duster","1.3 TCe Prestige",2022,"petrol","manual",41000,130,"suv",11800,15400,["navigation","camera_360","climate_auto"]],
+   ["Toyota","RAV4","2.5 Hybrid AWD",2021,"hybrid","automatic",76000,222,"suv",23200,29500,["acc","lane_assist","camera_rear","heated_seats"]],
+   ["Audi","A4","35 TDI S line",2019,"diesel","automatic",132000,163,"sedan",17200,22400,["matrix_led","digital_cockpit","leather","navigation"]],
+   ["Ford","Focus","1.0 EcoBoost Titanium",2020,"petrol","manual",88000,125,"hatchback",9300,12600,["carplay","park_front","park_rear"]],
+   ["Mercedes-Benz","C-Class","C 220 d AMG Line",2019,"diesel","automatic",141000,194,"sedan",20800,26900,["navigation","ambient_light","camera_rear","leather"]],
+   ["Hyundai","Tucson","1.6 T-GDi",2021,"petrol","automatic",58000,150,"suv",17600,22800,["carplay","heated_wheel","blind_spot"]],
+   ["Volkswagen","Golf","2.0 TDI Life",2020,"diesel","manual",104000,115,"hatchback",11200,14900,["climate_auto","acc","park_rear"]],
+   ["Skoda","Kodiaq","2.0 TDI 4x4",2019,"diesel","automatic",156000,190,"suv",19300,24900,["navigation","tow_hook","power_tailgate"]],
+   ["Kia","Sportage","1.6 CRDi",2020,"diesel","manual",97000,136,"suv",14100,18600,["camera_rear","heated_seats","carplay"]],
+   ["Renault","Clio","1.0 TCe Intens",2021,"petrol","manual",39000,90,"hatchback",8400,11400,["navigation","led_headlights"]],
+   ["BMW","X3","xDrive20d",2018,"diesel","automatic",162000,190,"suv",21500,27400,["navigation","leather","panoramic_roof","acc"]],
+  ];
+  const now=Date.now(), people=["Andrei Agent",S.profile.ownerName||"Proprietar","Ioana Manager"];
+  let seq=S.profile.stockSeq||0;
+  for(const [i,b] of base.entries()){
+    const [make,model,version,year,fuel,transmission,km,hp,body,buy,list,eq]=b;
+    seq++;
+    const sold=i<8, acqDays=sold?40+i*24:[12,37,66,95,24,140][i-8];
+    const acquiredAt=new Date(now-acqDays*864e5).toISOString().slice(0,10);
+    const v={id:uid(),example:true,stockNumber:seq,make,model,version,generation:null,year,vin:null,plateNumber:null,mileageKm:km,engine:version.split(" ")[0],engineCc:null,powerHp:hp,powerKw:Math.round(hp*.7355),fuel,transmission,drivetrain:null,emissionStandard:year>=2020?"euro6d":"euro6",bodyType:body,color:null,doors:5,seats:5,ownersCount:1+(i%2),origin:i%3?"imported":"ro_used",firstRegistration:null,equipment:eq,description:null,internalNotes:null,
+      purchasePrice:buy*100,transportCost:(450+i*40)*100,repairCost:(300+(i*170)%900)*100,preparationCost:250*100,otherCosts:null,listPrice:list*100,minPrice:(list-900)*100,salePrice:null,
+      status:"preparation",acquiredAt,listedAt:null,soldAt:null,soldBy:null,createdAt:new Date(now-acqDays*864e5).toISOString(),updatedAt:new Date().toISOString(),history:[{from:null,to:"preparation",at:new Date(now-acqDays*864e5).toISOString(),by:people[1]}]};
+    const listed=new Date(now-(acqDays-5)*864e5).toISOString();
+    v.listedAt=listed; v.history.push({from:"preparation",to:"available",at:listed,by:people[1]}); v.status="available";
+    if(sold){ const soldAt=new Date(now-(acqDays-(18+i*3))*864e5).toISOString(); v.status="sold"; v.salePrice=(list-300-(i*130)%700)*100; v.soldAt=soldAt; v.soldBy=people[i%3]; v.history.push({from:"available",to:"sold",at:soldAt,by:v.soldBy}); }
+    else if(i===9||i===12){ v.status="reserved"; v.history.push({from:"available",to:"reserved",at:new Date(now-2*864e5).toISOString(),by:people[0]}); }
+    else if(i===13){ v.status="preparation"; v.listedAt=null; v.history=v.history.slice(0,1); }
+    v.statusChangedAt=v.history.at(-1).at;
+    await Store.saveVehicle(v);
+  }
+  S.profile.stockSeq=seq; await Store.saveProfile(S.profile);
+}
+async function clearExamples(){ for(const v of S.vehicles.filter(v=>v.example)) await Store.deleteVehicle(v.id); }
+
+// ───────────── Validare fișă ─────────────
+const VIN_RE=/^[A-HJ-NPR-Z0-9]{17}$/;
+function parseVehicleForm(fd){
+  const raw=Object.fromEntries([...fd.entries()].filter(([k])=>k!=="equipment"));
+  raw.equipment=fd.getAll("equipment").filter(k=>EQ_KEYS.has(k));
+  const e={}, out={};
+  const txt=(k,max=200)=>{const s=(raw[k]??"").trim(); if(s.length>max)e[k]=`Maximum ${max} caractere.`; out[k]=s||null;};
+  const int=(k,min,max,label)=>{const s=(raw[k]??"").replace(/[\s.]/g,""); if(s===""){out[k]=null;return;} const n=Number(s); if(!Number.isInteger(n))e[k]=`${label} trebuie să fie un număr întreg.`; else if(n<min||n>max)e[k]=`${label} trebuie să fie între ${min} și ${nf.format(max)}.`; out[k]=n;};
+  const opt=(k,o)=>{const s=raw[k]||""; out[k]=s&&o[s]?s:null;};
+  const mon=k=>{ if(!(k in raw)) return; try{out[k]=parseMoney(raw[k]); if(out[k]!=null&&out[k]>1e10)e[k]="Sumă prea mare.";}catch{e[k]="Sumă invalidă.";} };
+  out.make=(raw.make||"").trim(); if(!out.make)e.make="Marca este obligatorie.";
+  out.model=(raw.model||"").trim(); if(!out.model)e.model="Modelul este obligatoriu.";
+  txt("generation",80); txt("version",120); txt("engine",80); txt("color",40); txt("description",5000); txt("internalNotes",5000);
+  const y=Number(raw.year); if(!raw.year)e.year="Anul este obligatoriu."; else if(!Number.isInteger(y)||y<1950||y>new Date().getFullYear()+1)e.year="An invalid."; out.year=y;
+  const vin=(raw.vin||"").toUpperCase().replace(/\s/g,""); if(vin&&!VIN_RE.test(vin))e.vin="Seria VIN trebuie să aibă 17 caractere (fără I, O, Q)."; out.vin=vin||null;
+  out.plateNumber=(raw.plateNumber||"").trim().toUpperCase()||null;
+  int("mileageKm",0,2000000,"Kilometrajul"); int("engineCc",0,10000,"Capacitatea"); int("powerHp",0,2000,"Puterea"); int("powerKw",0,1500,"Puterea");
+  int("doors",1,9,"Numărul de uși"); int("seats",1,60,"Numărul de locuri"); int("ownersCount",0,50,"Numărul de proprietari");
+  if(!FUEL[raw.fuel])e.fuel="Selectați combustibilul."; out.fuel=raw.fuel;
+  if(!TRANS[raw.transmission])e.transmission="Selectați transmisia."; out.transmission=raw.transmission;
+  opt("drivetrain",DRIVE); opt("emissionStandard",EMIS); opt("bodyType",BODY); opt("origin",ORIGIN);
+  out.firstRegistration=raw.firstRegistration||null; out.acquiredAt=raw.acquiredAt||today();
+  out.equipment=raw.equipment;
+  ["purchasePrice","transportCost","repairCost","preparationCost","otherCosts","listPrice","minPrice"].forEach(mon);
+  // Câmpurile protejate pe care rolul nu le poate scrie sunt ignorate (ca pe server).
+  if(!can(S.role,"vehicle.costs.write")) ["purchasePrice","transportCost","repairCost","preparationCost","otherCosts"].forEach(k=>delete out[k]);
+  if(!can(S.role,"vehicle.price.write")) delete out.listPrice;
+  if(!can(S.role,"vehicle.minPrice.write")) delete out.minPrice;
+  return {raw,out,errors:e};
+}
+
+// ───────────── Randare: shell ─────────────
+function go(name,params={}){ S.route={name,...params}; S.form=null; S.ui={}; document.getElementById("side").classList.remove("open"); document.querySelector(".scrim")?.remove(); refresh(); window.scrollTo(0,0); }
+function renderShell(){
+  const r=S.route.name;
+  const link=(n,label,icon,match=n)=>`<button data-go="${n}" class="${r===match||(match==="vehicles"&&r.startsWith("vehicle"))?"on":""}">${ic(icon)}${label}</button>`;
+  const soon=(label,icon,stage)=>`<div class="soon" title="Modul planificat — ${stage}">${ic(icon)}${label}<em>În curând</em></div>`;
+  document.getElementById("side").innerHTML=`
+   <div class="brand">${LOGO}<b>AUTOFLOW</b></div>
+   <div class="dealer"><small>Parc auto</small><span>${esc(S.profile?.name||"—")}</span></div>
+   <nav class="nav">
+    ${link("dashboard","Dashboard","dash")}${link("vehicles","Autoturisme","car")}
+    ${soon("Clienți","users","Etapa 1")}${soon("Programări","cal","Etapa 3")}${soon("Anunțuri","mega","Etapa 2")}${soon("Documente","doc","Etapa 3")}${soon("Rapoarte","chart","Etapa 3")}${soon("Website","globe","Etapa 2")}
+    <h6>Setări</h6>${link("company","Companie","bldg")}${link("roles","Roluri și permisiuni","shield")}
+   </nav>
+   <div class="side-foot">BLUR Advertising · v0.1 demo</div>`;
+  const th=document.documentElement.dataset.theme||"system";
+  document.getElementById("top").innerHTML=`
+   <button class="btn g burger" data-act="menu" aria-label="Deschide meniul" style="width:38px;padding:0">${ic("menu")}</button>
+   <span class="demo-pill" title="Rulează în browser. Datele sunt salvate în contul dumneavoastră, privat.">${S.mode==="memory"?"Demo · datele nu se salvează":"Versiune demonstrativă"}</span>
+   <div class="seg" role="radiogroup" aria-label="Temă">
+    ${[["light","sun","Luminos"],["dark","moon","Întunecat"],["system","mon","Sistem"]].map(([v,i,l])=>`<button role="radio" aria-checked="${th===v}" data-theme-set="${v}" title="${l}">${ic(i,"ic")}</button>`).join("")}
+   </div>
+   <div class="who"><label for="role">Vedeți ca</label>
+    <select id="role" data-role-select>${Object.entries(ROLE_LABEL).map(([k,v])=>`<option value="${k}" ${S.role===k?"selected":""}>${v}</option>`).join("")}</select></div>`;
+}
+function refresh(){ if(!S.ready) return; renderShell(); if(S.route.name==="vehicle-form"&&S.form&&S.ui.keepForm) return; renderMain(); }
+function renderMain(){
+  const m=document.getElementById("main"); const r=S.route.name;
+  const html=r==="dashboard"?viewDashboard():r==="vehicles"?viewList():r==="vehicle"?viewDetail():r==="vehicle-form"?viewForm():r==="company"?viewCompany():r==="roles"?viewRoles():"";
+  m.innerHTML=`<div class="fade">${html}</div>`;
+  if(r==="vehicle") hydrateDetail();
+  if(r==="vehicle-form") S.ui.keepForm=true;
+}
+const badge=s=>`<span class="badge b-${s}">${STATUS[s]||s}</span>`;
+const thumbHtml=(vid,cls="thumb")=>{const p=(S.photos[vid]||[]).slice().sort((a,b)=>(b.isPrimary-a.isPrimary)||(a.position-b.position))[0]; return `<div class="${cls}">${p?`<img src="${p.thumb}" alt="">`:ic("car")}</div>`;};
+const exTag=v=>v.example?` <span class="ex" title="Autoturism de exemplu">EXEMPLU</span>`:"";
+const header=(title,desc,actions="",eyebrow="")=>`<div class="ph"><div style="min-width:0">${eyebrow?`<div class="eyebrow">${eyebrow}</div>`:""}<h1>${title}</h1>${desc?`<p>${desc}</p>`:""}</div>${actions?`<div style="display:flex;gap:8px;flex-wrap:wrap">${actions}</div>`:""}</div>`;
+const addBtn=()=>can(S.role,"vehicle.create")?`<button class="btn p" data-go="vehicle-form">${ic("plus")} Adaugă autoturism</button>`:"";
+
+// ───────────── Dashboard ─────────────
+function computeDash(){
+  const V=S.vehicles, fin=can(S.role,"dashboard.financials");
+  const c={preparation:0,available:0,reserved:0,sold:0,withdrawn:0}; V.forEach(v=>c[v.status]++);
+  const stockV=V.filter(v=>IN_STOCK.includes(v.status));
+  let cost=0,list=0,prof=0,miss=0; stockV.forEach(v=>{const tc=totalCost(v); if(tc!=null)cost+=tc; else miss++; if(v.listPrice!=null)list+=v.listPrice; else miss++; const p=estProfit(v); if(p!=null)prof+=p;});
+  const now=new Date(); const months=[]; for(let i=11;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1); months.push({key:`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`,label:new Intl.DateTimeFormat("ro-RO",{month:"short"}).format(d).replace(".",""),sold:0,profit:0,hasProfit:false,days:[]});}
+  const start=new Date(now.getFullYear(),now.getMonth()-11,1);
+  const soldV=V.filter(v=>v.status==="sold"&&v.soldAt&&new Date(v.soldAt)>=start);
+  const byMake={}, agents={};
+  soldV.forEach(v=>{const d=new Date(v.soldAt); const k=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`; const m=months.find(x=>x.key===k); if(m){m.sold++; const p=realProfit(v); if(p!=null){m.profit+=p;m.hasProfit=true;} m.days.push(daysBetween(v.acquiredAt,v.soldAt));}
+    byMake[v.make]=(byMake[v.make]||0)+1; const a=v.soldBy||"Necunoscut"; agents[a]??={n:0,rev:0}; agents[a].n++; agents[a].rev+=v.salePrice||0;});
+  const allDays=soldV.map(v=>daysBetween(v.acquiredAt,v.soldAt));
+  const ages=stockV.map(v=>({v,d:daysBetween(v.acquiredAt,now)}));
+  return {fin,c,inStock:stockV.length,total:V.length,cost:fin?cost:null,list,prof:fin?prof:null,miss,months,thisMonth:months[11],
+    avgDays:allDays.length?Math.round(allDays.reduce((a,b)=>a+b,0)/allDays.length*10)/10:null,
+    byMake:Object.entries(byMake).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).slice(0,8),
+    agents:Object.entries(agents).sort((a,b)=>b[1].n-a[1].n).slice(0,8),
+    aging:[ages.filter(a=>a.d<=30).length,ages.filter(a=>a.d>30&&a.d<=60).length,ages.filter(a=>a.d>60&&a.d<=90).length,ages.filter(a=>a.d>90).length],
+    oldest:ages.filter(a=>a.d>30).sort((a,b)=>b.d-a.d).slice(0,4),
+    recent:V.slice().sort((a,b)=>b.createdAt.localeCompare(a.createdAt)).slice(0,5)};
+}
+function niceMax(v){ if(v<=0) return 4; const p=Math.pow(10,Math.floor(Math.log10(v))); const n=v/p; return (n<=1?1:n<=2?2:n<=2.5?2.5:n<=5?5:10)*p; }
+function compact(v){ return new Intl.NumberFormat("ro-RO",{notation:"compact",maximumFractionDigits:1}).format(v); }
+function barChart(data,unit){
+  const W=520,H=210,L=34,B=24,T=8, max=Math.max(4,niceMax(Math.max(...data.map(d=>d.v)))), step=(W-L)/data.length, bw=Math.min(26,step*.55);
+  const y=v=>T+(H-T-B)*(1-v/max); const ticks=[0,max/4,max/2,max*3/4,max].filter(t=>Number.isInteger(t));
+  return `<div class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Grafic ${unit}">
+   ${ticks.map(t=>`<line x1="${L}" x2="${W}" y1="${y(t)}" y2="${y(t)}" stroke="var(--grid)"/><text x="${L-8}" y="${y(t)+4}" text-anchor="end">${t}</text>`).join("")}
+   ${data.map((d,i)=>{const x=L+i*step+(step-bw)/2,h=H-B-y(d.v); return `<g><title>${d.label}: ${d.v} ${unit}</title><rect x="${L+i*step}" y="${T}" width="${step}" height="${H-T-B}" fill="transparent"/>${d.v?`<path d="M${x} ${H-B} V${y(d.v)+4} q0 -4 4 -4 h${bw-8} q4 0 4 4 V${H-B}z" fill="var(--accent)"/>`:""}<text x="${x+bw/2}" y="${H-6}" text-anchor="middle">${d.label}</text></g>`;}).join("")}
+  </svg></div>`;
+}
+function areaChart(data,fmt){
+  const W=520,H=210,L=46,B=24,T=10; const vals=data.map(d=>d.v).filter(v=>v!=null);
+  if(!vals.length) return `<div class="empty" style="padding:60px 10px"><p>Nicio vânzare cu cost complet în ultimele 12 luni.</p></div>`;
+  const mn=Math.min(0,...vals), mx=niceMax(Math.max(...vals,1)); const step=(W-L-10)/(data.length-1);
+  const y=v=>T+(H-T-B)*(1-(v-mn)/(mx-mn)); const x=i=>L+i*step;
+  const pts=data.map((d,i)=>d.v==null?null:[x(i),y(d.v)]).filter(Boolean);
+  const line=pts.map((p,i)=>(i?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1)).join(" ");
+  const area=`${line} L${pts.at(-1)[0]} ${y(Math.max(0,mn))} L${pts[0][0]} ${y(Math.max(0,mn))}Z`;
+  const ticks=[0,.25,.5,.75,1].map(f=>mn+(mx-mn)*f);
+  return `<div class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Evoluție profit">
+   <defs><linearGradient id="af-g" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".18"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>
+   ${ticks.map(t=>`<line x1="${L}" x2="${W}" y1="${y(t)}" y2="${y(t)}" stroke="var(--grid)"/><text x="${L-8}" y="${y(t)+4}" text-anchor="end">${compact(t/100)}</text>`).join("")}
+   <path d="${area}" fill="url(#af-g)"/><path d="${line}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round"/>
+   ${data.map((d,i)=>`<g><title>${d.label}: ${d.v==null?"—":fmt(d.v)}</title><rect x="${x(i)-step/2}" y="${T}" width="${step}" height="${H-T-B}" fill="transparent"/>${d.v!=null?`<circle cx="${x(i)}" cy="${y(d.v)}" r="${i===data.length-1?4:2.5}" fill="var(--accent)" stroke="var(--surface)" stroke-width="${i===data.length-1?2:0}"/>`:""}<text x="${x(i)}" y="${H-6}" text-anchor="middle">${d.label}</text></g>`).join("")}
+  </svg></div>`;
+}
+const rank=(rows,unit,empty)=>rows.length?`<ul class="rank">${rows.map(r=>`<li title="${esc(r.label)}: ${r.v} ${unit}"><div class="r"><span class="ellip">${esc(r.label)}</span><span class="tab fg2"><b style="color:var(--fg)">${r.v}</b> ${unit}${r.sub?` <span class="muted">${r.sub}</span>`:""}</span></div><div class="bar"><i style="width:${Math.max(3,r.v/rows[0].v*100)}%"></i></div></li>`).join("")}</ul>`:`<p class="muted" style="text-align:center;padding:36px 0;font-size:13px">${empty}</p>`;
+function viewDashboard(){
+  const d=computeDash(); const first=(S.role==="owner"?S.profile.ownerName:ROLE_PERSON[S.role]||"").split(" ")[0];
+  const h=new Date().getHours(), greet=h<11?"Bună dimineața":h<18?"Bună ziua":"Bună seara";
+  const dateStr=new Intl.DateTimeFormat("ro-RO",{weekday:"long",day:"numeric",month:"long"}).format(new Date());
+  const exN=S.vehicles.filter(v=>v.example).length;
+  const exBanner=exN?`<div class="alert warn" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:16px"><span>Vedeți ${exN} autoturisme de exemplu (marcate EXEMPLU), ca să puteți explora aplicația. Cifrele de mai jos se calculează din ele.</span><button class="btn s sm" data-act="clear-examples">Șterge exemplele</button></div>`:"";
+  if(!d.total) return header(`${greet}${first?", "+esc(first):""}`,"",addBtn(),dateStr)+`<div class="card empty"><div class="ico">${ic("car")}</div><b>Stocul este gol</b><p>Adăugați primul autoturism. Indicatorii și graficele se calculează automat din datele introduse.</p><div style="margin-top:18px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">${addBtn()}<button class="btn s" data-act="load-examples">Încarcă date de exemplu</button></div></div>`;
+  const k=(label,val,sub,lock,tone="")=>`<div class="card kpi"><h4>${label}</h4>${lock?`<div class="lock">Vizibil pentru proprietar și manager</div>`:`<div class="v tab ${tone}">${val}</div>${sub?`<div class="s">${sub}</div>`:""}`}</div>`;
+  const panel=(t,sub,body,act="")=>`<section class="card panel"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div><h3>${t}</h3>${sub?`<div class="sub">${sub}</div>`:`<div style="height:14px"></div>`}</div>${act}</div>${body}</section>`;
+  return header(`${greet}${first?", "+esc(first):""}`,"Situația parcului auto, calculată din datele introduse.",addBtn(),dateStr)+exBanner+`
+   <div class="grid4">${k("Autoturisme în stoc",num(d.inStock),`${d.c.preparation} în pregătire`)}${k("Disponibile",num(d.c.available),"Listate pentru vânzare")}${k("Rezervate",num(d.c.reserved),"")}${k("Vândute",num(d.c.sold),`${d.thisMonth.sold} în luna curentă`)}</div>
+   <div class="grid4" style="margin-top:14px">${k("Valoarea stocului (cost)",money(d.cost),"Achiziție + costuri directe",!d.fin)}${k("Valoare estimată la vânzare",money(d.list),"Suma prețurilor de listare")}${k("Profit brut estimat",money(d.prof),d.miss?`Exclude fișele fără cost sau preț`:"Estimativ — nu este profit net",!d.fin,d.prof<0?"bad":"")}${k("Durată medie până la vânzare",d.avgDays!=null?num(d.avgDays," zile"):"—","Ultimele 12 luni")}</div>
+   <div class="g2" style="margin-top:14px">
+    ${panel("Vânzări lunare","Autoturisme vândute, ultimele 12 luni",barChart(d.months.map(m=>({label:m.label,v:m.sold})),"vândute"))}
+    ${d.fin?panel("Profit brut realizat","Preț final − cost total, pe luna vânzării",areaChart(d.months.map(m=>({label:m.label,v:m.hasProfit?m.profit:null})),v=>money(v)))
+           :panel("Durată medie până la vânzare","Zile de la achiziție la vânzare",areaChart(d.months.map(m=>({label:m.label,v:m.days.length?Math.round(m.days.reduce((a,b)=>a+b,0)/m.days.length)*100:null})),v=>num(v/100," zile")))}
+   </div>
+   <div class="g3" style="margin-top:14px">
+    ${panel("Vânzări pe mărci","Ultimele 12 luni",rank(d.byMake.map(([l,v])=>({label:l,v})),"vândute","Nicio vânzare înregistrată încă."))}
+    ${panel("Performanța agenților","Ultimele 12 luni",rank(d.agents.map(([l,a])=>({label:l,v:a.n,sub:d.fin?money(a.rev,{compact:true}):""})),"vândute","Nicio vânzare înregistrată încă."))}
+    ${panel("Vechimea stocului","Zile de la achiziție",`<div class="aging">${[["0–30 zile",""],["31–60 zile",""],["61–90 zile","warn"],["Peste 90 zile","bad"]].map(([l,t],i)=>`<div><small>${l}</small><b class="tab ${d.aging[i]?t:""}">${d.aging[i]}</b></div>`).join("")}</div>
+      ${d.oldest.length?`<ul class="list" style="margin-top:14px;border-top:1px solid var(--line)">${d.oldest.map(o=>`<li><button class="rowlink" data-open="${o.v.id}" style="padding:9px 0;border-radius:0"><span class="ellip" style="flex:1">${esc(o.v.make)} ${esc(o.v.model)} <span class="muted">${o.v.year}</span></span><b class="tab ${o.d>90?"bad":o.d>60?"warn":"fg2"}" style="font-weight:500">${o.d} zile</b></button></li>`).join("")}</ul>`:""}`)}
+   </div>
+   <div class="g2" style="margin-top:14px;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)">
+    ${panel("Adăugate recent","",`<ul class="list" style="margin:0 -8px">${d.recent.map(v=>`<li style="border:0"><button class="rowlink" data-open="${v.id}">${thumbHtml(v.id)}<span style="flex:1;min-width:0"><span class="ellip" style="display:block;font-weight:500">${esc(v.make)} ${esc(v.model)} <span class="muted" style="font-weight:400">${v.year}</span>${exTag(v)}</span><span class="muted" style="font-size:12.5px">${stock(v.stockNumber)} · ${num(v.mileageKm," km")}</span></span><span class="tab hide-l" style="font-weight:500">${money(v.listPrice)}</span>${badge(v.status)}</button></li>`).join("")}</ul>`,`<button class="btn g sm" data-go="vehicles">Tot stocul ${ic("next")}</button>`)}
+    ${panel("Cereri clienți și sarcini","",`<div class="empty" style="padding:30px 10px"><div class="ico">${ic("inbox")}</div><b>Modulul CRM este în dezvoltare</b><p>Cererile noi, clienții de contactat și sarcinile programate vor apărea aici după activarea modulului Clienți.</p></div>`)}
+   </div>`;
+}
+
+// ───────────── Listă autoturisme ─────────────
+function filtered(){
+  const f=S.filters; let V=S.vehicles.slice();
+  if(f.status==="in_stock") V=V.filter(v=>IN_STOCK.includes(v.status)); else if(f.status) V=V.filter(v=>v.status===f.status);
+  if(f.make) V=V.filter(v=>v.make===f.make); if(f.fuel) V=V.filter(v=>v.fuel===f.fuel); if(f.transmission) V=V.filter(v=>v.transmission===f.transmission);
+  const q=f.q.trim().toLowerCase();
+  if(q){ const sn=q.toUpperCase().replace(/^AF-?/,""); V=V.filter(v=>`${v.make} ${v.model} ${v.version||""} ${v.vin||""} ${v.plateNumber||""}`.toLowerCase().includes(q)||(/^\d+$/.test(sn)&&v.stockNumber===Number(sn))); }
+  const nl=(a,b,dir)=>a==null&&b==null?0:a==null?1:b==null?-1:(a-b)*dir;
+  const sorts={newest:(a,b)=>b.createdAt.localeCompare(a.createdAt),oldest:(a,b)=>a.acquiredAt.localeCompare(b.acquiredAt),price_asc:(a,b)=>nl(a.listPrice,b.listPrice,1),price_desc:(a,b)=>nl(a.listPrice,b.listPrice,-1),year_desc:(a,b)=>b.year-a.year,mileage_asc:(a,b)=>nl(a.mileageKm,b.mileageKm,1)};
+  return V.sort(sorts[f.sort]||sorts.newest);
+}
+function viewList(){
+  const f=S.filters, V=filtered(), costs=can(S.role,"vehicle.costs.read"), isF=!!(f.q||f.make||f.fuel||f.transmission||f.status);
+  const makes=[...new Set(S.vehicles.map(v=>v.make))].sort();
+  const tabs=[["","Toate"],["in_stock","În stoc"],["preparation","În pregătire"],["available","Disponibile"],["reserved","Rezervate"],["sold","Vândute"],["withdrawn","Retrase"]];
+  const sel=(name,opts,ph)=>`<select class="input" id="f-${name}" data-filter="${name}" aria-label="${ph}"><option value="">${ph}</option>${opts.map(([k,l])=>`<option value="${esc(k)}" ${f[name]===k?"selected":""}>${esc(l)}</option>`).join("")}</select>`;
+  const now=new Date();
+  const rows=V.map(v=>{const d=daysBetween(v.acquiredAt,v.soldAt||now), sold=v.status==="sold"; const pr=sold?realProfit(v):estProfit(v), mg=marginPct(estProfit(v),v.listPrice);
+    return `<tr data-open="${v.id}"><td><div style="display:flex;align-items:center;gap:12px">${thumbHtml(v.id)}<div style="min-width:0"><div class="ellip" style="font-weight:500">${esc(v.make)} ${esc(v.model)}${v.version?` <span class="fg2" style="font-weight:400">${esc(v.version)}</span>`:""}${exTag(v)}</div><div class="muted" style="font-size:12px">${stock(v.stockNumber)}${v.plateNumber?" · "+esc(v.plateNumber):""}</div></div></div></td>
+    <td class="tab">${v.year}</td><td class="tab r">${num(v.mileageKm," km")}</td><td class="fg2 hide-l">${FUEL[v.fuel]} · ${TRANS[v.transmission]}</td>
+    <td class="tab r" style="font-weight:500">${sold&&v.salePrice!=null?money(v.salePrice):money(v.listPrice)}</td>
+    ${costs?`<td class="tab r hide-l"><span class="${pr<0?"bad":""}">${money(pr)}</span>${!sold&&mg!=null?` <span class="muted" style="font-size:12px">${mg}%</span>`:""}</td>`:""}
+    <td class="tab r ${!sold&&d>90?"bad":!sold&&d>60?"warn":"fg2"}">${d}</td><td>${badge(v.status)}</td></tr>`;}).join("");
+  const cards=V.map(v=>`<li><button class="rowlink" data-open="${v.id}" style="padding:12px;border-radius:0">${thumbHtml(v.id,"thumb")}<span style="flex:1;min-width:0"><span style="display:flex;justify-content:space-between;gap:8px"><span class="ellip" style="font-weight:500">${esc(v.make)} ${esc(v.model)}${exTag(v)}</span>${badge(v.status)}</span><span class="muted" style="font-size:12.5px;display:block">${v.year} · ${num(v.mileageKm," km")} · ${FUEL[v.fuel]}</span><span class="tab" style="font-weight:500">${money(v.status==="sold"?v.salePrice:v.listPrice)}</span></span></button></li>`).join("");
+  return header("Autoturisme",`${num(V.length)} ${V.length===1?"autoturism":"autoturisme"}${isF?" găsite":" în evidență"}`,addBtn())+`
+   <div class="scroll-x"><div class="tabs">${tabs.map(([k,l])=>`<button class="${f.status===k?"on":""}" data-tab="${k}">${l}</button>`).join("")}</div></div>
+   <div class="card filters">
+    <div class="search">${ic("search")}<input class="input" id="f-q" data-filter="q" value="${esc(f.q)}" placeholder="Caută marcă, model, VIN, nr. auto, AF-…" autocomplete="off"></div>
+    ${sel("make",makes.map(m=>[m,m]),"Toate mărcile")}${sel("fuel",Object.entries(FUEL),"Orice combustibil")}${sel("transmission",Object.entries(TRANS),"Orice transmisie")}
+    <select class="input" id="f-sort" data-filter="sort" aria-label="Sortare">${[["newest","Adăugate recent"],["oldest","Cele mai vechi în stoc"],["price_asc","Preț crescător"],["price_desc","Preț descrescător"],["year_desc","An (cele mai noi)"],["mileage_asc","Kilometraj redus"]].map(([k,l])=>`<option value="${k}" ${f.sort===k?"selected":""}>${l}</option>`).join("")}</select>
+   </div>
+   <div class="card" style="overflow:hidden" id="vlist">
+    ${V.length?`<table class="vt"><thead><tr><th>Autoturism</th><th>An</th><th class="r">Kilometraj</th><th class="hide-l">Motorizare</th><th class="r">Preț listare</th>${costs?`<th class="r hide-l">Profit brut est.</th>`:""}<th class="r">Zile</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table><ul class="list cards">${cards}</ul>`
+     :`<div class="empty"><div class="ico">${ic("car")}</div><b>${isF?"Niciun rezultat pentru filtrele selectate":"Niciun autoturism în evidență"}</b><p>${isF?"Modificați căutarea sau resetați filtrele.":"Fișele adăugate apar aici, cu status, preț și vechime în stoc."}</p>${isF?`<div style="margin-top:16px"><button class="btn s" data-act="reset-filters">Resetează filtrele</button></div>`:""}</div>`}
+   </div>`;
+}
+
+// ───────────── Formular fișă ─────────────
+function viewForm(){
+  const editing=S.route.id?S.vehicles.find(v=>v.id===S.route.id):null;
+  if(!S.form){ const v=editing||{acquiredAt:today(),equipment:[]};
+    S.form={values:{...Object.fromEntries(Object.entries(v).map(([k,x])=>[k,x==null?"":String(x)])),equipment:v.equipment||[],
+      ...Object.fromEntries(["purchasePrice","transportCost","repairCost","preparationCost","otherCosts","listPrice","minPrice"].map(k=>[k,toInput(v[k])]))},errors:{},error:null}; }
+  const {values:v,errors:e}=S.form, eq=new Set(v.equipment);
+  const inp=(k,label,o={})=>`<div class="f ${o.cls||""}"><label for="v-${k}">${label}</label>${o.unit?`<div class="unit">`:""}<input class="input ${e[k]?"err":""} ${o.mono?"mono":""} ${o.tab?"tab":""}" id="v-${k}" name="${k}" value="${esc(v[k])}" ${o.type?`type="${o.type}"`:""} ${o.list?`list="${o.list}"`:""} ${o.mode?`inputmode="${o.mode}"`:""} ${o.ph?`placeholder="${o.ph}"`:""} ${o.max?`maxlength="${o.max}"`:""} ${o.money?"data-money":""}>${o.unit?`<span>${o.unit}</span></div>`:""}${e[k]?`<div class="e">${e[k]}</div>`:o.hint?`<div class="h">${o.hint}</div>`:""}</div>`;
+  const sel=(k,label,opts,ph="—")=>`<div class="f"><label for="v-${k}">${label}</label><select class="input ${e[k]?"err":""}" id="v-${k}" name="${k}"><option value="">${ph}</option>${Object.entries(opts).map(([a,b])=>`<option value="${a}" ${v[k]===a?"selected":""}>${b}</option>`).join("")}</select>${e[k]?`<div class="e">${e[k]}</div>`:""}</div>`;
+  const sec=(t,d,body)=>`<section class="card sec"><div><h2>${t}</h2>${d?`<div class="d">${d}</div>`:""}</div><div style="min-width:0">${body}</div></section>`;
+  const m=k=>safeMoney(v[k]); const mv={purchasePrice:m("purchasePrice"),transportCost:m("transportCost"),repairCost:m("repairCost"),preparationCost:m("preparationCost"),otherCosts:m("otherCosts"),listPrice:m("listPrice")};
+  const pc=can(S.role,"vehicle.costs.write"), pp=can(S.role,"vehicle.price.write"), pm=can(S.role,"vehicle.minPrice.write");
+  const ep=estProfit(mv);
+  return `<button class="btn g sm" data-go="${editing?"vehicle":"vehicles"}" ${editing?`data-id="${editing.id}"`:""} style="margin:0 0 10px -10px">${ic("back")} ${editing?"Înapoi la fișă":"Autoturisme"}</button>`+
+   header(editing?`Editare: ${esc(editing.make)} ${esc(editing.model)}`:"Autoturism nou",editing?"":"Fișa primește automat un ID intern și statusul „În pregătire”. Fotografiile se adaugă după salvare.","",editing?stock(editing.stockNumber):"")+
+   `<form id="vform" novalidate style="padding-bottom:80px">
+   ${S.form.error?`<div class="alert bad" style="margin-bottom:14px">${esc(S.form.error)}</div>`:""}
+   ${sec("Identificare","Marca, modelul, anul, combustibilul și transmisia sunt obligatorii.",`<div class="fields">
+     ${inp("make","Marcă *",{list:"af-makes"})}${inp("model","Model *")}${inp("generation","Generație",{ph:"ex. B8, F30, Mk7"})}
+     ${inp("version","Versiune / echipare",{cls:"span2",ph:"ex. 2.0 TDI Highline"})}${inp("year","An fabricație *",{mode:"numeric",tab:1})}
+     ${inp("vin","Serie VIN",{mono:1,max:17})}${inp("plateNumber","Număr înmatriculare")}${inp("mileageKm","Kilometraj",{unit:"km",mode:"numeric",tab:1})}
+     ${inp("firstRegistration","Prima înmatriculare",{type:"date"})}${inp("ownersCount","Număr proprietari",{mode:"numeric"})}${sel("origin","Proveniență",ORIGIN)}
+     </div><datalist id="af-makes">${MAKES.map(x=>`<option value="${x}">`).join("")}</datalist>`)}
+   ${sec("Motorizare și caracteristici","",`<div class="fields">
+     ${sel("fuel","Combustibil *",FUEL,"Selectați")}${sel("transmission","Transmisie *",TRANS,"Selectați")}${sel("drivetrain","Tracțiune",DRIVE)}
+     ${inp("engine","Motorizare",{ph:"ex. 2.0 TDI"})}${inp("engineCc","Capacitate cilindrică",{unit:"cm³",mode:"numeric",tab:1})}
+     <div class="pair">${inp("powerHp","Putere (CP)",{mode:"numeric",tab:1})}${inp("powerKw","Putere (kW)",{mode:"numeric",tab:1})}</div>
+     ${sel("emissionStandard","Normă de poluare",EMIS)}${sel("bodyType","Caroserie",BODY)}${inp("color","Culoare")}
+     <div class="pair">${inp("doors","Uși",{mode:"numeric"})}${inp("seats","Locuri",{mode:"numeric"})}</div></div>`)}
+   ${sec("Dotări",`<span id="eqn">${eq.size}</span> selectate. Generatorul de anunțuri va folosi exclusiv dotările bifate aici.`,`<div class="eqgrid">${EQUIPMENT.map(c=>`<fieldset><legend>${c.label}</legend>${Object.entries(c.items).map(([k,l])=>`<label class="chk"><input type="checkbox" name="equipment" value="${k}" ${eq.has(k)?"checked":""}>${l}</label>`).join("")}</fieldset>`).join("")}</div>`)}
+   ${sec("Descriere și note","",`<div style="display:grid;gap:16px">
+     <div class="f"><label for="v-description">Descriere pentru clienți</label><textarea class="input" id="v-description" name="description" rows="5">${esc(v.description)}</textarea><div class="h">Text pentru anunțuri. Va putea fi generat cu AI în Etapa 2.</div></div>
+     <div class="f"><label for="v-internalNotes">Note interne</label><textarea class="input" id="v-internalNotes" name="internalNotes" rows="3">${esc(v.internalNotes)}</textarea><div class="h">Vizibile doar echipei. Nu apar în anunțuri.</div></div></div>`)}
+   ${sec("Situație financiară","Profitul brut = preț − cost direct al autoturismului. Nu include TVA, salarii, chirii sau alte cheltuieli generale.",`<div class="fields">
+     ${inp("acquiredAt","Data achiziției",{type:"date"})}
+     ${pc?inp("purchasePrice","Preț achiziție",{unit:"EUR",mode:"decimal",tab:1,money:1})+inp("transportCost","Cost transport",{unit:"EUR",mode:"decimal",tab:1,money:1})+inp("repairCost","Cost reparații",{unit:"EUR",mode:"decimal",tab:1,money:1})+inp("preparationCost","Cost pregătire vânzare",{unit:"EUR",mode:"decimal",tab:1,money:1,hint:"Detailing, ITP, acte etc."})+inp("otherCosts","Alte cheltuieli",{unit:"EUR",mode:"decimal",tab:1,money:1}):""}
+     ${pp?inp("listPrice","Preț de listare",{unit:"EUR",mode:"decimal",tab:1,money:1}):""}
+     ${pm?inp("minPrice","Preț minim acceptat",{unit:"EUR",mode:"decimal",tab:1,hint:"Ascuns operatorilor."}):""}
+     </div>${!pp?`<p class="muted" style="font-size:13px;margin:14px 0 0">Prețurile și costurile se completează de proprietar sau manager (rolul curent: ${ROLE_LABEL[S.role]}).</p>`:""}
+     ${pc?`<div class="calc"><div><small>Cost total</small><b class="tab" id="c-cost">${money(totalCost(mv))}</b></div><div><small>Profit brut estimat</small><b class="tab ${ep<0?"bad":""}" id="c-prof">${money(ep)}</b></div><div><small>Marjă</small><b class="tab" id="c-mg">${marginPct(ep,mv.listPrice)??"—"}${marginPct(ep,mv.listPrice)!=null?"%":""}</b></div></div>`:""}`)}
+   <div class="savebar"><div><button type="button" class="btn g" data-go="${editing?"vehicle":"vehicles"}" ${editing?`data-id="${editing.id}"`:""}>Anulează</button><button class="btn p" type="submit" style="min-width:150px">${editing?"Salvează modificările":"Creează fișa"}</button></div></div>
+   </form>`;
+}
+function liveCalc(){
+  const f=document.getElementById("vform"); if(!f||!document.getElementById("c-cost")) return;
+  const g=k=>safeMoney(f.elements[k]?.value); const mv={purchasePrice:g("purchasePrice"),transportCost:g("transportCost"),repairCost:g("repairCost"),preparationCost:g("preparationCost"),otherCosts:g("otherCosts"),listPrice:g("listPrice")};
+  const p=estProfit(mv), mg=marginPct(p,mv.listPrice);
+  document.getElementById("c-cost").textContent=money(totalCost(mv)); const cp=document.getElementById("c-prof"); cp.textContent=money(p); cp.classList.toggle("bad",p<0);
+  document.getElementById("c-mg").textContent=mg==null?"—":mg+"%";
+}
+async function submitForm(form){
+  const {raw,out,errors}=parseVehicleForm(new FormData(form));
+  const editing=S.route.id?S.vehicles.find(v=>v.id===S.route.id):null;
+  if(!Object.keys(errors).length&&out.vin){ const dup=S.vehicles.find(v=>v.vin===out.vin&&v.id!==editing?.id); if(dup) errors.vin=`VIN folosit deja la ${stock(dup.stockNumber)}.`; }
+  if(!Object.keys(errors).length&&editing?.status==="available"&&"listPrice" in out&&out.listPrice==null) errors.listPrice="Prețul de listare este obligatoriu pentru statusul Disponibil.";
+  if(Object.keys(errors).length){ S.form={values:{...raw,equipment:out.equipment},errors,error:"Verificați câmpurile marcate."}; renderMain(); document.querySelector(".input.err")?.focus(); return; }
+  const now=new Date().toISOString();
+  let v;
+  if(editing){ v={...editing,...out,updatedAt:now}; }
+  else{ S.profile.stockSeq=(S.profile.stockSeq||0)+1; v={id:uid(),stockNumber:S.profile.stockSeq,...Object.fromEntries(["purchasePrice","transportCost","repairCost","preparationCost","otherCosts","listPrice","minPrice","salePrice"].map(k=>[k,null])),...out,
+      status:"preparation",statusChangedAt:now,listedAt:null,soldAt:null,soldBy:null,createdBy:actor(),createdAt:now,updatedAt:now,history:[{from:null,to:"preparation",at:now,by:actor()}]};
+    await Store.saveProfile(S.profile); }
+  try{ await Store.saveVehicle(v); }catch(err){ S.form.error="Salvarea a eșuat: "+(err.message||err.code); renderMain(); return; }
+  S.flash=editing?"Modificările au fost salvate.":"created"; go("vehicle",{id:v.id});
+}
+
+// ───────────── Detaliu ─────────────
+function viewDetail(){
+  const v=S.vehicles.find(x=>x.id===S.route.id);
+  if(!v) return `<div class="card empty"><b>Autoturismul nu a fost găsit</b><p>Poate a fost șters.</p><div style="margin-top:14px"><button class="btn s" data-go="vehicles">Înapoi la listă</button></div></div>`;
+  const role=S.role, costs=can(role,"vehicle.costs.read"), minR=can(role,"vehicle.minPrice.read"), sold=v.status==="sold";
+  const photos=(S.photos[v.id]||[]).slice().sort((a,b)=>a.position-b.position), prim=photos.find(p=>p.isPrimary)||photos[0];
+  const d=daysBetween(v.acquiredAt,v.soldAt||new Date());
+  const missing=[]; if(v.listPrice==null)missing.push("preț de listare"); if(!photos.length)missing.push("fotografii"); if(costs&&v.purchasePrice==null)missing.push("preț de achiziție");
+  const flash=S.flash; S.flash=null;
+  const specs=[["An fabricație",v.year],["Kilometraj",num(v.mileageKm," km")],["Combustibil",FUEL[v.fuel]],["Transmisie",TRANS[v.transmission]],["Motorizare",esc(v.engine||"")],["Capacitate",v.engineCc?num(v.engineCc," cm³"):""],
+   ["Putere",[v.powerHp&&v.powerHp+" CP",v.powerKw&&v.powerKw+" kW"].filter(Boolean).join(" / ")],["Tracțiune",DRIVE[v.drivetrain]],["Normă poluare",EMIS[v.emissionStandard]],["Caroserie",BODY[v.bodyType]],["Culoare",esc(v.color||"")],
+   ["Uși / locuri",v.doors||v.seats?`${v.doors??"—"} / ${v.seats??"—"}`:""],["Proprietari",v.ownersCount??""],["Proveniență",ORIGIN[v.origin]],["Prima înmatriculare",v.firstRegistration?fdate(v.firstRegistration):""],["Generație",esc(v.generation||"")],
+   ["Serie VIN",v.vin?`<span class="mono">${esc(v.vin)}</span>`:""],["Nr. înmatriculare",esc(v.plateNumber||"")]];
+  const eq=new Set(v.equipment||[]);
+  const al=allowed(role,v.status,v);
+  const ACT={preparation:"Mută în pregătire",available:"Marchează disponibil",reserved:"Rezervă",sold:"Înregistrează vânzarea",withdrawn:"Retrage din vânzare"};
+  const ui=S.ui;
+  let salesPanel;
+  if(ui.selling){ const sp=safeMoney(ui.salePrice), below=sp!=null&&v.minPrice!=null&&sp<v.minPrice;
+    salesPanel=`<div class="sellbox"><label for="salePrice" style="font-size:13px;font-weight:500;color:var(--fg-2)">Preț final de vânzare</label><div class="unit"><input class="input tab" id="salePrice" inputmode="decimal" value="${esc(ui.salePrice)}"><span>EUR</span></div>
+     <div id="below">${below&&minR?`<div class="alert warn">Prețul este sub minimul acceptat (${money(v.minPrice)}). ${can(role,"vehicle.sell.override")?"Ca "+ROLE_LABEL[role].toLowerCase()+" puteți confirma.":"Este necesară aprobarea unui manager."}</div>`:""}</div>
+     <div style="display:flex;gap:8px"><button class="btn p" style="flex:1" data-act="confirm-sale">Confirmă vânzarea</button><button class="btn g" data-act="cancel-sale">Renunță</button></div></div>`; }
+  else salesPanel=al.length?`<div style="display:grid;gap:8px">${al.map(t=>`<button class="btn ${t==="sold"?"p":t==="withdrawn"?"g":"s"}" data-status="${t}">${sold&&t==="available"?"Anulează vânzarea":ACT[t]}</button>`).join("")}</div>`
+     :`<p class="muted" style="font-size:13px;margin:0">Statusul ${STATUS[v.status]} nu poate fi modificat de rolul ${ROLE_LABEL[role]}.</p>`;
+  const row=(l,val,cls="")=>`<div><dt>${l}</dt><dd class="tab ${cls}">${val}</dd></div>`;
+  return `<button class="btn g sm" data-go="vehicles" style="margin:0 0 10px -10px">${ic("back")} Autoturisme</button>`+
+   header(`${esc(v.make)} ${esc(v.model)}${v.version?" "+esc(v.version):""}`,[v.year,num(v.mileageKm," km"),FUEL[v.fuel],TRANS[v.transmission]].join(" · "),
+    can(role,"vehicle.update")?`<button class="btn s" data-go="vehicle-form" data-id="${v.id}">${ic("edit")} Editează fișa</button>`:"",
+    `<span class="mono" style="text-transform:none">${stock(v.stockNumber)}</span>${badge(v.status)}${v.example?`<span class="ex">EXEMPLU</span>`:""}`)+
+   (flash==="created"&&v.status==="preparation"?`<div class="alert good" style="margin-bottom:14px">Fișa a fost creată. Adăugați fotografiile, apoi marcați autoturismul disponibil.</div>`:flash&&flash!=="created"?`<div class="alert good" style="margin-bottom:14px">${esc(flash)}</div>`:missing.length&&!sold?`<div class="alert warn" style="margin-bottom:14px">Fișă incompletă: lipsesc ${missing.join(", ")}.</div>`:"")+
+   (ui.error?`<div class="alert bad" style="margin-bottom:14px">${esc(ui.error)}</div>`:"")+
+   `<div class="det"><div class="stack">
+     <section class="card panel"><h3 style="margin-bottom:14px">Fotografii (${photos.length})</h3>
+      <button class="hero" data-lb="${prim?.id||""}" ${prim?"":"disabled"} aria-label="Deschide galeria">${prim?`<img id="hero-img" src="${prim.thumb}" alt="${esc(v.make)} ${esc(v.model)}">`:`<span style="display:grid;gap:6px;place-items:center">${ic("img")}<small>Nicio fotografie</small></span>`}</button>
+      ${photos.length?`<ul class="thumbs" id="thumbs">${photos.map(p=>`<li draggable="${can(role,"media.write")}" data-pid="${p.id}" class="${p.isPrimary?"prim":""}"><img src="${p.thumb}" alt="" data-lb="${p.id}" draggable="false">${can(role,"media.write")?`<div class="tools"><button data-primary="${p.id}" title="${p.isPrimary?"Imagine principală":"Setează ca imagine principală"}" aria-label="Imagine principală">${ic("star")}</button><button data-delphoto="${p.id}" title="Șterge fotografia" aria-label="Șterge fotografia">${ic("trash")}</button></div>`:""}</li>`).join("")}</ul>`:""}
+      ${can(role,"media.write")?`<div class="drop" id="drop">${ui.progress?`<b>Se procesează ${Math.min(ui.progress.done+1,ui.progress.total)} din ${ui.progress.total}…</b><div class="prog"><i style="width:${ui.progress.done/ui.progress.total*100}%"></i></div>`
+        :`${ic("img")}<div>Trageți fotografiile aici sau <button class="link" data-act="pick">alegeți fișiere</button></div><div class="muted" style="font-size:12px;margin-top:2px">JPG, PNG, WebP · compresie automată în browser, metadate GPS eliminate · max. 20 per autoturism</div>`}
+        <input type="file" id="file" accept="image/jpeg,image/png,image/webp" multiple hidden></div>${photos.length>1?`<p class="muted" style="font-size:12px;margin:8px 0 0">Trageți miniaturile pentru a schimba ordinea. Steaua marchează imaginea principală.</p>`:""}`:""}
+     </section>
+     <section class="card panel"><h3 style="margin-bottom:10px">Date tehnice</h3><dl class="specs">${specs.map(([l,x])=>`<div><dt>${l}</dt><dd>${x===""||x==null?`<span class="muted" style="font-weight:400">—</span>`:x}</dd></div>`).join("")}</dl></section>
+     <section class="card panel"><h3 style="margin-bottom:14px">Dotări (${eq.size})</h3>${eq.size?`<div class="eqshow">${EQUIPMENT.map(c=>{const it=Object.entries(c.items).filter(([k])=>eq.has(k)); return it.length?`<div><div class="eyebrow">${c.label}</div><ul>${it.map(([,l])=>`<li>${l}</li>`).join("")}</ul></div>`:"";}).join("")}</div>`:`<p class="muted" style="margin:0;font-size:13px">Nicio dotare bifată.</p>`}</section>
+     ${v.description||v.internalNotes?`<section class="card panel"><h3 style="margin-bottom:10px">Descriere</h3>${v.description?`<p style="white-space:pre-line;margin:0">${esc(v.description)}</p>`:""}${v.internalNotes?`<div style="margin-top:12px;background:var(--surface-2);border:1px solid var(--line);border-radius:9px;padding:10px 12px"><div class="eyebrow">Note interne</div><p style="white-space:pre-line;margin:0;font-size:13px" class="fg2">${esc(v.internalNotes)}</p></div>`:""}</section>`:""}
+    </div>
+    <div class="stack">
+     <section class="card panel"><div class="fg2" style="font-size:12.5px">${sold?"Preț final de vânzare":"Preț de listare"}</div><div class="price tab">${money(sold?v.salePrice:v.listPrice)}</div>
+      ${sold&&v.listPrice!=null?`<div class="muted" style="font-size:12.5px">Listat la ${money(v.listPrice)}</div>`:""}
+      ${minR?`<div class="fg2" style="font-size:12.5px;margin-top:8px">Preț minim acceptat: <b class="tab" style="color:var(--fg);font-weight:500">${money(v.minPrice)}</b></div>`:""}
+      <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:16px">${salesPanel}
+       ${can(role,"vehicle.delete")&&!sold&&!ui.selling?`<button class="btn g sm" style="width:100%;margin-top:8px;color:var(--muted)" data-act="ask-delete">Șterge fișa (introdusă greșit)</button>`:""}</div></section>
+     ${costs?`<section class="card panel"><h3 style="margin-bottom:12px">Situație financiară</h3><dl class="rows">
+       ${row("Preț achiziție",money(v.purchasePrice))}${row("Transport",money(v.transportCost))}${row("Reparații",money(v.repairCost))}${row("Pregătire vânzare",money(v.preparationCost))}${row("Alte cheltuieli",money(v.otherCosts))}
+       <div style="border-top:1px solid var(--line);margin:6px 0"></div>${row("<b>Cost total</b>",`<b>${money(totalCost(v))}</b>`)}
+       ${sold?row("<b>Profit brut realizat</b>",`<b class="${realProfit(v)<0?"bad":"good"}">${money(realProfit(v))}</b>${marginPct(realProfit(v),v.salePrice)!=null?` <span class="muted">${marginPct(realProfit(v),v.salePrice)}%</span>`:""}`)
+             :row("<b>Profit brut estimat</b>",`<b class="${estProfit(v)<0?"bad":""}">${money(estProfit(v))}</b>${marginPct(estProfit(v),v.listPrice)!=null?` <span class="muted">${marginPct(estProfit(v),v.listPrice)}%</span>`:""}`)}
+      </dl><p class="muted" style="font-size:11.5px;margin:10px 0 0;line-height:1.45">Profit brut = preț − cost direct. Nu reprezintă profit contabil net (TVA, regim de marjă, cheltuieli generale).</p></section>`
+      :`<section class="card panel"><h3 style="margin-bottom:6px">Situație financiară</h3><p class="muted" style="margin:0;font-size:13px">Costurile de achiziție și profitul sunt vizibile doar proprietarului și managerului.</p></section>`}
+     <section class="card panel"><h3 style="margin-bottom:10px">Evidență</h3><dl class="rows">${row("Data achiziției",fdate(v.acquiredAt))}${row(sold?"Zile până la vânzare":"Zile în stoc",d,!sold&&d>90?"bad":!sold&&d>60?"warn":"")}${row("Listat la vânzare",fdate(v.listedAt))}${v.soldAt?row("Vândut",fdate(v.soldAt)):""}${v.soldBy?row("Vândut de",esc(v.soldBy)):""}${row("Ultima actualizare",fdt(v.updatedAt))}</dl></section>
+     <section class="card panel"><h3 style="margin-bottom:14px">Istoric status</h3><ol class="timeline">${(v.history||[]).slice().reverse().map(h=>`<li><div style="font-weight:500">${h.from?STATUS[h.from]+" → ":"Creat · "}${STATUS[h.to]}</div><div class="muted" style="font-size:12px">${fdt(h.at)}${h.by?" · "+esc(h.by):""}</div></li>`).join("")}</ol></section>
+    </div></div>`;
+}
+async function hydrateDetail(){
+  const v=S.vehicles.find(x=>x.id===S.route.id); if(!v) return;
+  const prim=(S.photos[v.id]||[]).find(p=>p.isPrimary)||(S.photos[v.id]||[])[0];
+  if(prim){ const full=await Store.full(prim.id).catch(()=>null); const h=document.getElementById("hero-img"); if(full&&h&&S.route.id===v.id) h.src=full; }
+}
+async function changeStatus(to){
+  const v=S.vehicles.find(x=>x.id===S.route.id); if(!v) return;
+  const err=checkTransition(S.role,v.status,to,v); if(err){ S.ui={error:err}; renderMain(); return; }
+  const now=new Date().toISOString(), from=v.status, nv={...v,status:to,statusChangedAt:now,updatedAt:now,history:[...(v.history||[]),{from,to,at:now,by:actor()}]};
+  if(to==="sold"){ let sp; try{sp=parseMoney(S.ui.salePrice);}catch{sp=null} if(sp==null){S.ui={...S.ui,error:"Introduceți un preț final de vânzare valid."};renderMain();return;}
+    if(v.minPrice!=null&&sp<v.minPrice&&!can(S.role,"vehicle.sell.override")){S.ui={...S.ui,error:"Prețul final este sub prețul minim acceptat. Este necesară aprobarea unui manager."};renderMain();return;}
+    Object.assign(nv,{salePrice:sp,soldAt:now,soldBy:actor()}); }
+  if(from==="sold") Object.assign(nv,{salePrice:null,soldAt:null,soldBy:null});
+  if(to==="available"&&!v.listedAt) nv.listedAt=now;
+  S.ui={}; await Store.saveVehicle(nv); renderMain(); toast(`Status actualizat: ${STATUS[to]}`);
+}
+
+// ───────────── Fotografii: compresie în browser ─────────────
+function loadImg(file){ return new Promise((res,rej)=>{ const u=URL.createObjectURL(file), im=new Image(); im.onload=()=>{URL.revokeObjectURL(u);res(im)}; im.onerror=()=>{URL.revokeObjectURL(u);rej(new Error("invalid"))}; im.src=u; }); }
+function encode(im,maxW,maxH,cover,budget){
+  let w=im.naturalWidth,h=im.naturalHeight,sx=0,sy=0,sw=w,sh=h,dw,dh;
+  if(cover){ const r=Math.max(maxW/w,maxH/h); dw=maxW; dh=maxH; sw=maxW/r; sh=maxH/r; sx=(w-sw)/2; sy=(h-sh)/2; }
+  else { const r=Math.min(1,maxW/w,maxH/h); dw=Math.round(w*r); dh=Math.round(h*r); }
+  const c=document.createElement("canvas"); c.width=dw; c.height=dh; c.getContext("2d").drawImage(im,sx,sy,sw,sh,0,0,dw,dh);
+  let q=.82, out=c.toDataURL("image/webp",q); if(!out.startsWith("data:image/webp")) out=c.toDataURL("image/jpeg",q);
+  while(out.length>budget&&q>.35){ q-=.1; out=c.toDataURL(out.startsWith("data:image/webp")?"image/webp":"image/jpeg",q); }
+  if(out.length>budget&&!cover) return encode(im,maxW*.75,maxH*.75,false,budget);
+  return out;
+}
+async function uploadPhotos(files){
+  const v=S.vehicles.find(x=>x.id===S.route.id); if(!v) return;
+  const ok=["image/jpeg","image/png","image/webp"]; const list=[...files].filter(f=>ok.includes(f.type));
+  if(!list.length){ S.ui={error:"Selectați fișiere JPG, PNG sau WebP."}; renderMain(); return; }
+  const existing=S.photos[v.id]||[]; if(existing.length+list.length>20){ S.ui={error:"Maximum 20 de fotografii per autoturism în versiunea demonstrativă."}; renderMain(); return; }
+  let pos=Math.max(-1,...existing.map(p=>p.position)), hasPrim=existing.some(p=>p.isPrimary);
+  S.ui={progress:{done:0,total:list.length}}; renderMain();
+  for(const [i,f] of list.entries()){
+    try{ const im=await loadImg(f); // canvas re-encode: metadatele EXIF/GPS nu sunt copiate
+      const full=encode(im,1600,1600,false,230000), thumb=encode(im,400,300,true,40000);
+      const p={id:uid(),vehicleId:v.id,thumb,position:++pos,isPrimary:!hasPrim&&i===0,createdAt:new Date().toISOString()};
+      if(p.isPrimary) hasPrim=true; await Store.savePhoto(p,full);
+    }catch(err){ S.ui={error:err.message==="invalid"?`${f.name} nu este o imagine validă.`:"Fotografia nu a putut fi salvată: "+(err.message||err.code)}; renderMain(); return; }
+    S.ui={progress:{done:i+1,total:list.length}}; renderMain();
+  }
+  S.ui={}; renderMain(); toast(`${list.length} ${list.length===1?"fotografie adăugată":"fotografii adăugate"}`);
+}
+async function setPrimary(pid){ const arr=S.photos[S.route.id]||[]; for(const p of arr){ const was=p.isPrimary; p.isPrimary=p.id===pid; if(was!==p.isPrimary) await Store.updatePhoto(p);} renderMain(); }
+async function reorder(fromId,toId){ const arr=(S.photos[S.route.id]||[]).sort((a,b)=>a.position-b.position); const fi=arr.findIndex(p=>p.id===fromId), ti=arr.findIndex(p=>p.id===toId); if(fi<0||ti<0||fi===ti) return;
+  const [m]=arr.splice(fi,1); arr.splice(ti,0,m); for(const [i,p] of arr.entries()){ if(p.position!==i){p.position=i; await Store.updatePhoto(p);} } renderMain(); }
+async function deletePhoto(pid){ const arr=S.photos[S.route.id]||[]; const p=arr.find(x=>x.id===pid); if(!p) return; await Store.deletePhoto(p);
+  if(p.isPrimary){ const n=(S.photos[S.route.id]||[]).sort((a,b)=>a.position-b.position)[0]; if(n){n.isPrimary=true; await Store.updatePhoto(n);} } renderMain(); toast("Fotografie ștearsă"); }
+
+// ───────────── Setări ─────────────
+function viewCompany(){
+  const p=S.profile, ro=!can(S.role,"company.update"), e=S.ui.errors||{};
+  const F=[["name","Nume comercial *"],["legalName","Denumire juridică","ex. Auto Exemplu SRL"],["cui","CUI"],["regCom","Nr. Registrul Comerțului","ex. J40/1234/2020"],["address","Adresă",null,"span2"],["city","Localitate"],["county","Județ"],["phone","Telefon"],["email","Email"],["website","Website","https://…"],["ownerName","Numele proprietarului","Apare ca autor al acțiunilor în rolul Proprietar."]];
+  return header("Date companie","Apar pe documente, în anunțuri și pe website-ul parcului auto.")+`<form id="cform" class="card" style="max-width:760px;padding:24px" novalidate>
+   ${S.ui.saved?`<div class="alert good" style="margin-bottom:14px">Datele companiei au fost salvate.</div>`:""}${ro?`<div class="alert info" style="margin-bottom:14px">Rolul ${ROLE_LABEL[S.role]} poate doar vizualiza aceste date.</div>`:""}
+   <fieldset ${ro?"disabled":""} style="border:0;margin:0;padding:0" class="fields">${F.map(([k,l,h,cls])=>`<div class="f ${cls||""}"><label for="c-${k}">${l}</label><input class="input ${e[k]?"err":""}" id="c-${k}" name="${k}" value="${esc(p[k])}">${e[k]?`<div class="e">${e[k]}</div>`:h&&!h.startsWith("http")&&!h.startsWith("ex.")?`<div class="h">${h}</div>`:h?`<div class="h">${h}</div>`:""}</div>`).join("")}</fieldset>
+   ${ro?"":`<div style="display:flex;justify-content:flex-end;border-top:1px solid var(--line);margin-top:20px;padding-top:16px"><button class="btn p" type="submit">Salvează</button></div>`}</form>`;
+}
+async function submitCompany(form){
+  const d=Object.fromEntries(new FormData(form).entries()); const e={};
+  for(const k in d) d[k]=String(d[k]).trim();
+  if(d.name.length<2) e.name="Numele este obligatoriu.";
+  if(d.cui){ d.cui=d.cui.toUpperCase().replace(/\s/g,""); if(!/^(RO)?\d{2,10}$/.test(d.cui)) e.cui="CUI invalid (ex. RO12345678)."; }
+  if(d.email&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.email)) e.email="Email invalid.";
+  if(d.website&&!/^https?:\/\/\S+\.\S+/.test(d.website)) e.website="Adresă web invalidă (ex. https://…).";
+  if(Object.keys(e).length){ S.profile={...S.profile,...d}; S.ui={errors:e}; renderMain(); return; }
+  await Store.saveProfile({...S.profile,...d}); S.ui={saved:true}; refresh();
+}
+function viewRoles(){
+  const rows=[["Vede și editează fișele, încarcă fotografii","vehicle.update"],["Vede costurile de achiziție și profitul","vehicle.costs.read"],["Setează prețul de listare","vehicle.price.write"],["Vede prețul minim acceptat","vehicle.minPrice.read"],["Rezervă și înregistrează vânzări","vehicle.sell"],["Vinde sub prețul minim, anulează vânzări","vehicle.sell.override"],["Retrage sau șterge fișe","vehicle.delete"],["Vede indicatorii financiari din dashboard","dashboard.financials"],["Modifică datele companiei","company.update"]];
+  const roles=Object.keys(ROLE_LABEL);
+  return header("Roluri și permisiuni","În aplicația completă, fiecare permisiune este verificată pe server. Aici puteți schimba rolul din bara de sus ca să vedeți efectul.")+
+   `<div class="card" style="overflow-x:auto"><table style="min-width:620px"><thead><tr><th>Permisiune</th>${roles.map(r=>`<th style="text-align:center">${ROLE_LABEL[r]}${r===S.role?` <span class="muted">(acum)</span>`:""}</th>`).join("")}</tr></thead><tbody>${rows.map(([l,p])=>`<tr style="cursor:default"><td>${l}</td>${roles.map(r=>`<td style="text-align:center">${can(r,p)?`<span class="good" aria-label="Da">${ic("check")}</span>`:`<span class="muted" aria-label="Nu">—</span>`}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
+   <div class="alert info" style="margin-top:14px">Versiunea demonstrativă simulează echipa (Ioana Manager, Andrei Agent, Radu Operator). În aplicația completă, proprietarul adaugă utilizatori reali, fiecare cu propriul cont.</div>`;
+}
+
+// ───────────── Modal, lightbox, toast ─────────────
+function modal(title,text,okLabel,onOk){
+  const L=document.getElementById("layer");
+  L.innerHTML=`<div class="overlay" data-close><div class="modal" role="dialog" aria-modal="true" aria-labelledby="m-t"><h3 id="m-t">${title}</h3><p>${text}</p><div class="acts"><button class="btn g" data-close>Renunță</button><button class="btn d" id="m-ok">${okLabel}</button></div></div></div>`;
+  L.querySelector("#m-ok").onclick=async()=>{L.innerHTML="";await onOk();}; L.querySelector("#m-ok").focus();
+}
+async function lightbox(pid){
+  const arr=(S.photos[S.route.id]||[]).slice().sort((a,b)=>a.position-b.position); let i=arr.findIndex(p=>p.id===pid); if(i<0) return;
+  const L=document.getElementById("layer");
+  const show=async()=>{ const p=arr[i]; L.innerHTML=`<div class="lb" data-close role="dialog" aria-modal="true"><button class="x" data-close aria-label="Închide">${ic("x")}</button>${arr.length>1?`<button class="pv" data-lbn="-1" aria-label="Anterioara">${ic("back")}</button><button class="nx" data-lbn="1" aria-label="Următoarea">${ic("next")}</button>`:""}<img src="${p.thumb}" alt="" id="lb-img"><span class="cnt">${i+1} / ${arr.length}</span></div>`;
+    const full=await Store.full(p.id).catch(()=>null); const im=document.getElementById("lb-img"); if(full&&im) im.src=full; };
+  S.lb={next:d=>{i=(i+d+arr.length)%arr.length;show();}}; show();
+}
+let toastT; function toast(t){ let el=document.querySelector(".toast"); if(!el){el=document.createElement("div");el.className="toast";el.setAttribute("role","status");document.body.appendChild(el);} el.textContent=t; clearTimeout(toastT); toastT=setTimeout(()=>el.remove(),2600); }
+
+// ───────────── Evenimente ─────────────
+document.addEventListener("click",async e=>{
+  const t=e.target.closest("[data-go],[data-open],[data-act],[data-tab],[data-status],[data-primary],[data-delphoto],[data-lb],[data-lbn],[data-close],[data-theme-set]"); if(!t) return;
+  if(t.dataset.close!==undefined&&(e.target===t||t.tagName==="BUTTON")){ document.getElementById("layer").innerHTML=""; return; }
+  if(t.dataset.lbn){ e.stopPropagation(); S.lb?.next(Number(t.dataset.lbn)); return; }
+  if(t.dataset.themeSet){ const v=t.dataset.themeSet; if(v==="system") delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme=v; store_set("af_theme",v); renderShell(); return; }
+  if(t.dataset.go){ go(t.dataset.go,t.dataset.id?{id:t.dataset.id}:{}); return; }
+  if(t.dataset.open){ go("vehicle",{id:t.dataset.open}); return; }
+  if(t.dataset.tab!==undefined){ S.filters.status=t.dataset.tab; renderMain(); return; }
+  if(t.dataset.status){ if(t.dataset.status==="sold"){ const v=S.vehicles.find(x=>x.id===S.route.id); S.ui={selling:true,salePrice:toInput(v.listPrice)}; renderMain(); document.getElementById("salePrice")?.focus(); }
+    else if(t.dataset.status==="available"&&S.vehicles.find(x=>x.id===S.route.id)?.status==="sold") modal("Anulați vânzarea?","Prețul final și data vânzării vor fi șterse, iar autoturismul revine în stoc ca disponibil.","Anulează vânzarea",()=>changeStatus("available"));
+    else changeStatus(t.dataset.status); return; }
+  if(t.dataset.primary){ setPrimary(t.dataset.primary); return; }
+  if(t.dataset.delphoto){ modal("Ștergeți fotografia?","Fotografia va fi eliminată definitiv din fișă.","Șterge",()=>deletePhoto(t.dataset.delphoto)); return; }
+  if(t.dataset.lb!==undefined){ if(t.dataset.lb) lightbox(t.dataset.lb); return; }
+  const a=t.dataset.act;
+  if(a==="menu"){ const s=document.getElementById("side"); s.classList.add("open"); const sc=document.createElement("div"); sc.className="scrim"; sc.onclick=()=>{s.classList.remove("open");sc.remove();}; document.body.appendChild(sc); }
+  if(a==="pick") document.getElementById("file")?.click();
+  if(a==="cancel-sale"){ S.ui={}; renderMain(); }
+  if(a==="confirm-sale") changeStatus("sold");
+  if(a==="reset-filters"){ S.filters={status:"",q:"",make:"",fuel:"",transmission:"",sort:"newest"}; renderMain(); }
+  if(a==="ask-delete") modal("Ștergeți definitiv fișa?","Fișa și fotografiile ei vor fi șterse. Folosiți această opțiune doar pentru fișe introduse greșit; pentru mașini scoase din vânzare folosiți „Retrage”.","Șterge fișa",async()=>{ await Store.deleteVehicle(S.route.id); go("vehicles"); toast("Fișa a fost ștearsă"); });
+  if(a==="clear-examples") modal("Ștergeți autoturismele de exemplu?","Rămân doar fișele introduse de dumneavoastră. Puteți reîncărca exemplele oricând stocul este gol.","Șterge exemplele",async()=>{ await clearExamples(); refresh(); toast("Exemplele au fost șterse"); });
+  if(a==="load-examples"){ t.disabled=true; await loadExamples(); refresh(); }
+});
+document.addEventListener("input",e=>{
+  const el=e.target;
+  if(el.dataset.filter==="q"){ S.filters.q=el.value; const pos=el.selectionStart; renderMain(); const n=document.getElementById("f-q"); n.focus(); n.setSelectionRange(pos,pos); return; }
+  if(el.id==="salePrice"){ S.ui.salePrice=el.value; const v=S.vehicles.find(x=>x.id===S.route.id); const sp=safeMoney(el.value), b=document.getElementById("below");
+    if(b) b.innerHTML=sp!=null&&v.minPrice!=null&&sp<v.minPrice&&can(S.role,"vehicle.minPrice.read")?`<div class="alert warn">Prețul este sub minimul acceptat (${money(v.minPrice)}). ${can(S.role,"vehicle.sell.override")?"Ca "+ROLE_LABEL[S.role].toLowerCase()+" puteți confirma.":"Este necesară aprobarea unui manager."}</div>`:""; return; }
+  if(el.form?.id==="vform"){ if(el.dataset.money!==undefined) liveCalc(); if(el.name==="equipment"){} }
+});
+document.addEventListener("change",e=>{
+  const el=e.target;
+  if(el.dataset.filter&&el.dataset.filter!=="q"){ S.filters[el.dataset.filter]=el.value; renderMain(); return; }
+  if(el.dataset.roleSelect!==undefined){ S.role=el.value; store_set("af_role",S.role); S.form=null; S.ui={}; if(S.route.name==="vehicle-form"&&!can(S.role,"vehicle.create")) S.route={name:"vehicles"}; S.ui.keepForm=false; refresh(); toast(`Acum vedeți aplicația ca ${ROLE_LABEL[S.role]}`); return; }
+  if(el.id==="file"){ uploadPhotos(el.files); el.value=""; return; }
+  if(el.name==="equipment"){ const n=document.getElementById("eqn"); if(n) n.textContent=el.form.querySelectorAll('input[name=equipment]:checked').length; }
+  if(el.id==="v-powerHp"){ const kw=document.getElementById("v-powerKw"), hp=Number(el.value); if(kw&&!kw.value&&hp>0) kw.value=Math.round(hp*.7355); }
+});
+document.addEventListener("submit",e=>{ e.preventDefault(); if(e.target.id==="vform"){ S.ui.keepForm=false; submitForm(e.target); } if(e.target.id==="cform") submitCompany(e.target); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") document.getElementById("layer").innerHTML=""; if(S.lb&&document.querySelector(".lb")){ if(e.key==="ArrowRight")S.lb.next(1); if(e.key==="ArrowLeft")S.lb.next(-1);} });
+// drag & drop: încărcare fișiere + reordonare miniaturi
+let dragPid=null;
+document.addEventListener("dragstart",e=>{ const li=e.target.closest?.("#thumbs li"); if(li){ dragPid=li.dataset.pid; li.classList.add("dragging"); e.dataTransfer.effectAllowed="move"; } });
+document.addEventListener("dragend",()=>{ dragPid=null; document.querySelectorAll(".dragging").forEach(x=>x.classList.remove("dragging")); });
+document.addEventListener("dragover",e=>{ const li=e.target.closest?.("#thumbs li"), drop=e.target.closest?.("#drop");
+  if(li&&dragPid){ e.preventDefault(); return; } if(drop&&!dragPid){ e.preventDefault(); drop.classList.add("over"); } });
+document.addEventListener("dragleave",e=>{ const drop=e.target.closest?.("#drop"); if(drop) drop.classList.remove("over"); });
+document.addEventListener("drop",e=>{ const li=e.target.closest?.("#thumbs li"), drop=e.target.closest?.("#drop");
+  if(li&&dragPid){ e.preventDefault(); reorder(dragPid,li.dataset.pid); return; }
+  if(drop&&!dragPid){ e.preventDefault(); drop.classList.remove("over"); uploadPhotos(e.dataTransfer.files); } });
+window.addEventListener("dragover",e=>{ if(e.dataTransfer?.types?.includes("Files")) e.preventDefault(); });
+window.addEventListener("drop",e=>{ if(!e.target.closest?.("#drop")) e.preventDefault(); });
+
+// ───────────── Pornire ─────────────
+const th=store_get("af_theme","system"); if(th==="light"||th==="dark") document.documentElement.dataset.theme=th;
+(async()=>{
+  try{ await Store.init(); }catch(err){ S.mode="memory"; S.profile=S.profile||defaultProfile(); toast("Datele nu pot fi salvate în această sesiune."); }
+  if(S.mode==="memory"&&!S.vehicles.length) await loadExamples();
+  S.ready=true; refresh();
+})();
+})();
+</script>
