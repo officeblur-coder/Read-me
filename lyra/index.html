@@ -62,28 +62,11 @@
   </main>
 </div>
 
-<!-- ================= WAITER FAB ================= -->
-<button id="fab" hidden aria-label="Ospătarul Lyra">
-  <span class="fab-teaser" id="fabTeaser"></span>
-  <span class="fab-avatar"><svg class="cloche" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="15" r="3.2"/><path d="M10 44a22 22 0 0 1 44 0Z"/><rect x="6" y="46" width="52" height="4.5" rx="2.2"/><path class="shine" d="M19 37a14 14 0 0 1 9-10" /></svg></span>
-</button>
-
-<!-- ================= WAITER CHAT ================= -->
-<section id="chat" class="sheet chat" aria-label="Lyra" hidden>
-  <div class="chat-head" id="chatHead">
-    <span class="grabber"></span>
-    <span class="avatar"><svg class="cloche" viewBox="0 0 64 64"><circle cx="32" cy="15" r="3.2"/><path d="M10 44a22 22 0 0 1 44 0Z"/><rect x="6" y="46" width="52" height="4.5" rx="2.2"/></svg></span>
-    <div class="who"><b>Lyra</b><small id="chatStatus"></small></div>
-    <button class="icon-btn sm" id="btnSound" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M4 10v4h4l5 4V6L8 10H4Z"/><path class="wave" d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/></svg></button>
-    <button class="icon-btn sm" id="btnChatMin" aria-label="Minimize"><svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button>
-  </div>
-  <div class="chat-log" id="chatLog"></div>
-  <form class="chat-input" id="chatForm" autocomplete="off">
-    <button type="button" class="icon-btn sm" id="btnMic" hidden aria-label="Mic"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
-    <input id="chatInput" type="text" enterkeyhint="send">
-    <button type="submit" class="send" aria-label="Send"><svg viewBox="0 0 24 24"><path d="M4 12h15M13 6l6 6-6 6"/></svg></button>
-  </form>
-</section>
+<!-- ================= BOTTOM BAR ================= -->
+<nav id="bottombar" hidden>
+  <button id="bbCatsBtn" class="bb-btn"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/></svg><span id="bbCats">Categorii</span></button>
+  <button id="bbListBtn" class="bb-btn"><svg viewBox="0 0 24 24"><path d="M6 7h12l-1 13H7L6 7Z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg><span id="bbList">Lista mea</span><em id="bbCount" hidden>0</em></button>
+</nav>
 
 <!-- ================= DISH DETAIL ================= -->
 <div class="scrim" id="scrim" hidden></div>
