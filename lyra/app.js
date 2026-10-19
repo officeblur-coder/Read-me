@@ -478,7 +478,16 @@ function setLang(l) { lang = l; try { localStorage.setItem("lyra-lang", l); } ca
   })();
 })();
 
+/* On phones that allow it (Android), hide the browser's address bar by going
+   full screen on the guest's first tap. iPhone Safari does not allow this. */
+function goFullscreen() {
+  const el = document.documentElement;
+  if (!matchMedia("(pointer: coarse)").matches || document.fullscreenElement || !el.requestFullscreen) return;
+  try { const r = el.requestFullscreen({ navigationUI: "hide" }); if (r && r.catch) r.catch(() => {}); } catch (e) {}
+}
+
 document.querySelectorAll(".lang-btn").forEach(b => b.onclick = () => {
+  goFullscreen();
   setLang(b.dataset.lang);
   render();
   $("#app").hidden = false;

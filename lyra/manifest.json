@@ -1,0 +1,9 @@
+{
+  "name": "Meniu Lyra",
+  "short_name": "Lyra",
+  "start_url": "./",
+  "display": "fullscreen",
+  "background_color": "#06120c",
+  "theme_color": "#06120c",
+  "icons": [{ "src": "img/logo.webp", "sizes": "600x404", "type": "image/webp" }]
+}
