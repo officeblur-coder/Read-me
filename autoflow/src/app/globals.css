@@ -1,0 +1,226 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* ── Design tokens ─────────────────────────────────────────────────────────
+   Light: alb + gri foarte deschis; sidebar antracit. Accent: albastru electric.
+   Dark: antracit în trepte, accent ușor mai luminos pentru contrast. */
+:root {
+  color-scheme: light;
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --surface-2: #f0f2f5;
+  --surface-3: #e7eaee;
+  --border: #e3e6eb;
+  --border-strong: #cfd4db;
+  --text: #0f1318;
+  --text-2: #49515c;
+  --muted: #6d7580;
+  --accent: #2a78d6;
+  --accent-strong: #1c5cab;
+  --accent-soft: #e8f1fc;
+  --accent-contrast: #ffffff;
+  --sidebar: #14171c;
+  --sidebar-2: #1d2128;
+  --sidebar-text: #c9ced6;
+  --sidebar-muted: #7d8591;
+  --good: #0f7b4b;
+  --good-soft: #e6f4ec;
+  --warn: #a0620a;
+  --warn-soft: #fbf1df;
+  --bad: #c0352f;
+  --bad-soft: #fbe9e8;
+  --info: #1c5cab;
+  --info-soft: #e8f1fc;
+  --shadow: 0 1px 2px rgb(16 24 40 / 0.04), 0 1px 3px rgb(16 24 40 / 0.06);
+  --shadow-lg: 0 12px 32px -8px rgb(16 24 40 / 0.18);
+  /* grafice */
+  --chart-1: #2a78d6;
+  --chart-grid: #e8ebef;
+  --chart-axis: #6d7580;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0c0e11;
+    --surface: #14171b;
+    --surface-2: #1a1e23;
+    --surface-3: #22272d;
+    --border: #252a31;
+    --border-strong: #343a43;
+    --text: #eef0f3;
+    --text-2: #b0b7c2;
+    --muted: #858d99;
+    --accent: #3987e5;
+    --accent-strong: #5598e7;
+    --accent-soft: #15253a;
+    --accent-contrast: #ffffff;
+    --sidebar: #0f1114;
+    --sidebar-2: #181b20;
+    --good: #3fb67c;
+    --good-soft: #10261b;
+    --warn: #e0a23a;
+    --warn-soft: #2a2010;
+    --bad: #ec6b65;
+    --bad-soft: #2d1514;
+    --info: #6da7ec;
+    --info-soft: #15253a;
+    --shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+    --shadow-lg: 0 16px 40px -8px rgb(0 0 0 / 0.6);
+    --chart-1: #3987e5;
+    --chart-grid: #22272d;
+    --chart-axis: #858d99;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0c0e11;
+  --surface: #14171b;
+  --surface-2: #1a1e23;
+  --surface-3: #22272d;
+  --border: #252a31;
+  --border-strong: #343a43;
+  --text: #eef0f3;
+  --text-2: #b0b7c2;
+  --muted: #858d99;
+  --accent: #3987e5;
+  --accent-strong: #5598e7;
+  --accent-soft: #15253a;
+  --accent-contrast: #ffffff;
+  --sidebar: #0f1114;
+  --sidebar-2: #181b20;
+  --good: #3fb67c;
+  --good-soft: #10261b;
+  --warn: #e0a23a;
+  --warn-soft: #2a2010;
+  --bad: #ec6b65;
+  --bad-soft: #2d1514;
+  --info: #6da7ec;
+  --info-soft: #15253a;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-lg: 0 16px 40px -8px rgb(0 0 0 / 0.6);
+  --chart-1: #3987e5;
+  --chart-grid: #22272d;
+  --chart-axis: #858d99;
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-line: var(--border);
+  --color-line-strong: var(--border-strong);
+  --color-fg: var(--text);
+  --color-fg-2: var(--text-2);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-soft: var(--accent-soft);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-2: var(--sidebar-2);
+  --color-sidebar-fg: var(--sidebar-text);
+  --color-sidebar-muted: var(--sidebar-muted);
+  --color-good: var(--good);
+  --color-good-soft: var(--good-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-bad: var(--bad);
+  --color-bad-soft: var(--bad-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --shadow-card: var(--shadow);
+  --shadow-pop: var(--shadow-lg);
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+body {
+  font-feature-settings: "cv11", "ss01";
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--accent) 25%, transparent);
+}
+
+@utility card {
+    @apply rounded-xl border border-line bg-surface shadow-card;
+}
+
+@utility label {
+    @apply mb-1.5 block text-[13px] font-medium text-fg-2;
+}
+
+@utility input {
+    @apply h-10 w-full rounded-lg border border-line-strong bg-surface px-3 text-sm text-fg outline-none transition placeholder:text-muted focus:border-accent focus:ring-3 focus:ring-accent/15 disabled:opacity-60;
+}
+
+textarea.input {
+  height: auto;
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
+}
+
+@utility btn {
+    @apply inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4 text-sm font-medium whitespace-nowrap transition select-none disabled:pointer-events-none disabled:opacity-50;
+}
+
+@utility btn-primary {
+    @apply btn bg-accent text-white hover:bg-accent-strong;
+}
+
+@utility btn-secondary {
+    @apply btn border border-line-strong bg-surface text-fg hover:bg-surface-2;
+}
+
+@utility btn-ghost {
+    @apply btn text-fg-2 hover:bg-surface-2 hover:text-fg;
+}
+
+@utility btn-danger {
+    @apply btn border border-line-strong bg-surface text-bad hover:bg-bad-soft;
+}
+
+@utility btn-sm {
+    @apply h-8 rounded-md px-3 text-[13px];
+}
+
+@utility eyebrow {
+    @apply text-[11px] font-semibold tracking-[0.08em] text-muted uppercase;
+}
+
+@utility tabular {
+    font-variant-numeric: tabular-nums;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-in {
+  animation: fade-up 0.28s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
