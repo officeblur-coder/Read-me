@@ -165,7 +165,7 @@ function sectionHTML(c, ci) {
   const nPhotos = list.filter(i => i.img).length;
   return `<section class="sec" id="sec-${c.id}" data-cat="${c.id}">
     <div class="sec-banner">
-      <img src="img/${c.cover}.webp" alt="" loading="${ci < 2 ? "eager" : "lazy"}">
+      <img src="img/t/${c.cover}.webp" data-full="img/${c.cover}.webp" alt="" loading="${ci < 2 ? "eager" : "lazy"}" decoding="async">
       ${nPhotos > 1 ? `<button class="play" data-reels="${c.id}">${playI}${esc(t("watch"))}</button>` : ""}
       <div class="bt"><div class="num">${String(ci + 1).padStart(2, "0")} · ${list.length} ${esc(t("items"))}</div><h2>${esc(tr(c.n))}</h2>${c.note ? `<p class="note">${esc(tr(c.note))}</p>` : ""}</div>
     </div>
@@ -175,7 +175,7 @@ function sectionHTML(c, ci) {
 }
 function dishHTML(it) {
   return `<article class="dish" data-id="${it.id}">
-    <div class="ph"><img data-src="${src(it)}" alt="${esc(tr(it.n))}"><div class="tags">${tagsHTML(it)}</div>
+    <div class="ph"><img src="${src(it, 1)}" data-full="${src(it)}" alt="${esc(tr(it.n))}" loading="lazy" decoding="async"><div class="tags">${tagsHTML(it)}</div>
       <button class="add" data-add="${it.id}" aria-label="+">${plus}</button></div>
     <div class="body"><h3>${esc(tr(it.n))}</h3>${it.d ? `<p>${esc(tr(it.d))}</p>` : ""}
       <div class="meta"><span class="w">${esc(it.w || "")}</span><div>${priceHTML(it.p)}${sub(it) ? `<div class="half">${sub(it)}</div>` : ""}</div></div>
@@ -187,16 +187,28 @@ function rowHTML(it) {
 }
 
 /* ---------- observers: reveal, lazy images, scrollspy, parallax ---------- */
-let revealObs, spyObs;
+let revealObs, spyObs, imgObs;
 function bindSections() {
-  revealObs && revealObs.disconnect(); spyObs && spyObs.disconnect();
+  revealObs && revealObs.disconnect(); spyObs && spyObs.disconnect(); imgObs && imgObs.disconnect();
   revealObs = new IntersectionObserver(es => es.forEach(e => {
     if (!e.isIntersecting) return;
-    const el = e.target, img = el.querySelector("img[data-src]");
-    if (img) { img.onload = () => img.classList.add("ok"); img.src = img.dataset.src; img.removeAttribute("data-src"); }
-    el.classList.add("in"); revealObs.unobserve(el);
+    e.target.classList.add("in"); revealObs.unobserve(e.target);
   }), { rootMargin: "200px 0px 0px 0px", threshold: 0.01 });
   document.querySelectorAll(".dish").forEach(el => revealObs.observe(el));
+
+  /* Phones run out of memory if every large photo stays decoded, and the browser
+     then reloads the page. Keep the sharp photo only near the screen and fall
+     back to the small one for everything further away. */
+  imgObs = new IntersectionObserver(es => es.forEach(e => {
+    const img = e.target, want = e.isIntersecting ? img.dataset.full : img.dataset.thumb;
+    if (img.getAttribute("src") !== want) img.src = want;
+  }), { rootMargin: "700px 0px 700px 0px" });
+  document.querySelectorAll("img[data-full]").forEach(img => {
+    img.dataset.thumb = img.getAttribute("src");
+    img.addEventListener("load", () => img.classList.add("ok"));
+    if (img.complete && img.naturalWidth) img.classList.add("ok");
+    imgObs.observe(img);
+  });
 
   spyObs = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) setChip(e.target.dataset.cat); }),
     { rootMargin: "-40% 0px -55% 0px" });
@@ -244,7 +256,8 @@ function goCat(id) {
   const sec = document.getElementById("sec-" + id);
   if (!sec) return;
   closeDish();
-  sec.scrollIntoView({ behavior: "smooth", block: "start" });
+  // Jump instantly: a smooth scroll would pass (and load) every photo in between.
+  sec.scrollIntoView({ behavior: "instant", block: "start" });
   setChip(id);
   sec.classList.remove("flash"); void sec.offsetWidth; sec.classList.add("flash");
 }
@@ -253,7 +266,7 @@ function focusItem(id) {
   const el = document.querySelector(`#sec-${it.cat} [data-id="${id}"]`);
   if (!el) return goCat(it.cat);
   const y = el.getBoundingClientRect().top + scrollY - (parseInt(getComputedStyle(document.documentElement).getPropertyValue("--top")) + 54 + 16);
-  scrollTo({ top: y, behavior: "smooth" });
+  scrollTo({ top: y, behavior: "instant" });
   el.classList.add("hl"); setTimeout(() => el.classList.remove("hl"), 2600);
 }
 
@@ -420,8 +433,14 @@ function openReels(catId) {
     const im = el.querySelector("img[data-src]"); if (im) { im.src = im.dataset.src; im.removeAttribute("data-src"); }
     const bg = el.querySelector("[data-bg]"); if (bg) { bg.style.backgroundImage = `url(${bg.dataset.bg})`; bg.removeAttribute("data-bg"); }
   };
+  const unload = el => {
+    const im = el.querySelector("img.main"); if (im && im.getAttribute("src")) { im.dataset.src = im.getAttribute("src"); im.removeAttribute("src"); }
+    const bg = el.querySelector(".bgblur"); if (bg && bg.style.backgroundImage) { bg.dataset.bg = bg.style.backgroundImage.slice(5, -2); bg.style.backgroundImage = ""; }
+  };
   const ob = new IntersectionObserver(es => es.forEach(e => {
     if (!e.isIntersecting) return;
+    const i = +e.target.dataset.i;
+    track.querySelectorAll(".reel").forEach(r => { if (Math.abs(+r.dataset.i - i) > 2) unload(r); });
     load(e.target); const nx = e.target.nextElementSibling; if (nx) load(nx);
     const im = e.target.querySelector("img.main"); im.classList.remove("img-in"); void im.offsetWidth; im.classList.add("img-in");
   }), { root: track, threshold: 0.6 });
@@ -448,7 +467,7 @@ $("#cgClose").onclick = () => closeOverlay("#catgrid");
 $("#btnList").onclick = openList;
 $("#bbCatsBtn").onclick = () => openOverlay("#catgrid");
 $("#bbListBtn").onclick = openList;
-$("#toTop").onclick = () => scrollTo({ top: 0, behavior: "smooth" });
+$("#toTop").onclick = () => scrollTo({ top: 0, behavior: "instant" });
 $("#btnLang").onclick = () => {
   const order = ["ro", "en", "hu"]; setLang(order[(order.indexOf(lang) + 1) % 3]);
   const y = scrollY; render(); scrollTo(0, y);
