@@ -103,7 +103,7 @@ export interface ProjectSpec {
   seed: number;
 }
 
-function buildStages(type: ProjectType, progress: number, start: ISODate, due: ISODate): Stage[] {
+export function buildStages(type: ProjectType, progress: number, start: ISODate, due: ISODate): Stage[] {
   const tpl = templateFor(type);
   const total = daysBetween(start, due);
   let left = progress;

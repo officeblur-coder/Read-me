@@ -38,6 +38,7 @@ interface Actions {
   setTour(t: Partial<State['tour']>): void;
   setSnapshot(key: string, value: number): void;
 
+  addProject(p: Project, materials: DemoData['projectMaterials']): void;
   updateProject(id: string, patch: Partial<Pick<Project, 'status' | 'notes' | 'contractValue' | 'dueDate'>>): void;
   setEtc(projectId: string, category: CostCategory, value: number): void;
   setBudget(projectId: string, category: CostCategory, value: number): void;
@@ -114,6 +115,10 @@ export const useStore = create<State & Actions>()(
         setTour: (t) => set((s) => ({ tour: { ...s.tour, ...t } })),
         setSnapshot: (key, value) => set((s) => ({ snapshots: { ...s.snapshots, [key]: value } })),
 
+        addProject: (p, materials) => {
+          set((s) => ({ projects: [p, ...s.projects], projectMaterials: [...s.projectMaterials, ...materials] }));
+          log(`a creat proiectul ${p.code}: ${p.name}, ${p.city}`, p.id, 'positive');
+        },
         updateProject: (id, patch) => {
           mapProject(id, (p) => ({ ...p, ...patch }));
           if (patch.status) log(`a schimbat statusul proiectului în „${patch.status}”`, id);

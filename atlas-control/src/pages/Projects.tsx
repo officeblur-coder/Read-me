@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
-import { Search, LayoutGrid, Rows3 } from 'lucide-react';
+import { Search, LayoutGrid, Rows3, Plus } from 'lucide-react';
+import { NewProjectWizard } from '../features/projects/NewProjectWizard';
 import { useStore } from '../store/store';
 import { usePermission, useVisibleRows } from '../store/derived';
-import { Card, PageHeader, Input, Select, RiskBadge, Progress, Badge, Table, Th, Td, Segmented, DemoTag } from '../components/ui';
+import { Button, Card, PageHeader, Input, Select, RiskBadge, Progress, Badge, Table, Th, Td, Segmented, DemoTag } from '../components/ui';
 import { SitePhoto } from '../components/SitePhoto';
 import { fmtMoney, fmtPct, fmtDateShort, normalize } from '../domain/format';
 import { STATUS_LABEL, TYPE_LABEL } from '../domain/labels';
@@ -16,6 +17,8 @@ export function ProjectsPage() {
   const rows = useVisibleRows();
   const people = useStore((s) => s.people);
   const canFinance = usePermission('finance.view');
+  const canCreate = usePermission('projects.edit');
+  const [creating, setCreating] = useState(false);
   const navigate = useNavigate();
   const [q, setQ] = useState('');
   const [status, setStatus] = useState<ProjectStatus | 'all' | 'active'>('active');
@@ -63,7 +66,7 @@ export function ProjectsPage() {
         eyebrow="Proiecte și contracte"
         title="Portofoliu de proiecte"
         subtitle={`${filtered.length} din ${rows.length} proiecte afișate. Valoare totală ${fmtMoney(filtered.reduce((a, r) => a + r.fin.revenue, 0))}.`}
-        actions={<><DemoTag /><Segmented value={view} onChange={setView} options={[{ id: 'table', label: 'Tabel' }, { id: 'cards', label: 'Carduri' }]} /></>}
+        actions={<><DemoTag /><Segmented value={view} onChange={setView} options={[{ id: 'table', label: 'Tabel' }, { id: 'cards', label: 'Carduri' }]} />{canCreate && <Button variant="primary" onClick={() => setCreating(true)}><Plus size={15} /> Proiect nou</Button>}</>}
       />
 
       <Card className="mb-4" pad={false}>
@@ -105,7 +108,6 @@ export function ProjectsPage() {
               <tr>
                 <Th className="pl-5">Cod</Th>
                 {th('name', 'Proiect')}
-                <Th>Beneficiar</Th>
                 {th('value', 'Valoare contract', 'right')}
                 {th('progress', 'Progres')}
                 {canFinance && th('margin', 'Marjă est.', 'right')}
@@ -117,15 +119,15 @@ export function ProjectsPage() {
             <tbody>
               {filtered.map((r) => (
                 <tr key={r.project.id} onClick={() => navigate(`/proiecte/${r.project.id}`)} className="cursor-pointer transition-colors hover:bg-ink-50/70">
-                  <Td className="pl-5 text-[12px] font-medium text-ink-500">{r.project.code}</Td>
-                  <Td>
+                  <Td className="whitespace-nowrap pl-5 text-[12px] font-medium text-ink-500">{r.project.code}</Td>
+                  <Td className="min-w-[280px]">
                     <div className="font-medium text-ink-900">{r.project.name}</div>
                     <div className="text-[12px] text-ink-500">{r.project.city}, jud. {r.project.county} · {TYPE_LABEL[r.project.type]}</div>
+                    <div className="max-w-[340px] truncate text-[12px] text-ink-400">{r.project.client}</div>
                   </Td>
-                  <Td className="max-w-[200px] truncate text-[13px] text-ink-600">{r.project.client}</Td>
                   <Td align="right" className="font-medium">{fmtMoney(r.fin.revenue)}</Td>
                   <Td className="w-36">
-                    <div className="flex items-center gap-2"><Progress value={r.sched.progress} marker={r.project.status === 'executie' ? r.sched.plannedProgress : undefined} className="w-16" /><span className="text-[12px] tabular-nums text-ink-600">{Math.round(r.sched.progress)}%</span></div>
+                    <div className="flex items-center gap-2"><Progress value={r.sched.progress} marker={r.project.status === 'executie' ? r.sched.plannedProgress : undefined} className="w-16 shrink-0" /><span className="text-[12px] tabular-nums text-ink-600">{Math.round(r.sched.progress)}%</span></div>
                   </Td>
                   {canFinance && <Td align="right" className={clsx(r.fin.margin < 12 && 'text-risk-600')}>{fmtPct(r.fin.margin)}</Td>}
                   <Td className={clsx('whitespace-nowrap text-[13px]', r.sched.delayed ? 'font-medium text-warn-700' : 'text-ink-600')}>{fmtDateShort(r.project.dueDate)}</Td>
@@ -168,6 +170,7 @@ export function ProjectsPage() {
           })}
         </div>
       )}
+      <NewProjectWizard open={creating} onClose={() => setCreating(false)} />
       <div className="mt-3 flex items-center gap-2 text-[12px] text-ink-400">
         <Rows3 size={13} /> Linia neagră din bara de progres indică progresul planificat la data curentă. <LayoutGrid size={13} className="ml-2" /> Fotografiile sunt imagini demonstrative.
       </div>

@@ -12,6 +12,13 @@ export function project(lng: number, lat: number): [number, number] {
   return [MERCATOR.tx + MERCATOR.scale * λ, MERCATOR.ty - MERCATOR.scale * Math.log(Math.tan(Math.PI / 4 + φ / 2))];
 }
 
+/** Inverse of project(): SVG map coordinates back to longitude / latitude. */
+export function unproject(x: number, y: number): [number, number] {
+  const λ = (x - MERCATOR.tx) / MERCATOR.scale;
+  const φ = 2 * Math.atan(Math.exp((MERCATOR.ty - y) / MERCATOR.scale)) - Math.PI / 2;
+  return [(λ * 180) / Math.PI, (φ * 180) / Math.PI];
+}
+
 interface Props {
   rows: ProjectRow[];
   selectedId?: string;
