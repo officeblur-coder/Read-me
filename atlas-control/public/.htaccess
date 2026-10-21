@@ -1,0 +1,5 @@
+# Demo cu date fictive: nu se indexează în motoarele de căutare.
+<IfModule mod_headers.c>
+  Header set X-Robots-Tag "noindex, nofollow"
+</IfModule>
+DirectoryIndex index.html
