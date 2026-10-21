@@ -189,6 +189,7 @@ function AskButton() {
 
 function RoleSwitcher({ current }: { current: RoleId }) {
   const [open, setOpen] = useState(false);
+  const [armed, setArmed] = useState(false);
   const setRole = useStore((s) => s.setRole);
   const resetDemo = useStore((s) => s.resetDemo);
   const people = useStore((s) => s.people);
@@ -231,10 +232,11 @@ function RoleSwitcher({ current }: { current: RoleId }) {
               ))}
             </div>
             <button
-              onClick={() => { if (confirm('Resetezi toate datele demonstrative la starea inițială?')) { resetDemo(); setOpen(false); navigate('/'); } }}
-              className="flex w-full items-center gap-2 border-t border-ink-100 px-4 py-2.5 text-[12.5px] text-ink-600 hover:bg-ink-50"
+              onClick={() => { if (!armed) { setArmed(true); return; } resetDemo(); setArmed(false); setOpen(false); navigate('/'); }}
+              onMouseLeave={() => setArmed(false)}
+              className={clsx('flex w-full items-center gap-2 border-t border-ink-100 px-4 py-2.5 text-[12.5px] hover:bg-ink-50', armed ? 'font-medium text-risk-600' : 'text-ink-600')}
             >
-              <RotateCcw size={14} /> Resetează datele demo
+              <RotateCcw size={14} /> {armed ? 'Confirmă: toate modificările se pierd' : 'Resetează datele demo'}
             </button>
           </div>
         </>

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Check, Minus, RotateCcw } from 'lucide-react';
 import { useStore } from '../store/store';
 import { usePermission, useRows } from '../store/derived';
@@ -34,6 +35,7 @@ export function SettingsPage() {
   const setThresholds = useStore((s) => s.setThresholds);
   const resetDemo = useStore((s) => s.resetDemo);
   const canEdit = usePermission('settings.edit');
+  const [armed, setArmed] = useState(false);
   const rows = useRows().filter((r) => isActive(r.project));
   const counts = { ok: 0, warn: 0, risk: 0 };
   rows.forEach((r) => counts[r.risk.level]++);
@@ -70,7 +72,12 @@ export function SettingsPage() {
           </Card>
           <Card>
             <CardHeader title="Date demonstrative" subtitle="Readuce toate proiectele, costurile, rapoartele și solicitările la starea inițială." />
-            <Button variant="danger" onClick={() => { if (confirm('Resetezi datele demonstrative?')) resetDemo(); }}><RotateCcw size={15} /> Resetează datele demo</Button>
+            {armed ? (
+              <div className="flex flex-wrap gap-2">
+                <Button variant="danger" onClick={() => { resetDemo(); setArmed(false); }}><RotateCcw size={15} /> Da, resetează</Button>
+                <Button variant="ghost" onClick={() => setArmed(false)}>Renunță</Button>
+              </div>
+            ) : <Button variant="danger" onClick={() => setArmed(true)}><RotateCcw size={15} /> Resetează datele demo</Button>}
           </Card>
         </div>
       </div>
