@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PAX – Casă Funerară, Târgu Mureș</title>
+<script>document.documentElement.classList.add('js')</script>
 <meta name="description" content="Casa Funerară PAX, Târgu Mureș. Servicii funerare complete, repatrieri din străinătate, acte și formalități. Consiliere gratuită: 0745 547 530.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -54,7 +55,10 @@ h2{font-size:clamp(2.2rem,4.4vw,3.9rem)}
 .btn.brown:hover{background:#56412a}
 
 /* ---------- preloader ---------- */
-#pre{position:fixed;inset:0;z-index:999;display:grid;place-items:center;pointer-events:none}
+document.body.classList.add('lock');
+#pre{position:fixed;inset:0;z-index:999;display:grid;place-items:center;pointer-events:none;animation:preSafe .6s 6s forwards}
+html:not(.js) #pre{display:none}
+@keyframes preSafe{to{opacity:0;visibility:hidden}}
 #pre .half{position:absolute;left:0;right:0;height:50.5%;background:var(--bg);transition:transform 1.2s var(--ease)}
 #pre .half.t{top:0}#pre .half.b{bottom:0}
 #pre.out .half.t{transform:translateY(-100%)}#pre.out .half.b{transform:translateY(100%)}
@@ -118,11 +122,12 @@ nav.main a:hover::after,nav.main a.on::after{transform:scaleX(1)}
 .hero-c{position:relative;z-index:2;max-width:680px}
 .hero-c h1{font-size:clamp(2.8rem,5.6vw,5rem);margin:22px 0 26px}
 .split .w{display:inline-block;overflow:hidden;vertical-align:top;padding-bottom:.08em}
-.split .w>span{display:inline-block;transform:translateY(105%) rotate(4deg);transform-origin:left bottom;transition:transform 1.3s var(--ease)}
-.ready .split .w>span{transform:none}
+.split .w>span{display:inline-block;transition:transform 1.3s var(--ease)}
+.js .split .w>span{transform:translateY(105%) rotate(4deg);transform-origin:left bottom;transition:transform 1.3s var(--ease)}
+.js.ready .split .w>span,.ready .split .w>span{transform:none}
 .hero-c p{max-width:46ch;color:#d8d0c2;font-size:1.04rem}
-.fade-in{opacity:0;transform:translateY(20px);transition:opacity 1.2s var(--ease),transform 1.2s var(--ease)}
-.ready .fade-in{opacity:1;transform:none}
+.js .fade-in{opacity:0;transform:translateY(20px);transition:opacity 1.2s var(--ease),transform 1.2s var(--ease)}
+.js.ready .fade-in,.ready .fade-in{opacity:1;transform:none}
 .hero-cta{display:flex;flex-wrap:wrap;gap:14px;margin:36px 0 46px}
 .perks{display:flex;flex-wrap:wrap;gap:34px}
 .perk{display:flex;align-items:center;gap:12px;font-size:.88rem;color:#d8d0c2}
@@ -152,8 +157,9 @@ nav.main a:hover::after,nav.main a.on::after{transform:scaleX(1)}
 .val svg{width:28px;height:28px;stroke:var(--brown);fill:none;stroke-width:1.3}
 .val b{display:block;font-family:var(--serif);font-weight:500;font-size:1.08rem;line-height:1.25;color:var(--ink)}
 .quote-script{font-family:var(--script);font-size:clamp(1.7rem,2.6vw,2.4rem);color:#6f5a40;line-height:1.35;text-align:center;margin-top:46px}
-.quote-script span{display:inline-block;clip-path:inset(0 100% 0 0);transition:clip-path 2.6s var(--ease)}
-.quote-script.in span{clip-path:inset(0 0 0 0)}
+.quote-script span{display:inline-block}
+.js .quote-script span{clip-path:inset(0 100% 0 0);transition:clip-path 2.6s var(--ease)}
+.js .quote-script.in span{clip-path:inset(0 0 0 0)}
 .quote-script span:nth-child(2){transition-delay:1.2s}
 .film{position:absolute;right:0;bottom:60px;display:flex;align-items:center;gap:16px;z-index:4}
 .film .play{width:64px;height:64px;border-radius:50%;background:var(--gold);display:grid;place-items:center;position:relative}
@@ -308,7 +314,7 @@ nav.main a:hover::after,nav.main a.on::after{transform:scaleX(1)}
 .pr:first-child{grid-row:span 2}
 .pr img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-2;transition:transform 1.6s var(--ease)}
 .pr::before{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(13,12,11,.9),rgba(13,12,11,.05) 65%);z-index:-1}
-.pr.rv img{transform:scale(1.25)}.pr.in img{transform:scale(1)}.pr.in:hover img{transform:scale(1.07)}
+.js .pr.rv img{transform:scale(1.25)}.js .pr.in img{transform:scale(1)}.pr.in:hover img{transform:scale(1.07)}
 .pr h4{font-size:1.9rem}
 .pr p{color:var(--txt2);font-size:.9rem;max-height:0;opacity:0;overflow:hidden;transition:max-height .6s var(--ease),opacity .6s}
 .pr:hover p{max-height:80px;opacity:1}
@@ -394,9 +400,9 @@ footer a:hover{color:var(--cream)}
 .mbar a{background:var(--gold);color:var(--bg);padding:12px 20px;border-radius:999px;font-weight:500;font-size:.88rem}
 
 /* reveal */
-.rv{opacity:0;transform:translateY(40px);transition:opacity 1.2s var(--ease),transform 1.2s var(--ease)}
-.rv.in{opacity:1;transform:none}
-.rv.d1{transition-delay:.12s}.rv.d2{transition-delay:.24s}.rv.d3{transition-delay:.36s}
+.js .rv{opacity:0;transform:translateY(40px);transition:opacity 1.2s var(--ease),transform 1.2s var(--ease)}
+.js .rv.in{opacity:1;transform:none}
+.js .rv.d1{transition-delay:.12s}.rv.d2{transition-delay:.24s}.rv.d3{transition-delay:.36s}
 .imgrev{clip-path:inset(100% 0 0 0);transition:clip-path 1.4s var(--ease)}
 .imgrev.in{clip-path:inset(0)}
 
@@ -440,7 +446,7 @@ footer a:hover{color:var(--cream)}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 </style>
 </head>
-<body class="lock">
+<body>
 
 <!-- preloader -->
 <div id="pre">
