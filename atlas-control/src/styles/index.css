@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    @apply bg-[#f3f4f1] font-sans text-ink-900 antialiased;
+    font-feature-settings: 'cv11', 'ss01', 'tnum' 0;
+  }
+  .tabular-nums { font-variant-numeric: tabular-nums; }
+  ::selection { background: rgba(140, 198, 63, 0.35); }
+}
+
+@layer utilities {
+  .scrollbar-none { scrollbar-width: none; }
+  .scrollbar-none::-webkit-scrollbar { display: none; }
+}
+
+/* Recharts: keep focus outlines off SVG */
+.recharts-wrapper svg:focus, .recharts-surface:focus { outline: none; }
+
+@media print {
+  aside, header, .no-print { display: none !important; }
+  .lg\:pl-\[264px\] { padding-left: 0 !important; }
+}
