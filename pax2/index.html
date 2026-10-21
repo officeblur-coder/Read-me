@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PAX – Casă Funerară, Târgu Mureș</title>
+<meta name="description" content="Casa Funerară PAX, Târgu Mureș. Servicii funerare complete, repatrieri din străinătate, acte și formalități. Consiliere gratuită: 0745 547 530.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Jost:wght@300;400;500&family=Pinyon+Script&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0c0b; --bg2:#14120f; --bg3:#1b1814;
+  --cream:#f2ebdf; --cream2:#e7ddcc; --paper:#f7f2ea;
+  --gold:#c6a06a; --gold2:#e2c591; --gold3:#8d6c40;
+  --brown:#6b5236;
+  --ink:#1b1712; --ink2:#5d5446;
+  --txt:#ece5d8; --txt2:#a69d8f;
+  --line:rgba(198,160,106,.22);
+  --serif:'Cormorant Garamond',Georgia,serif;
+  --sans:'Jost',system-ui,sans-serif;
+  --script:'Pinyon Script',cursive;
+  --ease:cubic-bezier(.2,.75,.15,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--txt);font-family:var(--sans);font-weight:300;font-size:16px;line-height:1.65;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+body.lock{overflow:hidden}
+a{color:inherit;text-decoration:none}
+button,input,select{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer}
+img{display:block;max-width:100%}
+::selection{background:var(--gold);color:var(--bg)}
+.wrap{width:min(1320px,100% - 40px);margin-inline:auto}
+.eyebrow{font-size:.72rem;font-weight:500;letter-spacing:.34em;text-transform:uppercase;color:var(--gold)}
+h1,h2,h3,h4{font-family:var(--serif);font-weight:400;line-height:1.05}
+h2{font-size:clamp(2.2rem,4.4vw,3.9rem)}
+.gold{color:var(--gold2)}
+.gold-grad{background:linear-gradient(100deg,#9b7646 0%,#e8cc98 35%,#b48a52 55%,#f0d9aa 75%,#a07a48 100%);background-size:220% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:sheen 7s linear infinite}
+@keyframes sheen{to{background-position:-220% 0}}
+
+/* buttons */
+.btn{position:relative;display:inline-flex;align-items:center;gap:14px;padding:16px 30px;border-radius:999px;font-size:.74rem;font-weight:500;letter-spacing:.2em;text-transform:uppercase;overflow:hidden;isolation:isolate;transition:color .45s var(--ease),border-color .45s}
+.btn svg{width:16px;transition:transform .45s var(--ease)}
+.btn:hover svg{transform:translateX(5px)}
+.btn.gold-b{background:linear-gradient(135deg,#d9b67e,#b88f58);color:#1a140c}
+.btn.gold-b::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.45) 50%,transparent 70%);transform:translateX(-120%);transition:transform .9s var(--ease);z-index:-1}
+.btn.gold-b:hover::after{transform:translateX(120%)}
+.btn.line{border:1px solid rgba(236,229,216,.35)}
+.btn.line::before{content:"";position:absolute;inset:0;background:var(--txt);transform:scaleX(0);transform-origin:right;transition:transform .5s var(--ease);z-index:-1}
+.btn.line:hover{color:var(--bg)}
+.btn.line:hover::before{transform:scaleX(1);transform-origin:left}
+.btn.brown{background:var(--brown);color:var(--cream)}
+.btn.brown:hover{background:#56412a}
+
+/* ---------- preloader ---------- */
+#pre{position:fixed;inset:0;z-index:999;display:grid;place-items:center;pointer-events:none}
+#pre .half{position:absolute;left:0;right:0;height:50.5%;background:var(--bg);transition:transform 1.2s var(--ease)}
+#pre .half.t{top:0}#pre .half.b{bottom:0}
+#pre.out .half.t{transform:translateY(-100%)}#pre.out .half.b{transform:translateY(100%)}
+#pre .c{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:22px;transition:opacity .5s}
+#pre.out .c{opacity:0}
+#pre .shield{position:relative;width:96px;overflow:hidden;opacity:0;animation:pin 1.1s .2s var(--ease) forwards}
+#pre .shield::after{content:"";position:absolute;inset:-20%;background:linear-gradient(110deg,transparent 40%,rgba(255,240,210,.65) 50%,transparent 60%);transform:translateX(-100%);animation:shine 1.6s .9s ease-in-out forwards}
+@keyframes pin{from{opacity:0;transform:scale(.85) translateY(10px)}to{opacity:1;transform:none}}
+@keyframes shine{to{transform:translateX(100%)}}
+#pre .bar{width:140px;height:1px;background:rgba(198,160,106,.2);overflow:hidden}
+#pre .bar i{display:block;height:100%;width:0;background:var(--gold);animation:load 1.8s .3s var(--ease) forwards}
+@keyframes load{to{width:100%}}
+#pre small{font-size:.66rem;letter-spacing:.5em;color:var(--txt2);text-transform:uppercase;padding-left:.5em}
+
+/* ---------- cursor ---------- */
+#cur,#cur2{position:fixed;left:0;top:0;pointer-events:none;z-index:998;border-radius:50%;transform:translate(-100px,-100px)}
+#cur{width:6px;height:6px;background:var(--gold2)}
+#cur2{width:38px;height:38px;border:1px solid rgba(198,160,106,.55);transition:width .35s var(--ease),height .35s var(--ease),background .35s,border-color .35s}
+#cur2.big{width:74px;height:74px;background:rgba(198,160,106,.12);border-color:transparent}
+@media (hover:none){#cur,#cur2{display:none}}
+
+/* ---------- header ---------- */
+header{position:fixed;top:0;left:0;right:0;z-index:100;transition:background .5s,padding .5s,box-shadow .5s;padding:22px 0}
+header.solid{background:rgba(13,12,11,.82);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);padding:12px 0;box-shadow:0 1px 0 var(--line)}
+header .wrap{display:flex;align-items:center;gap:30px}
+.brand{display:flex;align-items:center;gap:14px;margin-right:auto}
+.brand img{width:46px;transition:width .5s}
+header.solid .brand img{width:38px}
+.brand .bt b{display:block;font-family:var(--serif);font-weight:500;font-size:1.9rem;letter-spacing:.14em;line-height:1;color:var(--cream)}
+.brand .bt span{display:block;font-family:var(--serif);font-size:.82rem;letter-spacing:.24em;text-transform:uppercase;color:var(--gold2);margin-top:3px}
+.brand .bt em{display:block;font-style:normal;font-size:.52rem;letter-spacing:.42em;text-transform:uppercase;color:var(--txt2);margin-top:4px}
+nav.main{display:flex;gap:34px}
+nav.main a{position:relative;font-size:.72rem;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--txt2);padding:8px 0;transition:color .3s}
+nav.main a::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--gold);transform:scaleX(0);transition:transform .45s var(--ease)}
+nav.main a:hover,nav.main a.on{color:var(--cream)}
+nav.main a:hover::after,nav.main a.on::after{transform:scaleX(1)}
+.hcall{white-space:nowrap;display:inline-flex;align-items:center;gap:10px;background:var(--cream);color:var(--ink);padding:11px 22px;border-radius:999px;font-size:.84rem;font-weight:500;transition:background .3s}
+.hcall:hover{background:var(--gold2)}
+.hcall svg{width:15px}
+.lang{display:flex;gap:10px;font-size:.72rem;letter-spacing:.14em;color:var(--txt2)}
+.lang button{color:var(--txt2);transition:color .3s}.lang button.on{color:var(--cream)}
+.burger{display:none;width:44px;height:44px;border:1px solid var(--line);border-radius:50%;place-items:center}
+.burger i{display:block;width:16px;height:1px;background:var(--cream);box-shadow:0 5px 0 var(--cream),0 -5px 0 var(--cream)}
+
+/* side rails */
+.rail{position:fixed;left:18px;top:50%;transform:translateY(-50%);z-index:90;display:flex;flex-direction:column;gap:14px;font-size:.7rem;letter-spacing:.1em;color:var(--txt2);mix-blend-mode:difference}
+.rail a{display:flex;align-items:center;gap:10px;transition:color .4s}
+.rail a i{display:block;width:0;height:1px;background:var(--gold2);transition:width .5s var(--ease)}
+.rail a.on{color:#fff}.rail a.on i{width:26px}
+.scrollcue{position:fixed;right:20px;top:50%;transform:translateY(-50%);z-index:90;display:flex;flex-direction:column;align-items:center;gap:14px;font-size:.6rem;letter-spacing:.4em;color:var(--txt2);mix-blend-mode:difference}
+.scrollcue span{writing-mode:vertical-rl}
+.scrollcue .track{width:1px;height:70px;background:rgba(255,255,255,.2);position:relative}
+.scrollcue .track i{position:absolute;left:-3px;width:7px;height:7px;border-radius:50%;border:1px solid #fff;top:0}
+
+/* ---------- hero ---------- */
+#acasa{position:relative;min-height:100svh;overflow:hidden;display:flex;align-items:center;padding:140px 0 200px}
+.hero-img{position:absolute;inset:0 0 0 30%;overflow:hidden}
+.hero-img img{width:100%;height:115%;object-fit:cover;object-position:60% 40%;transform-origin:60% 40%;will-change:transform;filter:saturate(.9) contrast(1.05)}
+.hero-img::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,var(--bg) 0%,rgba(13,12,11,.75) 22%,rgba(13,12,11,.1) 55%,rgba(13,12,11,.25) 100%),linear-gradient(0deg,var(--bg) 0%,transparent 35%)}
+#dust{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}
+.hero-c{position:relative;z-index:2;max-width:680px}
+.hero-c h1{font-size:clamp(2.8rem,5.6vw,5rem);margin:22px 0 26px}
+.split .w{display:inline-block;overflow:hidden;vertical-align:top;padding-bottom:.08em}
+.split .w>span{display:inline-block;transform:translateY(105%) rotate(4deg);transform-origin:left bottom;transition:transform 1.3s var(--ease)}
+.ready .split .w>span{transform:none}
+.hero-c p{max-width:46ch;color:#d8d0c2;font-size:1.04rem}
+.fade-in{opacity:0;transform:translateY(20px);transition:opacity 1.2s var(--ease),transform 1.2s var(--ease)}
+.ready .fade-in{opacity:1;transform:none}
+.hero-cta{display:flex;flex-wrap:wrap;gap:14px;margin:36px 0 46px}
+.perks{display:flex;flex-wrap:wrap;gap:34px}
+.perk{display:flex;align-items:center;gap:12px;font-size:.88rem;color:#d8d0c2}
+.perk svg{width:28px;height:28px;stroke:var(--gold2);fill:none;stroke-width:1.3}
+
+/* waves */
+.wave{position:absolute;left:0;width:100%;height:150px;z-index:3;pointer-events:none}
+.wave.bottom{bottom:-1px}
+.wave.top{top:-1px}
+
+/* ---------- about (cream) ---------- */
+#despre{position:relative;background:var(--cream);color:var(--ink);padding:110px 0 160px}
+#despre::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 60% 70% at 30% 40%,rgba(255,255,255,.55),transparent 70%);pointer-events:none}
+.about{position:relative;display:grid;grid-template-columns:1.05fr .95fr;gap:70px;align-items:center}
+.about h2{color:var(--ink);margin:16px 0 22px}
+.about .eyebrow{color:var(--brown)}
+.about p{color:var(--ink2);max-width:54ch}
+.botanic{position:absolute;left:47%;top:-80px;width:220px;opacity:.75;pointer-events:none}
+.botanic path{fill:none;stroke:#a88b62;stroke-width:1.1;stroke-dasharray:var(--len);stroke-dashoffset:var(--len);transition:stroke-dashoffset 3.5s var(--ease)}
+.botanic .leaf{fill:rgba(168,139,98,.14)}
+.in .botanic path,.botanic.in path{stroke-dashoffset:0}
+.values{display:grid;grid-template-columns:repeat(4,1fr)}
+.val{text-align:center;padding:0 10px;border-left:1px solid rgba(107,82,54,.18)}
+.val:first-child{border-left:0}
+.val .ic{width:62px;height:62px;margin:0 auto 14px;border-radius:50%;background:#efe4d1;display:grid;place-items:center;transition:transform .6s var(--ease),background .4s}
+.val:hover .ic{transform:translateY(-6px) rotate(-6deg);background:#e6d5b8}
+.val svg{width:28px;height:28px;stroke:var(--brown);fill:none;stroke-width:1.3}
+.val b{display:block;font-family:var(--serif);font-weight:500;font-size:1.08rem;line-height:1.25;color:var(--ink)}
+.quote-script{font-family:var(--script);font-size:clamp(1.7rem,2.6vw,2.4rem);color:#6f5a40;line-height:1.35;text-align:center;margin-top:46px}
+.quote-script span{display:inline-block;clip-path:inset(0 100% 0 0);transition:clip-path 2.6s var(--ease)}
+.quote-script.in span{clip-path:inset(0 0 0 0)}
+.quote-script span:nth-child(2){transition-delay:1.2s}
+.film{position:absolute;right:0;bottom:60px;display:flex;align-items:center;gap:16px;z-index:4}
+.film .play{width:64px;height:64px;border-radius:50%;background:var(--gold);display:grid;place-items:center;position:relative}
+.film .play::before{content:"";position:absolute;inset:-8px;border-radius:50%;border:1px solid var(--gold);animation:ring 2.4s ease-out infinite}
+@keyframes ring{from{transform:scale(.8);opacity:1}to{transform:scale(1.5);opacity:0}}
+.film .play svg{width:18px;fill:var(--bg);margin-left:3px}
+.film span{font-size:.68rem;letter-spacing:.3em;text-transform:uppercase;color:var(--brown);line-height:1.8}
+
+/* ---------- services (dark) ---------- */
+#servicii{position:relative;padding:150px 0 170px;background:var(--bg)}
+.sv-top{display:grid;grid-template-columns:auto 1fr auto;gap:60px;align-items:end;margin-bottom:46px}
+.sv-top p{color:var(--txt2);max-width:44ch}
+.arrows{display:flex;gap:12px}
+.arrows button{width:50px;height:50px;border-radius:50%;border:1px solid rgba(236,229,216,.3);display:grid;place-items:center;transition:background .3s,border-color .3s}
+.arrows button:hover{background:var(--gold);border-color:var(--gold)}
+.arrows svg{width:16px;stroke:currentColor;fill:none;stroke-width:1.5}
+.arrows button:hover svg{stroke:var(--bg)}
+.rail-x{display:flex;gap:22px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:10px max(20px,calc((100vw - 1320px)/2)) 30px;cursor:grab}
+.rail-x::-webkit-scrollbar{display:none}
+.card{flex:none;width:clamp(260px,24vw,330px);scroll-snap-align:start;position:relative;border-radius:14px;overflow:hidden;background:var(--bg3);border:1px solid rgba(198,160,106,.18);text-align:left;transition:transform .6s var(--ease),border-color .5s,box-shadow .6s}
+.card:hover{transform:translateY(-10px);border-color:rgba(198,160,106,.6);box-shadow:0 30px 60px -30px rgba(0,0,0,.9),0 0 0 1px rgba(198,160,106,.15)}
+.card .im{height:260px;overflow:hidden;position:relative}
+.card .im img{width:100%;height:100%;object-fit:cover;transition:transform 1.4s var(--ease),filter .8s;filter:saturate(.85) brightness(.85)}
+.card:hover .im img{transform:scale(1.08);filter:saturate(1) brightness(1)}
+.card .im::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,var(--bg3),transparent 60%)}
+.card .bd{position:relative;padding:0 24px 24px;margin-top:-36px;z-index:2;display:grid;grid-template-columns:46px 1fr;gap:14px;align-items:end}
+.card .ico{width:46px;height:46px;display:grid;place-items:center}
+.card .ico svg{width:34px;height:34px;stroke:var(--gold2);fill:none;stroke-width:1.2}
+.card h3{font-size:1.5rem;line-height:1.1;color:var(--cream)}
+.card .more{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;font-size:.68rem;letter-spacing:.26em;text-transform:uppercase;color:var(--gold);border-top:1px solid rgba(198,160,106,.18);padding-top:14px;margin-top:6px}
+.card .more svg{width:15px;stroke:var(--gold);fill:none;stroke-width:1.5;transition:transform .4s var(--ease)}
+.card:hover .more svg{transform:translateX(6px)}
+.progress-x{height:1px;background:rgba(236,229,216,.12);margin-top:10px;position:relative}
+.progress-x i{position:absolute;left:0;top:-1px;height:3px;width:20%;background:var(--gold);transition:left .3s,width .3s}
+
+/* drawer */
+#drawer{position:fixed;inset:0;z-index:300;pointer-events:none}
+#drawer .sh{position:absolute;inset:0;background:rgba(0,0,0,.6);opacity:0;transition:opacity .5s}
+#drawer .pn{position:absolute;right:0;top:0;bottom:0;width:min(560px,100%);background:var(--bg2);border-left:1px solid var(--line);transform:translateX(100%);transition:transform .8s var(--ease);overflow-y:auto}
+#drawer.on{pointer-events:auto}
+#drawer.on .sh{opacity:1}
+#drawer.on .pn{transform:none}
+#drawer .pn img{height:300px;width:100%;object-fit:cover}
+#drawer .pc{padding:36px 40px 50px}
+#drawer h3{font-size:2.6rem;margin:12px 0 18px}
+#drawer p{color:#d0c8ba;margin-bottom:16px}
+#drawer ul{list-style:none;margin:20px 0 30px;display:grid;gap:10px}
+#drawer li{display:flex;gap:12px;color:#d0c8ba}
+#drawer li::before{content:"";flex:none;width:6px;height:6px;margin-top:10px;background:var(--gold);transform:rotate(45deg)}
+#drawer .x{position:absolute;top:18px;right:18px;width:46px;height:46px;border-radius:50%;background:rgba(13,12,11,.6);backdrop-filter:blur(6px);display:grid;place-items:center;z-index:2;font-size:1.4rem}
+
+/* ---------- repatriation ---------- */
+#repatrieri{position:relative;background:var(--bg2);padding:160px 0 150px;overflow:hidden}
+#repatrieri::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 50% 60% at 85% 20%,rgba(198,160,106,.09),transparent 70%)}
+.rp-head{position:relative;display:grid;grid-template-columns:1.1fr .9fr;gap:60px;align-items:end;margin-bottom:60px}
+.rp-head p{color:var(--txt2);max-width:48ch}
+.board{position:relative;background:#0a0908;border:1px solid rgba(198,160,106,.25);border-radius:16px;padding:26px clamp(14px,3vw,34px);box-shadow:inset 0 0 60px rgba(0,0,0,.6),0 40px 80px -40px rgba(0,0,0,.9)}
+.board-top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:18px;font-size:.68rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gold)}
+.board-top .live{display:flex;align-items:center;gap:8px;color:var(--txt2)}
+.board-top .live i{width:7px;height:7px;border-radius:50%;background:#7fbf7a;box-shadow:0 0 10px #7fbf7a;animation:blink 1.6s infinite}
+@keyframes blink{50%{opacity:.3}}
+.brow{display:grid;grid-template-columns:2.3fr 2fr 1.4fr;gap:clamp(10px,2vw,30px);padding:9px 0;border-top:1px solid rgba(198,160,106,.1);align-items:center}
+.brow.h{border-top:0;font-size:.62rem;letter-spacing:.24em;text-transform:uppercase;color:var(--txt2);padding-bottom:12px}
+.flap{display:flex;gap:2px;flex-wrap:nowrap;overflow:hidden}
+.flap b{flex:none;width:clamp(15px,1.55vw,24px);height:clamp(24px,2.4vw,36px);display:grid;place-items:center;background:linear-gradient(#1d1a16 49%,#0c0b09 50%,#191612 51%);border-radius:3px;font-family:'Jost',monospace;font-weight:500;font-size:clamp(.72rem,1.1vw,1.06rem);color:#efe3c8;position:relative}
+.flap b::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(0,0,0,.8)}
+.flap b.f{animation:flip .09s linear}
+@keyframes flip{0%{transform:scaleY(1)}50%{transform:scaleY(.2)}100%{transform:scaleY(1)}}
+.flap.gold b{color:var(--gold2)}
+.rp-grid{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-top:70px}
+.steps4{position:relative;display:grid;gap:0}
+.steps4 .line{position:absolute;left:23px;top:24px;bottom:24px;width:1px;background:rgba(198,160,106,.18)}
+.steps4 .line i{position:absolute;left:0;top:0;width:100%;height:var(--h,0%);background:var(--gold);transition:height .2s}
+.st{position:relative;display:grid;grid-template-columns:48px 1fr;gap:22px;padding:18px 0}
+.st .n{width:48px;height:48px;border-radius:50%;border:1px solid rgba(198,160,106,.4);background:var(--bg2);display:grid;place-items:center;font-family:var(--serif);font-size:1.3rem;color:var(--gold2);position:relative;z-index:1;transition:background .5s,color .5s}
+.st.on .n{background:var(--gold);color:var(--bg)}
+.st h4{font-size:1.5rem;margin-bottom:4px}
+.st p{color:var(--txt2);font-size:.95rem}
+.docs{background:var(--bg3);border:1px solid rgba(198,160,106,.16);border-radius:16px;padding:34px}
+.docs h4{font-size:1.6rem;margin-bottom:6px}
+.docs .sub{color:var(--txt2);font-size:.9rem;margin-bottom:22px}
+.dtabs{display:flex;gap:6px;margin-bottom:18px;background:rgba(0,0,0,.25);padding:5px;border-radius:999px;width:max-content;max-width:100%}
+.dtabs button{padding:9px 18px;border-radius:999px;font-size:.78rem;color:var(--txt2);transition:all .35s}
+.dtabs button.on{background:var(--gold);color:var(--bg)}
+.dl{list-style:none;display:grid;gap:2px}
+.dl li{display:flex;gap:14px;align-items:flex-start;padding:12px 0;border-bottom:1px solid rgba(198,160,106,.1);opacity:0;transform:translateX(-10px);animation:dl .6s var(--ease) forwards}
+@keyframes dl{to{opacity:1;transform:none}}
+.dl li svg{flex:none;width:20px;height:20px;stroke:var(--gold);fill:none;stroke-width:1.4;margin-top:2px}
+.dl small{display:block;color:var(--txt2);font-size:.82rem}
+.rp-note{margin-top:18px;font-size:.84rem;color:var(--txt2);border-left:2px solid var(--gold);padding-left:14px}
+
+/* request form */
+.req{margin-top:70px;display:grid;grid-template-columns:.9fr 1.1fr;border-radius:20px;overflow:hidden;border:1px solid rgba(198,160,106,.2)}
+.req .ph{position:relative;min-height:440px}
+.req .ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.req .ph::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(13,12,11,.92),rgba(13,12,11,.15))}
+.req .ph .t{position:absolute;left:34px;right:34px;bottom:34px;z-index:2}
+.req .ph h3{font-size:2.4rem;margin:10px 0}
+.req .ph p{color:#cfc6b8;font-size:.95rem}
+.req form{background:var(--cream);color:var(--ink);padding:clamp(26px,4vw,48px);display:flex;flex-direction:column}
+.fsteps{display:flex;gap:6px;margin-bottom:28px}
+.fsteps i{flex:1;height:3px;border-radius:3px;background:rgba(107,82,54,.18);overflow:hidden;position:relative}
+.fsteps i::after{content:"";position:absolute;inset:0;background:var(--brown);transform:scaleX(0);transform-origin:left;transition:transform .6s var(--ease)}
+.fsteps i.on::after{transform:scaleX(1)}
+.fpane{display:none;animation:pane .6s var(--ease)}
+.fpane.on{display:block}
+@keyframes pane{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
+.fpane h4{font-size:1.8rem;color:var(--ink);margin-bottom:6px}
+.fpane .hint{color:var(--ink2);font-size:.9rem;margin-bottom:20px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:10px 16px;border-radius:999px;border:1px solid rgba(107,82,54,.3);font-size:.88rem;transition:all .3s}
+.chip:hover{border-color:var(--brown)}
+.chip.on{background:var(--brown);color:var(--cream);border-color:var(--brown)}
+.field{display:block;margin-bottom:14px}
+.field span{display:block;font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink2);margin-bottom:6px}
+.field input{width:100%;background:transparent;border:0;border-bottom:1px solid rgba(107,82,54,.35);padding:10px 0;font-size:1.05rem;outline:none;transition:border-color .3s}
+.field input:focus{border-color:var(--brown)}
+.fnav{display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:28px}
+.fnav .back{font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink2)}
+.done{text-align:center;padding:20px 0}
+.done .ok{width:78px;height:78px;margin:0 auto 18px}
+.done .ok circle,.done .ok path{fill:none;stroke:var(--brown);stroke-width:2;stroke-dasharray:240;stroke-dashoffset:240;animation:draw 1.2s var(--ease) forwards}
+.done .ok path{animation-delay:.6s}
+@keyframes draw{to{stroke-dashoffset:0}}
+.done .sum{background:var(--paper);border-radius:12px;padding:16px;margin:18px 0;font-size:.9rem;color:var(--ink2);text-align:left}
+
+/* ---------- first hours timeline (cream) ---------- */
+#pasi{position:relative;background:var(--cream);color:var(--ink);padding:170px 0 170px}
+#pasi .eyebrow{color:var(--brown)}
+.ps-head{display:flex;justify-content:space-between;align-items:end;gap:40px;flex-wrap:wrap;margin-bottom:60px}
+.ps-head p{color:var(--ink2);max-width:44ch}
+.switch{display:inline-flex;background:var(--cream2);border-radius:999px;padding:5px;margin-bottom:40px;position:relative}
+.switch button{position:relative;z-index:1;padding:12px 24px;border-radius:999px;font-size:.86rem;color:var(--ink2);transition:color .4s}
+.switch button.on{color:var(--cream)}
+.switch .pill{position:absolute;top:5px;bottom:5px;left:5px;border-radius:999px;background:var(--brown);transition:left .5s var(--ease),width .5s var(--ease)}
+.tl{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;position:relative}
+.tl::before{content:"";position:absolute;left:0;right:0;top:27px;height:1px;background:rgba(107,82,54,.25)}
+.tl-i{position:relative;padding-top:70px}
+.tl-i .dot{position:absolute;top:18px;left:0;width:19px;height:19px;border-radius:50%;background:var(--cream);border:1px solid var(--brown)}
+.tl-i .dot::after{content:"";position:absolute;inset:4px;border-radius:50%;background:var(--brown);transform:scale(0);transition:transform .6s var(--ease)}
+.in .tl-i .dot::after,.tl.in .tl-i .dot::after{transform:scale(1)}
+.tl-i:nth-child(2) .dot::after{transition-delay:.3s}.tl-i:nth-child(3) .dot::after{transition-delay:.6s}.tl-i:nth-child(4) .dot::after{transition-delay:.9s}
+.tl-i small{font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;color:var(--brown);font-weight:500}
+.tl-i h4{font-size:1.65rem;color:var(--ink);margin:6px 0 10px}
+.tl-i p{color:var(--ink2);font-size:.94rem}
+.tl-i .tag{display:inline-block;margin-top:12px;font-size:.78rem;background:var(--paper);border:1px solid rgba(107,82,54,.2);padding:4px 12px;border-radius:999px;color:var(--ink2)}
+
+/* ---------- products ---------- */
+#produse{position:relative;background:var(--bg);padding:160px 0 140px}
+.pr-grid{display:grid;grid-template-columns:1.2fr 1fr 1fr;grid-template-rows:280px 280px;gap:18px;margin-top:50px}
+.pr{position:relative;border-radius:14px;overflow:hidden;display:flex;align-items:flex-end;padding:26px;isolation:isolate}
+.pr:first-child{grid-row:span 2}
+.pr img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-2;transition:transform 1.6s var(--ease)}
+.pr::before{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(13,12,11,.9),rgba(13,12,11,.05) 65%);z-index:-1}
+.pr.rv img{transform:scale(1.25)}.pr.in img{transform:scale(1)}.pr.in:hover img{transform:scale(1.07)}
+.pr h4{font-size:1.9rem}
+.pr p{color:var(--txt2);font-size:.9rem;max-height:0;opacity:0;overflow:hidden;transition:max-height .6s var(--ease),opacity .6s}
+.pr:hover p{max-height:80px;opacity:1}
+.pr .tg{position:absolute;top:22px;left:22px;font-size:.66rem;letter-spacing:.24em;text-transform:uppercase;border:1px solid rgba(236,229,216,.35);border-radius:999px;padding:5px 12px;backdrop-filter:blur(6px)}
+
+/* ---------- voices ---------- */
+#marturii{position:relative;background:var(--bg2);padding:150px 0}
+.vc{display:grid;grid-template-columns:.8fr 1.2fr;gap:70px;align-items:center}
+.vc .stars{display:flex;gap:4px;margin:20px 0}
+.vc .stars svg{width:18px;fill:var(--gold)}
+.vq{position:relative;min-height:260px}
+.vq blockquote{position:absolute;inset:0;font-family:var(--serif);font-size:clamp(1.8rem,3vw,2.7rem);line-height:1.2;opacity:0;transform:translateY(20px);transition:opacity .9s var(--ease),transform .9s var(--ease)}
+.vq blockquote.on{opacity:1;transform:none}
+.vq blockquote::before{content:"“";display:block;font-size:5rem;line-height:.6;color:var(--gold);margin-bottom:10px}
+.vq cite{display:block;font-family:var(--sans);font-style:normal;font-size:.78rem;letter-spacing:.2em;text-transform:uppercase;color:var(--txt2);margin-top:22px}
+.vnav{display:flex;gap:10px;margin-top:30px}
+.vnav button{width:36px;height:3px;background:rgba(236,229,216,.2);position:relative;overflow:hidden}
+.vnav button i{position:absolute;inset:0;background:var(--gold);transform:scaleX(0);transform-origin:left}
+.vnav button.on i{animation:fill 7s linear forwards}
+@keyframes fill{to{transform:scaleX(1)}}
+
+/* ---------- locations (cream w/ forest) ---------- */
+#locatii{position:relative;background:var(--cream);color:var(--ink);padding:170px 0 120px;overflow:hidden}
+#locatii .eyebrow{color:var(--brown)}
+.forest{position:absolute;left:0;right:0;bottom:0;height:150px;pointer-events:none;opacity:.35}
+.lc{position:relative;display:grid;grid-template-columns:1fr 1.2fr;gap:60px;align-items:center}
+.lc p{color:var(--ink2);max-width:46ch;margin:18px 0 28px}
+.lcards{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.lcard{background:var(--paper);border-radius:14px;overflow:hidden;box-shadow:0 30px 50px -35px rgba(60,40,10,.45);transition:transform .6s var(--ease)}
+.lcard:hover{transform:translateY(-8px) rotate(-.6deg)}
+.lcard img{height:180px;width:100%;object-fit:cover}
+.lcard .b{padding:18px 20px 22px;display:flex;gap:12px}
+.lcard svg{flex:none;width:22px;height:22px;stroke:var(--brown);fill:none;stroke-width:1.4}
+.lcard b{display:block;font-family:var(--serif);font-weight:500;font-size:1.35rem;line-height:1.1}
+.lcard small{color:var(--ink2)}
+
+/* ---------- faq ---------- */
+#intrebari{background:var(--cream);color:var(--ink);padding:40px 0 170px;position:relative}
+.fq{display:grid;grid-template-columns:.8fr 1.2fr;gap:70px}
+.fq .eyebrow{color:var(--brown)}
+.qa{border-top:1px solid rgba(107,82,54,.25)}
+.qa:last-child{border-bottom:1px solid rgba(107,82,54,.25)}
+.qa button{width:100%;text-align:left;display:flex;justify-content:space-between;gap:20px;align-items:center;padding:24px 0;font-family:var(--serif);font-size:1.5rem;color:var(--ink)}
+.qa .pm{flex:none;width:34px;height:34px;border-radius:50%;border:1px solid rgba(107,82,54,.35);position:relative;transition:background .4s,transform .5s var(--ease)}
+.qa .pm::before,.qa .pm::after{content:"";position:absolute;left:50%;top:50%;width:11px;height:1px;background:var(--ink);transform:translate(-50%,-50%)}
+.qa .pm::after{transform:translate(-50%,-50%) rotate(90deg);transition:transform .5s var(--ease)}
+.qa.open .pm{background:var(--brown);transform:rotate(180deg)}
+.qa.open .pm::before,.qa.open .pm::after{background:var(--cream)}
+.qa.open .pm::after{transform:translate(-50%,-50%) rotate(0)}
+.qa .an{display:grid;grid-template-rows:0fr;transition:grid-template-rows .6s var(--ease)}
+.qa.open .an{grid-template-rows:1fr}
+.qa .an>div{overflow:hidden}
+.qa .an p{color:var(--ink2);padding-bottom:24px;max-width:64ch}
+
+/* ---------- final cta ---------- */
+#contact{position:relative;background:var(--bg);padding:190px 0 90px;overflow:hidden;text-align:center}
+#contact .glow{position:absolute;left:50%;top:55%;width:900px;height:900px;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(198,160,106,.14),transparent 60%);pointer-events:none}
+#contact img.lg{width:84px;margin:0 auto 26px}
+#contact h2{font-size:clamp(2.4rem,5vw,4.6rem);max-width:16ch;margin:0 auto 18px}
+#contact p{color:var(--txt2)}
+.bigphone{display:inline-block;font-family:var(--serif);font-size:clamp(3rem,9vw,8rem);line-height:1;margin:36px 0 20px;transition:letter-spacing .6s var(--ease)}
+.bigphone:hover{letter-spacing:.03em}
+.phones{display:flex;justify-content:center;flex-wrap:wrap;gap:16px 50px;margin-top:30px;color:var(--txt2);font-size:.92rem}
+.phones a{color:var(--cream);border-bottom:1px solid var(--line)}
+footer{background:#080706;padding:40px 0;font-size:.82rem;color:var(--txt2)}
+footer .wrap{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;align-items:center}
+footer nav{display:flex;flex-wrap:wrap;gap:18px}
+footer a:hover{color:var(--cream)}
+
+/* lightbox film */
+#lb{position:fixed;inset:0;z-index:400;background:rgba(5,5,4,.94);display:grid;place-items:center;opacity:0;pointer-events:none;transition:opacity .6s}
+#lb.on{opacity:1;pointer-events:auto}
+#lb .stage{position:relative;width:min(1000px,92vw);aspect-ratio:16/9;overflow:hidden;border-radius:10px}
+#lb .stage img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1.12);transition:opacity 1.6s,transform 7s linear}
+#lb .stage img.on{opacity:1;transform:scale(1)}
+#lb .cap{position:absolute;left:0;right:0;bottom:0;padding:40px;background:linear-gradient(0deg,rgba(0,0,0,.8),transparent);font-family:var(--serif);font-size:clamp(1.4rem,3vw,2.4rem);text-align:center;transition:opacity .8s}
+#lb .x{position:absolute;top:24px;right:24px;font-size:2rem;color:var(--cream)}
+
+/* mobile bar */
+.mbar{display:none;position:fixed;left:12px;right:12px;bottom:12px;z-index:150;background:rgba(20,18,15,.9);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:999px;padding:8px 8px 8px 20px;align-items:center;justify-content:space-between;transform:translateY(150%);transition:transform .6s var(--ease)}
+.mbar.on{transform:none}
+.mbar span{font-size:.82rem;color:var(--txt2)}
+.mbar a{background:var(--gold);color:var(--bg);padding:12px 20px;border-radius:999px;font-weight:500;font-size:.88rem}
+
+/* reveal */
+.rv{opacity:0;transform:translateY(40px);transition:opacity 1.2s var(--ease),transform 1.2s var(--ease)}
+.rv.in{opacity:1;transform:none}
+.rv.d1{transition-delay:.12s}.rv.d2{transition-delay:.24s}.rv.d3{transition-delay:.36s}
+.imgrev{clip-path:inset(100% 0 0 0);transition:clip-path 1.4s var(--ease)}
+.imgrev.in{clip-path:inset(0)}
+
+@media (max-width:1520px){.rail,.scrollcue{display:none}}
+@media (max-width:1100px){
+  nav.main,.lang{display:none}
+  .burger{display:grid}
+}
+@media (max-width:900px){
+  body{font-size:15px}
+  .brand .bt em{display:none}
+  .hcall{padding:9px 14px;font-size:.78rem}
+  .brand .bt b{font-size:1.5rem}
+  .brand .bt span{font-size:.6rem;letter-spacing:.16em}
+  .brand img{width:38px}
+  .hero-img{inset:0}
+  .hero-img::after{background:linear-gradient(0deg,var(--bg) 30%,rgba(13,12,11,.72) 62%,rgba(13,12,11,.4))}
+  #acasa{align-items:flex-end;padding:120px 0 150px}
+  .perks{gap:16px}
+  .about,.rp-head,.rp-grid,.req,.vc,.lc,.fq{grid-template-columns:1fr}
+  .values{grid-template-columns:1fr 1fr;row-gap:26px}
+  .val:nth-child(3){border-left:0}
+  .botanic{left:auto;right:-40px;top:-60px;width:160px}
+  .film{position:relative;bottom:auto;margin-top:40px}
+  .sv-top{grid-template-columns:1fr;gap:20px}
+  .tl{grid-template-columns:1fr;gap:0}
+  .tl::before{left:9px;right:auto;top:0;bottom:0;width:1px;height:auto}
+  .tl-i{padding:0 0 34px 44px}
+  .tl-i .dot{top:4px}
+  .pr-grid{grid-template-columns:1fr 1fr;grid-template-rows:auto}
+  .pr{min-height:220px}
+  .pr:first-child{grid-column:span 2;grid-row:auto;min-height:300px}
+  .pr p{max-height:none;opacity:1}
+  .lcards{grid-template-columns:1fr}
+  .brow{grid-template-columns:1fr 1fr}
+  .brow>:nth-child(2){display:none}
+  .req .ph{min-height:300px}
+  .mbar{display:flex}
+  .wave{height:70px}
+}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body class="lock">
+
+<!-- preloader -->
+<div id="pre">
+  <div class="half t"></div><div class="half b"></div>
+  <div class="c">
+    <div class="shield"><img src="img/logo.png" alt=""></div>
+    <div class="bar"><i></i></div>
+    <small>Casă funerară</small>
+  </div>
+</div>
+<div id="cur"></div><div id="cur2"></div>
+
+<header id="hdr">
+  <div class="wrap">
+    <a href="#acasa" class="brand">
+      <img src="img/logo.png" alt="PAX">
+      <span class="bt"><b>PAX</b><span>Casă funerară</span><em>Alături de cine contează</em></span>
+    </a>
+    <nav class="main" id="nav">
+      <a href="#acasa" class="on">Acasă</a><a href="#despre">Despre noi</a><a href="#servicii">Servicii</a><a href="#repatrieri">Repatrieri</a><a href="#produse">Produse</a><a href="#contact">Contact</a>
+    </nav>
+    <a class="hcall" href="tel:0745547530"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>0745 547 530</a>
+    <div class="lang"><button class="on">RO</button>|<button>HU</button></div>
+    <button class="burger" aria-label="Meniu"><i></i></button>
+  </div>
+</header>
+
+<div class="rail" id="rail">
+  <a href="#acasa" class="on"><i></i>01</a><a href="#despre"><i></i>02</a><a href="#servicii"><i></i>03</a><a href="#repatrieri"><i></i>04</a><a href="#pasi"><i></i>05</a><a href="#produse"><i></i>06</a><a href="#locatii"><i></i>07</a>
+</div>
+<div class="scrollcue"><span>Scroll</span><div class="track"><i id="sdot"></i></div></div>
+
+<!-- HERO -->
+<section id="acasa" data-sec>
+  <div class="hero-img"><img id="heroImg" src="img/lily.jpg" alt="Crin alb"></div>
+  <canvas id="dust"></canvas>
+  <div class="wrap">
+    <div class="hero-c">
+      <p class="eyebrow fade-in">Respect. Demnitate. Sprijin.</p>
+      <h1 class="split" data-split>Alături de dumneavoastră în cele mai <em class="gold-grad" style="font-style:normal">importante</em> momente.</h1>
+      <p class="fade-in" style="transition-delay:.7s">Oferim sprijin complet, cu discreție și profesionalism, pentru ca dumneavoastră și familia să vă puteți concentra pe ceea ce contează cu adevărat.</p>
+      <div class="hero-cta fade-in" style="transition-delay:.85s">
+        <a class="btn gold-b" href="tel:0745547530">Solicită sprijin <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 12h16M14 6l6 6-6 6"/></svg></a>
+        <a class="btn line" href="#servicii">Vezi serviciile <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 12h16M14 6l6 6-6 6"/></svg></a>
+      </div>
+      <div class="perks fade-in" style="transition-delay:1s">
+        <div class="perk"><svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="12"/><path d="M16 9v7l5 3"/></svg>Consiliere gratuită</div>
+        <div class="perk"><svg viewBox="0 0 32 32"><path d="M16 29s9-8.5 9-15a9 9 0 0 0-18 0c0 6.5 9 15 9 15z"/><circle cx="16" cy="14" r="3.2"/></svg>Târgu Mureș și împrejurimi</div>
+        <div class="perk"><svg viewBox="0 0 32 32"><path d="M16 27S4 19.5 4 11.5A6.5 6.5 0 0 1 16 8a6.5 6.5 0 0 1 12 3.5C28 19.5 16 27 16 27z"/></svg>Sprijin din suflet</div>
+      </div>
+    </div>
+  </div>
+  <svg class="wave bottom" viewBox="0 0 1440 150" preserveAspectRatio="none"><path fill="#f2ebdf"><animate attributeName="d" dur="14s" repeatCount="indefinite" values="M0,110 C240,40 420,150 720,95 C1000,45 1200,20 1440,60 L1440,150 L0,150Z;M0,90 C260,140 460,40 760,80 C1040,120 1220,60 1440,30 L1440,150 L0,150Z;M0,110 C240,40 420,150 720,95 C1000,45 1200,20 1440,60 L1440,150 L0,150Z"/></path><path fill="none" stroke="#c6a06a" stroke-opacity=".5" stroke-width="1"><animate attributeName="d" dur="14s" repeatCount="indefinite" values="M0,100 C240,30 420,140 720,85 C1000,35 1200,10 1440,50;M0,80 C260,130 460,30 760,70 C1040,110 1220,50 1440,20;M0,100 C240,30 420,140 720,85 C1000,35 1200,10 1440,50"/></path></svg>
+</section>
+
+<!-- ABOUT -->
+<section id="despre" data-sec>
+  <div class="wrap about">
+    <svg class="botanic rv" viewBox="0 0 220 300"><path d="M30 290 C 70 220, 110 160, 190 20"/><path class="leaf" d="M70 220 C 40 200, 30 170, 40 150 C 60 170, 70 195, 70 220Z"/><path class="leaf" d="M95 175 C 120 150, 150 150, 165 160 C 140 175, 120 180, 95 175Z"/><path class="leaf" d="M115 140 C 95 110, 95 85, 105 70 C 120 95, 122 118, 115 140Z"/><path class="leaf" d="M145 95 C 165 80, 190 80, 200 88 C 182 100, 165 102, 145 95Z"/><path class="leaf" d="M160 70 C 150 50, 152 35, 162 25 C 170 42, 168 58, 160 70Z"/></svg>
+    <div class="rv">
+      <p class="eyebrow">Despre noi</p>
+      <h2>Mai mult decât servicii funerare. Oameni alături de oameni.</h2>
+      <p>Casa Funerară PAX înseamnă o echipă dedicată, cu experiență, care oferă sprijin real, soluții complete și respect în fiecare detaliu. Suntem alături de fiecare familie cu discreție, profesionalism și înțelegere — cu capelă mortuară proprie, autovehicule autorizate și respect pentru tradițiile fiecăruia.</p>
+      <a class="btn brown" href="#pasi" style="margin-top:28px">Află mai multe <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 12h16M14 6l6 6-6 6"/></svg></a>
+    </div>
+    <div class="rv d2">
+      <div class="values">
+        <div class="val"><div class="ic"><svg viewBox="0 0 32 32"><path d="M16 27S4 19.5 4 11.5A6.5 6.5 0 0 1 16 8a6.5 6.5 0 0 1 12 3.5C28 19.5 16 27 16 27z"/></svg></div><b>Empatie<br>și respect</b></div>
+        <div class="val"><div class="ic"><svg viewBox="0 0 32 32"><circle cx="11" cy="11" r="4"/><circle cx="22" cy="11" r="4"/><path d="M3 26c0-5 4-8 8-8s8 3 8 8M15 22c1-3 4-4 7-4 4 0 7 3 7 8"/></svg></div><b>Experiență și<br>profesionalism</b></div>
+        <div class="val"><div class="ic"><svg viewBox="0 0 32 32"><path d="M4 15l6-6 6 4 6-4 6 6-10 10z"/><path d="M10 9l6 6"/></svg></div><b>Sprijin complet<br>pentru familie</b></div>
+        <div class="val"><div class="ic"><svg viewBox="0 0 32 32"><path d="M8 28c4-6 8-14 18-22M12 20c-4 0-6-3-6-6 3 0 6 2 6 6zM17 14c-1-4 1-7 4-8 1 3 0 7-4 8zM20 19c3-2 7-2 8 0-2 2-5 2-8 0z"/></svg></div><b>Discreție<br>și seriozitate</b></div>
+      </div>
+      <p class="quote-script" id="qs"><span>Pentru că fiecare viață</span><br><span>merită un ultim omagiu.</span></p>
+    </div>
+  </div>
+  <button class="film" id="filmBtn"><span class="play"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg></span><span>Povestea noastră<br>Film · 0:30</span></button>
+  <svg class="wave bottom" viewBox="0 0 1440 150" preserveAspectRatio="none"><path fill="#0d0c0b"><animate attributeName="d" dur="16s" repeatCount="indefinite" values="M0,70 C300,150 560,20 900,90 C1150,140 1300,70 1440,100 L1440,150 L0,150Z;M0,100 C280,40 600,130 900,70 C1180,20 1320,110 1440,80 L1440,150 L0,150Z;M0,70 C300,150 560,20 900,90 C1150,140 1300,70 1440,100 L1440,150 L0,150Z"/></path></svg>
+</section>
+
+<!-- SERVICES -->
+<section id="servicii" data-sec>
+  <div class="wrap sv-top">
+    <div class="rv"><p class="eyebrow">Serviciile noastre</p><h2 style="margin-top:14px">Suport complet<br>în fiecare etapă.</h2></div>
+    <p class="rv d1">Ne ocupăm de toate detaliile, pentru ca dumneavoastră să aveți liniștea de a fi alături de cei dragi.</p>
+    <div class="arrows rv d2"><button id="svPrev" aria-label="Înapoi"><svg viewBox="0 0 24 24"><path d="M20 12H4M10 6l-6 6 6 6"/></svg></button><button id="svNext" aria-label="Înainte"><svg viewBox="0 0 24 24"><path d="M4 12h16M14 6l6 6-6 6"/></svg></button></div>
+  </div>
+  <div class="rail-x" id="svRail"></div>
+  <div class="wrap"><div class="progress-x"><i id="svBar"></i></div></div>
+</section>
+
+<!-- REPATRIATION -->
+<section id="repatrieri" data-sec>
+  <div class="wrap">
+    <div class="rp-head">
+      <div class="rv"><p class="eyebrow">Repatrieri din străinătate</p><h2 style="margin-top:14px">Îi aducem acasă pe cei dragi, <span class="gold-grad">de oriunde din Europa.</span></h2></div>
+      <p class="rv d1">Când pierderea are loc departe de casă, totul pare imposibil: altă limbă, alte autorități, alte reguli. Ne ocupăm noi de acte, de consulat, de pregătire și de transport — până la capela din Târgu Mureș.</p>
+    </div>
+
+    <div class="board rv">
+      <div class="board-top"><span>Rute de repatriere → Târgu Mureș</span><span class="live"><i></i>Disponibil la cerere</span></div>
+      <div class="brow h"><span>Plecare din</span><span>Oraș</span><span>Transport</span></div>
+      <div id="boardRows"></div>
+    </div>
+
+    <div class="rp-grid">
+      <div class="rv">
+        <h3 style="font-size:2rem;margin-bottom:20px">Cum decurge o repatriere</h3>
+        <div class="steps4" id="steps4">
+          <div class="line"><i></i></div>
+          <div class="st"><span class="n">1</span><div><h4>Consultanță și planificare</h4><p>Ne spuneți unde a avut loc decesul. Discutăm circumstanțele, costurile și pașii necesari — gratuit, la telefon.</p></div></div>
+          <div class="st"><span class="n">2</span><div><h4>Documente și formalități</h4><p>Certificatul de deces local, pașaportul mortuar, legătura cu consulatul și autoritățile din țara respectivă.</p></div></div>
+          <div class="st"><span class="n">3</span><div><h4>Pregătire și transport</h4><p>Îmbălsămare, sicriu și transport rutier sau aerian, în condițiile cerute de lege.</p></div></div>
+          <div class="st"><span class="n">4</span><div><h4>Acasă, în liniște</h4><p>Cel drag ajunge la capelă. Vă ajutăm cu transcrierea certificatului de deces și cu dosarul pentru ajutorul de deces.</p></div></div>
+        </div>
+      </div>
+      <div class="docs rv d1">
+        <h4>Ce documente sunt necesare</h4>
+        <p class="sub">Vă cerem doar ce aveți la îndemână. Restul obținem noi.</p>
+        <div class="dtabs"><button class="on" data-d="fam">De la familie</button><button data-d="noi">Obținem noi</button></div>
+        <ul class="dl" id="docList"></ul>
+        <p class="rp-note">Pentru incinerare în străinătate nu este necesar pașaportul mortuar — aducem urna acasă. Termenul depinde de țară și de acte; îl aflați exact la primul telefon.</p>
+      </div>
+    </div>
+
+    <div class="req rv">
+      <div class="ph"><img src="img/runway.jpg" alt="Avion pe pistă, la apus"><div class="t"><p class="eyebrow">Cerere de repatriere</p><h3>Spuneți-ne de unde. Restul e la noi.</h3><p>Trei întrebări simple. Vă sunăm noi înapoi cu toate detaliile și costul estimat.</p></div></div>
+      <form id="req" onsubmit="return false">
+        <div class="fsteps"><i class="on"></i><i></i><i></i></div>
+        <div class="fpane on" data-s="1"><h4>Din ce țară?</h4><p class="hint">Alegeți țara unde a avut loc decesul.</p><div class="chips" data-k="tara"></div></div>
+        <div class="fpane" data-s="2"><h4>În ce calitate ne scrieți?</h4><p class="hint">Ne ajută să știm ce acte puteți obține dumneavoastră.</p><div class="chips" data-k="rel"></div></div>
+        <div class="fpane" data-s="3"><h4>Cum vă putem contacta?</h4><p class="hint">Vă sunăm noi, oricând ne lăsați datele.</p>
+          <label class="field"><span>Numele dumneavoastră</span><input id="fName" autocomplete="name"></label>
+          <label class="field"><span>Telefon</span><input id="fTel" type="tel" autocomplete="tel"></label>
+        </div>
+        <div class="fpane" data-s="4"><div class="done"><svg class="ok" viewBox="0 0 80 80"><circle cx="40" cy="40" r="36"/><path d="M24 41l11 11 21-23"/></svg><h4>Cererea este pregătită</h4><div class="sum" id="sum"></div><p class="hint">Demo: formularul nu trimite încă date. Pentru ajutor imediat, sunați acum.</p><a class="btn brown" href="tel:0745547530">Sună: 0745 547 530</a></div></div>
+        <div class="fnav"><button class="back" id="fBack" type="button">← Înapoi</button><button class="btn brown" id="fNext" type="button">Continuă <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 12h16M14 6l6 6-6 6"/></svg></button></div>
+      </form>
+    </div>
+  </div>
+  <svg class="wave bottom" viewBox="0 0 1440 150" preserveAspectRatio="none"><path fill="#f2ebdf"><animate attributeName="d" dur="15s" repeatCount="indefinite" values="M0,120 C320,40 640,140 960,80 C1180,40 1320,90 1440,70 L1440,150 L0,150Z;M0,90 C300,130 620,50 960,100 C1200,130 1330,60 1440,90 L1440,150 L0,150Z;M0,120 C320,40 640,140 960,80 C1180,40 1320,90 1440,70 L1440,150 L0,150Z"/></path></svg>
+</section>
+
+<!-- FIRST HOURS -->
+<section id="pasi" data-sec>
+  <div class="wrap">
+    <div class="ps-head">
+      <div class="rv"><p class="eyebrow">Ce faceți acum</p><h2 style="margin-top:14px">Primii pași,<br>explicați simplu.</h2></div>
+      <p class="rv d1">Nimeni nu știe dinainte ce trebuie făcut. Alegeți situația și vedeți, în ordine, ce urmează. Pentru orice pas, ne puteți suna.</p>
+    </div>
+    <div class="switch rv" id="sw"><span class="pill"></span><button class="on" data-p="acasa">Deces acasă / la spital</button><button data-p="neasteptat">Deces neașteptat</button></div>
+    <div class="tl rv" id="tl"></div>
+  </div>
+</section>
+
+<!-- PRODUCTS -->
+<section id="produse" data-sec>
+  <svg class="wave top" viewBox="0 0 1440 150" preserveAspectRatio="none" style="transform:scaleY(-1)"><path fill="#f2ebdf"><animate attributeName="d" dur="15s" repeatCount="indefinite" values="M0,120 C320,40 640,140 960,80 C1180,40 1320,90 1440,70 L1440,150 L0,150Z;M0,90 C300,130 620,50 960,100 C1200,130 1330,60 1440,90 L1440,150 L0,150Z;M0,120 C320,40 640,140 960,80 C1180,40 1320,90 1440,70 L1440,150 L0,150Z"/></path></svg>
+  <div class="wrap">
+    <div class="rv"><p class="eyebrow">Produse funerare</p><h2 style="margin-top:14px">Alese cu grijă,<br>pentru un ultim omagiu.</h2></div>
+    <div class="pr-grid">
+      <a class="pr rv" href="tel:0745547530"><img src="img/pew.jpg" alt="Sicriu în capelă cu flori"><span class="tg">Sicrie</span><div><h4>Sicrie &amp; accesorii</h4><p>Modele din lemn masiv, capitonaj și accesorii, pentru înhumare sau incinerare.</p></div></a>
+      <a class="pr rv d1" href="tel:0745547530"><img src="img/roses.jpg" alt="Trandafir pe fundal întunecat"><span class="tg">Urne</span><div><h4>Urne funerare</h4><p>Urne pentru incinerare, în mai multe materiale și finisaje.</p></div></a>
+      <a class="pr rv d2" href="tel:0741115864"><img src="img/lily2.jpg" alt="Crini"><span class="tg">Flori</span><div><h4>Coroane &amp; aranjamente</h4><p>Flori proaspete, mesaj personalizat. Tel. 0741 115 864.</p></div></a>
+      <a class="pr rv d1" href="tel:0745547530"><img src="img/tealight.jpg" alt="Candele aprinse"><span class="tg">Accesorii</span><div><h4>Lumânări &amp; candele</h4><p>Tot ce e necesar pentru priveghi și ceremonie.</p></div></a>
+      <a class="pr rv d2" href="tel:0745547530"><img src="img/pen.jpg" alt="Stilou pe hârtie"><span class="tg">Personalizare</span><div><h4>Fotoceramică &amp; cruci</h4><p>Fotoceramică pentru monument, cruci și plăci personalizate.</p></div></a>
+    </div>
+  </div>
+</section>
+
+<!-- VOICES -->
+<section id="marturii">
+  <div class="wrap vc">
+    <div class="rv">
+      <p class="eyebrow">Ce spun familiile</p>
+      <h2 style="margin-top:14px">Cuvintele lor, nu ale noastre.</h2>
+      <div class="stars"><svg viewBox="0 0 24 24"><path d="M12 2l3 7 7 .6-5.3 4.6 1.6 7.3L12 17.8 5.7 21.5l1.6-7.3L2 9.6 9 9z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2l3 7 7 .6-5.3 4.6 1.6 7.3L12 17.8 5.7 21.5l1.6-7.3L2 9.6 9 9z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2l3 7 7 .6-5.3 4.6 1.6 7.3L12 17.8 5.7 21.5l1.6-7.3L2 9.6 9 9z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2l3 7 7 .6-5.3 4.6 1.6 7.3L12 17.8 5.7 21.5l1.6-7.3L2 9.6 9 9z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2l3 7 7 .6-5.3 4.6 1.6 7.3L12 17.8 5.7 21.5l1.6-7.3L2 9.6 9 9z"/></svg></div>
+    </div>
+    <div class="rv d1">
+      <div class="vq" id="vq">
+        <blockquote class="on">Ne-a răspuns o voce calmă care ne-a îndrumat. Ni s-a lăsat spațiu să ne luăm rămas-bun.<cite>O familie din Târgu Mureș</cite></blockquote>
+        <blockquote>N-am simțit nicio presiune. Doar oameni care ne-au înțeles durerea.<cite>O familie din Târgu Mureș</cite></blockquote>
+        <blockquote>Ne-au explicat fiecare pas și au rămas lângă noi până târziu în noapte.<cite>O familie din Târgu Mureș</cite></blockquote>
+      </div>
+      <div class="vnav" id="vnav"><button class="on"><i></i></button><button><i></i></button><button><i></i></button></div>
+    </div>
+  </div>
+</section>
+
+<!-- LOCATIONS -->
+<section id="locatii" data-sec>
+  <svg class="wave top" viewBox="0 0 1440 150" preserveAspectRatio="none" style="transform:scaleY(-1)"><path fill="#14120f"><animate attributeName="d" dur="17s" repeatCount="indefinite" values="M0,100 C300,40 600,140 900,90 C1150,50 1300,110 1440,80 L1440,150 L0,150Z;M0,80 C320,130 620,60 900,100 C1180,130 1320,60 1440,100 L1440,150 L0,150Z;M0,100 C300,40 600,140 900,90 C1150,50 1300,110 1440,80 L1440,150 L0,150Z"/></path></svg>
+  <svg class="forest" viewBox="0 0 1440 260" preserveAspectRatio="xMidYMax slice"><g fill="#cdbfa6" id="trees"></g></svg>
+  <div class="wrap lc">
+    <div class="rv">
+      <p class="eyebrow">Unde ne găsiți</p>
+      <h2 style="margin-top:14px">Un loc liniștit și demn pentru un ultim omagiu.</h2>
+      <p>Vă punem la dispoziție capela mortuară și spațiu pentru ceremonie, într-un cadru liniștit și respectuos, în centrul Târgu Mureșului.</p>
+      <a class="btn brown" href="https://www.google.com/maps/search/?api=1&query=Strada+Alexandru+Papiu+Ilarian+10+T%C3%A2rgu+Mure%C8%99" target="_blank" rel="noopener">Deschide harta <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 12h16M14 6l6 6-6 6"/></svg></a>
+    </div>
+    <div class="lcards">
+      <div class="lcard rv d1"><img src="img/chapel-ext.jpg" alt="Capelă"><div class="b"><svg viewBox="0 0 24 24"><path d="M12 22s7-6.5 7-12a7 7 0 0 0-14 0c0 5.5 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg><div><b>Târgu Mureș</b><small>Str. Alexandru Papiu Ilarian 10</small></div></div></div>
+      <div class="lcard rv d2"><img src="img/chapel.jpg" alt="Interior capelă"><div class="b"><svg viewBox="0 0 24 24"><path d="M4 21V10l8-6 8 6v11M12 4v6M9 7h6"/></svg><div><b>Capela mortuară</b><small>Pentru priveghi și rămas-bun</small></div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="intrebari">
+  <div class="wrap fq">
+    <div class="rv"><p class="eyebrow">Întrebări frecvente</p><h2 style="margin-top:14px">Răspunsuri clare, fără grabă.</h2></div>
+    <div class="rv d1" id="faq">
+      <div class="qa open"><button>Cât costă o înmormântare?<span class="pm"></span></button><div class="an"><div><p>Costul depinde de sicriu sau urnă, de serviciile suplimentare (îmbălsămare, transport pe distanțe lungi), de locul de veci, de tipul ceremoniei și de dată. Tarifele sunt adaptate fiecărei familii — sunați pentru o estimare gratuită.</p></div></div></div>
+      <div class="qa"><button>Cât durează o repatriere?<span class="pm"></span></button><div class="an"><div><p>Depinde de țară, de distanță și de cât de repede se obțin actele locale și pașaportul mortuar. Vă spunem un termen realist încă de la primul telefon și vă ținem la curent pe tot parcursul.</p></div></div></div>
+      <div class="qa"><button>Trebuie să vorbesc limba țării unde a avut loc decesul?<span class="pm"></span></button><div class="an"><div><p>Nu. Comunicăm noi cu autoritățile locale, spitalul și consulatul, în numele familiei.</p></div></div></div>
+      <div class="qa"><button>Incinerare sau înmormântare tradițională?<span class="pm"></span></button><div class="an"><div><p>La incinerare, cenușa poate fi îngropată, așezată într-un columbarium sau împrăștiată. La înmormântarea tradițională trupul este așezat în sicriu. Alegerea ține de preferințele personale și religioase — vă explicăm ambele variante.</p></div></div></div>
+      <div class="qa"><button>Ce acte trebuie pentru locul de veci?<span class="pm"></span></button><div class="an"><div><p>De regulă: actul de identitate al solicitantului, certificatul de deces, uneori un certificat medical, certificatul de căsătorie dacă se adaugă numele soțului/soției și procură notarială dacă acționează altcineva. Confirmați lista cu administrația cimitirului.</p></div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="glow"></div>
+  <div class="wrap" style="position:relative">
+    <img class="lg rv" src="img/logo.png" alt="PAX">
+    <h2 class="rv">Oricând aveți nevoie, suntem aici pentru dumneavoastră.</h2>
+    <p class="rv d1">Consilierea este gratuită. Un singur telefon — de restul ne ocupăm noi.</p>
+    <a class="bigphone gold-grad rv d2" href="tel:0745547530">0745 547 530</a>
+    <div class="phones rv d3">
+      <span>Servicii funerare: <a href="tel:0745647530">0745 647 530</a></span>
+      <span>Aranjamente florale: <a href="tel:0741115864">0741 115 864</a></span>
+      <span>Str. Alexandru Papiu Ilarian 10, Târgu Mureș</span>
+    </div>
+  </div>
+</section>
+<footer>
+  <div class="wrap">
+    <span>© 2026 CASA FUNERARA PAX SRL</span>
+    <nav><a href="#">Politica de confidențialitate</a><a href="#">Cookies</a><a href="#">Termeni și condiții</a><a href="#">Reclamații</a><a href="https://anpc.ro/ce-este-sal/" target="_blank" rel="noopener">ANPC – SAL</a><a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener">SOL</a></nav>
+    <span style="opacity:.6">Fotografii demo: Unsplash</span>
+  </div>
+</footer>
+
+<!-- drawer / lightbox / mobile -->
+<div id="drawer"><div class="sh"></div><div class="pn"><button class="x" aria-label="Închide">×</button><img id="dImg" alt=""><div class="pc"><p class="eyebrow" id="dTag">Serviciu</p><h3 id="dTitle"></h3><p id="dText"></p><ul id="dList"></ul><a class="btn gold-b" href="tel:0745547530">Sună pentru detalii <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 12h16M14 6l6 6-6 6"/></svg></a></div></div></div>
+<div id="lb"><button class="x" aria-label="Închide">×</button><div class="stage" id="lbStage"><div class="cap" id="lbCap"></div></div></div>
+<div class="mbar" id="mbar"><span>Consiliere gratuită</span><a href="tel:0745547530">Sună acum</a></div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const clamp=(v,a=0,b=1)=>Math.min(b,Math.max(a,v));
+const im=n=>'img/'+n+'.jpg';
+const ARR='<svg viewBox="0 0 24 24"><path d="M4 12h16M14 6l6 6-6 6"/></svg>';
+const IC={
+  sicriu:'<svg viewBox="0 0 32 32"><path d="M11 3h10l5 8-4 18H10L6 11z"/><path d="M16 9v10M12 13h8"/></svg>',
+  urna:'<svg viewBox="0 0 32 32"><path d="M12 4h8M13 4v4c-4 2-6 6-6 11 0 5 4 9 9 9s9-4 9-9c0-5-2-9-6-11V4"/><path d="M10 16h12"/></svg>',
+  car:'<svg viewBox="0 0 32 32"><path d="M3 20v-4l4-6h13l6 6h3v4z"/><circle cx="9" cy="21" r="2.5"/><circle cx="23" cy="21" r="2.5"/><path d="M7 10v6h17"/></svg>',
+  flori:'<svg viewBox="0 0 32 32"><circle cx="16" cy="12" r="3"/><path d="M16 9a4 4 0 1 1 3 6 4 4 0 1 1-6 0 4 4 0 1 1 3-6zM16 15v14M16 24c-3-3-7-3-9-2M16 21c3-3 6-3 8-2"/></svg>',
+  acte:'<svg viewBox="0 0 32 32"><path d="M8 3h11l6 6v20H8z"/><path d="M19 3v6h6M12 15h9M12 19h9M12 23h6"/></svg>',
+  maini:'<svg viewBox="0 0 32 32"><path d="M16 12c-2-4-7-4-8 0-1 3 2 6 8 10 6-4 9-7 8-10-1-4-6-4-8 0zM4 20c3 0 5 2 7 5h10c2-3 4-5 7-5"/></svg>',
+  capela:'<svg viewBox="0 0 32 32"><path d="M5 29V15l11-9 11 9v14M16 2v6M13 5h6M13 29v-7a3 3 0 0 1 6 0v7"/></svg>',
+  avion:'<svg viewBox="0 0 32 32"><path d="M3 18l9-2 7-11h3l-3 10 8-1 3-4h2l-1 6 1 6h-2l-3-4-8-1 3 10h-3l-7-11-9-2z"/></svg>',
+  masa:'<svg viewBox="0 0 32 32"><path d="M4 14h24M7 14l2 14M25 14l-2 14M10 9c0-3 2-5 6-5s6 2 6 5"/></svg>',
+  foc:'<svg viewBox="0 0 32 32"><path d="M16 29c5 0 8-3 8-8 0-6-6-9-6-15-3 2-5 5-5 9-2-1-3-3-3-5-2 3-2 6-2 11 0 5 3 8 8 8z"/></svg>'
+};
+const SERVICES=[
+  ['sicriu','Sicrie și accesorii','pew','Sicrie din lemn masiv, capitonaj, cruci și toate accesoriile necesare, alese împreună cu familia.',['Modele pentru înhumare și incinerare','Capitonaj și accesorii','Livrare la capelă sau acasă']],
+  ['urna','Urne funerare','roses','Pentru familiile care aleg incinerarea, vă ajutăm cu alegerea urnei și cu toate formalitățile.',['Urne în mai multe materiale','Organizare incinerare','Depunere în columbarium sau înhumare']],
+  ['car','Transport funerar','car','Transport cu autovehicule autorizate, plus suport tehnic și logistic, inclusiv echipamente audio-video pentru ceremonie.',['Autovehicule autorizate','Transport local și pe distanțe lungi','Sonorizare pentru ceremonie']],
+  ['flori','Aranjamente florale','lily2','Coroane din flori proaspete și aranjamente naturale, în mai multe modele și dimensiuni, cu mesaje personalizate.',['Coroane și jerbe','Aranjamente pentru sicriu și capelă','Comenzi: 0741 115 864']],
+  ['acte','Acte și formalități','pen','Vă ajutăm să obțineți documentele necesare după deces, ca să nu umblați pe drumuri în cele mai grele zile.',['Certificat de deces și adeverință de înhumare','Dosar pentru ajutorul de deces','Formalități pentru locul de veci']],
+  ['maini','Îmbălsămare','lily','Pregătirea celui decedat pentru priveghi și înmormântare, realizată de specialiști instruiți și certificați.',['Specialiști certificați','Certificat de îmbălsămare','Îngrijire cu demnitate']],
+  ['capela','Capelă mortuară','chapel','Un spațiu liniștit pentru priveghi și rămas-bun, pentru familie și apropiați.',['Capelă proprie','Cadru liniștit și respectuos','Ceremonii religioase sau civile']],
+  ['avion','Repatriere decedați','plane','Transfer internațional al celor decedați, cu toate formalitățile legale și logistica incluse.',['Acte și relația cu consulatul','Transport rutier sau aerian','Urnă adusă acasă în caz de incinerare']],
+  ['masa','Catering și pomană','candles','Mâncare și băuturi pentru familie și invitați, la masa de pomenire, plus pachete pomană.',['Meniuri pentru pomenire','Pachete pomană','Organizare completă']],
+  ['foc','Incinerare','tealight','Organizarea incinerării, de la acte până la urnă, cu ceremonie adaptată dorințelor familiei.',['Formalități complete','Ceremonie personalizată','Urne funerare']]
+];
+
+/* ---------- preloader ---------- */
+function ready(){ $('#pre').classList.add('out'); document.body.classList.remove('lock'); setTimeout(()=>document.body.classList.add('ready'),350); setTimeout(()=>$('#pre').remove(),1600); }
+let loaded=false;window.addEventListener('load',()=>{loaded=true;setTimeout(ready,1900)});
+setTimeout(()=>{if(!loaded)ready()},4200);
+
+/* ---------- split headline ---------- */
+$$('[data-split]').forEach(el=>{
+  const walk=n=>{[...n.childNodes].forEach(c=>{
+    if(c.nodeType===3){const f=document.createDocumentFragment();c.textContent.split(/(\s+)/).forEach(t=>{if(!t)return;if(/^\s+$/.test(t)){f.append(' ');return}const w=document.createElement('span');w.className='w';w.innerHTML='<span></span>';w.firstChild.textContent=t;f.append(w)});c.replaceWith(f)}
+    else if(c.nodeType===1){const w=document.createElement('span');w.className='w';const inner=document.createElement('span');c.replaceWith(w);inner.append(c);w.append(inner)}
+  })};walk(el);
+  [...el.querySelectorAll('.w>span')].forEach((s,i)=>s.style.transitionDelay=(.1+i*.06)+'s');
+});
+
+/* ---------- cursor ---------- */
+const c1=$('#cur'),c2=$('#cur2');let mx=-100,my=-100,rx=-100,ry=-100;
+addEventListener('pointermove',e=>{mx=e.clientX;my=e.clientY;c1.style.transform=`translate(${mx-3}px,${my-3}px)`});
+(function loop(){rx+=(mx-rx)*.16;ry+=(my-ry)*.16;c2.style.transform=`translate(${rx-c2.offsetWidth/2}px,${ry-c2.offsetHeight/2}px)`;requestAnimationFrame(loop)})();
+document.addEventListener('pointerover',e=>{c2.classList.toggle('big',!!e.target.closest('a,button,.card,.chip,.pr'))});
+
+/* ---------- gold dust ---------- */
+const cv=$('#dust'),cx=cv.getContext('2d');let W,H,P=[];
+function size(){const r=Math.min(devicePixelRatio||1,2);W=cv.offsetWidth;H=cv.offsetHeight;cv.width=W*r;cv.height=H*r;cx.setTransform(r,0,0,r,0,0)}
+size();addEventListener('resize',size);
+for(let i=0;i<(innerWidth<700?35:80);i++)P.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.5+.3,vx:(Math.random()-.5)*.15,vy:-Math.random()*.25-.05,a:Math.random()*.6+.2,p:Math.random()*6})
+let heroVisible=true;
+(function dust(t){if(heroVisible){cx.clearRect(0,0,W,H);for(const p of P){p.x+=p.vx+Math.sin(t/2000+p.p)*.12;p.y+=p.vy;if(p.y<-5){p.y=H+5;p.x=Math.random()*W}const tw=.55+.45*Math.sin(t/600+p.p);cx.beginPath();cx.arc(p.x,p.y,p.r,0,6.3);cx.fillStyle=`rgba(226,197,145,${p.a*tw})`;cx.fill()}}requestAnimationFrame(dust)})(0);
+
+/* ---------- scroll effects ---------- */
+const hdr=$('#hdr'),heroImg=$('#heroImg'),secs=$$('[data-sec]'),railA=$$('#rail a'),navA=$$('#nav a'),sdot=$('#sdot');
+const st4=$('#steps4'),st4line=st4.querySelector('.line i'),st4items=$$('#steps4 .st');
+function onScroll(){
+  const y=scrollY;hdr.classList.toggle('solid',y>60);$('#mbar').classList.toggle('on',y>innerHeight*.7);
+  heroVisible=y<innerHeight*1.1;
+  if(heroVisible)heroImg.style.transform=`translateY(${y*.25}px) scale(${1.04+y*.0002})`;
+  sdot.style.top=(y/(document.body.scrollHeight-innerHeight)*63)+'px';
+  let cur=secs[0].id;secs.forEach(s=>{if(s.getBoundingClientRect().top<innerHeight*.45)cur=s.id});
+  railA.forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+cur));
+  navA.forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+cur));
+  const r=st4.getBoundingClientRect(),p=clamp((innerHeight*.6-r.top)/r.height);
+  st4line.style.height=p*100+'%';
+  st4items.forEach((s,i)=>s.classList.toggle('on',p>(i/(st4items.length))+.02));
+}
+addEventListener('scroll',onScroll,{passive:true});onScroll();
+
+/* ---------- reveal ---------- */
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.18,rootMargin:'0px 0px -40px 0px'});
+$$('.rv,.imgrev,.quote-script,.botanic').forEach(el=>io.observe(el));
+$$('.botanic path').forEach(p=>{const l=Math.ceil(p.getTotalLength());p.style.setProperty('--len',l)});
+
+/* ---------- services rail ---------- */
+const rail=$('#svRail');
+rail.innerHTML=SERVICES.map((s,i)=>`<button class="card" data-i="${i}"><div class="im"><img src="${im(s[2])}" alt="" loading="lazy"></div><div class="bd"><span class="ico">${IC[s[0]]}</span><h3>${s[1]}</h3><span class="more">Detalii ${ARR}</span></div></button>`).join('');
+const step=()=>rail.querySelector('.card').offsetWidth+22;
+$('#svNext').onclick=()=>rail.scrollBy({left:step(),behavior:'smooth'});
+$('#svPrev').onclick=()=>rail.scrollBy({left:-step(),behavior:'smooth'});
+rail.addEventListener('scroll',()=>{const m=rail.scrollWidth-rail.clientWidth,w=rail.clientWidth/rail.scrollWidth*100;$('#svBar').style.width=w+'%';$('#svBar').style.left=(m?rail.scrollLeft/m:0)*(100-w)+'%'},{passive:true});
+rail.dispatchEvent(new Event('scroll'));
+// drag to scroll
+let down=false,sx=0,sl=0,moved=false;
+rail.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse')return;down=true;moved=false;sx=e.clientX;sl=rail.scrollLeft;rail.style.scrollSnapType='none'});
+addEventListener('pointermove',e=>{if(!down)return;const d=e.clientX-sx;if(Math.abs(d)>5)moved=true;rail.scrollLeft=sl-d});
+addEventListener('pointerup',()=>{if(!down)return;down=false;rail.style.scrollSnapType=''});
+rail.addEventListener('click',e=>{const c=e.target.closest('.card');if(!c||moved)return;openDrawer(SERVICES[c.dataset.i])});
+function openDrawer(s){$('#dImg').src=im(s[2]);$('#dTitle').textContent=s[1];$('#dText').textContent=s[3];$('#dList').innerHTML=s[4].map(x=>`<li>${x}</li>`).join('');$('#drawer').classList.add('on');document.body.classList.add('lock')}
+const closeDrawer=()=>{$('#drawer').classList.remove('on');document.body.classList.remove('lock')};
+$('#drawer .sh').onclick=closeDrawer;$('#drawer .x').onclick=closeDrawer;
+addEventListener('keydown',e=>{if(e.key==='Escape'){closeDrawer();closeLb()}});
+
+/* ---------- split-flap board ---------- */
+const ROUTES=[['ANGLIA','LONDRA','AERIAN'],['GERMANIA','MÜNCHEN','RUTIER'],['ITALIA','ROMA','RUTIER'],['SPANIA','MADRID','AERIAN'],['FRANȚA','PARIS','RUTIER'],['AUSTRIA','VIENA','RUTIER'],['BELGIA','BRUXELLES','RUTIER'],['OLANDA','AMSTERDAM','RUTIER'],['IRLANDA','DUBLIN','AERIAN'],['DANEMARCA','COPENHAGA','RUTIER']];
+const VIS=6,L1=10,L2=10,L3=7,CH='ABCDEFGHIJKLMNOPRSTUVZĂÂÎȘȚ';
+const rowsEl=$('#boardRows');
+rowsEl.innerHTML=Array.from({length:VIS},()=>`<div class="brow"><div class="flap">${'<b> </b>'.repeat(L1)}</div><div class="flap">${'<b> </b>'.repeat(L2)}</div><div class="flap gold">${'<b> </b>'.repeat(L3)}</div></div>`).join('');
+function setFlap(el,txt,len,delay){const cells=[...el.children];txt=txt.padEnd(len).slice(0,len);cells.forEach((b,i)=>{const target=txt[i];if(b.textContent===target)return;let n=4+Math.floor(Math.random()*6);setTimeout(function tick(){b.classList.remove('f');void b.offsetWidth;b.classList.add('f');b.textContent=n--<=0?target:CH[Math.floor(Math.random()*CH.length)];if(n>=0)setTimeout(tick,70)},delay+i*35)})}
+let off=0;
+function showRoutes(){[...rowsEl.children].forEach((r,i)=>{const d=ROUTES[(off+i)%ROUTES.length],f=r.children;setFlap(f[0],d[0],L1,i*120);setFlap(f[1],d[1],L2,i*120+80);setFlap(f[2],d[2],L3,i*120+160)});off=(off+VIS)%ROUTES.length}
+const boardIO=new IntersectionObserver(es=>{if(es[0].isIntersecting){showRoutes();boardIO.disconnect();setInterval(()=>{if(!document.hidden)showRoutes()},6500)}},{threshold:.3});
+boardIO.observe($('.board'));
+
+/* ---------- documents ---------- */
+const DOC='<svg viewBox="0 0 24 24"><path d="M6 2h8l5 5v15H6z"/><path d="M14 2v5h5M9 13l2 2 4-4"/></svg>';
+const DOCS={fam:[['Certificatul de naștere al decedatului',''],['Certificatul de căsătorie sau divorț','dacă este cazul'],['Livretul militar','dacă este cazul'],['Actul de identitate al solicitantului','persoana care cere repatrierea']],
+noi:[['Certificatul de deces local','eliberat de autoritățile din țara respectivă'],['Certificatul de îmbălsămare',''],['Pașaportul mortuar','obligatoriu pentru înhumare'],['Pașaportul / actul de identitate al decedatului',''],['Transcrierea certificatului în România','la starea civilă, după sosire'],['Dosarul pentru ajutorul de deces','la Casa de Pensii']]};
+function docs(k){$('#docList').innerHTML=DOCS[k].map((d,i)=>`<li style="animation-delay:${i*.08}s">${DOC}<div>${d[0]}${d[1]?`<small>${d[1]}</small>`:''}</div></li>`).join('')}
+$$('.dtabs button').forEach(b=>b.onclick=()=>{$$('.dtabs button').forEach(x=>x.classList.toggle('on',x===b));docs(b.dataset.d)});docs('fam');
+
+/* ---------- request form ---------- */
+const F={tara:'',rel:''},OPT={tara:['Anglia','Germania','Italia','Spania','Franța','Austria','Belgia','Olanda','Irlanda','Danemarca','Grecia','Portugalia','Altă țară'],rel:['Rudă','Prieten','Angajator','Firmă de asigurări','Consulat / ambasadă','Altă calitate']};
+$$('.chips').forEach(c=>{const k=c.dataset.k;c.innerHTML=OPT[k].map(o=>`<button type="button" class="chip">${o}</button>`).join('');c.onclick=e=>{const b=e.target.closest('.chip');if(!b)return;[...c.children].forEach(x=>x.classList.toggle('on',x===b));F[k]=b.textContent;setTimeout(()=>go(1),280)}});
+let fs=1;const panes=$$('.fpane'),bars=$$('.fsteps i');
+function go(d){
+  if(d>0){if(fs===1&&!F.tara)return shake();if(fs===2&&!F.rel)return shake();if(fs===3&&!$('#fTel').value.trim())return shake($('#fTel'))}
+  fs=clamp(fs+d,1,4);panes.forEach(p=>p.classList.toggle('on',+p.dataset.s===fs));bars.forEach((b,i)=>b.classList.toggle('on',i<Math.min(fs,3)));
+  $('#fBack').style.visibility=fs>1&&fs<4?'visible':'hidden';$('#fNext').style.display=fs<4?'':'none';
+  if(fs===4)$('#sum').innerHTML=`<b>Țara:</b> ${F.tara}<br><b>Calitate:</b> ${F.rel}<br><b>Nume:</b> ${$('#fName').value||'—'}<br><b>Telefon:</b> ${$('#fTel').value}`;
+}
+function shake(el){const t=el||$('.fpane.on');t.animate([{transform:'translateX(0)'},{transform:'translateX(-8px)'},{transform:'translateX(8px)'},{transform:'translateX(0)'}],{duration:300})}
+$('#fNext').onclick=()=>go(1);$('#fBack').onclick=()=>go(-1);go(0);
+
+/* ---------- first hours ---------- */
+const TL={
+  acasa:[['Primele ore','Sunați medicul de familie','El (sau medicul legist) constată decesul și eliberează certificatul medical constatator. Nu este nevoie de 112 sau poliție.','Certificat medical constatator'],
+    ['Imediat după','Sunați-ne','Un reprezentant PAX vine la dumneavoastră și stabilim împreună ceremonia, transportul, sicriul și îmbălsămarea.','0745 547 530'],
+    ['În 3 zile','Certificatul de deces','Se obține de la starea civilă, împreună cu adeverința de înhumare. Ne putem ocupa noi.','Buletin, cert. naștere/căsătorie'],
+    ['După ceremonie','Ajutorul de deces','Se solicită la Casa de Pensii sau la angajator, cu factura serviciilor funerare.','Factura o primiți de la noi']],
+  neasteptat:[['Primele ore','Anunțați poliția','Poliția coordonează cu ambulanța. Medicul ambulanței decide dacă este necesară expertiza medico-legală.','Nu mutați persoana'],
+    ['Dacă e cazul','Institutul de Medicină Legală','IML eliberează certificatul medical constatator. Vă îndrumăm la fiecare pas.','Dovada de la poliție'],
+    ['Imediat după','Sunați-ne','Preluăm transportul de la IML, pregătirea și toată organizarea ceremoniei.','0745 547 530'],
+    ['În 48 de ore','Certificatul de deces','Pentru accidente sau decese violente, termenul la starea civilă este de 48 de ore.','Ne putem ocupa noi']]
+};
+function tl(k){$('#tl').innerHTML=TL[k].map(t=>`<div class="tl-i"><span class="dot"></span><small>${t[0]}</small><h4>${t[1]}</h4><p>${t[2]}</p><span class="tag">${t[3]}</span></div>`).join('');const el=$('#tl');el.classList.remove('in');requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('in')))}
+const pill=$('#sw .pill');
+function movePill(b){pill.style.left=b.offsetLeft+'px';pill.style.width=b.offsetWidth+'px'}
+$$('#sw button').forEach(b=>b.onclick=()=>{$$('#sw button').forEach(x=>x.classList.toggle('on',x===b));movePill(b);tl(b.dataset.p)});
+tl('acasa');setTimeout(()=>movePill($('#sw button.on')),300);addEventListener('resize',()=>movePill($('#sw button.on')));
+
+/* ---------- voices ---------- */
+const qs=$$('#vq blockquote'),vb=$$('#vnav button');let qi=0,qt;
+function showQ(i){qi=i%qs.length;qs.forEach((q,j)=>q.classList.toggle('on',j===qi));vb.forEach((b,j)=>{b.classList.remove('on');void b.offsetWidth;b.classList.toggle('on',j===qi)});clearTimeout(qt);qt=setTimeout(()=>showQ(qi+1),7000)}
+vb.forEach((b,i)=>b.onclick=()=>showQ(i));showQ(0);
+
+/* ---------- faq ---------- */
+$$('.qa button').forEach(b=>b.onclick=()=>{const q=b.parentElement,o=q.classList.contains('open');$$('.qa').forEach(x=>x.classList.remove('open'));if(!o)q.classList.add('open')});
+
+/* ---------- forest silhouette ---------- */
+let trees='';for(let i=0;i<46;i++){const x=i*32+Math.random()*20-10,h=80+Math.random()*150,w=h*.32,b=260;trees+=`<path d="M${x} ${b-h} L${x+w/2} ${b} L${x-w/2} ${b}Z" opacity="${.5+Math.random()*.5}"/>`}$('#trees').innerHTML=trees;
+
+/* ---------- film lightbox ---------- */
+const FILM=[['hands','Suntem alături de oameni.'],['chapel','Cu respect pentru fiecare tradiție.'],['lily2','Cu grijă pentru fiecare detaliu.'],['road','Pas cu pas, până la capăt.']];
+const stage=$('#lbStage');stage.insertAdjacentHTML('afterbegin',FILM.map(f=>`<img src="${im(f[0])}" alt="">`).join(''));
+let fi=0,ft;
+function filmStep(){const ims=$$('#lbStage img');ims.forEach((im,i)=>im.classList.toggle('on',i===fi));$('#lbCap').textContent=FILM[fi][1];fi=(fi+1)%FILM.length;ft=setTimeout(filmStep,4200)}
+$('#filmBtn').onclick=()=>{$('#lb').classList.add('on');fi=0;filmStep()};
+function closeLb(){$('#lb').classList.remove('on');clearTimeout(ft)}
+$('#lb .x').onclick=closeLb;$('#lb').onclick=e=>{if(e.target.id==='lb')closeLb()};
+
+/* ---------- misc ---------- */
+$$('.lang button').forEach(b=>b.onclick=()=>$$('.lang button').forEach(x=>x.classList.toggle('on',x===b)));
+$('.burger').onclick=()=>document.getElementById('servicii').scrollIntoView({behavior:'smooth'});
+})();
+</script>
+</body>
+</html>
