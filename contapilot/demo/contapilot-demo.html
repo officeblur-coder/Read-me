@@ -1,0 +1,1547 @@
+<title>ContaPilot AI</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+/* Layout: rail de navigare + spațiu de lucru; Copilot ca sertar lateral care nu acoperă datele pe desktop.
+   Paleta: neutre reci cu tentă de petrol, accent petrol (registru), cerneală închisă pentru acțiuni primare. */
+:root {
+  --bg: #EEF2F0;
+  --surface: #FFFFFF;
+  --surface-2: #F6F8F7;
+  --sunken: #E4EAE7;
+  --ink: #12201C;
+  --ink-2: #33433E;
+  --muted: #62716C;
+  --line: #D6DFDB;
+  --line-strong: #BCC9C4;
+  --accent: #0C6B5C;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #DCEEEA;
+  --accent-line: #8FC7BC;
+  --primary: #12201C;
+  --primary-ink: #F4F7F6;
+  --crit: #B4232C;
+  --crit-soft: #FBE7E7;
+  --high: #B4520E;
+  --high-soft: #FCEBDD;
+  --med: #8A6A00;
+  --med-soft: #F7F0D4;
+  --info: #3A5F9C;
+  --info-soft: #E3EBF7;
+  --ok: #2C7A3F;
+  --ok-soft: #E1F1E4;
+  --chart: #0C6B5C;
+  --chart-fill: rgba(12,107,92,.14);
+  --grid: #E3E9E6;
+  --shadow: 0 1px 2px rgba(18,32,28,.05), 0 8px 24px -12px rgba(18,32,28,.18);
+  --font-display: "Bricolage Grotesque", "IBM Plex Sans", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r: 10px;
+  --r-sm: 6px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0C1311; --surface: #131C19; --surface-2: #17221F; --sunken: #0F1714;
+    --ink: #E4ECE8; --ink-2: #C3CFCA; --muted: #8C9C97; --line: #24312D; --line-strong: #34443F;
+    --accent: #45C2AA; --accent-ink: #06201A; --accent-soft: #143A33; --accent-line: #2C7C6D;
+    --primary: #E4ECE8; --primary-ink: #0C1311;
+    --crit: #F0716F; --crit-soft: #3A1A1B; --high: #F09A55; --high-soft: #3A2516;
+    --med: #E1C25A; --med-soft: #332C14; --info: #8DB0EC; --info-soft: #1A2840;
+    --ok: #6FCB85; --ok-soft: #15301E;
+    --chart: #45C2AA; --chart-fill: rgba(69,194,170,.16); --grid: #1E2A26;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px -14px rgba(0,0,0,.6);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0C1311; --surface: #131C19; --surface-2: #17221F; --sunken: #0F1714;
+  --ink: #E4ECE8; --ink-2: #C3CFCA; --muted: #8C9C97; --line: #24312D; --line-strong: #34443F;
+  --accent: #45C2AA; --accent-ink: #06201A; --accent-soft: #143A33; --accent-line: #2C7C6D;
+  --primary: #E4ECE8; --primary-ink: #0C1311;
+  --crit: #F0716F; --crit-soft: #3A1A1B; --high: #F09A55; --high-soft: #3A2516;
+  --med: #E1C25A; --med-soft: #332C14; --info: #8DB0EC; --info-soft: #1A2840;
+  --ok: #6FCB85; --ok-soft: #15301E;
+  --chart: #45C2AA; --chart-fill: rgba(69,194,170,.16); --grid: #1E2A26;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px -14px rgba(0,0,0,.6);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 14px; line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 50; background: var(--bg); }
+button, input, textarea, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.num, .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.num { white-space: nowrap; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; letter-spacing: -0.01em; }
+h1 { font-size: 1.75rem; font-weight: 600; line-height: 1.15; }
+h2 { font-size: 1.05rem; font-weight: 600; }
+h3 { font-size: .95rem; font-weight: 600; }
+p { margin: 0; }
+.eyebrow { font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.muted { color: var(--muted); }
+
+/* ---------- App shell ---------- */
+.app { display: grid; grid-template-columns: 236px minmax(0, 1fr); min-height: 100%; }
+.rail {
+  position: sticky; top: env(safe-area-inset-top, 0px); height: calc(100vh - env(safe-area-inset-top, 0px));
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 18px 12px 16px max(12px, env(safe-area-inset-left, 0px));
+  border-right: 1px solid var(--line); background: var(--surface-2);
+}
+.brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px 18px; }
+.brand-mark { width: 30px; height: 30px; flex: none; }
+.brand-name { font-family: var(--font-display); font-weight: 700; font-size: 1.08rem; letter-spacing: -0.02em; line-height: 1; }
+.brand-name small { display: block; font-family: var(--font-mono); font-size: .62rem; font-weight: 500; color: var(--muted); letter-spacing: .06em; margin-top: 4px; }
+.nav-group { display: flex; flex-direction: column; gap: 2px; }
+.nav-label { font-size: .66rem; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); font-weight: 600; padding: 14px 10px 6px; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 8px 10px; border: 0; background: none; border-radius: var(--r-sm);
+  color: var(--ink-2); text-align: left; font-weight: 500;
+}
+.nav-item svg { width: 18px; height: 18px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.6; }
+.nav-item:hover { background: var(--sunken); color: var(--ink); }
+.nav-item[aria-current="page"] { background: var(--surface); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); }
+.nav-item[aria-current="page"] svg { color: var(--accent); }
+.nav-item .count { margin-left: auto; font-family: var(--font-mono); font-size: .7rem; padding: 1px 6px; border-radius: 99px; background: var(--crit-soft); color: var(--crit); }
+.nav-item.soon { color: var(--muted); }
+.nav-item .phase { margin-left: auto; font-family: var(--font-mono); font-size: .62rem; color: var(--muted); border: 1px solid var(--line); border-radius: 99px; padding: 0 6px; }
+.rail-foot { margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding: 10px; border-top: 1px solid var(--line); }
+.who { display: flex; align-items: center; gap: 10px; }
+.avatar { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); font-weight: 600; font-size: .78rem; flex: none; }
+.who b { display: block; font-size: .82rem; font-weight: 600; }
+.who span { font-size: .72rem; color: var(--muted); }
+
+.main { min-width: 0; display: flex; flex-direction: column; }
+.topbar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+  display: flex; align-items: center; gap: 12px;
+  padding-block: 12px; padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px));
+  background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+.ctx { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.ctx-chip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border: 1px solid var(--line); background: var(--surface); border-radius: 99px; font-size: .82rem; white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.ctx-chip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex: none; }
+.ask {
+  flex: 1; min-width: 0; max-width: 520px; margin-left: auto;
+  display: flex; align-items: center; gap: 10px; padding: 8px 12px;
+  border: 1px solid var(--line); background: var(--surface); border-radius: 99px; color: var(--muted); text-align: left;
+}
+.ask:hover { border-color: var(--accent-line); }
+.ask svg { width: 16px; height: 16px; color: var(--accent); flex: none; }
+.ask span { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+kbd { font-family: var(--font-mono); font-size: .68rem; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; color: var(--muted); background: var(--surface-2); }
+.icon-btn { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); flex: none; }
+.icon-btn svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 1.7; }
+.icon-btn:hover { border-color: var(--line-strong); }
+
+.view { padding-block: 28px 64px; padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; gap: 24px; max-width: 1360px; width: 100%; }
+.view[hidden] { display: none !important; }
+.view-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; }
+.view-head .lede { color: var(--muted); max-width: 62ch; margin-top: 6px; }
+.view-head .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ---------- Primitives ---------- */
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); min-width: 0; }
+.panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.panel-head .sub { font-size: .78rem; color: var(--muted); }
+.panel-body { padding: 18px; }
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: var(--r-sm); border: 1px solid var(--line-strong); background: var(--surface); font-weight: 500; font-size: .85rem; white-space: nowrap; }
+.btn:hover { background: var(--surface-2); }
+.btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+.btn.primary { background: var(--primary); color: var(--primary-ink); border-color: var(--primary); }
+.btn.primary:hover { opacity: .9; }
+.btn.accent { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.ghost { border-color: transparent; background: none; color: var(--muted); }
+.btn.ghost:hover { color: var(--ink); background: var(--sunken); }
+.btn.sm { padding: 5px 10px; font-size: .78rem; }
+.btn[disabled] { opacity: .45; cursor: not-allowed; }
+
+.acct { font-family: var(--font-mono); font-size: .8rem; font-weight: 500; padding: 1px 6px; border-radius: 4px; background: var(--sunken); color: var(--ink); white-space: nowrap; }
+.sev { display: inline-flex; align-items: center; gap: 6px; font-size: .7rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; padding: 2px 8px; border-radius: 99px; white-space: nowrap; }
+.sev::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.sev.crit { color: var(--crit); background: var(--crit-soft); }
+.sev.high { color: var(--high); background: var(--high-soft); }
+.sev.med { color: var(--med); background: var(--med-soft); }
+.sev.info { color: var(--info); background: var(--info-soft); }
+.sev.ok { color: var(--ok); background: var(--ok-soft); }
+.src { display: inline-flex; align-items: center; gap: 5px; font-size: .72rem; color: var(--ink-2); border: 1px dashed var(--line-strong); padding: 1px 7px; border-radius: 4px; background: var(--surface-2); white-space: nowrap; }
+.src svg { width: 11px; height: 11px; stroke: currentColor; fill: none; stroke-width: 2; }
+.tag { font-size: .72rem; padding: 2px 8px; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: .84rem; }
+th { text-align: left; font-weight: 600; font-size: .7rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 10px 12px; border-bottom: 1px solid var(--line); background: var(--surface-2); white-space: nowrap; position: sticky; top: 0; }
+td { padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+tr:last-child td { border-bottom: 0; }
+td.r, th.r { text-align: right; }
+tbody tr:hover td { background: var(--surface-2); }
+tr.flag td { background: color-mix(in srgb, var(--crit-soft) 55%, transparent); }
+tr.flag-med td { background: color-mix(in srgb, var(--med-soft) 60%, transparent); }
+tr.sel td { box-shadow: inset 0 1px 0 var(--accent), inset 0 -1px 0 var(--accent); }
+tfoot td { font-weight: 600; background: var(--surface-2); border-top: 1px solid var(--line-strong); }
+
+.toast-zone { position: fixed; z-index: 80; left: 50%; transform: translateX(-50%); bottom: calc(24px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; width: min(92vw, 520px); }
+.toast { pointer-events: auto; background: var(--primary); color: var(--primary-ink); padding: 10px 16px; border-radius: 8px; font-size: .85rem; box-shadow: var(--shadow); animation: rise .25s ease; }
+@keyframes rise { from { transform: translateY(8px); opacity: 0; } }
+
+/* ---------- Dashboard ---------- */
+.deadline { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 12px 16px; border-radius: var(--r); background: var(--surface); border: 1px solid var(--line); }
+.deadline .when { font-family: var(--font-display); font-weight: 700; font-size: 1.5rem; line-height: 1; color: var(--high); }
+.deadline .when small { display: block; font-family: var(--font-body); font-size: .68rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+.deadline .forms { display: flex; gap: 6px; flex-wrap: wrap; }
+.deadline .sep { width: 1px; align-self: stretch; background: var(--line); }
+
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.kpi { background: var(--surface); padding: 16px 18px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.kpi .v { font-family: var(--font-display); font-size: 1.9rem; font-weight: 600; line-height: 1.05; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.kpi .v small { font-size: .95rem; color: var(--muted); font-weight: 500; }
+.kpi .d { font-size: .78rem; color: var(--muted); }
+.kpi .d b { color: var(--ok); font-weight: 600; }
+.kpi .d b.bad { color: var(--crit); }
+
+.dash-grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.stack { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+
+.queue { list-style: none; margin: 0; padding: 0; }
+.q-item { display: grid; grid-template-columns: 4px minmax(0, 1fr) auto; gap: 14px; padding: 14px 18px; border-bottom: 1px solid var(--line); align-items: center; }
+.q-item:last-child { border-bottom: 0; }
+.q-item .stripe { align-self: stretch; border-radius: 2px; }
+.q-item .stripe.crit { background: var(--crit); } .q-item .stripe.high { background: var(--high); } .q-item .stripe.med { background: var(--med); }
+.q-item .t { font-weight: 500; }
+.q-item .meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 4px; font-size: .76rem; color: var(--muted); }
+.q-item .impact { text-align: right; }
+.q-item .impact .num { font-weight: 500; }
+.q-item .impact .lbl { display: block; font-size: .68rem; color: var(--muted); }
+.q-item button.go { border: 0; background: none; padding: 0; text-align: left; width: 100%; }
+.q-item button.go:hover .t { color: var(--accent); }
+
+.firm { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.firm b { font-weight: 600; white-space: nowrap; }
+.firm span { font-size: .72rem; color: var(--muted); font-family: var(--font-mono); }
+.progress { width: 110px; height: 6px; background: var(--sunken); border-radius: 99px; overflow: hidden; }
+.progress i { display: block; height: 100%; background: var(--accent); border-radius: 99px; }
+.progress.done i { background: var(--ok); }
+.close-cell { display: flex; align-items: center; gap: 10px; }
+.issues-cell { white-space: nowrap; display: inline-flex; gap: 6px; align-items: center; }
+.issues-cell .c { color: var(--crit); font-weight: 600; }
+.sys { font-size: .72rem; color: var(--muted); }
+
+.drop {
+  border: 1.5px dashed var(--line-strong); border-radius: var(--r); padding: 22px 18px; text-align: center;
+  background: var(--surface-2); display: flex; flex-direction: column; align-items: center; gap: 8px; transition: border-color .15s, background .15s;
+}
+.drop.over { border-color: var(--accent); background: var(--accent-soft); }
+.drop svg.big { width: 30px; height: 30px; stroke: var(--accent); fill: none; stroke-width: 1.5; }
+.drop .hint { font-size: .78rem; color: var(--muted); max-width: 40ch; }
+.drop label { color: var(--accent); font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.imports { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.imp { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+.imp .ft { width: 34px; height: 40px; border-radius: 4px; border: 1px solid var(--line); display: grid; place-items: end center; padding-bottom: 4px; font-family: var(--font-mono); font-size: .58rem; font-weight: 600; color: var(--muted); background: var(--surface); position: relative; }
+.imp .ft::before { content: ""; position: absolute; top: -1px; right: -1px; width: 10px; height: 10px; background: linear-gradient(225deg, var(--bg) 50%, var(--line) 50%); }
+.imp .n { font-weight: 500; font-size: .84rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.imp .s { font-size: .74rem; color: var(--muted); }
+.imp .bar { height: 3px; background: var(--sunken); border-radius: 99px; overflow: hidden; margin-top: 5px; }
+.imp .bar i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .4s ease; }
+
+.chart-box { position: relative; }
+.chart-box svg { display: block; width: 100%; height: auto; overflow: visible; }
+.chart-box text { font-family: var(--font-mono); font-size: 10px; fill: var(--muted); }
+.tip { position: absolute; pointer-events: none; background: var(--primary); color: var(--primary-ink); font-size: .74rem; padding: 6px 9px; border-radius: 6px; white-space: nowrap; transform: translate(-50%, calc(-100% - 10px)); box-shadow: var(--shadow); z-index: 3; }
+.tip b { font-family: var(--font-mono); font-weight: 500; }
+
+.hbars { display: flex; flex-direction: column; gap: 10px; }
+.hbar { display: grid; grid-template-columns: minmax(0, 1fr) 36px; gap: 4px 10px; align-items: center; font-size: .8rem; }
+.hbar .track { grid-column: 1 / -1; height: 8px; background: var(--sunken); border-radius: 0 4px 4px 0; overflow: hidden; }
+.hbar .track i { display: block; height: 100%; background: var(--chart); border-radius: 0 4px 4px 0; }
+.hbar .n { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+/* ---------- Audit ---------- */
+.audit-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.summary-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.sum-card { padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.sum-card .v { font-family: var(--font-display); font-size: 1.35rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.sum-card .note { font-size: .74rem; color: var(--muted); }
+.check { display: inline-flex; align-items: center; gap: 6px; font-size: .78rem; font-weight: 500; }
+.check.ok { color: var(--ok); } .check.bad { color: var(--crit); }
+.check svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2.2; }
+
+.filters { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { border: 1px solid var(--line); background: var(--surface); border-radius: 99px; padding: 4px 11px; font-size: .78rem; color: var(--ink-2); }
+.chip[aria-pressed="true"] { background: var(--primary); color: var(--primary-ink); border-color: var(--primary); }
+.search { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: var(--r-sm); padding: 5px 10px; background: var(--surface); }
+.search input { border: 0; outline: 0; background: none; width: 150px; font-size: .82rem; }
+.search svg { width: 14px; height: 14px; stroke: var(--muted); fill: none; stroke-width: 2; }
+
+.findings { display: flex; flex-direction: column; }
+.finding { border-bottom: 1px solid var(--line); scroll-margin-top: 80px; }
+.finding:last-child { border-bottom: 0; }
+.f-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: start; padding: 14px 18px; width: 100%; border: 0; background: none; text-align: left; }
+.f-head:hover { background: var(--surface-2); }
+.f-head .t { font-weight: 600; font-size: .9rem; }
+.f-head .m { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 5px; align-items: center; }
+.f-head .rule { font-family: var(--font-mono); font-size: .7rem; color: var(--muted); }
+.f-head .chev { width: 16px; height: 16px; stroke: var(--muted); fill: none; stroke-width: 2; transition: transform .2s; margin-top: 3px; }
+.finding.open .chev { transform: rotate(180deg); }
+.f-body { padding: 0 18px 18px; display: none; flex-direction: column; gap: 14px; }
+.finding.open .f-body { display: flex; }
+.f-sec { display: flex; flex-direction: column; gap: 6px; }
+.f-sec p { color: var(--ink-2); max-width: 70ch; }
+.calc { font-family: var(--font-mono); font-size: .78rem; background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 10px 12px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 3px 16px; font-variant-numeric: tabular-nums; }
+.calc .r { text-align: right; white-space: nowrap; }
+.calc .tot { border-top: 1px solid var(--line-strong); padding-top: 4px; margin-top: 2px; font-weight: 500; }
+.calc .tot.bad { color: var(--crit); }
+.ai-note { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; padding: 12px; border-radius: var(--r-sm); background: var(--accent-soft); color: var(--ink); }
+.ai-note svg { width: 18px; height: 18px; color: var(--accent); stroke: currentColor; fill: none; stroke-width: 1.7; margin-top: 1px; }
+.ai-note .lbl { font-size: .68rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 600; color: var(--accent); display: block; margin-bottom: 2px; }
+.entry { border: 1px solid var(--line); border-radius: var(--r-sm); overflow: hidden; }
+.entry table td, .entry table th { padding: 7px 10px; }
+.f-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.status-pill { font-size: .74rem; font-weight: 600; padding: 3px 10px; border-radius: 99px; }
+.status-pill.approved { background: var(--ok-soft); color: var(--ok); }
+.status-pill.rejected { background: var(--sunken); color: var(--muted); }
+
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: .74rem; color: var(--muted); }
+.legend i { display: inline-block; width: 14px; height: 2px; background: var(--chart); vertical-align: middle; margin-right: 6px; }
+.legend i.dash { background: none; border-top: 2px dashed var(--crit); height: 0; }
+
+/* ---------- Bank ---------- */
+.recon-head { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.recon-eq { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 14px 18px; font-size: .84rem; }
+.recon-eq .op { color: var(--muted); font-family: var(--font-mono); }
+.match { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.match .doc { font-weight: 500; white-space: nowrap; }
+.match .why { font-size: .72rem; color: var(--muted); }
+.conf { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: .74rem; }
+.conf .meter { width: 38px; height: 4px; border-radius: 99px; background: var(--sunken); overflow: hidden; }
+.conf .meter i { display: block; height: 100%; background: var(--accent); }
+.amt-in { color: var(--ok); }
+.amt-out { color: var(--ink); }
+.rowx { border: 0; background: none; padding: 0; }
+
+/* ---------- Generator ---------- */
+.gen-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 20px; align-items: start; }
+.composer { display: flex; flex-direction: column; gap: 12px; }
+.composer textarea { width: 100%; min-height: 128px; resize: vertical; border: 1px solid var(--line-strong); border-radius: var(--r); padding: 14px; background: var(--surface); font-size: .95rem; line-height: 1.55; }
+.composer textarea:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
+.examples { display: flex; flex-wrap: wrap; gap: 6px; }
+.examples button { text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 6px 10px; font-size: .78rem; color: var(--ink-2); }
+.examples button:hover { border-color: var(--accent-line); color: var(--ink); }
+.result-empty { padding: 40px 24px; text-align: center; color: var(--muted); }
+.kv { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 16px; font-size: .84rem; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; }
+.list-check { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.list-check li { display: grid; grid-template-columns: 16px minmax(0, 1fr); gap: 8px; font-size: .84rem; color: var(--ink-2); }
+.list-check li::before { content: ""; width: 8px; height: 8px; margin-top: 6px; border-radius: 2px; background: var(--med); }
+.list-check.assume li::before { background: var(--info); border-radius: 50%; }
+.batch { list-style: none; margin: 0; padding: 0; }
+.batch li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 18px; border-bottom: 1px solid var(--line); font-size: .82rem; }
+.batch li:last-child { border-bottom: 0; }
+
+/* ---------- Roadmap modules ---------- */
+.soon-wrap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
+.soon-card { padding: 22px; display: flex; flex-direction: column; gap: 12px; }
+.soon-card ul { margin: 0; padding-left: 18px; color: var(--ink-2); display: flex; flex-direction: column; gap: 4px; }
+
+/* ---------- Copilot drawer ---------- */
+.copilot {
+  position: fixed; z-index: 60; top: 0; right: 0; bottom: 0; width: min(420px, 100vw);
+  padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); padding-right: env(safe-area-inset-right, 0px);
+  background: var(--surface); border-left: 1px solid var(--line); box-shadow: var(--shadow);
+  display: flex; flex-direction: column; transform: translateX(102%); transition: transform .28s cubic-bezier(.2,.8,.2,1);
+}
+.copilot:not(.open) { visibility: hidden; transition: transform .28s cubic-bezier(.2,.8,.2,1), visibility 0s .28s; }
+.copilot.open { transform: none; }
+.cp-head { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+.cp-head .ttl { flex: 1; }
+.cp-head .ttl b { font-family: var(--font-display); font-size: 1rem; }
+.cp-head .ttl span { display: block; font-size: .72rem; color: var(--muted); }
+.cp-log { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+.msg { max-width: 92%; font-size: .86rem; line-height: 1.55; }
+.msg.user { align-self: flex-end; background: var(--primary); color: var(--primary-ink); padding: 9px 13px; border-radius: 14px 14px 4px 14px; }
+.msg.bot { align-self: flex-start; display: flex; flex-direction: column; gap: 8px; }
+.msg.bot p { color: var(--ink); }
+.msg.bot .calc { font-size: .74rem; }
+.msg .srcs { display: flex; flex-wrap: wrap; gap: 5px; }
+.msg .badge { font-size: .66rem; letter-spacing: .07em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+.cp-suggest { display: flex; flex-direction: column; gap: 6px; }
+.cp-suggest button { text-align: left; border: 1px solid var(--line); background: var(--surface-2); border-radius: 8px; padding: 8px 11px; font-size: .8rem; color: var(--ink-2); }
+.cp-suggest button:hover { border-color: var(--accent-line); color: var(--ink); }
+.cp-input { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--line); }
+.cp-input input { flex: 1; min-width: 0; border: 1px solid var(--line-strong); border-radius: 99px; padding: 9px 14px; background: var(--surface); font-size: .86rem; }
+.cp-input input:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
+.cp-guard { font-size: .68rem; color: var(--muted); padding: 0 16px 10px; }
+.typing { display: inline-flex; gap: 4px; }
+.typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); animation: blink 1s infinite; }
+.typing i:nth-child(2) { animation-delay: .15s; } .typing i:nth-child(3) { animation-delay: .3s; }
+@keyframes blink { 50% { opacity: .25; } }
+.scrim { position: fixed; inset: 0; z-index: 55; background: rgba(0,0,0,.25); display: none; }
+
+/* ---------- Mobile tab bar ---------- */
+.tabbar { display: none; }
+
+@media (min-width: 1280px) {
+  body.cp-open .main { margin-right: 420px; }
+}
+@media (max-width: 1279px) {
+  body.cp-open .scrim { display: block; }
+}
+@media (max-width: 1100px) {
+  .dash-grid, .audit-grid, .gen-grid { grid-template-columns: minmax(0, 1fr); }
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .summary-strip, .recon-head { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 860px) {
+  .app { grid-template-columns: minmax(0, 1fr); }
+  .rail { display: none; }
+  .topbar { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .view { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 110px; }
+  .ask kbd, .ctx { display: none; }
+  .ask { max-width: none; margin-left: 0; }
+  .tabbar {
+    display: grid; grid-template-columns: repeat(4, 1fr); position: fixed; z-index: 40; left: 0; right: 0; bottom: 0;
+    padding: 6px max(8px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px));
+    background: var(--surface); border-top: 1px solid var(--line);
+  }
+  .tabbar button { border: 0; background: none; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: .66rem; color: var(--muted); padding: 4px 0; }
+  .tabbar button svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.6; }
+  .tabbar button[aria-current="page"] { color: var(--accent); }
+  .toast-zone { bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
+  .soon-wrap { grid-template-columns: minmax(0, 1fr); }
+  h1 { font-size: 1.45rem; }
+}
+@media (max-width: 520px) {
+  .kpis, .summary-strip, .recon-head { grid-template-columns: minmax(0, 1fr); }
+  .q-item { grid-template-columns: 4px minmax(0, 1fr); }
+  .q-item .impact { grid-column: 2; text-align: left; }
+  .deadline .sep { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9.5 21v-6h5v6"/></symbol>
+    <symbol id="i-audit" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h5"/><circle cx="15" cy="16" r="2.5"/><path d="m17 18 2 2"/></symbol>
+    <symbol id="i-bank" viewBox="0 0 24 24"><path d="M3 9.5 12 4l9 5.5"/><path d="M5 10v8M9.5 10v8M14.5 10v8M19 10v8"/><path d="M3 20.5h18"/></symbol>
+    <symbol id="i-note" viewBox="0 0 24 24"><path d="M5 4h10l4 4v12H5z"/><path d="M15 4v4h4"/><path d="M8.5 13h7M8.5 16.5h4.5"/></symbol>
+    <symbol id="i-docs" viewBox="0 0 24 24"><rect x="3" y="6" width="13" height="15" rx="1.5"/><path d="M7 3h12.5a1.5 1.5 0 0 1 1.5 1.5V18"/><path d="M6.5 11h6M6.5 14.5h6"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M9 11.5 11.5 14 16 9"/><rect x="3" y="3" width="18" height="18" rx="4"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3c.6 4.4 2.6 6.4 7 7-4.4.6-6.4 2.6-7 7-.6-4.4-2.6-6.4-7-7 4.4-.6 6.4-2.6 7-7Z"/><path d="M19 15.5c.25 1.6 1 2.3 2.5 2.5-1.5.2-2.25.9-2.5 2.5-.25-1.6-1-2.3-2.5-2.5 1.5-.2 2.25-.9 2.5-2.5Z"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5"/><path d="M4 15v3.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V15"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 8v5M12 16.5v.5"/><path d="M10.3 3.9 2.6 17.5A2 2 0 0 0 4.3 20.5h15.4a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><path d="M4 12 20 4l-5 16-3.5-6.5Z"/><path d="m11.5 13.5 4-4"/></symbol>
+    <symbol id="i-export" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></symbol>
+  </defs>
+</svg>
+
+<div class="app">
+  <aside class="rail" aria-label="Navigare principală">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+        <rect x="1" y="1" width="30" height="30" rx="8" fill="var(--primary)"/>
+        <path d="M9 10.5h14M9 16h14M9 21.5h8" stroke="var(--primary-ink)" stroke-width="1.6" stroke-linecap="round" opacity=".5"/>
+        <path d="M18.5 19.5 21 22l4.5-5" stroke="var(--accent)" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div class="brand-name">ContaPilot AI<small>CABINET POPA &amp; ASOC.</small></div>
+    </div>
+    <nav class="nav-group">
+      <button class="nav-item" data-go="panou"><svg><use href="#i-home"/></svg>Panou de lucru</button>
+      <div class="nav-label">Module MVP</div>
+      <button class="nav-item" data-go="audit"><svg><use href="#i-audit"/></svg>Audit balanță<span class="count" id="nav-audit-count">7</span></button>
+      <button class="nav-item" data-go="banca"><svg><use href="#i-bank"/></svg>Reconciliere bancară<span class="count" id="nav-bank-count">6</span></button>
+      <button class="nav-item" data-go="note"><svg><use href="#i-note"/></svg>Generator note</button>
+      <div class="nav-label">Urmează</div>
+      <button class="nav-item soon" data-go="contabilizare"><svg><use href="#i-docs"/></svg>Contabilizare documente<span class="phase">F2</span></button>
+      <button class="nav-item soon" data-go="inchidere"><svg><use href="#i-close"/></svg>Închidere lunară<span class="phase">F2</span></button>
+    </nav>
+    <div class="rail-foot">
+      <div class="who"><span class="avatar">AP</span><div><b>Andreea Popa</b><span>Expert contabil · CECCAR</span></div></div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="ctx" id="ctx"></div>
+      <button class="ask" id="open-copilot" aria-label="Întreabă Copilotul">
+        <svg><use href="#i-spark"/></svg>
+        <span>Întreabă despre datele importate: „De ce a crescut TVA-ul de plată?”</span>
+        <kbd>Ctrl K</kbd>
+      </button>
+      <button class="icon-btn" id="theme-btn" aria-label="Schimbă tema"><svg><use href="#i-moon"/></svg></button>
+    </header>
+
+    <!-- ================= PANOU ================= -->
+    <section class="view" data-view="panou" aria-labelledby="h-panou">
+      <div class="view-head">
+        <div>
+          <div class="eyebrow">Joi, 22 octombrie 2026 · închidere septembrie</div>
+          <h1 id="h-panou" style="margin-top:6px">Bună dimineața, Andreea. Ai 7 probleme critice în 3 firme.</h1>
+          <p class="lede">ContaPilot a rulat peste noapte 46 de reguli pe 9 balanțe și 11 extrase bancare. Lista de mai jos e ordonată după impactul în lei și termenul legal.</p>
+        </div>
+      </div>
+
+      <div class="deadline">
+        <div class="when">3 zile<small>până la 25 octombrie</small></div>
+        <div class="sep"></div>
+        <div>
+          <div class="eyebrow" style="margin-bottom:6px">Declarații pentru septembrie</div>
+          <div class="forms"><span class="tag">D300 · 8 firme</span><span class="tag">D112 · 9</span><span class="tag">D100 · 6</span><span class="tag">D390 · 3</span></div>
+        </div>
+        <div class="sep"></div>
+        <div style="flex:1;min-width:200px">
+          <div class="eyebrow" style="margin-bottom:6px">Blocante pentru D300</div>
+          <div style="font-size:.84rem">3 firme au diferențe TVA nerezolvate: Atelier Nord, Carpatica Logistic, Agro Câmpia Sud.</div>
+        </div>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi"><span class="eyebrow">Timp economisit în octombrie</span><span class="v">31,5 <small>ore</small></span><span class="d"><b>+6,2 h</b> față de septembrie · estimat per operațiune</span></div>
+        <div class="kpi"><span class="eyebrow">Probleme deschise</span><span class="v" id="kpi-open">30</span><span class="d"><b class="bad">7 critice</b> · 4 ridicate · 19 medii sau informative</span></div>
+        <div class="kpi"><span class="eyebrow">Firme gata de închidere</span><span class="v">3 <small>din 9</small></span><span class="d">Medisan, Lumen, Tipografia Litera</span></div>
+        <div class="kpi"><span class="eyebrow">Documente procesate</span><span class="v">1.284</span><span class="d"><b>96,1%</b> contate automat fără corecții</span></div>
+      </div>
+
+      <div class="dash-grid">
+        <div class="stack">
+          <div class="panel">
+            <div class="panel-head">
+              <div><h2>Coada de priorități</h2><div class="sub">Ordonată după impact × termen. Fiecare element are sursă și regulă.</div></div>
+              <button class="btn sm ghost" data-go="audit">Toate problemele</button>
+            </div>
+            <ul class="queue" id="queue"></ul>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div><h2>Portofoliu · septembrie 2026</h2><div class="sub">9 firme · date importate din SAGA, WinMENTOR și SmartBill</div></div>
+              <div class="filters" id="port-filters">
+                <button class="chip" aria-pressed="true" data-f="all">Toate</button>
+                <button class="chip" aria-pressed="false" data-f="issues">Cu probleme</button>
+                <button class="chip" aria-pressed="false" data-f="ready">Gata</button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Firmă</th><th>Închidere</th><th>Probleme</th><th class="r">TVA sept.</th><th>Sursă</th></tr></thead>
+                <tbody id="portfolio"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="stack">
+          <div class="panel">
+            <div class="panel-head"><div><h2>Import rapid</h2><div class="sub">Tipul fișierului se recunoaște automat</div></div></div>
+            <div class="panel-body">
+              <div class="drop" id="drop">
+                <svg class="big"><use href="#i-upload"/></svg>
+                <div><b>Trage aici</b> balanțe, jurnale, extrase sau facturi</div>
+                <div class="hint">Excel, CSV, PDF, MT940, XML e-Factura · sau <label for="file-in">alege fișiere</label></div>
+                <input type="file" id="file-in" multiple hidden>
+              </div>
+              <ul class="imports" id="imports"></ul>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head"><div><h2>Ore economisite pe săptămână</h2><div class="sub">Ultimele 10 săptămâni · toate firmele</div></div></div>
+            <div class="panel-body"><div class="chart-box" id="chart-hours"></div></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head"><div><h2>Ce găsește ContaPilot</h2><div class="sub">Probleme deschise, după tip</div></div></div>
+            <div class="panel-body"><div class="hbars" id="bars-types"></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= AUDIT ================= -->
+    <section class="view" data-view="audit" aria-labelledby="h-audit" hidden>
+      <div class="view-head">
+        <div>
+          <div class="eyebrow">Audit AI · balanța de verificare</div>
+          <h1 id="h-audit" style="margin-top:6px">Atelier Nord Mobilier SRL · septembrie 2026</h1>
+          <p class="lede">Balanța e recalculată din 37 de înregistrări importate din SAGA. Regulile sunt deterministe; Copilotul doar explică și propune nota de corecție.</p>
+        </div>
+        <div class="actions">
+          <button class="btn" id="btn-rerun"><svg><use href="#i-audit"/></svg>Rulează din nou</button>
+          <button class="btn primary" id="btn-export-audit"><svg><use href="#i-export"/></svg>Exportă notele aprobate</button>
+        </div>
+      </div>
+
+      <div class="summary-strip" id="audit-summary"></div>
+
+      <div class="audit-grid">
+        <div class="stack">
+          <div class="panel">
+            <div class="panel-head">
+              <div><h2>Constatări</h2><div class="sub" id="find-sub"></div></div>
+              <div class="filters" id="sev-filters">
+                <button class="chip" aria-pressed="true" data-s="all">Toate</button>
+                <button class="chip" aria-pressed="false" data-s="crit">Critice</button>
+                <button class="chip" aria-pressed="false" data-s="high">Ridicate</button>
+                <button class="chip" aria-pressed="false" data-s="med">Medii</button>
+              </div>
+            </div>
+            <div class="findings" id="findings"></div>
+          </div>
+        </div>
+
+        <div class="stack">
+          <div class="panel">
+            <div class="panel-head">
+              <div><h2>TVA de plată, ultimele 12 luni</h2><div class="sub">Cont <span class="acct">4423</span> · rulaj creditor lunar</div></div>
+              <div class="legend"><span><i></i>Înregistrat</span><span><i class="dash"></i>După corecții propuse</span></div>
+            </div>
+            <div class="panel-body"><div class="chart-box" id="chart-tva"></div></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div><h2>Corelații verificate</h2><div class="sub">Regulile care au trecut</div></div></div>
+            <div class="panel-body" style="display:flex;flex-direction:column;gap:10px" id="passed"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div><h2>Balanța de verificare</h2><div class="sub">Clic pe un cont pentru a vedea înregistrările care îl compun</div></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <div class="filters" id="cls-filters">
+              <button class="chip" aria-pressed="true" data-c="all">Toate clasele</button>
+              <button class="chip" aria-pressed="false" data-c="flag">Doar semnalate</button>
+            </div>
+            <label class="search"><svg><use href="#i-search"/></svg><input id="bal-search" placeholder="Cont sau denumire" aria-label="Caută cont"></label>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table id="balance">
+            <thead><tr><th>Cont</th><th>Denumire</th><th class="r">SI debit</th><th class="r">SI credit</th><th class="r">Rulaj D</th><th class="r">Rulaj C</th><th class="r">SF debit</th><th class="r">SF credit</th></tr></thead>
+            <tbody></tbody>
+            <tfoot></tfoot>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel" id="ledger-panel" hidden>
+        <div class="panel-head"><div><h2 id="ledger-title">Fișa contului</h2><div class="sub">Înregistrări din jurnalul importat</div></div><button class="btn sm ghost" id="ledger-close">Închide</button></div>
+        <div class="table-wrap"><table><thead><tr><th>Data</th><th>Document</th><th>Explicație</th><th>Corespondent</th><th class="r">Debit</th><th class="r">Credit</th></tr></thead><tbody id="ledger-body"></tbody></table></div>
+      </div>
+    </section>
+
+    <!-- ================= BANCA ================= -->
+    <section class="view" data-view="banca" aria-labelledby="h-banca" hidden>
+      <div class="view-head">
+        <div>
+          <div class="eyebrow">Reconciliere bancară · <span class="acct">5121</span> RO49 AAAA 1B31 0075 9384 0000</div>
+          <h1 id="h-banca" style="margin-top:6px">Extras septembrie: 12 tranzacții, 6 potrivite automat</h1>
+          <p class="lede">Potrivirea se face după sumă, CUI, număr de factură din detaliile plății și dată. Diferența de sold trebuie explicată integral înainte de închidere.</p>
+        </div>
+        <div class="actions">
+          <button class="btn" id="btn-accept-sure"><svg><use href="#i-check"/></svg>Acceptă potrivirile sigure</button>
+          <button class="btn primary" id="btn-export-bank"><svg><use href="#i-export"/></svg>Generează notele</button>
+        </div>
+      </div>
+
+      <div class="recon-head" id="recon-head"></div>
+      <div class="panel"><div class="recon-eq" id="recon-eq"></div></div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div><h2>Tranzacții din extras</h2><div class="sub">Import MT940 · 30.09.2026</div></div>
+          <div class="filters" id="bank-filters">
+            <button class="chip" aria-pressed="true" data-b="all">Toate</button>
+            <button class="chip" aria-pressed="false" data-b="todo">De decis</button>
+            <button class="chip" aria-pressed="false" data-b="done">Potrivite</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Data</th><th>Detalii extras</th><th class="r">Sumă</th><th>Potrivire propusă</th><th>Încredere</th><th>Stare</th><th></th></tr></thead>
+            <tbody id="bank-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= NOTE ================= -->
+    <section class="view" data-view="note" aria-labelledby="h-note" hidden>
+      <div class="view-head">
+        <div>
+          <div class="eyebrow">Generator de note contabile · Atelier Nord Mobilier SRL</div>
+          <h1 id="h-note" style="margin-top:6px">Descrie operațiunea. Primești nota, TVA-ul și ce trebuie verificat.</h1>
+          <p class="lede">Conturile vin din planul de conturi (OMFP 1802/2014) și din memoria de contare a firmei. Sumele și TVA-ul sunt calculate determinist, cu cotele în vigoare: 21% și 11%.</p>
+        </div>
+      </div>
+      <div class="gen-grid">
+        <div class="stack">
+          <div class="panel"><div class="panel-body composer">
+            <label for="gen-in" class="eyebrow">Operațiunea, în cuvintele tale</label>
+            <textarea id="gen-in">Factură chirie birou octombrie de la Imobiliare Nord SRL, 6.050 lei cu TVA</textarea>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <button class="btn accent" id="gen-btn"><svg><use href="#i-spark"/></svg>Generează nota</button>
+              <span class="muted" style="font-size:.78rem">sau <kbd>Ctrl</kbd> + <kbd>Enter</kbd></span>
+            </div>
+            <div class="eyebrow" style="margin-top:6px">Exemple</div>
+            <div class="examples" id="examples"></div>
+          </div></div>
+          <div class="panel">
+            <div class="panel-head"><div><h2>Lot pentru export</h2><div class="sub">Note aprobate, gata de import în SAGA</div></div><button class="btn sm" id="btn-export-batch" disabled><svg><use href="#i-export"/></svg>Exportă XML SAGA</button></div>
+            <ul class="batch" id="batch"><li class="muted">Nicio notă aprobată încă.</li></ul>
+          </div>
+        </div>
+        <div class="panel" id="gen-out"><div class="result-empty">Nota propusă apare aici.</div></div>
+      </div>
+    </section>
+
+    <!-- ================= ROADMAP ================= -->
+    <section class="view" data-view="contabilizare" aria-labelledby="h-cont" hidden>
+      <div class="view-head"><div><div class="eyebrow">Faza 2 · după MVP</div><h1 id="h-cont" style="margin-top:6px">Contabilizare documente</h1><p class="lede">Facturile intră direct din SPV (e-Factura XML) sau prin OCR pentru documentele pe hârtie. Modulul refolosește motorul generatorului de note.</p></div></div>
+      <div class="soon-wrap">
+        <div class="panel soon-card"><h2>Ce va face</h2><ul><li>Preia automat facturile primite din SPV și le compară cu jurnalul de cumpărări.</li><li>Extrage din PDF-uri scanate furnizorul, CUI-ul, liniile și TVA-ul.</li><li>Propune conturile pe baza istoricului aprobat al firmei.</li><li>Generează note în lot, aprobate cu un singur clic.</li></ul></div>
+        <div class="panel soon-card"><h2>De ce contează</h2><p class="muted">Într-un cabinet cu 40 de firme, înregistrarea facturilor primite ocupă 30–40% din lună. Facturile XML din SPV au deja date structurate, deci pot fi contate fără OCR.</p></div>
+      </div>
+    </section>
+    <section class="view" data-view="inchidere" aria-labelledby="h-inch" hidden>
+      <div class="view-head"><div><div class="eyebrow">Faza 2 · după MVP</div><h1 id="h-inch" style="margin-top:6px">Închidere lunară</h1><p class="lede">Checklist generat din profilul fiecărei firme: plătitor de TVA, salariați, mijloace fixe, valută, stocuri.</p></div></div>
+      <div class="soon-wrap">
+        <div class="panel soon-card"><h2>Pași verificați automat</h2><ul><li>Amortizarea lunară înregistrată și egală cu registrul MF.</li><li>Reevaluarea soldurilor în valută la cursul BNR din ultima zi.</li><li>Regularizarea TVA și simularea D300 din balanță.</li><li>Închiderea conturilor de venituri și cheltuieli.</li><li>Extrase reconciliate și casă fără sold creditor.</li></ul></div>
+        <div class="panel soon-card"><h2>Rezultat</h2><p class="muted">Un raport de verificare semnat la închidere, cu toate regulile rulate, constatările rezolvate și notele aprobate. Rămâne în dosarul firmei ca pistă de audit.</p></div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<nav class="tabbar" aria-label="Navigare">
+  <button data-go="panou"><svg><use href="#i-home"/></svg>Panou</button>
+  <button data-go="audit"><svg><use href="#i-audit"/></svg>Audit</button>
+  <button data-go="banca"><svg><use href="#i-bank"/></svg>Bancă</button>
+  <button data-go="note"><svg><use href="#i-note"/></svg>Note</button>
+</nav>
+
+<div class="scrim" id="scrim"></div>
+<aside class="copilot" id="copilot" aria-label="Copilot ContaPilot" aria-hidden="true">
+  <div class="cp-head">
+    <span class="avatar" style="background:var(--accent);color:var(--accent-ink)"><svg width="16" height="16" style="stroke:currentColor;fill:none;stroke-width:1.8"><use href="#i-spark"/></svg></span>
+    <div class="ttl"><b>Copilot</b><span>Atelier Nord Mobilier SRL · balanța 09.2026</span></div>
+    <button class="icon-btn" id="cp-close" aria-label="Închide Copilotul"><svg><use href="#i-x"/></svg></button>
+  </div>
+  <div class="cp-log" id="cp-log"></div>
+  <div class="cp-guard">Cifrele din răspunsuri provin din calcule deterministe pe datele importate. Copilotul nu modifică înregistrări.</div>
+  <form class="cp-input" id="cp-form">
+    <input id="cp-q" placeholder="Întreabă despre balanță, TVA, extrase…" autocomplete="off" aria-label="Întrebare">
+    <button class="icon-btn" aria-label="Trimite" style="background:var(--accent);color:var(--accent-ink);border-color:var(--accent)"><svg><use href="#i-send"/></svg></button>
+  </form>
+</aside>
+
+<div class="toast-zone" id="toasts" aria-live="polite"></div>
+
+<script>
+(() => {
+'use strict';
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const r2 = n => Math.round(n * 100) / 100;
+const NF = new Intl.NumberFormat('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const lei = n => NF.format(r2(n));
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const ICON = id => `<svg><use href="#${id}"/></svg>`;
+const src = t => `<span class="src">${ICON('i-link')}${esc(t)}</span>`;
+const acct = a => `<span class="acct">${a}</span>`;
+
+function toast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast'; t.textContent = msg;
+  $('#toasts').appendChild(t);
+  setTimeout(() => t.remove(), 3400);
+}
+
+/* =========================================================
+   Date demo: Atelier Nord Mobilier SRL, septembrie 2026.
+   Balanța se calculează din solduri inițiale + înregistrări,
+   deci este echilibrată prin construcție.
+   ========================================================= */
+const ACCOUNTS = {
+  '1012': 'Capital subscris vărsat', '117': 'Rezultatul reportat', '121': 'Profit sau pierdere',
+  '2131': 'Echipamente tehnologice', '2813': 'Amortizarea instalațiilor și mijloacelor de transport',
+  '371': 'Mărfuri', '401': 'Furnizori', '4111': 'Clienți', '421': 'Personal – salarii datorate',
+  '4315': 'Contribuția de asigurări sociale', '4316': 'Contribuția de asigurări sociale de sănătate',
+  '436': 'Contribuția asiguratorie pentru muncă', '444': 'Impozitul pe venituri de natura salariilor',
+  '4423': 'TVA de plată', '4426': 'TVA deductibilă', '4427': 'TVA colectată', '542': 'Avansuri de trezorerie',
+  '5121': 'Conturi la bănci în lei', '5311': 'Casa în lei', '6022': 'Cheltuieli privind combustibilii',
+  '607': 'Cheltuieli privind mărfurile', '612': 'Cheltuieli cu chiriile', '627': 'Cheltuieli cu serviciile bancare',
+  '628': 'Alte cheltuieli cu serviciile executate de terți', '641': 'Cheltuieli cu salariile personalului',
+  '6461': 'Cheltuieli cu contribuția asiguratorie pentru muncă', '6811': 'Cheltuieli cu amortizarea imobilizărilor',
+  '704': 'Venituri din servicii prestate', '707': 'Venituri din vânzarea mărfurilor'
+};
+const OPENING = { // pozitiv = debit, negativ = credit
+  '1012': -10000, '117': -160170, '121': -64310, '2131': 186500, '2813': -58240, '371': 74380,
+  '401': -71850, '4111': 96420, '421': -22230, '4315': -2140, '4316': -860, '436': -850, '444': -1250,
+  '4423': -18420, '5121': 52180, '5311': 840
+};
+// [data, document, jurnal, debit, credit, sumă, explicație]
+const E = [
+  ['01.09', 'Jurnal vânzări', 'JV', '4111', '707', 182000, 'Vânzări mărfuri sept. (64 facturi)'],
+  ['01.09', 'Jurnal vânzări', 'JV', '4111', '4427', 38220, 'TVA colectată vânzări mărfuri'],
+  ['01.09', 'Jurnal vânzări', 'JV', '4111', '704', 46000, 'Servicii montaj sept. (21 facturi)'],
+  ['01.09', 'Jurnal vânzări', 'JV', '4111', '4427', 9660, 'TVA colectată servicii montaj'],
+  ['17.09', 'FV-0917', 'JV', '4111', '704', 2057, 'Montaj bucătărie – Mobila Casa Bună SRL'],
+  ['30.09', 'Bon consum', 'NC', '607', '371', 121300, 'Descărcare gestiune mărfuri vândute'],
+  ['01.09', 'Jurnal cumpărări', 'JC', '371', '401', 98400, 'Achiziții mărfuri sept. (38 facturi)'],
+  ['01.09', 'Jurnal cumpărări', 'JC', '4426', '401', 20664, 'TVA deductibilă achiziții mărfuri'],
+  ['12.09', 'LE-2291', 'JC', '371', '401', 12500, 'Lemn Expert SRL – PAL melaminat'],
+  ['12.09', 'LE-2291', 'JC', '4426', '401', 2625, 'Lemn Expert SRL – TVA'],
+  ['19.09', 'LE-2291', 'JC', '371', '401', 12500, 'Lemn Expert SRL – PAL melaminat'],
+  ['19.09', 'LE-2291', 'JC', '4426', '401', 2625, 'Lemn Expert SRL – TVA'],
+  ['01.09', 'Jurnal cumpărări', 'JC', '6022', '401', 4380, 'Combustibil sept. (9 facturi)'],
+  ['01.09', 'Jurnal cumpărări', 'JC', '4426', '401', 919.80, 'TVA combustibil'],
+  ['03.09', 'IN-1092', 'JC', '612', '401', 7500, 'Chirie hală sept. – Imobiliare Nord SRL'],
+  ['03.09', 'IN-1092', 'JC', '4426', '401', 1575, 'TVA chirie'],
+  ['30.09', 'CT-0930', 'JC', '628', '401', 3200, 'Servicii transport și curierat'],
+  ['30.09', 'CT-0930', 'JC', '4426', '401', 672, 'TVA servicii'],
+  ['30.09', 'Stat salarii', 'NC', '641', '421', 38000, 'Salarii brute sept.'],
+  ['30.09', 'Stat salarii', 'NC', '421', '4315', 9500, 'CAS 25%'],
+  ['30.09', 'Stat salarii', 'NC', '421', '4316', 3800, 'CASS 10%'],
+  ['30.09', 'Stat salarii', 'NC', '421', '444', 2470, 'Impozit pe venit 10%'],
+  ['30.09', 'Stat salarii', 'NC', '6461', '436', 855, 'CAM 2,25%'],
+  ['30.09', 'Extras', 'JB', '5121', '4111', 204600, 'Încasări clienți sept.'],
+  ['30.09', 'Extras', 'JB', '401', '5121', 142300, 'Plăți furnizori sept.'],
+  ['05.09', 'OP-ANAF', 'JB', '4423', '5121', 18420, 'Plată TVA august'],
+  ['05.09', 'OP-ANAF', 'JB', '444', '5121', 1250, 'Plată impozit salarii august'],
+  ['05.09', 'OP-ANAF', 'JB', '436', '5121', 850, 'Plată CAM august'],
+  ['05.09', 'OP-ANAF', 'JB', '4315', '5121', 2140, 'Plată CAS august'],
+  ['05.09', 'OP-ANAF', 'JB', '4316', '5121', 860, 'Plată CASS august'],
+  ['10.09', 'OP-SAL', 'JB', '421', '5121', 22230, 'Plată salarii nete august'],
+  ['30.09', 'Extras', 'JB', '627', '5121', 186, 'Comisioane bancare sept.'],
+  ['30.09', 'Registru casă', 'RC', '5311', '4111', 3200, 'Încasări numerar clienți'],
+  ['18.09', 'PL-0412', 'RC', '401', '5311', 4100, 'Plată numerar Hârtia Verde SRL'],
+  ['26.09', 'DP-033', 'RC', '542', '5311', 1180, 'Avans deplasare – M. Ionescu'],
+  ['30.09', 'NC-TVA', 'NC', '4427', '4426', 29080.80, 'Regularizare TVA'],
+  ['30.09', 'NC-TVA', 'NC', '4427', '4423', 18799.20, 'TVA de plată sept.']
+];
+const ENTRIES = E.map((e, i) => ({ id: i + 1, date: e[0], doc: e[1], j: e[2], d: e[3], c: e[4], amt: e[5], desc: e[6] }));
+
+function buildBalance() {
+  const codes = Object.keys(ACCOUNTS).sort((a, b) => a.localeCompare(b, 'ro', { numeric: false }));
+  return codes.map(code => {
+    const o = OPENING[code] || 0;
+    const rd = ENTRIES.filter(e => e.d === code).reduce((s, e) => s + e.amt, 0);
+    const rc = ENTRIES.filter(e => e.c === code).reduce((s, e) => s + e.amt, 0);
+    const net = r2(o + rd - rc);
+    return { code, name: ACCOUNTS[code], sid: o > 0 ? o : 0, sic: o < 0 ? -o : 0, rd: r2(rd), rc: r2(rc), sfd: net > 0 ? net : 0, sfc: net < 0 ? -net : 0 };
+  });
+}
+const BAL = buildBalance();
+const B = code => BAL.find(b => b.code === code);
+
+/* ---- Reguli deterministe (subset demonstrativ) ---- */
+const VAT = 0.21;
+const revenue = B('707').rc + B('704').rc;
+const vatExpected = r2(revenue * VAT);
+const vatBooked = B('4427').rc;
+const vatGap = r2(vatExpected - vatBooked);
+const totals = BAL.reduce((t, b) => { for (const k of ['sid', 'sic', 'rd', 'rc', 'sfd', 'sfc']) t[k] = r2(t[k] + b[k]); return t; }, { sid: 0, sic: 0, rd: 0, rc: 0, sfd: 0, sfc: 0 });
+const vatPayable = B('4423').sfc;
+const vatCorrected = r2(vatPayable + vatGap + 2625);
+
+const FINDINGS = [
+  {
+    id: 'F1', sev: 'crit', rule: 'R-CASA-01 · v1.0', accts: ['5311'],
+    title: `Casa are sold creditor: −${lei(B('5311').sfc)} lei`,
+    sources: ['Balanță 09.2026 · cont 5311', 'Registru casă 18.09 · PL-0412', 'Registru casă 26.09 · DP-033'],
+    calc: [['Sold inițial 5311', lei(B('5311').sid)], ['+ Încasări numerar', lei(B('5311').rd)], ['− Plăți numerar', lei(B('5311').rc)], ['Sold final', '−' + lei(B('5311').sfc), 'bad']],
+    why: 'Casa nu poate avea sold creditor: nu poți plăti mai mult numerar decât ai. De obicei lipsește o ridicare de numerar din bancă sau o încasare.',
+    ai: 'Pe extrasul din 15.09 apare o retragere ATM de 2.000,00 lei care nu e înregistrată în contabilitate (tranzacția T-08 din reconciliere). Dacă banii au intrat în casierie, înregistrarea ei readuce casa la +760,00 lei.',
+    entry: [['581', '5121', 2000, 'Retragere numerar ATM 15.09'], ['5311', '581', 2000, 'Depunere în casierie 15.09']],
+    link: 'banca'
+  },
+  {
+    id: 'F2', sev: 'crit', rule: 'R-TVA-03 · v1.2', accts: ['4427', '704', '707'],
+    title: `TVA colectată mai mică cu ${lei(vatGap)} lei decât rezultă din venituri`,
+    sources: ['Balanță 09.2026 · 704, 707, 4427', 'Jurnal vânzări · FV-0917 din 17.09'],
+    calc: [['Venituri taxabile (704 + 707)', lei(revenue)], ['× cota standard 21%', lei(vatExpected)], ['TVA colectată înregistrată (4427)', lei(vatBooked)], ['Diferență', lei(vatGap), 'bad']],
+    why: 'Toate veniturile din 704 și 707 sunt marcate taxabile în profilul firmei, deci TVA colectată ar trebui să fie 21% din ele. Diferența corespunde exact facturii FV-0917.',
+    ai: 'Factura FV-0917 către Mobila Casa Bună SRL (2.057,00 lei, montaj) e înregistrată fără TVA. Clientul nu e în lista firmelor cu taxare inversă, iar serviciul nu e scutit. Probabil s-a ales codul de TVA greșit la import în SAGA.',
+    entry: [['4111', '4427', vatGap, 'TVA colectată FV-0917']],
+    impact: 'D300 rd. 9 (bază 21%) și D394'
+  },
+  {
+    id: 'F3', sev: 'high', rule: 'R-DUP-01 · v1.1', accts: ['371', '4426', '401'],
+    title: 'Factura LE-2291 de la Lemn Expert SRL e înregistrată de două ori',
+    sources: ['Jurnal cumpărări rd. 112 (12.09)', 'Jurnal cumpărări rd. 147 (19.09)', 'SPV e-Factura: 1 singură factură'],
+    calc: [['Aceeași serie, număr, CUI, sumă', '15.125,00 × 2'], ['Stoc 371 supraevaluat', lei(12500)], ['TVA deductibilă 4426 supraevaluată', lei(2625)], ['Datorie 401 supraevaluată', lei(15125), 'bad']],
+    why: 'Două înregistrări au aceeași serie și număr de factură, același CUI de furnizor și aceeași sumă. În SPV există o singură factură cu aceste date.',
+    ai: 'A doua înregistrare a fost introdusă la 19.09, la reimportul jurnalului din SAGA. TVA deductibilă dublată reduce TVA-ul de plată cu 2.625,00 lei, deci D300 ar fi greșit.',
+    entry: [['371', '401', -12500, 'Stornare dublură LE-2291'], ['4426', '401', -2625, 'Stornare TVA dublură LE-2291']],
+    impact: 'D300 rd. 25 și D394'
+  },
+  {
+    id: 'F4', sev: 'med', rule: 'R-AMO-01 · v1.0', accts: ['6811', '2813'],
+    title: 'Amortizarea lunară lipsește în septembrie',
+    sources: ['Balanță 09.2026 · 2813 fără rulaj', 'Registru mijloace fixe (14 active)', 'Balanțe 03–08.2026'],
+    calc: [['Rulaj creditor 2813 în septembrie', lei(B('2813').rc)], ['Amortizare din registrul MF', lei(2140)], ['Medie lunară 03–08.2026', lei(2140)], ['Lipsă', lei(2140), 'bad']],
+    why: 'Firma are 14 mijloace fixe amortizate liniar. În fiecare din ultimele 6 luni s-a înregistrat 2.140,00 lei; în septembrie, nimic.',
+    ai: 'Valoarea propusă este calculată din registrul mijloacelor fixe, nu din medie. Niciun activ nu s-a amortizat complet și niciunul nu a ieșit din gestiune în septembrie.',
+    entry: [['6811', '2813', 2140, 'Amortizare septembrie 2026']]
+  },
+  {
+    id: 'F5', sev: 'med', rule: 'R-401-02 · v1.0', accts: ['401'],
+    title: 'Furnizorul Hârtia Verde SRL are sold debitor de 3.570,00 lei',
+    sources: ['Fișă analitică 401.00087', 'Registru casă 18.09 · PL-0412'],
+    calc: [['Facturi Hârtia Verde (sept.)', lei(530)], ['Plată numerar 18.09', lei(4100)], ['Sold analitic', '3.570,00 debitor', 'bad']],
+    why: 'Un furnizor cu sold debitor înseamnă că ai plătit mai mult decât s-a facturat: avans neînregistrat ca avans, factură lipsă sau plată pe alt furnizor.',
+    ai: 'Plata în numerar de 4.100,00 lei pare să fie pentru mai multe facturi, din care una lipsește. Cere factura de la furnizor sau, dacă e avans, reclasifică în 4091.',
+    entry: null
+  },
+  {
+    id: 'F6', sev: 'med', rule: 'R-VAR-02 · v1.0', accts: ['6022'],
+    title: 'Combustibil +67,8% față de media ultimelor 6 luni',
+    sources: ['Balanță 09.2026 · 6022', 'Balanțe 03–08.2026', '3 facturi carburant 27–29.09'],
+    calc: [['6022 în septembrie', lei(B('6022').rd)], ['Medie 03–08.2026', lei(2610)], ['Variație', '+67,8%', 'bad']],
+    why: 'Nu e neapărat o eroare. Pragul de semnalare pentru cheltuieli recurente este ±40% față de media pe 6 luni.',
+    ai: 'Creșterea vine din 3 alimentări în 27–29.09 (2.150,00 lei). Dacă vehiculul nu e folosit exclusiv în activitatea economică, TVA-ul se deduce 50% (art. 298 Cod fiscal). Verifică foile de parcurs.',
+    entry: null
+  },
+  {
+    id: 'F7', sev: 'info', rule: 'R-542-01 · v1.0', accts: ['542'],
+    title: 'Avans de trezorerie nedecontat: 1.180,00 lei',
+    sources: ['Registru casă 26.09 · DP-033'],
+    calc: [['Avans acordat 26.09', lei(1180)], ['Decont înregistrat', lei(0)], ['Sold 542 la închidere', lei(B('542').sfd), 'bad']],
+    why: 'Avansurile de trezorerie se decontează după întoarcerea din deplasare. La închiderea lunii soldul trebuie justificat.',
+    ai: 'Avansul e pentru deplasarea lui M. Ionescu. Dacă decontul există, introdu-l înainte de închidere; dacă nu, soldul rămâne și apare în raportul de închidere.',
+    entry: null
+  }
+];
+const PASSED = [
+  ['R-BAL-01', 'Balanța e echilibrată: total debit = total credit pe solduri inițiale, rulaje și solduri finale'],
+  ['R-TVA-01', 'Conturile 4426 și 4427 sunt închise prin regularizare'],
+  ['R-SAL-01', 'Contribuții salariale corelate: CAS 25%, CASS 10%, CAM 2,25% din brut'],
+  ['R-SAL-02', 'Impozit pe salarii = 10% din (brut − CAS − CASS)'],
+  ['R-BNC-01', 'Contul 5121 are sold debitor'],
+  ['R-CLS-01', 'Nicio înregistrare pe conturi sintetice care cer analitic']
+];
+const state = { decisions: {}, open: 'F1', sev: 'all', balFilter: 'all', balQuery: '' };
+
+/* ---- Portofoliu ---- */
+const FIRMS = [
+  { n: 'Atelier Nord Mobilier SRL', cui: 'RO 38291047', close: 62, crit: 2, total: 7, vat: '18.799,20', vatNote: 'de plată', sys: 'SAGA', id: 'an' },
+  { n: 'Carpatica Logistic SRL', cui: 'RO 30418852', close: 45, crit: 3, total: 9, vat: '31.205,60', vatNote: 'de plată', sys: 'SAGA' },
+  { n: 'Agro Câmpia Sud SRL', cui: 'RO 27756310', close: 30, crit: 2, total: 5, vat: '42.110,00', vatNote: 'de recuperat', sys: 'WinMENTOR' },
+  { n: 'Verde Urban Construct SRL', cui: 'RO 43120985', close: 55, crit: 0, total: 4, vat: '12.640,00', vatNote: 'de plată', sys: 'SAGA' },
+  { n: 'Pixel Forge Studio SRL', cui: 'RO 45509213', close: 74, crit: 0, total: 3, vat: '9.870,40', vatNote: 'de plată', sys: 'SmartBill' },
+  { n: 'Brutăria Vatra SRL', cui: 'RO 19873406', close: 88, crit: 0, total: 2, vat: '6.412,00', vatNote: 'de plată', sys: 'WinMENTOR' },
+  { n: 'Medisan Clinic SRL', cui: 'RO 35671128', close: 100, crit: 0, total: 0, vat: '—', vatNote: 'scutit art. 292', sys: 'SmartBill' },
+  { n: 'Lumen Arhitectură SRL', cui: 'RO 40092751', close: 100, crit: 0, total: 0, vat: '4.115,30', vatNote: 'de plată', sys: 'SAGA' },
+  { n: 'Tipografia Litera SRL', cui: 'RO 16604327', close: 100, crit: 0, total: 0, vat: '7.320,10', vatNote: 'de plată', sys: 'WinMENTOR' }
+];
+const QUEUE = [
+  { sev: 'crit', t: '6 facturi primite în SPV nu sunt în jurnalul de cumpărări', firm: 'Carpatica Logistic SRL', rule: 'R-EFX-01', impact: '4.212,40', lbl: 'TVA deductibilă', due: 'D300 · 25 oct' },
+  { sev: 'crit', t: FINDINGS[1].title, firm: 'Atelier Nord Mobilier SRL', rule: 'R-TVA-03', impact: lei(vatGap), lbl: 'TVA colectată', due: 'D300 · 25 oct', go: 'audit', f: 'F2' },
+  { sev: 'crit', t: FINDINGS[0].title, firm: 'Atelier Nord Mobilier SRL', rule: 'R-CASA-01', impact: lei(B('5311').sfc), lbl: 'sold casă', due: 'închidere', go: 'audit', f: 'F1' },
+  { sev: 'crit', t: 'D300 estimat diferă cu 23% de decontul precompletat RO e-TVA', firm: 'Agro Câmpia Sud SRL', rule: 'R-ETVA-02', impact: '9.840,00', lbl: 'diferență TVA', due: 'D300 · 25 oct' },
+  { sev: 'high', t: FINDINGS[2].title, firm: 'Atelier Nord Mobilier SRL', rule: 'R-DUP-01', impact: lei(15125), lbl: 'datorie dublată', due: 'D300 · 25 oct', go: 'audit', f: 'F3' },
+  { sev: 'high', t: 'Taxare inversă aplicată la o lucrare fără cod CPV de construcții', firm: 'Verde Urban Construct SRL', rule: 'R-TI-04', impact: '2.394,00', lbl: 'TVA', due: 'D300 · 25 oct' }
+];
+
+function renderDash() {
+  $('#queue').innerHTML = QUEUE.map((q, i) => `
+    <li class="q-item">
+      <span class="stripe ${q.sev}"></span>
+      <button class="go" data-q="${i}">
+        <div class="t">${esc(q.t)}</div>
+        <div class="meta"><span class="sev ${q.sev}">${q.sev === 'crit' ? 'Critic' : 'Ridicat'}</span><span>${esc(q.firm)}</span><span class="mono">${q.rule}</span><span>· ${q.due}</span></div>
+      </button>
+      <div class="impact"><span class="num">${q.impact} lei</span><span class="lbl">${q.lbl}</span></div>
+    </li>`).join('');
+  $$('#queue button.go').forEach(b => b.addEventListener('click', () => {
+    const q = QUEUE[+b.dataset.q];
+    if (q.go) { state.open = q.f; state.jump = true; go(q.go); }
+    else toast(`În demo, detaliile complete sunt disponibile pentru Atelier Nord Mobilier SRL.`);
+  }));
+  renderPortfolio('all');
+  renderImports();
+  areaChart($('#chart-hours'), ['10 aug', '17 aug', '24 aug', '31 aug', '7 sep', '14 sep', '21 sep', '28 sep', '5 oct', '12 oct'], [3.2, 4.1, 4.8, 5.5, 6.0, 6.8, 7.4, 6.9, 8.1, 8.6], v => `${String(v).replace('.', ',')} h`);
+  const types = [['Corelații TVA', 7], ['Documente lipsă sau neînregistrate', 8], ['Dubluri', 4], ['Solduri imposibile', 3], ['Variații neobișnuite', 5], ['Operațiuni de închidere lipsă', 3]];
+  const max = Math.max(...types.map(t => t[1]));
+  $('#bars-types').innerHTML = types.map(t => `<div class="hbar"><span>${t[0]}</span><span class="n">${t[1]}</span><div class="track"><i style="width:${t[1] / max * 100}%"></i></div></div>`).join('');
+}
+function renderPortfolio(f) {
+  const list = FIRMS.filter(x => f === 'all' || (f === 'issues' ? x.total > 0 : x.close === 100));
+  $('#portfolio').innerHTML = list.map(x => `
+    <tr ${x.id ? 'style="cursor:pointer" data-firm="an"' : ''}>
+      <td><div class="firm"><b>${esc(x.n)}</b><span>${x.cui}</span></div></td>
+      <td><div class="close-cell"><div class="progress ${x.close === 100 ? 'done' : ''}"><i style="width:${x.close}%"></i></div><span class="mono" style="font-size:.76rem">${x.close}%</span></div></td>
+      <td>${x.total === 0 ? '<span class="sev ok">Curat</span>' : `<span class="issues-cell">${x.crit ? `<span class="c">${x.crit} critice</span> ·` : ''} ${x.total} total</span>`}</td>
+      <td class="r"><span class="num">${x.vat}</span><div class="sys">${x.vatNote}</div></td>
+      <td><span class="sys">${x.sys}</span></td>
+    </tr>`).join('');
+  $$('#portfolio tr[data-firm]').forEach(tr => tr.addEventListener('click', () => go('audit')));
+}
+$$('#port-filters .chip').forEach(c => c.addEventListener('click', () => {
+  $$('#port-filters .chip').forEach(x => x.setAttribute('aria-pressed', x === c));
+  renderPortfolio(c.dataset.f);
+}));
+
+/* ---- Import cu drag & drop ---- */
+const imports = [
+  { ext: 'XLS', n: 'Balanta_AtelierNord_09_2026.xls', s: 'Balanță SAGA · 29 conturi · 7 constatări', done: true },
+  { ext: 'STA', n: 'extras_RO49AAAA_sept.sta', s: 'Extras MT940 · 12 tranzacții · 6 potrivite', done: true },
+  { ext: 'XML', n: 'SPV_primite_CarpaticaLogistic.zip', s: 'e-Factura · 214 facturi · 6 neînregistrate', done: true }
+];
+function detect(name) {
+  const n = name.toLowerCase();
+  const ext = (n.split('.').pop() || 'fis').slice(0, 4).toUpperCase();
+  if (/balan|bal_|trial/.test(n)) return [ext, 'Balanță de verificare · se mapează conturile'];
+  if (/extras|\.sta$|mt940|statement/.test(n)) return [ext, 'Extras bancar · se pregătește reconcilierea'];
+  if (/jurnal|journal|registru/.test(n)) return [ext, 'Jurnal contabil · se caută dubluri'];
+  if (/\.xml$|efactura|spv/.test(n)) return [ext, 'e-Factura XML · se compară cu jurnalul'];
+  if (/\.pdf$|\.jpe?g$|\.png$/.test(n)) return [ext, 'Document scanat · OCR + extragere date'];
+  if (/\.csv$|\.xlsx?$/.test(n)) return [ext, 'Tabel · se detectează structura coloanelor'];
+  return [ext, 'Tip necunoscut · se cere confirmarea ta'];
+}
+function renderImports() {
+  $('#imports').innerHTML = imports.map((f, i) => `
+    <li class="imp"><span class="ft">${esc(f.ext)}</span>
+      <div style="min-width:0"><div class="n">${esc(f.n)}</div><div class="s">${esc(f.s)}</div>${f.done ? '' : `<div class="bar"><i id="bar-${i}"></i></div>`}</div>
+      ${f.done ? '<span class="sev ok">Analizat</span>' : '<span class="sev info">Se analizează</span>'}
+    </li>`).join('');
+}
+function addFiles(files) {
+  [...files].slice(0, 6).forEach(file => {
+    const [ext, s] = detect(file.name);
+    const item = { ext, n: file.name, s, done: false };
+    imports.unshift(item);
+    renderImports();
+    requestAnimationFrame(() => { const b = $('#bar-0'); if (b) b.style.width = '70%'; });
+    setTimeout(() => { item.done = true; item.s = s.split(' · ')[0] + ' · analizat local în demo, fișierul nu părăsește browserul'; renderImports(); }, 1600);
+  });
+  toast(`${files.length} fișier${files.length > 1 ? 'e' : ''} primit${files.length > 1 ? 'e' : ''} pentru analiză.`);
+}
+const drop = $('#drop');
+['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e => { if (e.dataTransfer.files.length) addFiles(e.dataTransfer.files); });
+$('#file-in').addEventListener('change', e => { if (e.target.files.length) addFiles(e.target.files); e.target.value = ''; });
+
+/* ---- Grafice SVG ---- */
+function scaleY(vals, h, pad) {
+  const max = Math.max(...vals), min = 0;
+  const step = niceStep(max / 4);
+  const top = Math.ceil(max / step) * step;
+  return { y: v => pad.t + (h - pad.t - pad.b) * (1 - (v - min) / (top - min)), ticks: Array.from({ length: Math.round(top / step) + 1 }, (_, i) => i * step) };
+}
+function niceStep(raw) {
+  const p = Math.pow(10, Math.floor(Math.log10(raw)));
+  const n = raw / p;
+  return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * p;
+}
+function attachHover(box, svg, xs, labels, fmtFn, values, W, H, pad, yfn) {
+  const tip = document.createElement('div'); tip.className = 'tip'; tip.hidden = true; box.appendChild(tip);
+  const cross = svg.querySelector('.cross'); const dot = svg.querySelector('.hdot');
+  svg.addEventListener('pointermove', e => {
+    const rect = svg.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width * W;
+    let i = 0, best = Infinity;
+    xs.forEach((xx, k) => { const d = Math.abs(xx - x); if (d < best) { best = d; i = k; } });
+    cross.setAttribute('x1', xs[i]); cross.setAttribute('x2', xs[i]); cross.style.opacity = 1;
+    dot.setAttribute('cx', xs[i]); dot.setAttribute('cy', yfn(values[i])); dot.style.opacity = 1;
+    tip.hidden = false;
+    tip.innerHTML = `${labels[i]} · <b>${fmtFn(values[i])}</b>`;
+    tip.style.left = (xs[i] / W * rect.width) + 'px';
+    tip.style.top = (yfn(values[i]) / H * rect.height) + 'px';
+  });
+  svg.addEventListener('pointerleave', () => { tip.hidden = true; cross.style.opacity = 0; dot.style.opacity = 0; });
+}
+function areaChart(box, labels, vals, fmtFn) {
+  const W = 400, H = 170, pad = { l: 30, r: 12, t: 12, b: 24 };
+  const { y, ticks } = scaleY(vals, H, pad);
+  const xs = vals.map((_, i) => pad.l + i * (W - pad.l - pad.r) / (vals.length - 1));
+  const line = xs.map((x, i) => `${i ? 'L' : 'M'}${x.toFixed(1)},${y(vals[i]).toFixed(1)}`).join('');
+  const area = `${line}L${xs[xs.length - 1]},${y(0)}L${xs[0]},${y(0)}Z`;
+  const last = vals.length - 1;
+  box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Ore economisite pe săptămână, de la ${fmtFn(vals[0])} la ${fmtFn(vals[last])}">
+    ${ticks.map(t => `<line x1="${pad.l}" x2="${W - pad.r}" y1="${y(t)}" y2="${y(t)}" stroke="var(--grid)" stroke-width="1"/><text x="${pad.l - 6}" y="${y(t) + 3}" text-anchor="end">${t}</text>`).join('')}
+    ${labels.map((l, i) => i % 3 === 0 || i === last ? `<text x="${xs[i]}" y="${H - 6}" text-anchor="middle">${l}</text>` : '').join('')}
+    <path d="${area}" fill="var(--chart-fill)"/>
+    <path d="${line}" fill="none" stroke="var(--chart)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${xs[last]}" cy="${y(vals[last])}" r="4" fill="var(--chart)" stroke="var(--surface)" stroke-width="2"/>
+    <text x="${xs[last] - 8}" y="${y(vals[last]) - 9}" text-anchor="end" style="fill:var(--ink);font-weight:500">${fmtFn(vals[last])}</text>
+    <line class="cross" y1="${pad.t}" y2="${H - pad.b}" stroke="var(--line-strong)" stroke-dasharray="3 3" style="opacity:0"/>
+    <circle class="hdot" r="4" fill="var(--chart)" stroke="var(--surface)" stroke-width="2" style="opacity:0"/>
+    <rect x="0" y="0" width="${W}" height="${H}" fill="transparent"/>
+  </svg>`;
+  attachHover(box, box.querySelector('svg'), xs, labels, fmtFn, vals, W, H, pad, y);
+}
+const TVA_MONTHS = ['oct', 'nov', 'dec', 'ian', 'feb', 'mar', 'apr', 'mai', 'iun', 'iul', 'aug', 'sep'];
+const TVA_VALS = [14210, 15880, 19420, 12960, 13540, 16120, 15760, 17340, 16980, 17900, 18420, vatPayable];
+function tvaChart() {
+  const box = $('#chart-tva');
+  const W = 420, H = 190, pad = { l: 40, r: 16, t: 16, b: 24 };
+  const { y, ticks } = scaleY([...TVA_VALS, vatCorrected], H, pad);
+  const xs = TVA_VALS.map((_, i) => pad.l + i * (W - pad.l - pad.r) / (TVA_VALS.length - 1));
+  const line = xs.map((x, i) => `${i ? 'L' : 'M'}${x.toFixed(1)},${y(TVA_VALS[i]).toFixed(1)}`).join('');
+  const last = xs.length - 1;
+  const k = v => v ? (v / 1000).toLocaleString('ro-RO') + 'k' : '0';
+  box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="TVA de plată lunar; septembrie ${lei(vatPayable)} lei, după corecții ${lei(vatCorrected)} lei">
+    ${ticks.map(t => `<line x1="${pad.l}" x2="${W - pad.r}" y1="${y(t)}" y2="${y(t)}" stroke="var(--grid)"/><text x="${pad.l - 6}" y="${y(t) + 3}" text-anchor="end">${k(t)}</text>`).join('')}
+    ${TVA_MONTHS.map((m, i) => i % 2 === 1 || i === last ? `<text x="${xs[i]}" y="${H - 6}" text-anchor="middle">${m}</text>` : '').join('')}
+    <path d="${line}" fill="none" stroke="var(--chart)" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M${xs[last - 1]},${y(TVA_VALS[last - 1])}L${xs[last]},${y(vatCorrected)}" stroke="var(--crit)" stroke-width="2" stroke-dasharray="4 3" fill="none"/>
+    <circle cx="${xs[last]}" cy="${y(vatCorrected)}" r="4" fill="var(--crit)" stroke="var(--surface)" stroke-width="2"/>
+    <circle cx="${xs[last]}" cy="${y(vatPayable)}" r="4" fill="var(--chart)" stroke="var(--surface)" stroke-width="2"/>
+    <text x="${xs[last] - 8}" y="${y(vatCorrected) - 4}" text-anchor="end" style="fill:var(--ink);font-weight:500">${lei(vatCorrected)}</text>
+    <text x="${xs[last] - 8}" y="${y(vatPayable) + 14}" text-anchor="end" style="fill:var(--ink-2)">${lei(vatPayable)}</text>
+    <line class="cross" y1="${pad.t}" y2="${H - pad.b}" stroke="var(--line-strong)" stroke-dasharray="3 3" style="opacity:0"/>
+    <circle class="hdot" r="4" fill="var(--chart)" stroke="var(--surface)" stroke-width="2" style="opacity:0"/>
+    <rect x="0" y="0" width="${W}" height="${H}" fill="transparent"/>
+  </svg>`;
+  attachHover(box, box.querySelector('svg'), xs, TVA_MONTHS.map(m => m + (m === 'oct' || m === 'nov' || m === 'dec' ? ' 2025' : ' 2026')), v => lei(v) + ' lei', TVA_VALS, W, H, pad, y);
+}
+
+/* ---- Audit ---- */
+function renderAudit() {
+  const open = FINDINGS.filter(f => !state.decisions[f.id]);
+  const crit = open.filter(f => f.sev === 'crit').length;
+  const balanced = totals.sid === totals.sic && totals.rd === totals.rc && totals.sfd === totals.sfc;
+  $('#audit-summary').innerHTML = `
+    <div class="sum-card"><span class="eyebrow">Echilibru balanță</span><span class="v num">${lei(totals.rd)}</span><span class="check ${balanced ? 'ok' : 'bad'}">${ICON('i-check')}Rulaje D = C, solduri D = C</span></div>
+    <div class="sum-card"><span class="eyebrow">Constatări deschise</span><span class="v">${open.length} <small class="muted" style="font-size:.85rem;font-weight:500">din ${FINDINGS.length}</small></span><span class="note">${crit} critice · ${PASSED.length} reguli trecute</span></div>
+    <div class="sum-card"><span class="eyebrow">TVA de plată înregistrat</span><span class="v num">${lei(vatPayable)}</span><span class="note">cont 4423 · sold creditor</span></div>
+    <div class="sum-card"><span class="eyebrow">TVA de plată după corecții</span><span class="v num" style="color:var(--crit)">${lei(vatCorrected)}</span><span class="note">+${lei(vatCorrected - vatPayable)} lei din F2 și F3</span></div>`;
+  $('#find-sub').textContent = `${open.length} deschise · ${Object.keys(state.decisions).length} decise`;
+  $('#nav-audit-count').textContent = open.length;
+  $('#nav-audit-count').hidden = open.length === 0;
+
+  const sevLabel = { crit: 'Critic', high: 'Ridicat', med: 'Mediu', info: 'Info' };
+  const list = FINDINGS.filter(f => state.sev === 'all' || f.sev === state.sev || (state.sev === 'med' && f.sev === 'info'));
+  $('#findings').innerHTML = list.map(f => {
+    const d = state.decisions[f.id];
+    return `<div class="finding ${state.open === f.id ? 'open' : ''}" id="find-${f.id}">
+      <button class="f-head" data-f="${f.id}" aria-expanded="${state.open === f.id}">
+        <span class="sev ${f.sev}">${sevLabel[f.sev]}</span>
+        <span><span class="t">${esc(f.title)}</span>
+          <span class="m"><span class="rule">${f.rule}</span>${f.accts.map(acct).join('')}${d ? `<span class="status-pill ${d}">${d === 'approved' ? 'Aprobat' : 'Respins'}</span>` : ''}</span></span>
+        <svg class="chev"><use href="#i-chev"/></svg>
+      </button>
+      <div class="f-body">
+        <div class="f-sec"><span class="eyebrow">Surse</span><div style="display:flex;gap:6px;flex-wrap:wrap">${f.sources.map(src).join('')}</div></div>
+        <div class="f-sec"><span class="eyebrow">Calcul determinist</span>
+          <div class="calc">${f.calc.map(c => `<span class="${c[2] === 'bad' ? 'tot bad' : ''}">${esc(c[0])}</span><span class="r ${c[2] === 'bad' ? 'tot bad' : ''}">${esc(c[1])}</span>`).join('')}</div></div>
+        <div class="f-sec"><span class="eyebrow">Justificare</span><p>${esc(f.why)}</p></div>
+        <div class="ai-note">${ICON('i-spark')}<div><span class="lbl">Explicația Copilotului</span>${esc(f.ai)}</div></div>
+        ${f.entry ? `<div class="f-sec"><span class="eyebrow">Notă de corecție propusă${f.impact ? ` · afectează ${esc(f.impact)}` : ''}</span>
+          <div class="entry"><table><thead><tr><th>Debit</th><th>Credit</th><th class="r">Sumă</th><th>Explicație</th></tr></thead><tbody>
+          ${f.entry.map(e => `<tr><td>${acct(e[0])}</td><td>${acct(e[1])}</td><td class="r num">${lei(e[2])}</td><td>${esc(e[3])}</td></tr>`).join('')}</tbody></table></div></div>` : ''}
+        <div class="f-actions">
+          ${d ? `<span class="status-pill ${d}">${d === 'approved' ? (f.entry ? 'Nota e în lotul de export' : 'Marcat ca verificat') : 'Respins · rămâne în raport'}</span><button class="btn sm ghost" data-undo="${f.id}">Anulează decizia</button>`
+            : `<button class="btn sm primary" data-approve="${f.id}">${ICON('i-check')}${f.entry ? 'Aprobă nota' : 'Marchează verificat'}</button>
+               <button class="btn sm" data-reject="${f.id}">Respinge</button>
+               ${f.link ? `<button class="btn sm ghost" data-link="${f.link}">Vezi în reconciliere</button>` : ''}
+               <button class="btn sm ghost" data-ask="${f.id}">${ICON('i-spark')}Întreabă</button>`}
+        </div>
+      </div>
+    </div>`;
+  }).join('') || '<div class="result-empty">Nicio constatare la acest nivel.</div>';
+
+  $$('#findings [data-f]').forEach(b => b.addEventListener('click', () => { state.open = state.open === b.dataset.f ? null : b.dataset.f; renderAudit(); }));
+  $$('#findings [data-approve]').forEach(b => b.addEventListener('click', () => { state.decisions[b.dataset.approve] = 'approved'; toast('Aprobat. Înregistrarea originală rămâne neschimbată; nota intră în lotul de export.'); renderAudit(); }));
+  $$('#findings [data-reject]').forEach(b => b.addEventListener('click', () => { state.decisions[b.dataset.reject] = 'rejected'; toast('Respins. Motivul se păstrează în pista de audit.'); renderAudit(); }));
+  $$('#findings [data-undo]').forEach(b => b.addEventListener('click', () => { delete state.decisions[b.dataset.undo]; renderAudit(); }));
+  $$('#findings [data-link]').forEach(b => b.addEventListener('click', () => go(b.dataset.link)));
+  $$('#findings [data-ask]').forEach(b => b.addEventListener('click', () => { openCopilot(); ask(`Explică constatarea ${b.dataset.ask}`); }));
+
+  $('#passed').innerHTML = PASSED.map(p => `<div style="display:grid;grid-template-columns:18px minmax(0,1fr);gap:8px;font-size:.82rem"><span class="check ok">${ICON('i-check')}</span><span><span class="mono muted" style="font-size:.72rem">${p[0]}</span> ${esc(p[1])}</span></div>`).join('');
+  renderBalance();
+}
+const FLAGGED = { '5311': 'crit', '4427': 'crit', '371': 'med', '4426': 'med', '2813': 'med', '6022': 'med', '542': 'med' };
+function renderBalance() {
+  const q = state.balQuery.trim().toLowerCase();
+  const rows = BAL.filter(b => (state.balFilter === 'all' || FLAGGED[b.code]) && (!q || b.code.startsWith(q) || b.name.toLowerCase().includes(q)));
+  const z = v => v ? lei(v) : '<span class="muted">–</span>';
+  $('#balance tbody').innerHTML = rows.map(b => `
+    <tr class="${FLAGGED[b.code] === 'crit' ? 'flag' : FLAGGED[b.code] ? 'flag-med' : ''}" data-acct="${b.code}" style="cursor:pointer">
+      <td>${acct(b.code)}</td><td style="min-width:200px">${esc(b.name)}</td>
+      <td class="r num">${z(b.sid)}</td><td class="r num">${z(b.sic)}</td><td class="r num">${z(b.rd)}</td><td class="r num">${z(b.rc)}</td>
+      <td class="r num">${z(b.sfd)}</td><td class="r num" ${b.code === '5311' && b.sfc ? 'style="color:var(--crit);font-weight:600"' : ''}>${z(b.sfc)}</td>
+    </tr>`).join('');
+  $('#balance tfoot').innerHTML = `<tr><td colspan="2">Total balanță (${BAL.length} conturi)</td>${['sid', 'sic', 'rd', 'rc', 'sfd', 'sfc'].map(k => `<td class="r num">${lei(totals[k])}</td>`).join('')}</tr>`;
+  $$('#balance tbody tr').forEach(tr => tr.addEventListener('click', () => showLedger(tr.dataset.acct)));
+}
+function showLedger(code) {
+  const rows = ENTRIES.filter(e => e.d === code || e.c === code);
+  $('#ledger-title').innerHTML = `Fișa contului ${acct(code)} ${esc(ACCOUNTS[code])}`;
+  $('#ledger-body').innerHTML = rows.length ? rows.map(e => `<tr><td class="mono">${e.date}.2026</td><td>${esc(e.doc)}</td><td>${esc(e.desc)}</td><td>${acct(e.d === code ? e.c : e.d)}</td>
+    <td class="r num">${e.d === code ? lei(e.amt) : ''}</td><td class="r num">${e.c === code ? lei(e.amt) : ''}</td></tr>`).join('')
+    : `<tr><td colspan="6" class="muted">Nicio înregistrare în septembrie. ${code === '2813' ? 'Vezi constatarea F4: amortizarea lipsește.' : 'Contul are doar sold inițial.'}</td></tr>`;
+  $('#ledger-panel').hidden = false;
+  $('#ledger-panel').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+}
+$('#ledger-close').addEventListener('click', () => { $('#ledger-panel').hidden = true; });
+$$('#sev-filters .chip').forEach(c => c.addEventListener('click', () => { $$('#sev-filters .chip').forEach(x => x.setAttribute('aria-pressed', x === c)); state.sev = c.dataset.s; renderAudit(); }));
+$$('#cls-filters .chip').forEach(c => c.addEventListener('click', () => { $$('#cls-filters .chip').forEach(x => x.setAttribute('aria-pressed', x === c)); state.balFilter = c.dataset.c; renderBalance(); }));
+$('#bal-search').addEventListener('input', e => { state.balQuery = e.target.value; renderBalance(); });
+$('#btn-rerun').addEventListener('click', () => toast(`${FINDINGS.length + PASSED.length} reguli rulate pe ${ENTRIES.length} înregistrări în 0,4 s. Rezultat identic.`));
+$('#btn-export-audit').addEventListener('click', () => {
+  const n = FINDINGS.filter(f => f.entry && state.decisions[f.id] === 'approved').length;
+  toast(n ? `${n} note pregătite pentru import în SAGA (XML). În demo nu se descarcă fișiere.` : 'Aprobă cel puțin o notă de corecție înainte de export.');
+});
+
+/* ---- Reconciliere bancară ---- */
+const BANK = [
+  { id: 'T-01', date: '02.09', det: 'MOBILA CASA BUNA SRL · c/v FV-0902', amt: 23800, match: 'FV-0902 · 4111', why: 'Sumă, CUI și nr. factură identice', conf: 99, st: 'auto', books: true },
+  { id: 'T-02', date: '03.09', det: 'LEMN EXPERT SRL · fact LE-2244', amt: -18150, match: 'LE-2244 · 401', why: 'Sumă, CUI și nr. factură identice', conf: 99, st: 'auto', books: true },
+  { id: 'T-03', date: '05.09', det: 'TREZORERIA OPERATIVA · TVA 08.2026', amt: -18420, match: 'Decont D300 aug. · 4423', why: 'Sumă = TVA de plată august', conf: 98, st: 'auto', books: true },
+  { id: 'T-04', date: '08.09', det: 'DECOR INTERIOR SRL · avans FV-0897', amt: 9000, match: 'FV-0897 (12.000,00) · parțial', why: 'Rest de încasat 3.000,00 lei', conf: 91, st: 'suggest', books: true },
+  { id: 'T-05', date: '10.09', det: 'PLATA SALARII AUGUST · 7 beneficiari', amt: -22230, match: 'Stat salarii aug. · 421', why: 'Total net = sold 421 la 31.08', conf: 97, st: 'auto', books: true },
+  { id: 'T-06', date: '11.09', det: 'RUSTIC HOME SRL · plata facturi', amt: 14637.50, match: 'FV-0905 + FV-0908 · 4111', why: '8.330,00 + 6.307,50 = suma încasată', conf: 94, st: 'suggest', books: true },
+  { id: 'T-07', date: '12.09', det: 'COMISION ADMINISTRARE CONT', amt: -36, match: '627 = 5121', why: 'Comision recunoscut după cod tranzacție', conf: 99, st: 'auto', books: true },
+  { id: 'T-08', date: '15.09', det: 'RETRAGERE NUMERAR ATM 0042', amt: -2000, match: 'Neînregistrată · 581 / 5311', why: 'Explică soldul creditor al casei (F1)', conf: 88, st: 'missing', books: false, note: [['581', '5121', 2000], ['5311', '581', 2000]] },
+  { id: 'T-09', date: '18.09', det: 'POPESCU MIHAI · fara referinta', amt: 3500, match: 'FV-0921 · Popescu Mihai (PF)', why: 'Singura factură deschisă cu această sumă', conf: 72, st: 'suggest', books: true },
+  { id: 'T-10', date: '22.09', det: 'ADNETWORK EUROPE LTD IE · card', amt: -1240.50, match: 'Factură lipsă · taxare inversă', why: 'Furnizor UE de servicii: 623 + 4426 = 4427', conf: 0, st: 'missing', books: false, note: [['623', '5121', 1240.50], ['4426', '4427', 260.51]] },
+  { id: 'T-11', date: '25.09', det: 'TRANSCOM CURIER SRL · fact TC-5519', amt: -1428, match: 'TC-5519 achitată deja la 19.09', why: 'Plată dublă: aceeași factură, aceeași sumă', conf: 96, st: 'missing', books: false, note: [['461', '5121', 1428]] },
+  { id: 'T-12', date: '30.09', det: 'DOBANDA CREDITOARE SEPT', amt: 4.12, match: '5121 = 766', why: 'Dobândă recunoscută după cod tranzacție', conf: 99, st: 'auto', books: false, note: [['5121', '766', 4.12]] }
+];
+const bankState = { filter: 'all', decided: {} };
+const bookBalance = B('5121').sfd;
+const notInBooks = BANK.filter(t => !t.books);
+const stmtBalance = r2(bookBalance + notInBooks.reduce((s, t) => s + t.amt, 0));
+function renderBank() {
+  const isDone = t => t.st === 'auto' || bankState.decided[t.id];
+  const todo = BANK.filter(t => !isDone(t));
+  const explained = r2(notInBooks.filter(t => bankState.decided[t.id] || t.st === 'auto').reduce((s, t) => s + t.amt, 0));
+  const diff = r2(stmtBalance - bookBalance);
+  const remaining = r2(diff - explained);
+  $('#recon-head').innerHTML = `
+    <div class="sum-card"><span class="eyebrow">Sold extras 30.09</span><span class="v num">${lei(stmtBalance)}</span><span class="note">MT940 · sold final</span></div>
+    <div class="sum-card"><span class="eyebrow">Sold contabil 5121</span><span class="v num">${lei(bookBalance)}</span><span class="note">balanța 09.2026</span></div>
+    <div class="sum-card"><span class="eyebrow">Diferență de explicat</span><span class="v num" style="color:${remaining ? 'var(--crit)' : 'var(--ok)'}">${lei(remaining)}</span><span class="note">din ${lei(diff)} diferență totală</span></div>
+    <div class="sum-card"><span class="eyebrow">De decis</span><span class="v">${todo.length} <small class="muted" style="font-size:.85rem;font-weight:500">din ${BANK.length}</small></span><span class="note">${BANK.filter(t => t.st === 'auto').length} potrivite automat</span></div>`;
+  $('#recon-eq').innerHTML = `<span class="eyebrow" style="margin-right:6px">Explicația diferenței</span><span class="num">${lei(bookBalance)}</span>` +
+    notInBooks.map(t => `<span class="op">${t.amt < 0 ? '−' : '+'}</span><span class="num" title="${esc(t.det)}" style="${bankState.decided[t.id] || t.st === 'auto' ? '' : 'color:var(--crit)'}">${lei(Math.abs(t.amt))}</span><span class="tag">${t.id}</span>`).join('') +
+    `<span class="op">=</span><span class="num" style="font-weight:600">${lei(stmtBalance)}</span>` +
+    (remaining ? '' : `<span class="check ok" style="margin-left:auto">${ICON('i-check')}Diferență explicată integral</span>`);
+  $('#nav-bank-count').textContent = todo.length; $('#nav-bank-count').hidden = !todo.length;
+  const list = BANK.filter(t => bankState.filter === 'all' || (bankState.filter === 'todo' ? !isDone(t) : isDone(t)));
+  const stLabel = t => {
+    if (bankState.decided[t.id] === 'ok') return '<span class="sev ok">Acceptat</span>';
+    if (bankState.decided[t.id] === 'no') return '<span class="sev info">Amânat</span>';
+    return t.st === 'auto' ? '<span class="sev ok">Potrivit</span>' : t.st === 'suggest' ? '<span class="sev med">Propunere</span>' : '<span class="sev crit">Neînregistrat</span>';
+  };
+  $('#bank-body').innerHTML = list.map(t => `
+    <tr>
+      <td class="mono">${t.date}</td>
+      <td style="min-width:220px"><div class="match"><span class="doc">${esc(t.det)}</span><span class="why mono">${t.id}</span></div></td>
+      <td class="r num ${t.amt > 0 ? 'amt-in' : 'amt-out'}">${t.amt > 0 ? '+' : '−'}${lei(Math.abs(t.amt))}</td>
+      <td style="min-width:220px"><div class="match"><span class="doc">${esc(t.match)}</span><span class="why">${esc(t.why)}</span>
+        ${t.note ? `<span style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px">${t.note.map(n => `${acct(n[0])}<span class="muted">=</span>${acct(n[1])}<span class="num muted" style="font-size:.72rem">${lei(n[2])}</span>`).join('<span class="muted"> · </span>')}</span>` : ''}</div></td>
+      <td>${t.conf ? `<span class="conf"><span class="meter"><i style="width:${t.conf}%"></i></span>${t.conf}%</span>` : '<span class="muted" style="font-size:.76rem">—</span>'}</td>
+      <td>${stLabel(t)}</td>
+      <td>${t.st !== 'auto' && !bankState.decided[t.id] ? `<div style="display:flex;gap:6px"><button class="btn sm primary" data-ok="${t.id}">Acceptă</button><button class="btn sm ghost" data-no="${t.id}">Amână</button></div>` : bankState.decided[t.id] ? `<button class="btn sm ghost" data-undo-b="${t.id}">Anulează</button>` : ''}</td>
+    </tr>`).join('');
+  $$('#bank-body [data-ok]').forEach(b => b.addEventListener('click', () => { bankState.decided[b.dataset.ok] = 'ok'; toast(`${b.dataset.ok} acceptată. Nota intră în lotul de export.`); renderBank(); }));
+  $$('#bank-body [data-no]').forEach(b => b.addEventListener('click', () => { bankState.decided[b.dataset.no] = 'no'; renderBank(); }));
+  $$('#bank-body [data-undo-b]').forEach(b => b.addEventListener('click', () => { delete bankState.decided[b.dataset.undoB]; renderBank(); }));
+}
+$$('#bank-filters .chip').forEach(c => c.addEventListener('click', () => { $$('#bank-filters .chip').forEach(x => x.setAttribute('aria-pressed', x === c)); bankState.filter = c.dataset.b; renderBank(); }));
+$('#btn-accept-sure').addEventListener('click', () => {
+  const sure = BANK.filter(t => t.st === 'suggest' && t.conf >= 90 && !bankState.decided[t.id]);
+  sure.forEach(t => bankState.decided[t.id] = 'ok');
+  toast(sure.length ? `${sure.length} potriviri cu încredere ≥ 90% acceptate. Restul cer decizia ta.` : 'Nu mai sunt potriviri sigure de acceptat.');
+  renderBank();
+});
+$('#btn-export-bank').addEventListener('click', () => {
+  const n = Object.values(bankState.decided).filter(v => v === 'ok').length;
+  toast(n ? `${n} note bancare pregătite pentru SAGA. În demo nu se descarcă fișiere.` : 'Acceptă cel puțin o propunere înainte de a genera notele.');
+});
+
+/* ---- Generator de note (reguli deterministe, demonstrativ) ---- */
+const EXAMPLES = [
+  'Factură chirie birou octombrie de la Imobiliare Nord SRL, 6.050 lei cu TVA',
+  'Am cumpărat un laptop de 4.200 lei fără TVA, plătit cu cardul firmei',
+  'Factură Google Ads din Irlanda, 850 EUR, curs 4,9750',
+  'Bon combustibil 350 lei cu TVA, mașina e folosită și personal',
+  'Vânzare mărfuri 12.000 lei fără TVA către Rustic Home SRL',
+  'Încasare în bancă de la Decor Interior SRL 3.000 lei pentru FV-0897',
+  'Plată în numerar 6.200 lei către Lemn Expert SRL'
+];
+const NAMES = Object.assign({}, ACCOUNTS, {
+  '214': 'Mobilier, aparatură birotică și alte active corporale', '303': 'Materiale de natura obiectelor de inventar',
+  '623': 'Cheltuieli de protocol, reclamă și publicitate', '624': 'Cheltuieli cu transportul de bunuri și personal',
+  '626': 'Cheltuieli poștale și taxe de telecomunicații', '605': 'Cheltuieli privind energia și apa',
+  '635': 'Cheltuieli cu alte impozite, taxe și vărsăminte asimilate', '404': 'Furnizori de imobilizări',
+  '581': 'Viramente interne', '461': 'Debitori diverși', '766': 'Venituri din dobânzi'
+});
+const fold = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+function parseAmount(txt) {
+  const m = txt.match(/(\d{1,3}(?:\.\d{3})+(?:,\d+)?|\d+(?:,\d+)?)\s*(lei|ron|eur|euro)?/i);
+  if (!m) return null;
+  return { v: parseFloat(m[1].replace(/\./g, '').replace(',', '.')), cur: m[2] && /eur/i.test(m[2]) ? 'EUR' : 'RON' };
+}
+function generate(raw) {
+  const t = fold(raw);
+  const out = { lines: [], vat: [], check: [], assume: [], kind: '', decl: [] };
+  const amtM = parseAmount(raw.replace(/curs\s*[\d.,]+/i, ''));
+  if (!amtM) return { error: 'Nu am găsit suma. Scrie-o explicit, de exemplu „1.190 lei cu TVA”.' };
+  let amount = amtM.v;
+  if (amtM.cur === 'EUR') {
+    const rm = raw.match(/curs\s*([\d]+[.,]\d+)/i);
+    const rate = rm ? parseFloat(rm[1].replace(',', '.')) : 4.9750;
+    if (!rm) out.assume.push('Curs BNR 4,9750 lei/EUR presupus; se preia automat cursul din data facturii.');
+    out.assume.push(`${lei(amtM.v)} EUR × ${String(rate).replace('.', ',')} = ${lei(amtM.v * rate)} lei`);
+    amount = r2(amtM.v * rate);
+  }
+  const party = (raw.match(/([A-ZĂÂÎȘȚ][\wăâîșțĂÂÎȘȚ-]*(?:\s+[A-ZĂÂÎȘȚ][\wăâîșțĂÂÎȘȚ-]*)*\s+(?:SRL|SA|LTD|Ltd|PFA))/) || [])[1] || '';
+  const rate = /carte|medicament|cazare|aliment|apa potabila/.test(t) ? 0.11 : VAT;
+  const rateLbl = rate === VAT ? '21%' : '11%';
+  const gross = /fara tva/.test(t) ? false : true;
+  const split = v => gross ? { base: r2(v / (1 + rate)), vat: r2(v - r2(v / (1 + rate))) } : { base: v, vat: r2(v * rate) };
+  if (!/fara tva|cu tva/.test(t) && !/eur|incasare|plata in numerar|plata catre|platit catre/.test(t)) out.assume.push('Suma a fost considerată cu TVA inclus.');
+  const payAcct = /numerar|cash|casa/.test(t) ? '5311' : /card|banca|extras|op /.test(t) ? '5121' : null;
+  const sup = party || 'furnizor';
+
+  if (/incasare|incasat/.test(t)) {
+    out.kind = 'Încasare de la client';
+    const into = payAcct || '5121';
+    out.lines.push([into, '4111', amount, `Încasare ${party || 'client'}${(raw.match(/FV-\d+/i) || [''])[0] ? ' · ' + raw.match(/FV-\d+/i)[0] : ''}`]);
+    out.vat.push('Nu are efect TVA: TVA-ul a fost colectat la facturare.');
+    out.check.push('Verifică dacă suma acoperă integral factura sau rămâne rest de încasat.');
+    if (into === '5311' && amount > 5000) out.check.push('Încasarea în numerar depășește plafonul zilnic de 5.000 lei între persoane juridice (Legea 70/2015).');
+  } else if (/plata|platit|achitat/.test(t) && !/factura|cumparat|bon/.test(t)) {
+    out.kind = 'Plată către furnizor';
+    const from = payAcct || '5121';
+    out.lines.push(['401', from, amount, `Plată ${sup}`]);
+    out.vat.push('Nu are efect TVA: TVA-ul a fost dedus la înregistrarea facturii.');
+    if (from === '5311' && amount > 5000) out.check.push(`Plata în numerar de ${lei(amount)} lei depășește plafonul de 5.000 lei/zi către o persoană juridică (Legea 70/2015). Împarte plata sau folosește banca.`);
+    out.check.push('Confirmă factura achitată, ca să fie închisă în fișa furnizorului.');
+  } else if (/vanzare|vandut|factura emisa|am facturat/.test(t)) {
+    const serv = /servici|montaj|consultanta|prestar/.test(t);
+    out.kind = serv ? 'Vânzare de servicii' : 'Vânzare de mărfuri';
+    const { base, vat } = split(amount);
+    out.lines.push(['4111', serv ? '704' : '707', base, `Factură ${party || 'client'}`]);
+    out.lines.push(['4111', '4427', vat, `TVA colectată ${rateLbl}`]);
+    out.vat.push(`Livrare taxabilă, cota ${rateLbl}: bază ${lei(base)}, TVA ${lei(vat)} lei.`);
+    out.decl.push('D300 rd. 9–10', 'D394', 'SAF-T D406');
+    if (!serv) out.check.push('Descărcarea din gestiune (607 = 371) se face la costul de achiziție, din fișa de stoc.');
+    out.check.push('Verifică dacă clientul e în regim de taxare inversă (art. 331 Cod fiscal).');
+  } else if (/irlanda|intracomunitar|\bue\b|google ads|meta ads|germania|olanda|ltd|eur/.test(t)) {
+    out.kind = 'Achiziție intracomunitară de servicii';
+    const ex = /ads|reclama|publicitate|marketing/.test(t) ? '623' : '628';
+    const vat = r2(amount * VAT);
+    out.lines.push([ex, '401', amount, `Servicii ${party || 'furnizor UE'}`]);
+    out.lines.push(['4426', '4427', vat, 'Taxare inversă (autolichidare) 21%']);
+    out.vat.push(`Taxare inversă, art. 307 alin. (2) Cod fiscal: TVA ${lei(vat)} lei colectat și dedus simultan, efect net zero.`);
+    out.decl.push('D300 rd. 7 și 20', 'D390 · tip S');
+    out.check.push('Furnizorul trebuie să aibă cod valid în VIES la data facturii.');
+    out.check.push('Firma trebuie să aibă cod de TVA; altfel e nevoie de cod special (art. 317).');
+  } else {
+    let ex = '628', what = 'Servicii';
+    if (/chirie/.test(t)) { ex = '612'; what = 'Chirie'; }
+    else if (/combustibil|motorina|benzina|carburant/.test(t)) { ex = '6022'; what = 'Combustibil'; }
+    else if (/telefon|internet|abonament/.test(t)) { ex = '626'; what = 'Telecomunicații'; }
+    else if (/curier|transport/.test(t)) { ex = '624'; what = 'Transport'; }
+    else if (/energie|curent|electric|gaz|apa/.test(t)) { ex = '605'; what = 'Utilități'; }
+    else if (/marfa|marfuri/.test(t)) { ex = '371'; what = 'Mărfuri'; }
+    const { base, vat } = split(amount);
+    let asset = false;
+    if (/laptop|calculator|imprimanta|echipament|utilaj|mobilier|telefon mobil/.test(t)) {
+      asset = true;
+      if (base >= 2500) { ex = '214'; what = 'Mijloc fix'; out.check.push(`Valoare ${lei(base)} lei ≥ 2.500 lei: se înregistrează ca mijloc fix. Durata de amortizare se alege din Catalogul HG 2139/2004.`); }
+      else { ex = '303'; what = 'Obiect de inventar'; out.check.push(`Valoare ${lei(base)} lei < 2.500 lei: obiect de inventar, se poate da direct în consum (603 = 303).`); }
+    }
+    out.kind = asset ? `Achiziție ${what.toLowerCase()}` : `Achiziție: ${what.toLowerCase()}`;
+    const cred = asset && ex === '214' ? '404' : '401';
+    const mixed = ex === '6022' && /personal|mixt|si in interes/.test(t);
+    out.lines.push([ex, cred, base, `${what} ${party || ''}`.trim()]);
+    if (mixed) {
+      const half = r2(vat / 2);
+      out.lines.push(['4426', cred, half, 'TVA deductibilă 50%']);
+      out.lines.push(['635', cred, r2(vat - half), 'TVA nedeductibilă 50%']);
+      out.vat.push(`Vehicul cu utilizare mixtă: TVA dedus 50% (art. 298 Cod fiscal). Deductibil ${lei(half)}, nedeductibil ${lei(vat - half)} lei.`);
+      out.check.push('Și cheltuiala cu combustibilul e deductibilă 50% la impozitul pe profit (art. 25 Cod fiscal).');
+    } else {
+      out.lines.push(['4426', cred, vat, `TVA deductibilă ${rateLbl}`]);
+      out.vat.push(`Achiziție taxabilă, cota ${rateLbl}: bază ${lei(base)}, TVA ${lei(vat)} lei, deductibil integral.`);
+    }
+    out.decl.push('D300 rd. 24–25', 'D394');
+    if (payAcct) {
+      const tot = r2(out.lines.reduce((s, l) => s + l[2], 0));
+      out.lines.push([cred, payAcct, tot, payAcct === '5311' ? 'Plată numerar' : 'Plată cu cardul / OP']);
+      if (payAcct === '5311' && tot > 5000) out.check.push('Plata în numerar depășește plafonul de 5.000 lei/zi (Legea 70/2015).');
+    }
+    if (!party && !/bon/.test(t)) out.check.push('Furnizorul nu a fost identificat: verifică CUI-ul pe factură.');
+    if (/bon/.test(t)) out.check.push('Bonul fiscal dă drept de deducere doar dacă are CUI-ul firmei și valoarea ≤ 100 EUR (factură simplificată).');
+    if (ex === '628') out.check.push('Contul 628 e implicit; dacă serviciul are cont dedicat (622, 623, 624), schimbă-l.');
+  }
+  return out;
+}
+function renderGen(raw) {
+  const res = generate(raw);
+  const box = $('#gen-out');
+  if (res.error) { box.innerHTML = `<div class="result-empty">${esc(res.error)}</div>`; return; }
+  const totD = r2(res.lines.reduce((s, l) => s + l[2], 0));
+  box.innerHTML = `
+    <div class="panel-head"><div><div class="eyebrow">Notă propusă · neînregistrată</div><h2 style="margin-top:4px">${esc(res.kind)}</h2></div>
+      <span class="check ok">${ICON('i-check')}Debit = Credit · ${lei(totD)}</span></div>
+    <div class="table-wrap"><table><thead><tr><th>Debit</th><th>Credit</th><th class="r">Sumă (lei)</th><th>Explicație</th></tr></thead><tbody>
+      ${res.lines.map(l => `<tr><td>${acct(l[0])}<div class="muted" style="font-size:.7rem;margin-top:3px">${esc(NAMES[l[0]] || '')}</div></td><td>${acct(l[1])}<div class="muted" style="font-size:.7rem;margin-top:3px">${esc(NAMES[l[1]] || '')}</div></td><td class="r num">${lei(l[2])}</td><td>${esc(l[3])}</td></tr>`).join('')}
+    </tbody></table></div>
+    <div class="panel-body" style="display:flex;flex-direction:column;gap:16px;border-top:1px solid var(--line)">
+      <div class="f-sec"><span class="eyebrow">Tratament TVA</span>${res.vat.map(v => `<p>${esc(v)}</p>`).join('')}${res.decl.length ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">${res.decl.map(d => `<span class="tag">${esc(d)}</span>`).join('')}</div>` : ''}</div>
+      ${res.check.length ? `<div class="f-sec"><span class="eyebrow">De verificat înainte de aprobare</span><ul class="list-check">${res.check.map(c => `<li>${esc(c)}</li>`).join('')}</ul></div>` : ''}
+      ${res.assume.length ? `<div class="f-sec"><span class="eyebrow">Ipoteze făcute</span><ul class="list-check assume">${res.assume.map(c => `<li>${esc(c)}</li>`).join('')}</ul></div>` : ''}
+      <div class="f-actions"><button class="btn primary" id="gen-approve">${ICON('i-check')}Aprobă și adaugă în lot</button><button class="btn" id="gen-edit">Editează conturile</button></div>
+    </div>`;
+  $('#gen-approve').addEventListener('click', () => {
+    batch.push({ kind: res.kind, total: totD, n: res.lines.length });
+    renderBatch(); toast('Nota a intrat în lotul de export. Nimic nu s-a scris încă în SAGA.');
+    $('#gen-approve').disabled = true;
+  });
+  $('#gen-edit').addEventListener('click', () => toast('În aplicație, conturile se editează direct în tabel; corecția ta intră în memoria de contare a firmei.'));
+}
+const batch = [];
+function renderBatch() {
+  $('#batch').innerHTML = batch.length ? batch.map((b, i) => `<li><span><span class="mono muted">NC-${String(i + 1).padStart(3, '0')}</span> ${esc(b.kind)} · ${b.n} rânduri</span><span class="num">${lei(b.total)}</span></li>`).join('') : '<li class="muted">Nicio notă aprobată încă.</li>';
+  $('#btn-export-batch').disabled = !batch.length;
+}
+$('#btn-export-batch').addEventListener('click', () => toast(`${batch.length} note pregătite în format XML pentru SAGA. În demo nu se descarcă fișiere.`));
+$('#examples').innerHTML = EXAMPLES.map((e, i) => `<button data-ex="${i}">${esc(e)}</button>`).join('');
+$$('#examples button').forEach(b => b.addEventListener('click', () => { $('#gen-in').value = EXAMPLES[+b.dataset.ex]; renderGen(EXAMPLES[+b.dataset.ex]); }));
+$('#gen-btn').addEventListener('click', () => renderGen($('#gen-in').value));
+$('#gen-in').addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); renderGen(e.target.value); } });
+
+/* ---- Copilot ---- */
+const ANSWERS = [
+  { k: /tva.*(crescut|scazut|plata|diferent)|de ce.*tva/, a: () => ({
+      p: [`TVA de plată înregistrat pentru septembrie este ${lei(vatPayable)} lei, cu ${lei(vatPayable - 18420)} lei (+2,1%) peste august. Creșterea e mică, dar cifra e greșită în jos.`,
+          `După corecțiile propuse, TVA de plată devine ${lei(vatCorrected)} lei, adică +18,7% față de august. Diferența vine din două erori, nu din activitate.`],
+      calc: [['TVA de plată înregistrat (4423)', lei(vatPayable)], ['+ TVA lipsă pe FV-0917 (F2)', lei(vatGap)], ['+ TVA dedus de două ori pe LE-2291 (F3)', lei(2625)], ['TVA de plată corect', lei(vatCorrected)]],
+      src: ['Balanță 09.2026 · 4423, 4426, 4427', 'Jurnal vânzări · FV-0917', 'Jurnal cumpărări rd. 112, 147'] }) },
+  { k: /variat|neobisnuit|crestere|anomal/, a: () => ({
+      p: ['Trei conturi depășesc pragul de ±40% față de media pe 6 luni:'],
+      calc: [['6022 Combustibil', '+67,8%'], ['2813 Amortizare (rulaj zero)', '−100%'], ['5311 Casa (sold final)', 'trece în negativ']],
+      p2: 'Combustibilul poate fi justificat (3 alimentări în 27–29.09). Amortizarea și casa sunt erori sigure.',
+      src: ['Balanțe 03–09.2026', 'Regula R-VAR-02'] }) },
+  { k: /unde.*diferent|diferente|nu se potriv|reconcil/, a: () => ({
+      p: ['Sunt trei locuri cu diferențe:'],
+      calc: [['TVA colectată vs. venituri × 21%', lei(vatGap)], ['Bancă: extras vs. 5121', lei(stmtBalance - bookBalance)], ['Furnizor Hârtia Verde (sold debitor)', lei(3570)]],
+      p2: 'Diferența bancară se explică integral prin 4 tranzacții neînregistrate: retragerea ATM, factura AdNetwork lipsă, plata dublă către Transcom și dobânda.',
+      src: ['Balanță 09.2026', 'Extras MT940 30.09', 'Fișă 401.00087'] }) },
+  { k: /verificat|verific|inregistrari/, a: () => ({
+      p: ['În ordinea impactului, verifică:'],
+      calc: [['LE-2291 dublură (rd. 112 și 147)', lei(15125)], ['T-11 plată dublă TC-5519', lei(1428)], ['FV-0917 fără TVA', lei(2057)], ['PL-0412 plată numerar Hârtia Verde', lei(4100)], ['DP-033 avans nedecontat', lei(1180)]],
+      src: ['Jurnal cumpărări', 'Registru casă', 'Extras MT940'] }) },
+  { k: /eror|greseli|gresit|probleme|balant/, a: () => ({
+      p: [`Balanța e echilibrată (${lei(totals.rd)} lei rulaje pe ambele părți), dar are ${FINDINGS.filter(f => f.sev === 'crit' || f.sev === 'high').length} erori sigure:`],
+      calc: [['5311 Casa cu sold creditor', '−' + lei(B('5311').sfc)], ['4427 TVA colectată lipsă', lei(vatGap)], ['LE-2291 înregistrată de două ori', lei(15125)], ['6811 amortizare lipsă', lei(2140)]],
+      p2: 'Toate au notă de corecție propusă în modulul Audit. Niciuna nu se aplică fără aprobarea ta.',
+      src: ['Balanță 09.2026', 'Reguli R-CASA-01, R-TVA-03, R-DUP-01, R-AMO-01'] }) },
+  { k: /f(\d)|constatare/, a: q => {
+      const id = 'F' + ((q.match(/f(\d)/) || [])[1] || '1');
+      const f = FINDINGS.find(x => x.id === id) || FINDINGS[0];
+      return { p: [f.why, f.ai], calc: f.calc.map(c => [c[0], c[1]]), src: f.sources };
+    } }
+];
+const SUGGEST = ['De ce a crescut TVA-ul de plată?', 'Ce conturi au variații neobișnuite?', 'Unde există diferențe?', 'Ce înregistrări ar trebui verificate?', 'Care sunt posibilele erori din balanță?'];
+const log = $('#cp-log');
+function renderSuggest() {
+  const s = document.createElement('div'); s.className = 'cp-suggest';
+  s.innerHTML = SUGGEST.map(q => `<button>${esc(q)}</button>`).join('');
+  s.querySelectorAll('button').forEach(b => b.addEventListener('click', () => ask(b.textContent)));
+  log.appendChild(s);
+}
+function botMsg(html) { const m = document.createElement('div'); m.className = 'msg bot'; m.innerHTML = html; log.appendChild(m); log.scrollTop = log.scrollHeight; return m; }
+function ask(q) {
+  if (!q.trim()) return;
+  const u = document.createElement('div'); u.className = 'msg user'; u.textContent = q; log.appendChild(u);
+  const typing = botMsg('<span class="typing"><i></i><i></i><i></i></span>');
+  const fq = fold(q);
+  const hit = ANSWERS.find(a => a.k.test(fq));
+  setTimeout(() => {
+    typing.remove();
+    if (!hit) {
+      botMsg(`<span class="badge">Copilot</span><p>În demo răspund doar la întrebările despre balanța Atelier Nord Mobilier din septembrie. În aplicație, întrebarea ar fi transformată în interogări pe datele importate, iar fiecare cifră din răspuns ar veni dintr-un calcul pe care îl poți deschide.</p>`);
+    } else {
+      const a = hit.a(fq);
+      botMsg(`<span class="badge">Copilot · pe baza datelor importate</span>${a.p.map(p => `<p>${esc(p)}</p>`).join('')}
+        <div class="calc">${a.calc.map(c => `<span>${esc(c[0])}</span><span class="r">${esc(c[1])}</span>`).join('')}</div>
+        ${a.p2 ? `<p>${esc(a.p2)}</p>` : ''}<div class="srcs">${a.src.map(src).join('')}</div>`);
+    }
+    log.scrollTop = log.scrollHeight;
+  }, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 650);
+}
+botMsg(`<span class="badge">Copilot</span><p>Am analizat balanța din septembrie, extrasul bancar și jurnalele. Am găsit ${FINDINGS.length} constatări, din care 2 critice. Întreabă-mă orice despre ele.</p>`);
+renderSuggest();
+function openCopilot() {
+  document.body.classList.add('cp-open'); $('#copilot').classList.add('open'); $('#copilot').setAttribute('aria-hidden', 'false');
+  setTimeout(() => $('#cp-q').focus(), 50);
+}
+function closeCopilot() { document.body.classList.remove('cp-open'); $('#copilot').classList.remove('open'); $('#copilot').setAttribute('aria-hidden', 'true'); }
+$('#open-copilot').addEventListener('click', openCopilot);
+$('#cp-close').addEventListener('click', closeCopilot);
+$('#scrim').addEventListener('click', closeCopilot);
+$('#cp-form').addEventListener('submit', e => { e.preventDefault(); const q = $('#cp-q').value; $('#cp-q').value = ''; ask(q); });
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); $('#copilot').classList.contains('open') ? closeCopilot() : openCopilot(); }
+  if (e.key === 'Escape') closeCopilot();
+});
+
+/* ---- Temă ---- */
+function setTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  $('#theme-btn use').setAttribute('href', t === 'dark' ? '#i-sun' : '#i-moon');
+  try { localStorage.setItem('cp-theme', t); } catch (e) {}
+}
+let saved = null; try { saved = localStorage.getItem('cp-theme'); } catch (e) {}
+const sysDark = matchMedia('(prefers-color-scheme: dark)').matches;
+if (saved) setTheme(saved); else $('#theme-btn use').setAttribute('href', sysDark ? '#i-sun' : '#i-moon');
+$('#theme-btn').addEventListener('click', () => {
+  const cur = document.documentElement.getAttribute('data-theme') || (sysDark ? 'dark' : 'light');
+  setTheme(cur === 'dark' ? 'light' : 'dark');
+});
+
+/* ---- Navigare ---- */
+const VIEWS = ['panou', 'audit', 'banca', 'note', 'contabilizare', 'inchidere'];
+const CTX = {
+  panou: '<span class="ctx-chip"><span class="dot"></span>Portofoliu · 9 firme · septembrie 2026</span>',
+  other: '<span class="ctx-chip"><span class="dot"></span>Atelier Nord Mobilier SRL</span><span class="ctx-chip mono" style="font-size:.76rem">09.2026</span>'
+};
+function go(v) {
+  if (!VIEWS.includes(v)) v = 'panou';
+  $$('.view').forEach(s => s.hidden = s.dataset.view !== v);
+  $$('[data-go]').forEach(b => b.dataset.go === v ? b.setAttribute('aria-current', 'page') : b.removeAttribute('aria-current'));
+  $('#ctx').innerHTML = v === 'panou' ? CTX.panou : CTX.other;
+  if (v === 'audit') { renderAudit(); tvaChart(); if (state.jump) setTimeout(() => { const el = $('#find-' + state.open); if (el && v === 'audit') el.scrollIntoView({ block: 'start' }); state.jump = false; }, 0); }
+  if (v === 'banca') renderBank();
+  if (v === 'note' && !$('#gen-out .entry, #gen-out table')) renderGen($('#gen-in').value);
+  try { history.replaceState(null, '', '#' + v); } catch (e) {}
+  window.scrollTo(0, 0);
+}
+$$('[data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
+renderDash();
+renderBatch();
+go((location.hash || '#panou').slice(1));
+})();
+</script>
