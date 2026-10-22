@@ -1,0 +1,292 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Lori Sax Halloween</title>
+<style>html,body{margin:0;background:#000}canvas{display:block;width:100vw;height:auto;max-height:100vh;object-fit:contain;margin:auto}</style>
+</head><body><canvas id="c" width="1080" height="1920"></canvas>
+<script>
+const LAYERS = __LAYERS__;
+const SRC = __SRC__;
+const W = 1080, H = 1920, DURATION = 20;
+const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+const img = {};
+const off = document.createElement('canvas'); off.width = W; off.height = H; const ox = off.getContext('2d');
+
+// --- utilitare de timp ---
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const eOut = x => 1 - Math.pow(1 - x, 3);
+const eExpo = x => x >= 1 ? 1 : 1 - Math.pow(2, -10 * x);
+const eInOut = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+const eBack = x => { const c = 1.4; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+const pulse = (t, at, att, dec) => t < at ? clamp(1 - (at - t) / att) ** 2 : Math.exp(-(t - at) / dec);
+// pseudo-random determinist
+const rnd = (() => { let s = 1337; return () => (s = (s * 16807) % 2147483647) / 2147483647; })();
+
+// --- particule (jar) ---
+const embers = Array.from({ length: 140 }, () => ({
+  x: rnd() * W, y: rnd() * H, v: 40 + rnd() * 140, s: .8 + rnd() * 3.2, ph: rnd() * 6.28,
+  w: 10 + rnd() * 40, f: .3 + rnd() * 1.2, z: rnd()
+}));
+const dust = Array.from({ length: 70 }, () => ({ x: rnd() * W, y: rnd() * H, vx: -8 + rnd() * 16, vy: -6 + rnd() * 12, s: .6 + rnd() * 1.4, ph: rnd() * 6.28 }));
+
+// fulgere: [timp, intensitate]
+const FLASH = [[0.35, .55], [0.55, .9], [3.6, 1.0], [14.6, .45], [14.78, .7], [18.2, .35]];
+const flash = t => FLASH.reduce((m, [a, k]) => Math.max(m, k * (t < a ? clamp(1 - (a - t) / .03) : Math.exp(-(t - a) / .09))), 0);
+
+function drawLayer(c, name, opts = {}) {
+  const g = LAYERS[name], im = img[name];
+  c.save();
+  if (opts.alpha !== undefined) c.globalAlpha = opts.alpha;
+  if (opts.filter) c.filter = opts.filter;
+  if (opts.comp) c.globalCompositeOperation = opts.comp;
+  const sc = opts.scale || 1, cx = opts.cx ?? g.x + g.w / 2, cy = opts.cy ?? g.y + g.h / 2;
+  c.translate(cx + (opts.dx || 0), cy + (opts.dy || 0)); c.scale(sc, sc); c.translate(-cx, -cy);
+  if (opts.clip) { c.beginPath(); opts.clip(c, g); c.clip(); }
+  c.drawImage(im, g.x, g.y, g.w, g.h);
+  c.restore();
+}
+
+// strălucire care trece peste un layer (doar pe pixelii lui)
+function sweep(name, p, color, width = 220, angle = .35, amt = 1) {
+  if (p <= 0 || p >= 1) return;
+  const g = LAYERS[name];
+  ox.clearRect(0, 0, W, H);
+  ox.globalCompositeOperation = 'source-over';
+  ox.drawImage(img[name], g.x, g.y, g.w, g.h);
+  ox.globalCompositeOperation = 'source-in';
+  const x = g.x - width + (g.w + width * 2) * p;
+  const gr = ox.createLinearGradient(x - width, g.y, x + width, g.y + g.h * angle);
+  gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(.5, color); gr.addColorStop(1, 'rgba(255,255,255,0)');
+  ox.fillStyle = gr; ox.fillRect(g.x, g.y, g.w, g.h);
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = amt; ctx.drawImage(off, 0, 0);
+  ctx.filter = 'blur(10px)'; ctx.globalAlpha = amt * .7; ctx.drawImage(off, 0, 0); ctx.restore();
+}
+
+// strălucire statică (glow) a unui layer
+function glow(name, a, blur = 18, opts = {}) {
+  if (a <= 0.002) return;
+  drawLayer(ctx, name, Object.assign({}, opts, { alpha: a, filter: `blur(${blur}px)`, comp: 'lighter' }));
+}
+
+function renderFrame(t) {
+  ctx.save();
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.filter = 'none'; ctx.globalAlpha = 1;
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+  const fl = flash(t);
+
+  // --- camera ---
+  const push = eInOut(prog(t, 0, 7));
+  const drift = prog(t, 7, 20);
+  const shake = Math.exp(-Math.max(0, t - 3.6) / .18) * (t > 3.6 ? 1 : 0) * 9 + Math.exp(-Math.max(0, t - 5.0) / .14) * (t > 5.0 ? 1 : 0) * 6;
+  const sx = Math.sin(t * 71) * shake, sy = Math.cos(t * 53) * shake;
+  const camBG = 1.16 - .14 * push + .035 * drift;
+  const camMan = 1.0 + .02 * drift + .006 * Math.sin(t * 1.7);
+  const panX = Math.sin(t * .35) * 6, panY = -14 * drift;
+
+  // --- fundal ---
+  const bgIn = Math.max(eOut(prog(t, 1.0, 3.4)) * .92 + .08 * eOut(prog(t, 3.4, 4.2)), fl * .9);
+  const flick = 1 + .05 * Math.sin(t * 9.1) * Math.sin(t * 3.7) + .03 * Math.sin(t * 23);
+  ctx.save();
+  ctx.translate(540 + panX + sx, 960 + panY + sy); ctx.scale(camBG, camBG); ctx.translate(-540, -960);
+  ctx.filter = `brightness(${(bgIn * flick * (1 + fl * 1.3)).toFixed(3)}) saturate(${(1 + fl * .2).toFixed(2)}) blur(${(2.5 * (1 - eOut(prog(t, 1, 5)))).toFixed(2)}px)`;
+  ctx.drawImage(img.bg, 0, 0, W, H);
+  ctx.filter = 'none';
+  // luna pulsează
+  const moonA = (.16 + .1 * Math.sin(t * 1.3)) * bgIn;
+  const mg = ctx.createRadialGradient(800, 540, 40, 800, 540, 330);
+  mg.addColorStop(0, `rgba(255,170,80,${moonA})`); mg.addColorStop(1, 'rgba(255,120,30,0)');
+  ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = mg; ctx.fillRect(400, 150, 800, 800);
+  // licărirea lumânărilor / dovleacului
+  const cand = (.12 + .1 * Math.abs(Math.sin(t * 7.3) * Math.sin(t * 2.9))) * bgIn;
+  for (const [x, y, r] of [[60, 1640, 260], [1010, 1800, 320], [160, 1780, 200]]) {
+    const cg = ctx.createRadialGradient(x, y, 10, x, y, r);
+    cg.addColorStop(0, `rgba(255,140,40,${cand})`); cg.addColorStop(1, 'rgba(255,90,10,0)');
+    ctx.fillStyle = cg; ctx.fillRect(x - r, y - r, r * 2, r * 2);
+  }
+  ctx.restore();
+
+  // --- ceață ---
+  const fogA = .13 + .05 * Math.sin(t * .6);
+  ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.globalAlpha = fogA * (.4 + .6 * bgIn);
+  const fx = (t * 28) % W;
+  ctx.drawImage(img.fog, -fx, 0, W, H); ctx.drawImage(img.fog, W - fx, 0, W, H);
+  ctx.globalAlpha = fogA * .6 * (.4 + .6 * bgIn);
+  const fx2 = (t * 55 + 300) % W;
+  ctx.drawImage(img.fog, W - fx2, 280, W, H); ctx.drawImage(img.fog, -fx2, 280, W, H);
+  ctx.restore();
+
+  // --- saxofonist ---
+  // silueta e prezentă din start în contre-jour; fulgerul de la 3.6s o aprinde
+  const mp = prog(t, 3.6, 5.0);
+  {
+    const lit = eOut(mp);
+    const sc = camMan * (1.05 - .05 * eExpo(mp));
+    const a = 1;
+    drawLayer(ctx, 'man', { alpha: a * (.55 + .2 * Math.sin(t * 2)), filter: `blur(22px) brightness(0)`, scale: sc * 1.01, cx: 540, cy: 960, dx: sx, dy: sy + 10 });
+    drawLayer(ctx, 'man', { alpha: a * (.18 + .25 * lit) * (1 + .4 * Math.sin(t * 1.3)), filter: `blur(26px) sepia(1) saturate(6) hue-rotate(-12deg) brightness(1.4)`, comp: 'lighter', scale: sc * 1.015, cx: 540, cy: 960, dx: sx, dy: sy });
+    drawLayer(ctx, 'man', { alpha: a, filter: `brightness(${(.03 + .97 * lit + fl * (.6 + .6 * lit) + (t > 3.6 ? (1 - lit) * .9 * Math.exp(-(t - 3.6) / .25) : 0)).toFixed(3)}) contrast(1.05)`, scale: sc, cx: 540, cy: 960, dx: sx, dy: sy });
+  }
+
+  // --- jar ---
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  const emA = .25 + .75 * eOut(prog(t, 0, 2));
+  for (const e of embers) {
+    const y = ((e.y - e.v * t) % (H + 100) + H + 100) % (H + 100) - 50;
+    const x = e.x + Math.sin(t * e.f + e.ph) * e.w + (t * 8 * (e.z - .5));
+    const tw = .5 + .5 * Math.sin(t * (3 + e.f * 4) + e.ph);
+    const r = e.s * (e.z > .85 ? 2.4 : 1);
+    const gr = ctx.createRadialGradient(x, y, 0, x, y, r * 4);
+    const al = emA * (.35 + .65 * tw) * (e.z > .85 ? .55 : .9);
+    gr.addColorStop(0, `rgba(255,220,150,${al})`); gr.addColorStop(.25, `rgba(255,130,30,${al * .7})`); gr.addColorStop(1, 'rgba(255,60,0,0)');
+    ctx.fillStyle = gr; ctx.fillRect(x - r * 4, y - r * 4, r * 8, r * 8);
+  }
+  for (const d of dust) {
+    const x = ((d.x + d.vx * t) % W + W) % W, y = ((d.y + d.vy * t) % H + H) % H;
+    ctx.fillStyle = `rgba(255,230,200,${.12 + .1 * Math.sin(t * 2 + d.ph)})`;
+    ctx.beginPath(); ctx.arc(x, y, d.s, 0, 6.283); ctx.fill();
+  }
+  ctx.restore();
+
+  // --- LOGO ---
+  {
+    const p = prog(t, 1.9, 3.1);
+    if (p > 0) {
+      const g = LAYERS.logo;
+      drawLayer(ctx, 'logo', {
+        alpha: eOut(p), filter: `blur(${(6 * (1 - eOut(p))).toFixed(2)}px)`, scale: 1.06 - .06 * eOut(p),
+        clip: (c, g) => { const x = g.x - 120 + (g.w + 240) * eInOut(p); c.moveTo(g.x - 200, g.y - 20); c.lineTo(x + 60, g.y - 20); c.lineTo(x - 60, g.y + g.h + 20); c.lineTo(g.x - 200, g.y + g.h + 20); }
+      });
+      sweep('logo', prog(t, 2.3, 3.4), 'rgba(255,235,200,1)', 120, .5, .9);
+      sweep('logo', prog(t, 16.0, 16.9), 'rgba(255,225,180,1)', 120, .5, .7);
+    }
+  }
+
+  // --- DATA ---
+  {
+    const pl = eInOut(prog(t, 6.9, 7.9));
+    if (pl > 0) {
+      drawLayer(ctx, 'vline', { clip: (c, g) => c.rect(g.x - 5, g.y, g.w + 10, g.h * pl) });
+      drawLayer(ctx, 'vline2', { clip: (c, g) => c.rect(g.x - 5, g.y + g.h * (1 - pl), g.w + 10, g.h * pl) });
+    }
+    const p = prog(t, 7.1, 8.3);
+    if (p > 0) {
+      // 31 / OCTOBER / FROM 22:00 apar pe rânduri, de sus în jos
+      const rows = [[0, .37, 0], [.37, .58, .18], [.58, 1, .36]];
+      for (const [a, b, d] of rows) {
+        const q = eOut(prog(p, d, d + .6));
+        if (q <= 0) continue;
+        drawLayer(ctx, 'date', { alpha: q, dx: -24 * (1 - q), filter: `blur(${(4 * (1 - q)).toFixed(2)}px)`, clip: (c, g) => c.rect(g.x - 40, g.y + g.h * a, g.w + 80, g.h * (b - a)) });
+      }
+      sweep('date', prog(t, 8.1, 9.0), 'rgba(255,220,170,1)', 90, 1.2, .8);
+    }
+  }
+
+  // --- LORI SAX ---
+  {
+    const p = prog(t, 4.9, 5.9);
+    if (p > 0) {
+      const q = eExpo(p);
+      glow('lori', (1 - q) * 1.2 + .18 + .06 * Math.sin(t * 2.2), 26, { scale: 1.5 - .5 * q });
+      drawLayer(ctx, 'lori', { alpha: clamp(p * 3), scale: 1.5 - .5 * q, filter: `blur(${(10 * (1 - q)).toFixed(2)}px) brightness(${(1 + 1.5 * (1 - q)).toFixed(2)})` });
+    }
+    const p2 = prog(t, 5.6, 6.6);
+    if (p2 > 0) {
+      const q = eInOut(p2);
+      glow('sax', .25 + .1 * Math.sin(t * 2.6 + 1) + (1 - eOut(p2)) * .6, 22);
+      drawLayer(ctx, 'sax', {
+        dy: 30 * (1 - eOut(p2)),
+        clip: (c, g) => { const x = g.x - 100 + (g.w + 200) * q; c.moveTo(g.x - 150, g.y - 30); c.lineTo(x + 50, g.y - 30); c.lineTo(x - 50, g.y + g.h + 30); c.lineTo(g.x - 150, g.y + g.h + 30); }
+      });
+    }
+    sweep('lori', prog(t, 6.2, 7.3), 'rgba(255,240,215,1)', 160, .6, .9);
+    sweep('sax', prog(t, 6.5, 7.5), 'rgba(255,190,110,1)', 140, .6, .9);
+    sweep('lori', prog(t, 13.2, 14.4), 'rgba(255,240,215,1)', 160, .6, .75);
+    sweep('sax', prog(t, 13.5, 14.6), 'rgba(255,190,110,1)', 140, .6, .75);
+    sweep('lori', prog(t, 18.4, 19.6), 'rgba(255,240,215,1)', 160, .6, .75);
+    sweep('sax', prog(t, 18.7, 19.8), 'rgba(255,190,110,1)', 140, .6, .75);
+  }
+
+  // --- HALLOWEEN PARTY ---
+  {
+    const p = prog(t, 8.4, 9.6);
+    if (p > 0) {
+      const q = eOut(p);
+      drawLayer(ctx, 'hp', { alpha: q, scale: 1.18 - .18 * q, filter: `blur(${(8 * (1 - q)).toFixed(2)}px)` });
+      const pl = eInOut(prog(t, 8.8, 9.8));
+      drawLayer(ctx, 'hpline', { clip: (c, g) => c.rect(g.x + g.w / 2 * (1 - pl), g.y - 5, g.w * pl, g.h + 10) });
+      sweep('hpline', prog(t, 9.6, 10.4), 'rgba(255,230,190,1)', 80, .1, 1);
+    }
+  }
+
+  // --- BANNER ---
+  {
+    const p = prog(t, 10.0, 10.9);
+    if (p > 0) {
+      const q = eInOut(p);
+      // margine zimțată (pensulă) la ștergere
+      drawLayer(ctx, 'brush', {
+        clip: (c, g) => {
+          const x = g.x - 60 + (g.w + 120) * q;
+          c.moveTo(g.x - 10, g.y - 10);
+          for (let i = 0; i <= 24; i++) { const yy = g.y - 10 + (g.h + 20) * i / 24; c.lineTo(x + Math.sin(i * 2.7) * 22 + Math.cos(i * 1.3) * 14, yy); }
+          c.lineTo(g.x - 10, g.y + g.h + 10);
+        }
+      });
+      glow('brush', (1 - eOut(p)) * .7 + .12 + .05 * Math.sin(t * 3), 20);
+    }
+    const p2 = prog(t, 10.7, 11.6);
+    if (p2 > 0) {
+      const q = eOut(p2);
+      drawLayer(ctx, 'btext', { alpha: q, dy: 16 * (1 - q), filter: `blur(${(5 * (1 - q)).toFixed(2)}px) brightness(${(1 + .8 * (1 - q)).toFixed(2)})` });
+      glow('btext', .25 + .15 * Math.sin(t * 4) * (t > 12 ? 1 : 0), 14);
+      sweep('btext', prog(t, 11.5, 12.4), 'rgba(255,220,170,1)', 110, .4, .9);
+      sweep('btext', prog(t, 15.4, 16.3), 'rgba(255,220,170,1)', 110, .4, .8);
+    }
+  }
+
+  // --- RSVP ---
+  {
+    const pl = eInOut(prog(t, 11.8, 12.7));
+    if (pl > 0) drawLayer(ctx, 'lines2', { clip: (c, g) => c.rect(g.x + g.w / 2 * (1 - pl), g.y - 5, g.w * pl, g.h + 10) });
+    const p = prog(t, 12.0, 13.0);
+    if (p > 0) {
+      const q = eOut(p);
+      drawLayer(ctx, 'rsvp', { alpha: q, dy: 20 * (1 - q), filter: `blur(${(5 * (1 - q)).toFixed(2)}px)` });
+      sweep('rsvp', prog(t, 13.0, 13.9), 'rgba(255,235,210,1)', 100, .3, .8);
+      sweep('rsvp', prog(t, 17.0, 17.9), 'rgba(255,235,210,1)', 100, .3, .8);
+    }
+  }
+
+  // --- fulger / flash ---
+  if (fl > .01) {
+    ctx.save(); ctx.globalCompositeOperation = 'screen';
+    ctx.fillStyle = `rgba(255,236,215,${(fl * .55).toFixed(3)})`; ctx.fillRect(0, 0, W, H); ctx.restore();
+  }
+  // flash portocaliu la impact
+  const hit = pulse(t, 3.6, .05, .35) * .5 + pulse(t, 5.0, .05, .3) * .35 + pulse(t, 10.0, .05, .4) * .15;
+  if (hit > .01) {
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    const hg = ctx.createRadialGradient(540, 900, 0, 540, 900, 1100);
+    hg.addColorStop(0, `rgba(255,150,60,${hit})`); hg.addColorStop(1, 'rgba(255,80,0,0)');
+    ctx.fillStyle = hg; ctx.fillRect(0, 0, W, H); ctx.restore();
+  }
+
+  // --- vignetă + grain + lens ---
+  ctx.save();
+  const vg = ctx.createRadialGradient(540, 900, 380, 540, 960, 1250);
+  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.62)');
+  ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+  ctx.globalCompositeOperation = 'overlay'; ctx.globalAlpha = .09;
+  const gi = Math.floor(t * 30) % 4;
+  ctx.drawImage(img.grain, (gi % 2) * -256, Math.floor(gi / 2) * -256, W + 512, H + 512);
+  ctx.restore();
+  // intrare din negru
+  const fin = 1 - eOut(prog(t, 0, .9));
+  if (fin > 0) { ctx.fillStyle = `rgba(0,0,0,${fin * .85})`; ctx.fillRect(0, 0, W, H); }
+  ctx.restore();
+}
+
+const ready = Promise.all(Object.entries(SRC).map(([k, s]) => new Promise(r => { const i = new Image(); i.onload = () => { img[k] = i; r(); }; i.src = s; })));
+window.FILM = { ready, renderFrame, DURATION, canvas: cv };
+if (!location.search.includes('render')) ready.then(() => { const t0 = performance.now(); const loop = () => { renderFrame(((performance.now() - t0) / 1000) % DURATION); requestAnimationFrame(loop); }; loop(); });
+</script></body></html>
