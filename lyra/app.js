@@ -103,6 +103,26 @@ function tagsHTML(it, max = 3) {
   return f.slice(0, max).map(x => `<span class="tag ${x}">${esc(t("tags")[x])}</span>`).join("");
 }
 
+/* ---------- anonymous statistics (Umami, cookieless, invisible to guests) ----------
+   Each event is one name (no extra properties) so the free monthly quota lasts.
+   Product and category names are always sent in Romanian so the counts add up
+   across languages. Nothing is sent from a local preview. */
+const STATS_ID = (window.LYRA_ANALYTICS || {}).umamiWebsiteId;
+const STATS_ON = !!STATS_ID && !/^(localhost|127\.|0\.0\.0\.0|$)/.test(location.hostname);
+const statsQueue = [];
+if (STATS_ON) {
+  const sc = document.createElement("script");
+  sc.defer = true; sc.src = "https://cloud.umami.is/script.js"; sc.dataset.websiteId = STATS_ID;
+  sc.onload = () => { while (statsQueue.length) send(statsQueue.shift()); };
+  document.head.appendChild(sc);
+}
+function send(name) { try { window.umami.track(name); } catch (e) {} }
+function track(name) {
+  if (!STATS_ON) return;
+  name = name.slice(0, 50);
+  window.umami && window.umami.track ? send(name) : statsQueue.push(name);
+}
+
 /* =====================================================================
    RENDER
    ===================================================================== */
@@ -255,6 +275,7 @@ document.addEventListener("click", e => {
 function goCat(id) {
   const sec = document.getElementById("sec-" + id);
   if (!sec) return;
+  track("categorie: " + cat(id).n[0]);
   closeDish();
   // Jump instantly: a smooth scroll would pass (and load) every photo in between.
   sec.scrollIntoView({ behavior: "instant", block: "start" });
@@ -275,6 +296,7 @@ function focusItem(id) {
    ===================================================================== */
 function openDish(id) {
   const it = BY[id]; if (!it) return;
+  track("produs: " + it.n[0]);
   const c = cat(it.cat), wine = it.wine && BY[it.wine];
   const tagAll = tagsHTML(it, 9);
   $("#dish").innerHTML = `
@@ -326,6 +348,7 @@ addEventListener("keydown", e => {
    ===================================================================== */
 function saveOrder() { try { localStorage.setItem("lyra-order", JSON.stringify(st.order)); } catch (e) {} }
 function addItem(id, fromEl) {
+  track("în listă: " + BY[id].n[0]);
   st.order[id] = (st.order[id] || 0) + 1; saveOrder(); updateBadge(true);
   toast(t("added"));
   if (fromEl && fromEl.classList.contains("add")) {
@@ -470,6 +493,7 @@ $("#bbListBtn").onclick = openList;
 $("#toTop").onclick = () => scrollTo({ top: 0, behavior: "instant" });
 $("#btnLang").onclick = () => {
   const order = ["ro", "en", "hu"]; setLang(order[(order.indexOf(lang) + 1) % 3]);
+  track("limba schimbată: " + lang.toUpperCase());
   const y = scrollY; render(); scrollTo(0, y);
 };
 function setLang(l) { lang = l; try { localStorage.setItem("lyra-lang", l); } catch (e) {} }
@@ -508,6 +532,7 @@ function goFullscreen() {
 document.querySelectorAll(".lang-btn").forEach(b => b.onclick = () => {
   goFullscreen();
   setLang(b.dataset.lang);
+  track("limba: " + b.dataset.lang.toUpperCase());
   render();
   $("#app").hidden = false;
   $("#intro").classList.add("leave");

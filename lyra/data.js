@@ -16,6 +16,12 @@
    Pentru a schimba un preț: modifică doar câmpul p.
    ===================================================================== */
 
+/* Statistici (invizibile pentru clienți). Pune aici „Website ID” din contul
+   Umami Cloud (Settings → Websites → Edit). Gol = statisticile sunt oprite. */
+window.LYRA_ANALYTICS = {
+  umamiWebsiteId: ""
+};
+
 window.LYRA_INFO = {
   phone: "0749 027726",
   orders: "0265 333 090",
