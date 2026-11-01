@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { COMPANY } from "../lib/company";
 import SiteFooter from "../components/SiteFooter";
+import Wordmark from "../components/Wordmark";
 
 const UPDATED = "9 octombrie 2026";
 const contact = [COMPANY.email && `email ${COMPANY.email}`, COMPANY.phone && `telefon ${COMPANY.phone}`].filter(Boolean).join(" sau ")
@@ -11,7 +12,7 @@ function Page({ title, children }: { title: string; children: React.ReactNode })
   useEffect(() => { document.title = `${title} · Lyra's Delivery`; window.scrollTo(0, 0); }, [title]);
   return (
     <div className="legal">
-      <header className="acc-top"><Link to="/"><img src="/img/logo-lyra.jpg" alt="Lyra" /></Link><b>{COMPANY.brand}</b><Link className="mini" to="/">Înapoi la meniu</Link></header>
+      <header className="acc-top"><Link to="/"><Wordmark small /></Link><b>{COMPANY.brand}</b><Link className="mini" to="/">Înapoi la meniu</Link></header>
       <article className="legal-doc">
         <h1>{title}</h1>
         <p className="muted">Ultima actualizare: {UPDATED}</p>

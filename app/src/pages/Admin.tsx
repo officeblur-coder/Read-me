@@ -6,6 +6,7 @@ import { BannersTab, PromosTab, CodesTab, TeamTab } from "./AdminPromo";
 import { uploadImage } from "../lib/upload";
 import { ALLERGENS, MEAT, TAGS, imgUrl, lei } from "../lib/format";
 import Icon from "../components/Icon";
+import Wordmark from "../components/Wordmark";
 import { Login } from "./Reception";
 
 type Draft = Omit<Item, "price"> & { price: string; isNew?: boolean };
@@ -35,7 +36,7 @@ export default function Admin() {
   if (role === undefined) return <div className="login"><p className="muted">Se verifică accesul…</p></div>;
   if (role !== "admin") return (
     <div className="login"><form onSubmit={e => { e.preventDefault(); supabase.auth.signOut(); }}>
-      <img src="/img/logo-lyra.jpg" alt="Lyra" /><h1>Fără acces</h1>
+      <Wordmark small /><h1>Fără acces</h1>
       <p className="muted" style={{ textAlign: "center" }}>Contul {session.user.email} nu are drept de administrator. Pentru comenzi folosește <a href="/receptie">recepția</a>.</p>
       <button className="big ghost">Ieși din cont</button></form></div>
   );
@@ -94,7 +95,7 @@ function AdminPanel({ email }: { email: string }) {
   return (
     <div className="adm">
       <header className="adm-top">
-        <img src="/img/logo-lyra.jpg" alt="Lyra" />
+        <Wordmark small />
         <div className="adm-title"><b>Administrare meniu</b><small>{email}</small></div>
         <nav className="adm-tabs" aria-label="Secțiuni">
           {([["menu", "Meniu"], ["banners", "Bannere"], ["promos", "Promoții & popup"], ["codes", "Coduri reducere"], ["team", "Echipa"]] as const).map(([k, l]) =>

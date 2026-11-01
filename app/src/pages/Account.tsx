@@ -5,6 +5,7 @@ import { STARS, TIERS, nextTier, tierOf, useCustomer, type Customer } from "../l
 import type { Order } from "../lib/types";
 import { ALLERGENS, imgUrl, lei } from "../lib/format";
 import Icon from "../components/Icon";
+import Wordmark from "../components/Wordmark";
 import BottomNav from "../components/BottomNav";
 import SiteFooter from "../components/SiteFooter";
 
@@ -27,7 +28,7 @@ export default function Account() {
   if (!ready) return <div className="acc"><p className="muted" style={{ padding: 40, textAlign: "center" }}>Se încarcă…</p></div>;
   return (
     <div className="acc">
-      <header className="acc-top"><Link to="/"><img src="/img/logo-lyra.jpg" alt="Lyra" /></Link><b>Lyra Club</b>
+      <header className="acc-top"><Link to="/"><Wordmark small /></Link><b>Lyra Club</b>
         {session && <button className="mini" onClick={() => supabase.auth.signOut()}>Ieși din cont</button>}</header>
       {session && customer ? <Member c={customer} refresh={refresh} /> : <SignIn />}
       <SiteFooter />

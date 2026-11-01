@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabase";
 import type { Order } from "../lib/types";
 import { hm, lei, mmss } from "../lib/format";
 import Icon from "../components/Icon";
+import Wordmark from "../components/Wordmark";
 import { Login } from "./Reception";
 
 type Me = { id: string; name: string; role: string };
@@ -29,7 +30,7 @@ export default function Courier() {
   if (me === undefined) return <div className="login"><p className="muted">Se verifică accesul…</p></div>;
   if (!me) return (
     <div className="login"><form onSubmit={e => { e.preventDefault(); supabase.auth.signOut(); }}>
-      <img src="/img/logo-lyra.jpg" alt="Lyra" /><h1>Fără acces</h1>
+      <Wordmark small /><h1>Fără acces</h1>
       <p className="muted" style={{ textAlign: "center" }}>Contul {session.user.email} nu e în echipa Lyra. Roagă administratorul să te adauge ca și curier.</p>
       <button className="big ghost">Ieși din cont</button></form></div>
   );
@@ -90,7 +91,7 @@ function CourierApp({ me }: { me: Me }) {
   return (
     <div className="cr">
       <header className="cr-top">
-        <img src="/img/logo-lyra.jpg" alt="Lyra" />
+        <Wordmark small />
         <div><b>Curier · {me.name}</b><small>{doneToday.length} livrări azi · {lei(doneToday.reduce((s, o) => s + (o.payment === "online" ? 0 : Number(o.total)), 0))} încasat</small></div>
         <button className="mini" onClick={() => supabase.auth.signOut()} aria-label="Ieși"><Icon name="logout" size={15} /></button>
       </header>

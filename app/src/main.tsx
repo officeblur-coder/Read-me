@@ -3,8 +3,8 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter, HashRouter, Routes, Route, useParams } from "react-router-dom";
 import "./styles.css";
 
-// light theme by default; the visitor can switch to dark (remembered on this device)
-try { document.documentElement.dataset.theme = localStorage.getItem("lyra-theme") === "dark" ? "dark" : "light"; } catch { document.documentElement.dataset.theme = "light"; }
+// dark "Lyra Night" theme by default; the visitor can switch to light (remembered on this device)
+try { document.documentElement.dataset.theme = localStorage.getItem("lyra-theme") === "light" ? "light" : "dark"; } catch { document.documentElement.dataset.theme = "dark"; }
 import Menu from "./pages/Menu";
 import Track from "./pages/Track";
 import Reception from "./pages/Reception";

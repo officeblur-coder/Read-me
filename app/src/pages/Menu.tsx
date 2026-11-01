@@ -8,7 +8,7 @@ import { flyToCart, haptic } from "../lib/fx";
 import Icon from "../components/Icon";
 import BottomNav from "../components/BottomNav";
 import SiteFooter from "../components/SiteFooter";
-import { BURGER_CATS, CAT_IMG, EXTRA_IDS, MAIN_CATS, MOODS, SEARCH_PH, UPSELL, moodFor } from "../lib/menuConfig";
+import { BURGER_CATS, CAT_ICON, EXTRA_IDS, MAIN_CATS, POPULAR, SEARCH_PH, UPSELL } from "../lib/menuConfig";
 
 type Lang = "ro" | "hu";
 type ItemSheet = { id: string; qty: number; vi: number; extras: string[]; note: string };
@@ -49,7 +49,7 @@ export default function Menu({ source }: { source?: string }) {
   const [lang, setLang] = useState<Lang>("ro");
   const [mode, setMode] = useState<"livrare" | "ridicare">("livrare");
   const [q, setQ] = useState("");
-  const [mood, setMood] = useState(() => moodFor(new Date().getHours()));
+  const [drawer, setDrawer] = useState(false);
   const [activeCat, setActiveCat] = useState("");
   const [cart, setCart] = useState<CartLine[]>(loadCart);
   const [sheet, setSheet] = useState<ItemSheet | null>(null);
@@ -270,10 +270,10 @@ export default function Menu({ source }: { source?: string }) {
   const query = q.trim().toLowerCase();
   const match = (it: Item) => !query || `${it.name_ro} ${it.name_hu} ${it.desc_ro}`.toLowerCase().includes(query);
   const visibleCats = cats.filter(c => items.some(i => i.category_id === c.id));
-  const moodItems = (MOODS.find(m => m.id === mood)?.ids || []).map(id => byId[id]).filter(it => it && it.image);
-  const h = new Date().getHours();
-  const firstName = customer?.name?.split(" ")[0];
-  const hello = L ? (h < 11 ? "Jó reggelt" : h < 18 ? "Jó napot" : "Jó estét") : (h < 11 ? "Bună dimineața" : h < 18 ? "Bună ziua" : "Bună seara");
+  // "Cele mai comandate": dishes tagged "top" in admin, otherwise the default picks
+  const tagged = items.filter(it => it.tags.includes("top") && it.image);
+  const popular = (tagged.length ? tagged : POPULAR.map(id => byId[id]).filter(it => it && it.image)).slice(0, 8);
+  const catOf = (id: string | null) => cats.find(c => c.id === id);
 
   if (loadErr) return <div className="m-page"><p className="closed">{loadErr}</p></div>;
 
@@ -305,9 +305,10 @@ export default function Menu({ source }: { source?: string }) {
 
       {validCart.length === 0 ? (
         <div className="cp-empty">
-          <div className="cp-empty-ic"><Icon name="bag" size={34} /></div>
-          <b>Coșul e gol</b>
-          <p>Alege ceva bun din meniu. Livrarea e gratuită peste {lei(freeOver)}.</p>
+          <div className="cp-empty-ic"><Icon name="bag" size={38} /></div>
+          <b>Coșul este gol</b>
+          <p>Alege preparatele preferate din meniul Lyra's. Livrarea e gratuită peste {lei(freeOver)}.</p>
+          <button className="cp-empty-go" onClick={() => { setCartOpen(false); if (visibleCats[0]) jump(visibleCats[0].id); }}><Icon name="cutlery" size={18} />Vezi meniul</button>
         </div>
       ) : step === "cart" ? (<>
         <div className="cp-lines">
@@ -404,70 +405,86 @@ export default function Menu({ source }: { source?: string }) {
       {/* ---------- top bar ---------- */}
       <header className="topbar" ref={topRef}>
         <div className="tb-in">
-          <a className="brand" href="/" aria-label="Lyra's Delivery · acasă"><img src="/img/logo-lyra.jpg" alt="Lyra" /><b className="wm">Lyra's<span>Delivery</span></b></a>
-          <div className="tb-hello"><small>{hello}{firstName ? `, ${firstName}` : ""}!</small>
-            <div className="seg tb-mode" role="group" aria-label="Livrare sau ridicare">
-              <button aria-pressed={mode === "livrare"} onClick={() => setMode("livrare")}>{t.deliv}</button>
-              <button aria-pressed={mode === "ridicare"} onClick={() => setMode("ridicare")}>{t.pick}</button>
-            </div>
-          </div>
-          <label className="tb-search"><Icon name="search" size={17} /><input type="search" value={q} onChange={e => setQ(e.target.value)} placeholder={t.search} aria-label="Caută în meniu" /></label>
-          <button className="tb-ic" onClick={toggleTheme} aria-label={dark ? "Temă deschisă" : "Temă închisă"}><Icon name={dark ? "sun" : "moon"} size={18} /></button>
-          <button className="tb-ic tb-lang" onClick={() => setLang(lang === "ro" ? "hu" : "ro")} aria-label="Schimbă limba">{lang === "ro" ? "RO" : "HU"}</button>
-          <Link to="/cont" className="tb-club">{customer ? <><span className={`club-dot ${tier.cls}`} /><b className="num">{customer.points}</b><small>puncte</small></> : <><Icon name="star" size={16} fill /><b>Lyra Club</b></>}</Link>
+          <button className="tb-ic tb-burger" onClick={() => setDrawer(true)} aria-label="Meniu"><Icon name="menu" size={22} /></button>
+          <a className="wordmark" href="/" aria-label="Lyra's Delivery · acasă">
+            <b>LYRA’S</b><span>DELIVERY</span>
+            <svg viewBox="0 0 120 10" aria-hidden="true"><path d="M4 6c30-5 80-5 112 0" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" /></svg>
+          </a>
+          <button className="tb-where" onClick={() => setMode(mode === "livrare" ? "ridicare" : "livrare")} aria-label="Livrare sau ridicare">
+            <Icon name="pin" size={17} /><span>{mode === "livrare" ? `${t.deliv} · Mureș` : `${t.pick} · Acățari`}</span><Icon name="chev" size={15} />
+          </button>
+          <label className="tb-search"><Icon name="search" size={18} /><input type="search" value={q} onChange={e => setQ(e.target.value)} placeholder={t.search} aria-label="Caută în meniu" /></label>
+          <Link to="/cont" className="tb-ic tb-user" aria-label="Contul meu · Lyra Club"><Icon name="user" size={20} />{customer && <em className="num">{customer.points}</em>}</Link>
+          <button className="tb-cart" onClick={() => { if (window.matchMedia("(min-width:1100px)").matches) document.querySelector(".cartcol")?.scrollIntoView({ behavior: "smooth", block: "nearest" }); else setCartOpen(true); }} aria-label="Coșul tău">
+            <Icon name="cart" size={20} /><b className="num">{lei(sub)}</b>{count > 0 && <i className="num">{count}</i>}
+          </button>
         </div>
       </header>
+      {drawer && <div className="drawer-wrap"><div className="veil" onClick={() => setDrawer(false)} />
+        <nav className="drawer" aria-label="Meniu principal">
+          <div className="dr-head"><span className="wordmark sm"><b>LYRA’S</b><span>DELIVERY</span></span><button className="x-btn" onClick={() => setDrawer(false)} aria-label="Închide">×</button></div>
+          <button onClick={() => { setDrawer(false); window.scrollTo({ top: 0, behavior: "smooth" }); }}><Icon name="cutlery" size={19} />{t.menu}</button>
+          <Link to="/cont" onClick={() => setDrawer(false)}><Icon name="star" size={19} />{customer ? `Lyra Club · ${customer.points} puncte` : "Lyra Club · intră în cont"}</Link>
+          <Link to="/cont" onClick={() => setDrawer(false)}><Icon name="orders" size={19} />Comenzile mele</Link>
+          <div className="dr-row"><button onClick={toggleTheme}><Icon name={dark ? "sun" : "moon"} size={19} />{dark ? "Temă deschisă" : "Temă întunecată"}</button>
+            <button onClick={() => setLang(lang === "ro" ? "hu" : "ro")}><b className="dr-lang">{lang === "ro" ? "HU" : "RO"}</b>{lang === "ro" ? "Magyarul" : "Românește"}</button></div>
+          <div className="dr-legal"><Link to="/termeni">Termeni și condiții</Link><Link to="/confidentialitate">Confidențialitate</Link></div>
+        </nav></div>}
       {settings && !settings.accepting_orders && <p className="closed">Restaurantul nu preia comenzi online în acest moment. Poți răsfoi meniul.</p>}
 
       <div className="shell">
         <main className="m-main">
           {!query && <>
-            {/* ---------- stories: categories ---------- */}
-            <nav className="stories" aria-label="Categorii">
-              {visibleCats.map(c => {
-                const img = CAT_IMG[c.id] || items.find(i => i.category_id === c.id && i.image)?.image;
-                return (
-                  <button key={c.id} className="story" onClick={() => jump(c.id)}>
-                    <span className="story-ring">{img ? <img src={imgUrl(img)!} alt="" loading="lazy" /> : <i />}</span>
-                    <span className="story-n">{catName(c)}</span>
-                  </button>
-                );
-              })}
-            </nav>
-
-            {/* ---------- hero carousel ---------- */}
-            {shownBanners.length > 0 && <section className="hero-wrap">
+            {/* ---------- hero: banners from admin ---------- */}
+            {shownBanners.length > 0 && <section className="hero2">
               <div className="hero-track" ref={heroRef} onScroll={e => { const el = e.currentTarget; setSlide(Math.round(el.scrollLeft / el.clientWidth)); }}>
-                {shownBanners.map((bn, i) => (
-                  <button key={bn.id} className="hero" onClick={() => bn.category_id && jump(bn.category_id)}
-                    style={{ backgroundImage: bn.image ? `url(${imgUrl(bn.image)})` : undefined }}>
-                    <div className="h-txt">
-                      {bn.chip && <span className={`chip-hot ${i % 2 ? "alt" : ""}`}>{bn.chip}</span>}
-                      {bn.title && <h2>{bn.title}</h2>}
-                      {bn.body && <p className="h-lead">{bn.body}</p>}
-                      {bn.cta && <span className="h-cta">{bn.cta} →</span>}
+                {shownBanners.map(bn => {
+                  const head = bn.title || (bn.category_id && catOf(bn.category_id) ? catName(catOf(bn.category_id)!) : "Lyra's Delivery");
+                  return (
+                    <div key={bn.id} className="h2-slide">
+                      <div className="h2-txt">
+                        <span className="h2-kick">{L ? "A LYRA'S AJÁNLATA" : "RECOMANDAREA LYRA'S"}</span>
+                        <h2>{head}<svg viewBox="0 0 300 16" aria-hidden="true"><path d="M6 11c60-7 150-9 210-6M150 13c50-3 100-3 144-1" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" /></svg></h2>
+                        {bn.body && <p>{bn.body}</p>}
+                        <button className="h2-cta" onClick={() => bn.category_id && jump(bn.category_id)}>{bn.cta || (L ? "Rendelj most" : "Comandă acum")}<Icon name="arrow" size={18} /></button>
+                      </div>
+                      <button className="h2-img" onClick={() => bn.category_id && jump(bn.category_id)} aria-label={head}>
+                        {bn.image && <img src={imgUrl(bn.image)!} alt="" />}
+                        {bn.chip && <span className="h2-note">{bn.chip}<svg viewBox="0 0 60 60" aria-hidden="true"><path d="M50 4c4 20-6 38-34 44M16 48l9-10M16 48l12 3" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" /></svg></span>}
+                      </button>
                     </div>
-                  </button>
-                ))}
+                  );
+                })}
               </div>
               {shownBanners.length > 1 && <div className="dots">{shownBanners.map((b, i) => <button key={b.id} aria-label={`Banner ${i + 1}`} aria-current={slide === i} onClick={() => heroRef.current?.scrollTo({ left: i * heroRef.current.clientWidth, behavior: "smooth" })} />)}</div>}
             </section>}
 
-            {/* ---------- moods ---------- */}
-            <section className="moods-wrap">
-              <div className="sec-h"><h2>{t.mood}</h2></div>
-              <div className="mood-chips">
-                {MOODS.map(m => <button key={m.id} aria-pressed={mood === m.id} onClick={() => { setMood(m.id); haptic(6); }}>{L ? m.hu : m.ro}</button>)}
-              </div>
-              <div className="rail" key={mood}>
-                {moodItems.map(it => (
-                  <article key={it.id} className="rc" data-card>
-                    <button className="rc-img" onClick={() => openItem(it)} aria-label={nm(it)}><img src={imgUrl(it.image)!} alt="" loading="lazy" /></button>
-                    <div className="rc-body"><button className="pc-name" onClick={() => openItem(it)}><h3>{nm(it)}</h3></button>{buyRow(it)}</div>
+            {/* ---------- categories ---------- */}
+            <nav className="cat-tiles" aria-label="Categorii">
+              {visibleCats.map(c => (
+                <button key={c.id} aria-current={activeCat === c.id} onClick={() => jump(c.id)}>
+                  <Icon name={CAT_ICON[c.id] || "dish"} size={30} /><span>{catName(c)}</span>
+                </button>
+              ))}
+            </nav>
+
+            {/* ---------- most ordered ---------- */}
+            {popular.length > 0 && <section className="top-wrap">
+              <div className="sec-h top-h"><h2>{L ? "Legnépszerűbb" : "Cele mai comandate"}</h2>
+                <button className="see-all" onClick={() => visibleCats[0] && jump(visibleCats[0].id)}>{L ? "Teljes étlap" : "Vezi tot meniul"}<Icon name="arrow" size={16} /></button></div>
+              <div className="top-rail">
+                {popular.map(it => (
+                  <article key={it.id} className="top-card" data-card>
+                    <button className="tc-img" onClick={() => openItem(it)} aria-label={nm(it)}><img src={imgUrl(it.image)!} alt="" loading="lazy" /></button>
+                    <div className="tc-body">
+                      <button className="tc-name" onClick={() => openItem(it)}><h3>{nm(it)}</h3></button>
+                      {catOf(it.category_id) && <small>{catName(catOf(it.category_id)!)}</small>}
+                      {buyRow(it)}
+                    </div>
                   </article>
                 ))}
               </div>
-            </section>
+            </section>}
           </>}
 
           {/* ---------- sticky category pills ---------- */}

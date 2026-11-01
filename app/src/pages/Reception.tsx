@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabase";
 import type { Item, Order, OrderStatus, Promo, Settings } from "../lib/types";
 import { ALLERGENS, hm, imgUrl, lei, mmss } from "../lib/format";
 import Icon from "../components/Icon";
+import Wordmark from "../components/Wordmark";
 
 const ETAS = [20, 30, 40, 50, 60, 75];
 const REASONS = ["Produs epuizat", "Zonă în afara livrării", "Bucătăria e plină", "Restaurantul se închide"];
@@ -54,7 +55,7 @@ export default function Reception() {
   if (isStaff === null) return <div className="login"><p className="muted">Se verifică accesul…</p></div>;
   if (!isStaff) return (
     <div className="login"><form onSubmit={e => { e.preventDefault(); supabase.auth.signOut(); }}>
-      <img src="/img/logo-lyra.jpg" alt="Lyra" /><h1>Fără acces la recepție</h1>
+      <Wordmark small /><h1>Fără acces la recepție</h1>
       <p className="muted" style={{ textAlign: "center" }}>Contul {session.user.email} nu are acces la recepție. Curierii folosesc <a href="/curier">lyrasdelivery.ro/curier</a>.</p>
       <button className="big ghost">Ieși din cont</button></form></div>
   );
@@ -74,7 +75,7 @@ export function Login({ title = "Recepție" }: { title?: string }) {
         setBusy(false);
         if (error) setErr(error.message === "Invalid login credentials" ? "Email sau parolă greșită." : error.message);
       }}>
-        <img src="/img/logo-lyra.jpg" alt="Lyra" />
+        <Wordmark small />
         <h1>{title}</h1>
         <input className="in" type="email" required placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} autoComplete="username" aria-label="Email" />
         <input className="in" type="password" required placeholder="Parolă" value={password} onChange={e => setPassword(e.target.value)} autoComplete="current-password" aria-label="Parolă" />
@@ -188,7 +189,7 @@ function Console({ email }: { email: string }) {
   return (
     <div className="rx">
       <aside className="rx-side">
-        <div className="rb"><img src="/img/logo-lyra.jpg" alt="Lyra" /><small>Recepție</small></div>
+        <div className="rb"><Wordmark small /><small>Recepție</small></div>
         <button className="rnav" aria-current={tab === "orders"} onClick={() => setTab("orders")}><Icon name="orders" />Comenzi{incoming.length > 0 && <span className="n">{incoming.length}</span>}</button>
         <button className="rnav" aria-current={tab === "menu"} onClick={() => setTab("menu")}><Icon name="dish" />Meniu & stoc</button>
         <button className="rnav" aria-current={tab === "promos"} onClick={() => setTab("promos")}><Icon name="send" />Promoții</button>
@@ -299,7 +300,7 @@ function Console({ email }: { email: string }) {
       {showStart && (
         <div className="start-veil">
           <div className="start-card">
-            <img src="/img/logo-lyra.jpg" alt="Lyra" />
+            <Wordmark small />
             <h2>Pornește consola</h2>
             <p>Apasă o dată ca să pornești <b>soneria</b> pentru comenzi noi. Ecranul rămâne aprins cât e deschisă consola.</p>
             {incoming.length > 0 && <p className="start-new">{incoming.length} {incoming.length === 1 ? "comandă nouă te așteaptă" : "comenzi noi te așteaptă"}</p>}

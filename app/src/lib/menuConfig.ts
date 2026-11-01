@@ -29,3 +29,12 @@ export const moodFor = (h: number) => (h < 11 ? "dimineata" : h < 16 ? "casa" : 
 
 export const BURGER_CATS = ["smash", "burger"];
 export const SEARCH_PH = { ro: "Caută ciolan, burger, papanaș…", hu: "Keresés…" };
+// icon on the category tiles (names from components/Icon); anything missing gets "dish"
+export const CAT_ICON: Record<string, string> = {
+  antreuri: "dish", dejun: "egg", nou: "spark", platouri: "dish", specialitati: "flame", smash: "burger", burger: "burger",
+  supe: "bowl", porc: "steak", ardeal: "house", pui: "leg", peste: "fish", paste: "pasta", salate: "salad", vegetariene: "leaf",
+  post: "leaf", kids: "smile", garnituri: "fries", muraturi: "jar", sosuri: "drop", desert: "cake",
+  limonade: "drink", racoritoare: "can", cocktail: "cocktail", vin: "wine", bere: "beer",
+};
+// "Cele mai comandate" when no dish carries the "top" tag (set it in admin to choose them yourself)
+export const POPULAR = ["double-smash", "ciolan-lyra", "cordon-bleu", "platou-lyra", "costite", "chicken-burger", "papanas", "ceafa-tiganeasca"];

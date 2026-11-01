@@ -46,6 +46,7 @@ export const TAGS: Record<string, [string, string]> = {
   smoker: ["Din BBQ Pit Box Smoker", "BBQ Pit Box Smokerből"],
   share: ["Pentru 2–3 persoane", "2–3 személyre"],
   alc: ["Conține alcool · 18+", "Alkoholt tartalmaz · 18+"],
+  top: ["Cele mai comandate", "Legnépszerűbb"],
 };
 
 /** Saved order links on this device, so a guest can find their order again. */

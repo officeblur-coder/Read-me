@@ -19,3 +19,7 @@ export const MOODS = [
 ];
 export const moodFor = (h: number) => (h < 11 ? "dimineata" : h < 16 ? "usor" : h < 22 ? "burger" : "dulce");
 export const SEARCH_PH = { ro: "Caută burger, pizza, sushi…", hu: "Keresés…" };
+export const CAT_ICON: Record<string, string> = {
+  burgers: "burger", pizza: "pizza", bowls: "salad", grill: "steak", paste: "pasta", sushi: "sushi", brunch: "egg", desert: "cake", bauturi: "drink", extra: "fries",
+};
+export const POPULAR = ["double-cheese", "margherita", "sushi-boat", "steak-frites", "poke-somon", "tiramisu", "bbq-bacon", "diavola"];

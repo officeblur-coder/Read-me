@@ -5,6 +5,7 @@ import { supabase } from "../lib/supabase";
 import type { PublicOrder } from "../lib/types";
 import { GOOGLE_REVIEW_URL, hm, lei } from "../lib/format";
 import Icon from "../components/Icon";
+import Wordmark from "../components/Wordmark";
 
 const R = 82, CIRC = 2 * Math.PI * R;
 
@@ -60,7 +61,7 @@ export default function Track() {
 
   return (
     <div className="app">
-      <header className="c-head"><div className="c-row"><Link to="/" className="c-logo"><img src="/img/logo-lyra.jpg" alt="Lyra" /><span>COMANDA #{o.number}</span></Link></div></header>
+      <header className="c-head"><div className="c-row"><Link to="/" className="c-logo"><Wordmark small /><span>COMANDA #{o.number}</span></Link></div></header>
       <div className="track">
         {ring}
         <h1 className="t-title">{title}</h1>
