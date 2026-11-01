@@ -62,6 +62,8 @@ alter table public.settings add column if not exists site_url text not null defa
 update public.settings set site_url = 'https://lyrasdelivery.ro' where site_url like '%lyrago.netlify.app%';
 alter table public.settings add column if not exists email_from text not null default 'Lyra''s Delivery <onboarding@resend.dev>';
 update public.settings set email_from = 'Lyra''s Delivery <onboarding@resend.dev>' where email_from = 'Lyra <onboarding@resend.dev>';
+-- răspunsurile clienților la emailurile automate ajung aici
+alter table public.settings add column if not exists email_reply_to text default 'restaurant_lyra@yahoo.com';
 alter table public.settings add column if not exists review_url text not null default 'https://g.page/r/Cb92kT0SuXLSEAE/review';
 
 -- ---------- Promoții și coduri ----------
@@ -634,7 +636,7 @@ begin
 
   perform net.http_post(
     url := 'https://api.resend.com/emails',
-    body := jsonb_build_object('from', s.email_from, 'to', jsonb_build_array(o.email),
+    body := jsonb_build_object('from', s.email_from, 'to', jsonb_build_array(o.email), 'reply_to', coalesce(s.email_reply_to, 'restaurant_lyra@yahoo.com'),
       'subject', format('Mulțumim! Ai primit %s puncte Lyra Club 🌟', pts), 'html', html),
     headers := jsonb_build_object('Authorization', 'Bearer ' || key, 'Content-Type', 'application/json'));
 exception when others then
