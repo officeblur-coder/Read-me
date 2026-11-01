@@ -6,13 +6,14 @@ export const EXTRA_IDS = {
   desert: ["smantana"],
 };
 export const MAIN_CATS = ["nou", "specialitati", "porc", "ardeal", "pui", "peste", "post", "dejun", "platouri", "vegetariene"];
-export const UPSELL = ["sosul-casei", "mujdei", "muraturi", "papanas", "lapte-pasare", "ardei-iute", "cartofi"];
+export const UPSELL = ["sosul-casei", "limonada", "mujdei", "papanas", "pepsi", "cinnamon-rolls", "cartofi", "muraturi"];
 export const CAT_IMG: Record<string, string> = {
   antreuri: "platou-branzeturi.jpg", dejun: "english.jpg", nou: "antricot.jpg", platouri: "platou-lyra.jpg",
   specialitati: "costite.jpg", smash: "double-smash.jpg", burger: "eleven-burger.jpg", supe: "ciorba-vita.jpg",
   porc: "ciolan-lyra.jpg", ardeal: "papricas.jpg", pui: "cordon-bleu.jpg", peste: "pastrav.jpg", paste: "carbonara.jpg",
   salate: "halloumi.jpg", vegetariene: "papricas-ciuperci.jpg", post: "ciorba-pita.jpg", kids: "kids-dino.jpg",
-  garnituri: "cartofi-coaja.jpg", muraturi: "muraturi.jpg", sosuri: "special-fries.jpg", desert: "papanas.jpg",
+  garnituri: "special-fries.jpg", muraturi: "muraturi.jpg", sosuri: "special-fries.jpg", desert: "papanas.jpg",
+  limonade: "limonada-capsuni.jpg", cocktail: "aperol-spritz.jpg", bere: "moretti.jpg", racoritoare: "virgin-mojito.jpg", vin: "hugo.jpg",
 };
 // "Ce poftă ai?" — quick moods, each a hand-picked set of dishes
 export const MOODS = [

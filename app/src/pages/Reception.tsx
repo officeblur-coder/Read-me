@@ -326,6 +326,8 @@ function Ticket({ o }: { o: Order }) {
           <span>{l.unit === 0 ? "0.00" : (l.unit * l.qty).toFixed(2)}</span></div>
       ))}
       {o.note && <div className="tn"><b>Mențiune:</b> {o.note}</div>}
+      {Number(o.packaging) > 0 && <div className="tl"><span className="q" /><div><b>Ambalaj</b></div><span>{Number(o.packaging).toFixed(2)}</span></div>}
+      {Number(o.delivery_fee) > 0 && <div className="tl"><span className="q" /><div><b>Livrare</b></div><span>{Number(o.delivery_fee).toFixed(2)}</span></div>}
       <div className="tot"><span>TOTAL · {o.payment === "cash" ? "numerar" : o.payment === "online" ? "plătit online" : "card la livrare"}</span><b>{lei(Number(o.total))}</b></div>
       {Number(o.discount) > 0 && <small>{o.discount_label}: −{lei(Number(o.discount))}</small>}
     </div>

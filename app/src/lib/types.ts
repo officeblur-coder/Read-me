@@ -30,6 +30,7 @@ export type Item = {
   available: boolean;
   active: boolean;
   sort: number;
+  packaging: number;     // ambalaj, lei pe bucată
 };
 
 export type Settings = {
@@ -81,6 +82,7 @@ export type OrderLine = {
   note: string;
   gift?: boolean;
   promo?: string | null;
+  pack?: number;   // ambalaj pe bucată
 };
 
 export type OrderStatus = "new" | "prep" | "road" | "done" | "rejected";
@@ -105,6 +107,7 @@ export type Order = {
   points_used: number;
   points_value: number;
   delivery_fee: number;
+  packaging?: number;
   total: number;
   points_earned: number;
   source: string | null;
@@ -123,7 +126,7 @@ export type Order = {
 export type PublicOrder = Pick<
   Order,
   | "number" | "status" | "mode" | "address" | "items" | "subtotal" | "discount" | "discount_label"
-  | "points_value" | "delivery_fee" | "total" | "points_earned" | "eta_min" | "created_at"
+  | "points_value" | "delivery_fee" | "packaging" | "total" | "points_earned" | "eta_min" | "created_at"
   | "accepted_at" | "road_at" | "done_at" | "reject_reason" | "rating"
 > & { messages: { body: string; at: string }[] };
 

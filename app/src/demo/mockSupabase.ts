@@ -235,7 +235,7 @@ function placeOrder(p: Row) {
   if (p.mode === "livrare" && !p.address?.trim()) throw new Error("Completează adresa de livrare.");
   if (!p.items?.length) throw new Error("Coșul e gol.");
   const cust = session ? db.customers.find(c => c.id === session!.user.id) : null;
-  const lines: Row[] = []; let sub = 0;
+  const lines: Row[] = []; let sub = 0, pack = 0;
   for (const l of p.items) {
     const it = db.items.find(x => x.id === l.id && x.active);
     if (!it) throw new Error(`Produsul ${l.id} nu mai există în meniu.`);
@@ -248,6 +248,7 @@ function placeOrder(p: Row) {
     if (pr) { unit = pr.price; (pr.extras || []).forEach((id: string) => { const e = db.items.find(x => x.id === id); if (e) extras.push({ id, name: e.name_ro, price: 0 }); }); }
     else (l.extras || []).forEach((id: string) => { const e = db.items.find(x => x.id === id && x.active && x.available); if (e) { unit += e.price; extras.push({ id, name: e.name_ro, price: e.price }); } });
     sub += unit * qty;
+    pack += ((it.packaging ?? 2) + extras.reduce((t: number, e: Row) => t + (db.items.find(x => x.id === e.id)?.packaging ?? 2), 0)) * qty;
     lines.push({ id: it.id, name: it.name_ro, qty, unit, variant, vi, grams, hot: it.hot, allergens: it.allergens, category: it.category_id, extras, note: (l.note || "").slice(0, 200), promo: pr ? pr.title : null });
   }
   let disc = 0, label = null;
@@ -263,14 +264,14 @@ function placeOrder(p: Row) {
   const fee = p.mode === "livrare" && sub < s.free_delivery_over && !(cust && cust.lifetime >= 1500) ? s.delivery_fee : 0;
   let ptsVal = 0;
   if (cust && p.use_points) { ptsVal = Math.min(Math.floor(cust.points / 100) * 10, Math.floor((sub - disc) * 0.5 / 10) * 10); if (ptsVal > 0) cust.points -= ptsVal * 10; }
-  const total = Math.max(sub - disc - ptsVal + fee, 0);
+  const total = Math.max(sub - disc - ptsVal + fee, 0) + pack;
   const mult = !cust ? 1 : cust.lifetime >= 1500 ? 1.1 : cust.lifetime >= 500 ? 1.05 : 1;
   const number = Math.max(1036, ...db.orders.map(o => o.number)) + 1;
   const o: Row = {
     id: uid(), number, token: uid(), customer_id: cust?.id ?? null, name: p.name.trim(), phone: p.phone.trim(), email: p.email || cust?.email || null,
     address: p.mode === "livrare" ? p.address.trim() : "Ridicare din restaurant", mode: p.mode, payment: p.payment || "card", note: p.note || null,
     items: lines, allergies: cust?.allergies || [], subtotal: sub, discount: disc, discount_label: label, points_used: ptsVal * 10, points_value: ptsVal,
-    delivery_fee: fee, total, points_earned: Math.floor(total * mult), source: p.source, status: "new", reject_reason: null, eta_min: null,
+    delivery_fee: fee, packaging: pack, total, points_earned: Math.floor((total - pack) * mult), source: p.source, status: "new", reject_reason: null, eta_min: null,
     created_at: iso(), accepted_at: null, road_at: null, done_at: null, rating: null, credited: false, courier_id: null, courier_name: null, demo_auto: true,
   };
   db.orders.push(o); save(); emit("orders", "INSERT", o);

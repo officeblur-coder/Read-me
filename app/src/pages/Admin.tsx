@@ -79,7 +79,7 @@ function AdminPanel({ email }: { email: string }) {
   function newItem() {
     const c = cat === "all" ? cats[0]?.id || "" : cat;
     const maxSort = Math.max(0, ...items.filter(i => i.category_id === c).map(i => i.sort));
-    setDraft({ id: "", category_id: c, num: null, name_ro: "", name_hu: "", desc_ro: "", desc_hu: "", price: "", grams: "", allergens: [], meat: null, hot: false, tags: [], wine: null, image: null, variants: null, available: true, active: true, sort: maxSort + 10, isNew: true });
+    setDraft({ id: "", category_id: c, num: null, name_ro: "", name_hu: "", desc_ro: "", desc_hu: "", price: "", grams: "", allergens: [], meat: null, hot: false, tags: [], wine: null, image: null, variants: null, packaging: 2, available: true, active: true, sort: maxSort + 10, isNew: true });
   }
   async function moveCat(c: Category, dir: -1 | 1) {
     const idx = cats.findIndex(x => x.id === c.id), other = cats[idx + dir];
@@ -191,13 +191,15 @@ function ItemEditor({ draft: initial, cats, items, onClose, onSaved }: { draft: 
     if (!d.name_ro.trim()) { setErr("Scrie numele preparatului."); return; }
     if (!variants.length && !(price >= 0)) { setErr("Scrie prețul (de ex. 45 sau 49.50)."); return; }
     if (variants.some(v => !v.l.trim() || !(v.p >= 0))) { setErr("Fiecare porție are nevoie de nume și preț."); return; }
+    const packaging = parseFloat(String(d.packaging ?? "").replace(",", "."));
+    if (!(packaging >= 0)) { setErr("Scrie ambalajul în lei (0 dacă nu are)."); return; }
     setBusy(true);
     const row = {
       category_id: d.category_id, num: d.num, name_ro: d.name_ro.trim(), name_hu: d.name_hu?.trim() || null,
       desc_ro: d.desc_ro?.trim() || null, desc_hu: d.desc_hu?.trim() || null,
       price: variants.length ? variants[0].p : price, grams: d.grams?.trim() || null, allergens: d.allergens, meat: d.meat || null,
       hot: d.hot, tags: d.tags, wine: d.wine?.trim() || null, image: d.image, variants: variants.length ? variants : null,
-      available: d.available, active: d.active, sort: d.sort, updated_at: new Date().toISOString(),
+      packaging, available: d.available, active: d.active, sort: d.sort, updated_at: new Date().toISOString(),
     };
     let error;
     if (d.isNew) {
@@ -258,6 +260,7 @@ function ItemEditor({ draft: initial, cats, items, onClose, onSaved }: { draft: 
           <div className="fields">
             {!variants.length && <label className="fl"><span>Preț (lei)</span><input inputMode="decimal" value={d.price} onChange={e => set({ price: e.target.value })} placeholder="45.00" /></label>}
             <label className="fl"><span>Gramaj</span><input value={d.grams || ""} onChange={e => set({ grams: e.target.value })} placeholder="300 gr" /></label>
+            <label className="fl"><span>Ambalaj (lei/buc.)</span><input inputMode="decimal" value={d.packaging ?? ""} onChange={e => set({ packaging: e.target.value as unknown as number })} placeholder="2" /></label>
             <label className="fl"><span>Categorie</span>
               <select value={d.category_id} onChange={e => set({ category_id: e.target.value })}>{cats.map(c => <option key={c.id} value={c.id}>{c.name_ro}</option>)}</select></label>
             <label className="fl"><span>Nr. în meniu <i>opțional</i></span><input inputMode="numeric" value={d.num ?? ""} onChange={e => set({ num: e.target.value ? parseInt(e.target.value) || null : null })} /></label>

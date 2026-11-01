@@ -178,8 +178,11 @@ export default function Menu({ source }: { source?: string }) {
   const fee = mode === "livrare" && settings && sub > 0 && sub < freeOver && tier.name !== "Aur" ? settings.delivery_fee : 0;
   const maxPts = customer ? Math.min(Math.floor(customer.points / 100) * 10, Math.floor((sub - disc) * 0.5 / 10) * 10) : 0;
   const ptsVal = usePts && maxPts > 0 ? maxPts : 0;
-  const total = Math.max(0, sub - disc - ptsVal + fee);
-  const earn = Math.floor(total * tier.mult);
+  // delivery packaging, per piece (dish + each extra); no discounts or points on it
+  const pk = (it?: Item) => (it ? Number(it.packaging ?? 2) : 0);
+  const pack = validCart.reduce((s, l) => s + (pk(byId[l.id]) + l.extras.reduce((t, k) => t + pk(byId[k]), 0)) * l.qty, 0);
+  const total = Math.max(0, sub - disc - ptsVal + fee) + pack;
+  const earn = Math.floor((total - pack) * tier.mult);
   const count = validCart.reduce((s, l) => s + l.qty, 0);
   const qtyOf = (id: string) => validCart.filter(l => l.id === id && !l.promo).reduce((s, l) => s + l.qty, 0);
 
@@ -337,8 +340,9 @@ export default function Menu({ source }: { source?: string }) {
         })()}
         <div className="cp-sum">
           <div><span>Produse</span><span className="num">{lei(sub)}</span></div>
+          {pack > 0 && <div><span>Ambalaj</span><span className="num">{lei(pack)}</span></div>}
           {mode === "livrare" && <div><span>Livrare</span><span className="num">{fee ? lei(fee) : "gratuit"}</span></div>}
-          <div className="tot"><span>Total</span><span className="num">{lei(sub + fee)}</span></div>
+          <div className="tot"><span>Total</span><span className="num">{lei(sub + pack + fee)}</span></div>
         </div>
         <button className="cta" onClick={() => setStep("details")}>Continuă <span>→</span></button>
       </>) : (<>
@@ -381,6 +385,7 @@ export default function Menu({ source }: { source?: string }) {
           <div><span>Produse ({count})</span><span className="num">{lei(sub)}</span></div>
           {disc > 0 && <div className="neg"><span>{code?.label}</span><span className="num">−{lei(disc)}</span></div>}
           {ptsVal > 0 && <div className="neg"><span>Puncte Lyra Club</span><span className="num">−{lei(ptsVal)}</span></div>}
+          {pack > 0 && <div><span>Ambalaj</span><span className="num">{lei(pack)}</span></div>}
           {mode === "livrare" && <div><span>Livrare</span><span className="num">{fee ? lei(fee) : "gratuit"}</span></div>}
           <div className="tot"><span>Total</span><span className="num">{lei(total)}</span></div>
           {(customer || form.email.includes("@")) && <div className="earn"><span>Câștigi</span><span className="num">+{earn} puncte · +1 stea</span></div>}

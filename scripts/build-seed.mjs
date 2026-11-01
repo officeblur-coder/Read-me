@@ -8,8 +8,11 @@ const arr = a => "array[" + (a || []).map(q).join(",") + "]::text[]";
 const out = ["-- Meniul Lyra (generat automat din lyra/data/menu.js). Nu suprascrie modificările făcute în admin.", "begin;"];
 out.push("insert into public.categories(id,name_ro,name_hu,note_ro,note_hu,sort) values");
 out.push(ctx.CATS.map((c, i) => `  (${q(c.id)},${q(c.ro)},${q(c.hu)},${q(c.note?.[0])},${q(c.note?.[1])},${(i + 1) * 10})`).join(",\n") + "\non conflict (id) do nothing;");
-out.push("insert into public.items(id,category_id,num,name_ro,name_hu,desc_ro,desc_hu,price,grams,allergens,meat,hot,tags,wine,image,variants,sort) values");
-out.push(ctx.M.map((it, i) => `  (${q(it.id)},${q(it.c)},${it.n ?? "null"},${q(it.ro)},${q(it.hu)},${q(it.d)},${q(it.dh)},${it.p},${q(it.g)},${arr(it.al)},${q(it.m)},${!!it.hot},${arr(it.t)},${q(it.w)},${q(it.img ? it.img + ".jpg" : null)},${it.v ? q(JSON.stringify(it.v)) + "::jsonb" : "null"},${(i + 1) * 10})`).join(",\n") + "\non conflict (id) do nothing;");
+const COLS = "id,category_id,num,name_ro,name_hu,desc_ro,desc_hu,price,grams,allergens,meat,hot,tags,wine,image,variants,packaging,active,sort";
+const itemRows = ctx.M.map((it, i) => `  (${q(it.id)},${q(it.c)},${it.n ?? "null"},${q(it.ro)},${q(it.hu)},${q(it.d)},${q(it.dh)},${it.p},${q(it.g)},${arr(it.al)},${q(it.m)},${!!it.hot},${arr(it.t)},${q(it.w)},${q(it.img ? it.img + ".jpg" : null)},${it.v ? q(JSON.stringify(it.v)) + "::jsonb" : "null"},${it.pk ?? 2},${!it.x},${(i + 1) * 10})`).join(",\n");
+const catRows = ctx.CATS.map((c, i) => `  (${q(c.id)},${q(c.ro)},${q(c.hu)},${q(c.note?.[0])},${q(c.note?.[1])},${(i + 1) * 10})`).join(",\n");
+out.push(`insert into public.items(${COLS}) values`);
+out.push(itemRows + "\non conflict (id) do nothing;");
 out.push(`insert into public.promo_codes(code,percent,category_id,label) values
   ('LYRA10',10,null,'-10% la toată comanda'),
   ('PRANZ15',15,'burger','-15% la Lyra''s Burger')
@@ -27,4 +30,15 @@ fs.writeFileSync(path.join(root, "supabase/02_seed_menu.sql"), out.join("\n") + 
 fs.writeFileSync(path.join(root, "supabase/setup.sql"),
   "-- Lyra Comenzi: fișier unic de instalare. Supabase → SQL Editor → New query → lipiți tot → Run.\n\n" +
   fs.readFileSync(path.join(root, "supabase/01_schema.sql"), "utf8") + "\n\n" + out.join("\n") + "\n");
+// Actualizarea meniului pe o bază existentă: suprascrie categoriile și preparatele cu cele din lyra/data/menu.js
+// (inclusiv prețuri, poze, ambalaj); preparatele marcate x rămân în bază, dar ascunse.
+const upd = ["-- Actualizare meniu (generat din lyra/data/menu.js). ATENȚIE: suprascrie prețurile, textele și pozele din admin.", "begin;",
+  "insert into public.categories(id,name_ro,name_hu,note_ro,note_hu,sort) values", catRows,
+  "on conflict (id) do update set name_ro = excluded.name_ro, name_hu = excluded.name_hu, note_ro = excluded.note_ro, note_hu = excluded.note_hu, sort = excluded.sort, active = true;",
+  `insert into public.items(${COLS}) values`, itemRows,
+  "on conflict (id) do update set " + COLS.split(",").filter(c => c !== "id").map(c => `${c} = excluded.${c}`).join(", ") + ", updated_at = now();",
+  "commit;"];
+fs.writeFileSync(path.join(root, "supabase/actualizare_meniu.sql"),
+  "-- Lyra: schema + actualizarea meniului. Supabase → SQL Editor → New query → lipiți tot → Run.\n\n" +
+  fs.readFileSync(path.join(root, "supabase/01_schema.sql"), "utf8") + "\n\n" + upd.join("\n") + "\n");
 console.log("categorii", ctx.CATS.length, "preparate", ctx.M.length);

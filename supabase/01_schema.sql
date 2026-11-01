@@ -40,6 +40,8 @@ create table if not exists public.items (
   updated_at  timestamptz not null default now()
 );
 create index if not exists items_category_idx on public.items(category_id, sort);
+-- ambalaj pentru livrare, lei pe bucată (adăugat la fiecare porție comandată)
+alter table public.items add column if not exists packaging numeric(6,2) not null default 2 check (packaging >= 0);
 
 -- ---------- Setări restaurant (un singur rând) ----------
 create table if not exists public.settings (
@@ -171,6 +173,7 @@ create table if not exists public.orders (
   rating         int check (rating between 1 and 5),
   credited       boolean not null default false
 );
+alter table public.orders add column if not exists packaging numeric(10,2) not null default 0;
 create index if not exists orders_status_idx on public.orders(status, created_at desc);
 create index if not exists orders_customer_idx on public.orders(customer_id, created_at desc);
 
@@ -246,6 +249,8 @@ declare
   allg     text[] := '{}';
   pr       public.promos;
   is_promo boolean;
+  pack     numeric := 0;  -- ambalaj, nu intră la reduceri
+  lpack    numeric;
 begin
   select * into s from public.settings where id = 1;
   if not s.accepting_orders then raise exception 'Restaurantul nu preia comenzi acum.' using errcode = 'P0001'; end if;
@@ -266,7 +271,7 @@ begin
     if not found then raise exception 'Produsul % nu mai există în meniu.', line->>'id' using errcode = 'P0001'; end if;
     if not it.available then raise exception '% este epuizat azi.', it.name_ro using errcode = 'P0001'; end if;
     qty := least(greatest(coalesce((line->>'qty')::int, 1), 1), 50);
-    vi := null; vlabel := null; grams := it.grams; unit := it.price;
+    vi := null; vlabel := null; grams := it.grams; unit := it.price; lpack := it.packaging;
     if it.variants is not null and jsonb_array_length(it.variants) > 0 then
       vi := least(greatest(coalesce((line->>'vi')::int, 0), 0), jsonb_array_length(it.variants) - 1);
       unit   := (it.variants->vi->>'p')::numeric;
@@ -285,22 +290,23 @@ begin
       unit := pr.price;
       for ex_id in select unnest(pr.extras) loop
         select * into ex from public.items where id = ex_id;
-        if found then ex_arr := ex_arr || jsonb_build_object('id', ex.id, 'name', ex.name_ro, 'price', 0); end if;
+        if found then ex_arr := ex_arr || jsonb_build_object('id', ex.id, 'name', ex.name_ro, 'price', 0); lpack := lpack + ex.packaging; end if;
       end loop;
     else
       for ex_id in select jsonb_array_elements_text(coalesce(line->'extras','[]')) loop
         select * into ex from public.items where id = ex_id and active and available;
         if found then
-          unit := unit + ex.price;
+          unit := unit + ex.price; lpack := lpack + ex.packaging;
           ex_arr := ex_arr || jsonb_build_object('id', ex.id, 'name', ex.name_ro, 'price', ex.price);
         end if;
       end loop;
     end if;
     sub := sub + unit * qty;
+    pack := pack + lpack * qty;
     lines := lines || jsonb_build_object(
       'id', it.id, 'name', it.name_ro, 'qty', qty, 'unit', unit, 'variant', vlabel, 'vi', vi,
       'grams', grams, 'hot', it.hot, 'allergens', to_jsonb(it.allergens), 'category', it.category_id,
-      'extras', ex_arr, 'note', left(coalesce(line->>'note',''), 200),
+      'extras', ex_arr, 'note', left(coalesce(line->>'note',''), 200), 'pack', lpack,
       'promo', case when is_promo then pr.title end);
   end loop;
 
@@ -340,15 +346,15 @@ begin
     if pts_val > 0 then update public.customers set points = points - (pts_val * 10)::int where id = cust.id; end if;
   end if;
 
-  total := greatest(sub - disc - pts_val + fee, 0);
-  earn  := floor(total * s.points_per_leu * public.tier_mult(coalesce(cust.lifetime, 0)));
+  total := greatest(sub - disc - pts_val + fee, 0) + pack;
+  earn  := floor((total - pack) * s.points_per_leu * public.tier_mult(coalesce(cust.lifetime, 0)));  -- ambalajul nu aduce puncte
 
   insert into public.orders(customer_id, name, phone, email, address, mode, payment, note, items, allergies,
-    subtotal, discount, discount_label, points_used, points_value, delivery_fee, total, points_earned, source)
+    subtotal, discount, discount_label, points_used, points_value, delivery_fee, packaging, total, points_earned, source)
   values (cust.id, left(trim(p->>'name'),80), left(trim(p->>'phone'),30), coalesce(nullif(trim(p->>'email'),''), cust.email),
     case when v_mode = 'livrare' then left(trim(p->>'address'),200) else 'Ridicare din restaurant' end,
     v_mode, coalesce(p->>'payment','card'), left(p->>'note',300), lines, allg,
-    sub, disc, disc_lbl, (pts_val*10)::int, pts_val, fee, total, earn, left(p->>'source',30))
+    sub, disc, disc_lbl, (pts_val*10)::int, pts_val, fee, pack, total, earn, left(p->>'source',30))
   returning * into o;
 
   return jsonb_build_object('id', o.id, 'number', o.number, 'token', o.token, 'total', o.total);
@@ -366,7 +372,7 @@ create or replace function public.get_order(p_token uuid) returns jsonb
 language sql stable security definer set search_path = public as $$
   select to_jsonb(x) from (
     select o.number, o.status, o.mode, o.address, o.items, o.subtotal, o.discount, o.discount_label,
-           o.points_value, o.delivery_fee, o.total, o.points_earned, o.eta_min, o.created_at,
+           o.points_value, o.delivery_fee, o.packaging, o.total, o.points_earned, o.eta_min, o.created_at,
            o.accepted_at, o.road_at, o.done_at, o.reject_reason, o.rating,
            coalesce((select jsonb_agg(jsonb_build_object('body', m.body, 'at', m.created_at) order by m.created_at)
                      from public.order_messages m where m.order_id = o.id), '[]') as messages
