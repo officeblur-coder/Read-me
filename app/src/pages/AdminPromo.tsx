@@ -378,9 +378,9 @@ export function TeamTab({ flash }: { flash: Flash }) {
       <div className="muted adm-help">
         <p style={{ margin: "0 0 6px" }}>Cine are acces și unde intră:</p>
         <ul className="team-links">
-          <li><b>Recepție:</b> lyrago.netlify.app/receptie</li>
-          <li><b>Curieri:</b> lyrago.netlify.app/curier (din telefon)</li>
-          <li><b>Administrare:</b> lyrago.netlify.app/admin</li>
+          <li><b>Recepție:</b> lyrasdelivery.ro/receptie</li>
+          <li><b>Curieri:</b> lyrasdelivery.ro/curier (din telefon)</li>
+          <li><b>Administrare:</b> lyrasdelivery.ro/admin</li>
         </ul>
         <p style={{ margin: "8px 0 0" }}>Pentru un om nou: <b>1.</b> în Supabase → Authentication → Users → <b>Add user</b> (email + parolă, bifează Auto Confirm). <b>2.</b> Aici, scrie emailul și alege rolul.</p>
       </div>

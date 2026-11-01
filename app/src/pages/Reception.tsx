@@ -55,7 +55,7 @@ export default function Reception() {
   if (!isStaff) return (
     <div className="login"><form onSubmit={e => { e.preventDefault(); supabase.auth.signOut(); }}>
       <img src="/img/logo-lyra.jpg" alt="Lyra" /><h1>Fără acces la recepție</h1>
-      <p className="muted" style={{ textAlign: "center" }}>Contul {session.user.email} nu are acces la recepție. Curierii folosesc <a href="/curier">lyrago.netlify.app/curier</a>.</p>
+      <p className="muted" style={{ textAlign: "center" }}>Contul {session.user.email} nu are acces la recepție. Curierii folosesc <a href="/curier">lyrasdelivery.ro/curier</a>.</p>
       <button className="big ghost">Ieși din cont</button></form></div>
   );
   return <Console email={session.user.email || ""} />;

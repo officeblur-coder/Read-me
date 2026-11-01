@@ -19,7 +19,7 @@ const DEMO = !!import.meta.env.VITE_DEMO;
 const STAFF = !DEMO || !!import.meta.env.VITE_DEMO_STAFF;
 const Router = DEMO ? HashRouter : BrowserRouter;
 
-// Short campaign links: lyrago.ro/fb, /qr, /ig, /google… open the menu and tag the order's source.
+// Short campaign links: lyrasdelivery.ro/fb, /qr, /ig, /google… open the menu and tag the order's source.
 const SOURCES = ["fb", "ig", "qr", "google", "tiktok", "wa", "flyer"];
 function SourceMenu() {
   const { src } = useParams();

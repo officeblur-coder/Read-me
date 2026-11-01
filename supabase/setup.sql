@@ -57,7 +57,9 @@ create table if not exists public.settings (
   gift_item_id        text default 'papanas'
 );
 insert into public.settings(id) values (1) on conflict do nothing;
-alter table public.settings add column if not exists site_url text not null default 'https://lyrago.netlify.app';
+alter table public.settings add column if not exists site_url text not null default 'https://lyrasdelivery.ro';
+-- domeniul propriu: linkurile din emailuri duc pe lyrasdelivery.ro
+update public.settings set site_url = 'https://lyrasdelivery.ro' where site_url like '%lyrago.netlify.app%';
 alter table public.settings add column if not exists email_from text not null default 'Lyra''s Delivery <onboarding@resend.dev>';
 update public.settings set email_from = 'Lyra''s Delivery <onboarding@resend.dev>' where email_from = 'Lyra <onboarding@resend.dev>';
 alter table public.settings add column if not exists review_url text not null default 'https://g.page/r/Cb92kT0SuXLSEAE/review';
