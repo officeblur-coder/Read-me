@@ -71,13 +71,15 @@ export function Login({ title = "Recepție" }: { title?: string }) {
     <div className="login">
       <form onSubmit={async e => {
         e.preventDefault(); setBusy(true); setErr(""); unlockAudio();
-        const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+        // staff can type a short user name: "receptielyra" means receptielyra@lyrasdelivery.ro
+        const login = email.includes("@") ? email.trim() : email.trim().toLowerCase() + "@lyrasdelivery.ro";
+        const { error } = await supabase.auth.signInWithPassword({ email: login, password });
         setBusy(false);
-        if (error) setErr(error.message === "Invalid login credentials" ? "Email sau parolă greșită." : error.message);
+        if (error) setErr(error.message === "Invalid login credentials" ? "Utilizator sau parolă greșită." : error.message);
       }}>
         <Wordmark small />
         <h1>{title}</h1>
-        <input className="in" type="email" required placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} autoComplete="username" aria-label="Email" />
+        <input className="in" type="text" required placeholder="Utilizator sau email" value={email} onChange={e => setEmail(e.target.value)} autoComplete="username" autoCapitalize="none" spellCheck={false} aria-label="Utilizator sau email" />
         <input className="in" type="password" required placeholder="Parolă" value={password} onChange={e => setPassword(e.target.value)} autoComplete="current-password" aria-label="Parolă" />
         <button className="big" disabled={busy}>{busy ? "Se conectează…" : "Intră în consolă"}</button>
         {err && <p className="err">{err}</p>}
