@@ -1151,3 +1151,18 @@ h1,h2,h3,h4{margin:0;font-weight:700;text-wrap:balance}
 .rep-bad{color:var(--bad);font-weight:800}
 .rep-good{color:var(--ok);font-weight:800}
 @media (max-width:1000px){.rep-grid{grid-template-columns:minmax(0,1fr)}}
+
+/* =================== Lyra Rewards invitation + opt-in =================== */
+.join-pop{padding:28px 24px 20px;display:grid;gap:14px;background:radial-gradient(120% 90% at 85% 0%,rgba(201,151,63,.35),transparent 60%),var(--surface)}
+.join-pop .x-btn{position:absolute;right:12px;top:12px}
+.jp-top h2{font-family:var(--f-display);font-weight:800;font-size:26px;line-height:1.08;letter-spacing:-.03em;margin-top:8px}
+.jp-top .rw-kicker{color:var(--amber)}
+.jp-perks{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.jp-perks li{display:grid;padding:11px 14px;border-radius:14px;background:var(--surface-2);border:1px solid var(--line)}
+.jp-perks b{font-size:14.5px}
+.jp-perks span{color:var(--muted);font-size:12.5px}
+.join-pop .cta{text-decoration:none;display:flex;justify-content:center}
+.join-pop .later{justify-self:center}
+.optin{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;margin:4px 0 12px;padding:12px 14px;border-radius:14px;background:var(--surface-2);font-size:13.5px;line-height:1.45;cursor:pointer}
+.optin input{width:20px;height:20px;margin-top:1px;accent-color:var(--brand)}
+.optin i{display:block;font-style:normal;color:var(--muted);font-size:12px;margin-top:2px}

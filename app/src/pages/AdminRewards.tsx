@@ -18,6 +18,7 @@ export function RewardsTab({ items, flash, isAdmin }: { items: Item[]; flash: Fl
   const [ov, setOv] = useState<Overview | null>(null);
   const [rows, setRows] = useState<Row[]>([]);
   const [q, setQ] = useState("");
+  const [onlySubs, setOnlySubs] = useState(false);
   const [open, setOpen] = useState<Row | null>(null);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
@@ -30,6 +31,18 @@ export function RewardsTab({ items, flash, isAdmin }: { items: Item[]; flash: Fl
   };
   useEffect(() => { loadStats(); }, []);
   useEffect(() => { const t = setTimeout(loadStats, 300); return () => clearTimeout(t); }, [q]);
+
+  async function exportSubs() {
+    const { data, error } = await supabase.rpc("admin_marketing_list");
+    if (error) { setErr(error.message); return; }
+    const list = (data || []) as { email: string; name: string | null; phone: string | null; tier: number; since: string; source: string | null; orders: number; unsubscribe: string }[];
+    const head = ["Email", "Nume", "Telefon", "Nivel", "Abonat din", "Sursa", "Comenzi", "Link dezabonare"];
+    const body = list.map(x => [x.email, x.name || "", x.phone || "", cfg.tier_names[x.tier - 1], x.since ? new Date(x.since).toLocaleDateString("ro-RO") : "", x.source || "", x.orders, x.unsubscribe]);
+    const text = "\ufeff" + [head, ...body].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(";")).join("\n");
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type: "text/csv;charset=utf-8" }));
+    a.download = `abonati-oferte-lyra-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+    flash(`${list.length} abonați exportați.`);
+  }
 
   async function save() {
     if (!f) return;
@@ -94,10 +107,17 @@ export function RewardsTab({ items, flash, isAdmin }: { items: Item[]; flash: Fl
       </section>}
 
       <section className="rw-cust">
-        <div className="row-btw"><h2>Clienți</h2><input className="in" style={{ maxWidth: 320 }} placeholder="Caută email, nume, telefon" value={q} onChange={e => setQ(e.target.value)} /></div>
+        <div className="row-btw"><h2>Clienți</h2>
+          <div className="rep-range">
+            <button aria-pressed={!onlySubs} onClick={() => setOnlySubs(false)}>Toți ({rows.length})</button>
+            <button aria-pressed={onlySubs} onClick={() => setOnlySubs(true)}>Acceptă oferte ({rows.filter(r => r.marketing_ok).length})</button>
+            {isAdmin && <button onClick={exportSubs}>Export abonați (Excel)</button>}
+            <input className="in" style={{ maxWidth: 260 }} placeholder="Caută email, nume, telefon" value={q} onChange={e => setQ(e.target.value)} />
+          </div></div>
+        <p className="fine" style={{ textAlign: "left", margin: 0 }}>În lista de oferte apar doar clienții care au bifat singuri acordul. Fiecare are un link personal de dezabonare (coloana din export), pe care îl pui în emailurile promoționale.</p>
         <div className="rw-table">
           <div className="rw-tr rw-th"><span>Client</span><span>Nivel</span><span>Cheltuit</span><span>Puncte</span><span>Valoare</span><span>Vouchere</span><span>Ultima comandă</span></div>
-          {rows.map(r => <button key={r.id} className="rw-tr" onClick={() => setOpen(r)}>
+          {rows.filter(r => !onlySubs || r.marketing_ok).map(r => <button key={r.id} className="rw-tr" onClick={() => setOpen(r)}>
             <span><b>{r.name || r.email?.split("@")[0] || "—"}</b><small>{r.email}{r.marketing_ok ? " · acceptă oferte" : ""}</small></span>
             <span><i className={`club-dot ${TIER_CLS[r.tier - 1]}`} /> {cfg.tier_names[r.tier - 1]}</span>
             <span className="num">{lei(r.spent)}</span><span className="num">{r.points}</span><span className="num">{lei(r.value)}</span>

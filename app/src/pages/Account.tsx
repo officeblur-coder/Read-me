@@ -31,11 +31,13 @@ function SignIn() {
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  const [optIn, setOptIn] = useState(false);   // offers by email: only if the customer ticks it (GDPR)
   async function send() {
     setErr("");
     if (!/^\S+@\S+\.\S+$/.test(email.trim())) { setErr("Scrie o adresă de email validă."); return; }
     setBusy(true);
-    const { error } = await supabase.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: true, emailRedirectTo: location.origin + "/cont" } });
+    try { localStorage.setItem("lyra-optin", optIn ? "1" : "0"); } catch { /* ignore */ }
+    const { error } = await supabase.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: true, emailRedirectTo: location.origin + "/cont", data: { marketing_ok: optIn } } });
     setBusy(false);
     if (error) { setErr(error.message.includes("rate") ? "Ai cerut prea multe coduri. Încearcă din nou peste câteva minute." : error.message); return; }
     setSent(true);
@@ -55,11 +57,13 @@ function SignIn() {
             <h2>Intră sau fă-ți cont</h2>
             <p className="muted">Fără parolă. Îți trimitem pe email un cod de logare. Dacă ai comandat deja cu emailul ăsta, punctele te așteaptă.</p>
             <label className="fl wide"><span>Email</span><input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="nume@email.com" autoComplete="email" inputMode="email" onKeyDown={e => e.key === "Enter" && send()} /></label>
+            <label className="optin"><input type="checkbox" checked={optIn} onChange={e => setOptIn(e.target.checked)} />
+              <span>Da, vreau să primesc pe email oferte, noutăți și surprize de la Lyra's Delivery. <i>Opțional. Te poți dezabona oricând, dintr-un click.</i></span></label>
             <button className="cta" onClick={send} disabled={busy}>{busy ? "Se trimite…" : "Trimite-mi codul"}</button>
           </> : <>
             <h2>Verifică emailul</h2>
-            <p className="muted">Am trimis un email la <b>{email}</b>. Scrie codul de 6 cifre sau apasă pe linkul din email. Uită-te și în Spam / Promoții.</p>
-            <input className="otp num" value={code} onChange={e => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" placeholder="••••••" aria-label="Codul din email" onKeyDown={e => e.key === "Enter" && code.length === 6 && verify()} />
+            <p className="muted">Am trimis un email la <b>{email}</b>. Scrie codul din email sau apasă pe linkul din email. Uită-te și în Spam / Promoții.</p>
+            <input className="otp num" value={code} onChange={e => setCode(e.target.value.replace(/\D/g, "").slice(0, 10))} inputMode="numeric" autoComplete="one-time-code" placeholder="••••••" aria-label="Codul din email" onKeyDown={e => e.key === "Enter" && code.length >= 6 && verify()} />
             <button className="cta" onClick={verify} disabled={busy || code.length < 6}>{busy ? "Se verifică…" : "Intră în cont"}</button>
             <button className="later" onClick={() => { setSent(false); setCode(""); }}>Alt email sau cod nou</button>
           </>}
@@ -77,6 +81,11 @@ function Member({ c, refresh }: { c: Customer; refresh: () => void }) {
   const [profile, setProfile] = useState({ name: c.name || "", phone: c.phone || "", address: c.addresses?.[0] || "", allergies: c.allergies || [], marketing_ok: c.marketing_ok });
   const [saved, setSaved] = useState("");
   const { cfg, me, reload } = useRewards(c.id);
+  useEffect(() => {
+    let want: string | null = null;
+    try { want = localStorage.getItem("lyra-optin"); localStorage.removeItem("lyra-optin"); } catch { /* ignore */ }
+    if (want === "1" && !c.marketing_ok) supabase.from("customers").update({ marketing_ok: true }).eq("id", c.id).then(() => { setProfile(p => ({ ...p, marketing_ok: true })); refresh(); });
+  }, [c.id]);
   useEffect(() => {
     supabase.from("orders").select("*").eq("customer_id", c.id).order("created_at", { ascending: false }).limit(20).then(({ data }) => setOrders((data || []) as Order[]));
     if (location.hash === "#comenzi") setTimeout(() => document.getElementById("comenzi")?.scrollIntoView({ behavior: "smooth" }), 300);

@@ -13,6 +13,7 @@ const Admin = lazy(() => import("./pages/Admin"));
 const Courier = lazy(() => import("./pages/Courier"));
 import Account from "./pages/Account";
 import { Privacy, Terms } from "./pages/Legal";
+import Unsubscribe from "./pages/Unsubscribe";
 import DemoBar from "./demo/DemoBar";
 
 // The showcase build (mode demo) runs from a plain folder: hash URLs, and the staff screens only when asked for screenshots.
@@ -41,6 +42,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         <Route path="/cont" element={<Account />} />
         <Route path="/confidentialitate" element={<Privacy />} />
         <Route path="/termeni" element={<Terms />} />
+        <Route path="/dezabonare" element={<Unsubscribe />} />
         <Route path="/:src" element={<SourceMenu />} />
       </Routes>
       </Suspense>

@@ -210,7 +210,12 @@ $$;
 create or replace function public.handle_new_user() returns trigger
 language plpgsql security definer set search_path = public as $$
 begin
-  insert into public.customers(id, email, last_activity_at) values (new.id, new.email, now()) on conflict (id) do nothing;
+  -- acordul pentru oferte bifat la înregistrare vine în metadatele contului
+  insert into public.customers(id, email, last_activity_at, marketing_ok, marketing_source)
+  values (new.id, new.email, now(),
+    coalesce((to_jsonb(new)->'raw_user_meta_data'->>'marketing_ok')::boolean, false),
+    case when (to_jsonb(new)->'raw_user_meta_data'->>'marketing_ok')::boolean then 'inregistrare' end)
+  on conflict (id) do nothing;
   -- Lyra Rewards: preia punctele și progresul strânse fără cont (după email)
   perform public.rewards_attach_guest(new.id, new.email);
   return new;

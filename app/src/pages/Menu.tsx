@@ -42,7 +42,7 @@ const isDesktop = () => window.matchMedia("(min-width: 1100px)").matches;
 
 export default function Menu({ source }: { source?: string }) {
   const nav = useNavigate();
-  const { customer } = useCustomer();
+  const { customer, ready: authReady } = useCustomer();
   const rw = useRewards(customer?.id);
   const { zones } = useZones();
   const [geo, setGeo] = useState<LatLng | null>(() => { try { return JSON.parse(localStorage.getItem("lyra-geo") || "null")?.p ?? null; } catch { return null; } });
@@ -64,6 +64,7 @@ export default function Menu({ source }: { source?: string }) {
   const [cartOpen, setCartOpen] = useState(false);
   const [step, setStep] = useState<"cart" | "details">("cart");
   const [popup, setPopup] = useState<Promo | null>(null);
+  const [joinPop, setJoinPop] = useState(false);              // invite new visitors to Lyra Rewards
   const [form, setForm] = useState<Form>(loadForm);
   const [orderNote, setOrderNote] = useState("");
   const [pay, setPay] = useState<"card" | "cash">("card");
@@ -244,6 +245,16 @@ export default function Menu({ source }: { source?: string }) {
     if (data) { setCode(data as CodeInfo); setCodeMsg("Cod aplicat: " + (data as CodeInfo).label); }
     else { setCode(null); setCodeMsg(`Codul „${v}” nu există sau a expirat.`); }
   }
+
+  // Lyra Rewards invitation: once every 14 days, only to visitors without an account, after they had a look
+  useEffect(() => {
+    if (!authReady || customer || !rw.cfg.enabled) return;
+    let last = 0; try { last = Number(localStorage.getItem("lyra-join-pop") || 0); } catch { /* ignore */ }
+    if (Date.now() - last < 14 * 864e5) return;
+    const t = setTimeout(() => setJoinPop(true), 9000);
+    return () => clearTimeout(t);
+  }, [authReady, customer?.id, rw.cfg.enabled]);
+  function closeJoin() { setJoinPop(false); try { localStorage.setItem("lyra-join-pop", String(Date.now())); } catch { /* ignore */ } }
 
   function setPin(p: LatLng, addr = form.address) {
     setGeo(p); setGeoFor(addr.trim());
@@ -673,6 +684,20 @@ export default function Menu({ source }: { source?: string }) {
       })()}
 
       {/* ---------- promo popup ---------- */}
+      {joinPop && !popup && !customer && !cartOpen && !sheet && <div className="pop" role="dialog" aria-modal="true" aria-label="Lyra Rewards" onClick={e => e.target === e.currentTarget && closeJoin()}>
+        <div className="pop-card join-pop">
+          <button className="x-btn" onClick={closeJoin} aria-label="Închide">×</button>
+          <div className="jp-top"><span className="rw-kicker">LYRA REWARDS</span><h2>Fă-ți cont și primești înapoi la fiecare comandă</h2></div>
+          <ul className="jp-perks">
+            <li><b>{rw.cfg.rates[0]}% înapoi în puncte</b><span>de la prima comandă, folosite la următoarele</span></li>
+            <li><b>Până la {rw.cfg.rates[2]}% la nivelul {rw.cfg.tier_names[2]}</b><span>cu cât comanzi mai des, cu atât valorează mai mult</span></li>
+            <li><b>Desert cadou 🍰</b><span>la fiecare nivel nou: {rw.cfg.tier_names[1]} și {rw.cfg.tier_names[2]}</span></li>
+            <li><b>Comandă din nou cu un click</b><span>adrese salvate, istoric, fără parolă</span></li>
+          </ul>
+          <Link to="/cont" className="cta" onClick={closeJoin}>Creează cont gratuit</Link>
+          <button className="later" onClick={closeJoin}>Mai târziu</button>
+        </div>
+      </div>}
       {popup && (() => {
         const it = popup.item_id ? byId[popup.item_id] : undefined;
         const old = it ? it.price + popup.extras.reduce((s, k) => s + (byId[k]?.price || 0), 0) : 0;
