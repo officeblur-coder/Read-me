@@ -51,7 +51,7 @@ export default function Reception() {
   }, [session]);
 
   if (!ready) return null;
-  if (!session) return <Login />;
+  if (!session) return <Login users={RECEPTION_USERS} />;
   if (isStaff === null) return <div className="login"><p className="muted">Se verifică accesul…</p></div>;
   if (!isStaff) return (
     <div className="login"><form onSubmit={e => { e.preventDefault(); supabase.auth.signOut(); }}>
@@ -62,8 +62,13 @@ export default function Reception() {
   return <Console email={session.user.email || ""} />;
 }
 
-export function Login({ title = "Recepție" }: { title?: string }) {
-  const [email, setEmail] = useState("");
+/** Receptioners shown as buttons on the reception login (user name = account before @lyrasdelivery.ro). */
+const RECEPTION_USERS = ["Marco", "Ciprian"];
+
+export function Login({ title = "Recepție", users = [] }: { title?: string; users?: string[] }) {
+  const [email, setEmail] = useState(() => { try { const u = localStorage.getItem("lyra-recv-user") || ""; return users.includes(u) ? u : ""; } catch { return ""; } });
+  const [other, setOther] = useState(false);
+  const picked = users.find(u => u === email);
   const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
@@ -75,13 +80,22 @@ export function Login({ title = "Recepție" }: { title?: string }) {
         const login = email.includes("@") ? email.trim() : email.trim().toLowerCase() + "@lyrasdelivery.ro";
         const { error } = await supabase.auth.signInWithPassword({ email: login, password });
         setBusy(false);
+        if (!error && picked) try { localStorage.setItem("lyra-recv-user", picked); } catch {}
         if (error) setErr(error.message === "Invalid login credentials" ? "Utilizator sau parolă greșită." : error.message);
       }}>
         <Wordmark small />
         <h1>{title}</h1>
-        <input className="in" type="text" required placeholder="Utilizator sau email" value={email} onChange={e => setEmail(e.target.value)} autoComplete="username" autoCapitalize="none" spellCheck={false} aria-label="Utilizator sau email" />
+        {users.length > 0 && <>
+          <p className="muted login-who">Cine preia comenzile?</p>
+          <div className="login-users">
+            {users.map(u => <button type="button" key={u} className={picked === u && !other ? "on" : ""} onClick={() => { setEmail(u); setOther(false); setErr(""); }}>
+              <span className="av">{u[0]}</span>{u}</button>)}
+          </div>
+          <button type="button" className="linkbtn login-other" onClick={() => { setOther(o => !o); setEmail(""); }}>{other ? "Înapoi la listă" : "Alt cont"}</button>
+        </>}
+        {(users.length === 0 || other) && <input className="in" type="text" required placeholder="Utilizator sau email" value={email} onChange={e => setEmail(e.target.value)} autoComplete="username" autoCapitalize="none" spellCheck={false} aria-label="Utilizator sau email" />}
         <input className="in" type="password" required placeholder="Parolă" value={password} onChange={e => setPassword(e.target.value)} autoComplete="current-password" aria-label="Parolă" />
-        <button className="big" disabled={busy}>{busy ? "Se conectează…" : "Intră în consolă"}</button>
+        <button className="big" disabled={busy || (users.length > 0 && !other && !picked)}>{busy ? "Se conectează…" : picked && !other ? `Intră ca ${picked}` : "Intră în consolă"}</button>
         {err && <p className="err">{err}</p>}
       </form>
     </div>
