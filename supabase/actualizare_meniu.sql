@@ -1313,7 +1313,7 @@ revoke execute on function public.rewards_plan(uuid,int,numeric) from public, an
 
 -- =====================================================================
 -- Migrare o singură dată din vechiul Lyra Club (Bronz/Argint/Aur, 100 puncte = 10 lei)
--- Punctele vechi își păstrează valoarea (0,10 lei/punct); nivelul se calculează din cheltuieli.
+-- Punctele vechi trec la valoarea Classic (0,01 lei/punct); nivelul se calculează din cheltuieli.
 -- =====================================================================
 do $$
 declare c record; p record;
@@ -1323,18 +1323,23 @@ begin
     update public.customers set reward_spent = c.spent, tier = public.rewards_tier_for(c.spent),
       near_notified_tier = public.rewards_tier_for(c.spent), last_activity_at = coalesce(c.last_activity_at, now()) where id = c.id;
     if c.points > 0 then
-      insert into public.point_lots(customer_id, source, points, remaining, vpp, tier) values (c.id, 'migration', c.points, c.points, 0.10, 1);
-      insert into public.point_ledger(customer_id, kind, points, value, note) values (c.id, 'migration', c.points, round(c.points * 0.10, 2), 'Puncte Lyra Club păstrate (0,10 lei/punct)');
+      insert into public.point_lots(customer_id, source, points, remaining, vpp, tier) values (c.id, 'migration', c.points, c.points, 0.01, 1);
+      insert into public.point_ledger(customer_id, kind, points, value, note) values (c.id, 'migration', c.points, round(c.points * 0.01, 2), 'Puncte Lyra Club păstrate (0,01 lei/punct)');
     end if;
     perform public.rewards_sync(c.id);
   end loop;
   for p in select * from public.pending_points where points > 0 loop
-    insert into public.point_lots(email, source, points, remaining, vpp, tier) values (p.email, 'migration', p.points, p.points, 0.10, 1);
-    insert into public.point_ledger(email, kind, points, value, note) values (p.email, 'migration', p.points, round(p.points * 0.10, 2), 'Puncte Lyra Club păstrate (0,10 lei/punct)');
+    insert into public.point_lots(email, source, points, remaining, vpp, tier) values (p.email, 'migration', p.points, p.points, 0.01, 1);
+    insert into public.point_ledger(email, kind, points, value, note) values (p.email, 'migration', p.points, round(p.points * 0.01, 2), 'Puncte Lyra Club păstrate (0,01 lei/punct)');
     update public.pending_points set points = 0 where email = p.email;
   end loop;
   update public.rewards_settings set migrated = true where id = 1;
 end $$;
+
+-- corecție: punctele preluate din Lyra Club valorează ca Classic (0,01 lei/punct), nu 0,10
+update public.point_lots set vpp = 0.01 where source = 'migration' and vpp <> 0.01;
+update public.point_ledger set value = round(points * 0.01, 2), note = 'Puncte Lyra Club păstrate (0,01 lei/punct)'
+  where kind = 'migration' and note like '%0,10%';
 
 
 -- =====================================================================
