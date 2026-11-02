@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense, lazy } from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, HashRouter, Routes, Route, useParams } from "react-router-dom";
 import "./styles.css";
@@ -7,9 +7,10 @@ import "./styles.css";
 try { document.documentElement.dataset.theme = localStorage.getItem("lyra-theme") === "light" ? "light" : "dark"; } catch { document.documentElement.dataset.theme = "dark"; }
 import Menu from "./pages/Menu";
 import Track from "./pages/Track";
-import Reception from "./pages/Reception";
-import Admin from "./pages/Admin";
-import Courier from "./pages/Courier";
+// staff screens load on demand, so customers download only the menu
+const Reception = lazy(() => import("./pages/Reception"));
+const Admin = lazy(() => import("./pages/Admin"));
+const Courier = lazy(() => import("./pages/Courier"));
 import Account from "./pages/Account";
 import { Privacy, Terms } from "./pages/Legal";
 import DemoBar from "./demo/DemoBar";
@@ -30,6 +31,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <Router>
       {DEMO && <DemoBar />}
+      <Suspense fallback={null}>
       <Routes>
         <Route path="/" element={<Menu />} />
         <Route path="/comanda/:token" element={<Track />} />
@@ -41,6 +43,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         <Route path="/termeni" element={<Terms />} />
         <Route path="/:src" element={<SourceMenu />} />
       </Routes>
+      </Suspense>
     </Router>
   </React.StrictMode>
 );

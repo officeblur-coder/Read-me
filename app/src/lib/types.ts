@@ -121,6 +121,9 @@ export type Order = {
   rating: number | null;
   courier_id?: string | null;
   courier_name?: string | null;
+  lat?: number | null;
+  lng?: number | null;
+  zone_name?: string | null;
 };
 
 export type PublicOrder = Pick<

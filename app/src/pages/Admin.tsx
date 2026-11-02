@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabase";
 import type { Category, Item, Variant } from "../lib/types";
 import { BannersTab, PromosTab, CodesTab, TeamTab } from "./AdminPromo";
 import { RewardsTab } from "./AdminRewards";
+import { ZonesTab } from "./AdminZones";
 import { uploadImage } from "../lib/upload";
 import { ALLERGENS, MEAT, TAGS, imgUrl, lei } from "../lib/format";
 import Icon from "../components/Icon";
@@ -44,9 +45,9 @@ export default function Admin() {
   return <AdminPanel email={session.user.email || ""} />;
 }
 
-type Tab = "menu" | "banners" | "promos" | "codes" | "rewards" | "team";
+type Tab = "menu" | "banners" | "promos" | "codes" | "rewards" | "zones" | "team";
 function AdminPanel({ email }: { email: string }) {
-  const [tab, setTab] = useState<Tab>(() => (["menu", "banners", "promos", "codes", "rewards", "team"].includes(location.hash.slice(1)) ? location.hash.slice(1) as Tab : "menu"));
+  const [tab, setTab] = useState<Tab>(() => (["menu", "banners", "promos", "codes", "rewards", "zones", "team"].includes(location.hash.slice(1)) ? location.hash.slice(1) as Tab : "menu"));
   const go = (t: Tab) => { setTab(t); history.replaceState(null, "", "#" + t); };
   const [cats, setCats] = useState<Category[]>([]);
   const [items, setItems] = useState<Item[]>([]);
@@ -99,7 +100,7 @@ function AdminPanel({ email }: { email: string }) {
         <Wordmark small />
         <div className="adm-title"><b>Administrare meniu</b><small>{email}</small></div>
         <nav className="adm-tabs" aria-label="Secțiuni">
-          {([["menu", "Meniu"], ["banners", "Bannere"], ["promos", "Promoții & popup"], ["codes", "Coduri reducere"], ["rewards", "Lyra Rewards"], ["team", "Echipa"]] as const).map(([k, l]) =>
+          {([["menu", "Meniu"], ["banners", "Bannere"], ["promos", "Promoții & popup"], ["codes", "Coduri reducere"], ["rewards", "Lyra Rewards"], ["zones", "Zone livrare"], ["team", "Echipa"]] as const).map(([k, l]) =>
             <button key={k} aria-current={tab === k} onClick={() => go(k)}>{l}</button>)}
         </nav>
         <nav>
@@ -113,6 +114,7 @@ function AdminPanel({ email }: { email: string }) {
       {tab === "promos" && <PromosTab items={items} flash={flash} />}
       {tab === "codes" && <CodesTab cats={cats} flash={flash} />}
       {tab === "rewards" && <RewardsTab items={items} flash={flash} isAdmin />}
+      {tab === "zones" && <ZonesTab flash={flash} />}
       {tab === "team" && <TeamTab flash={flash} />}
       {tab === "menu" && <div className="adm-shell">
         <aside className="adm-cats">

@@ -38,7 +38,9 @@ export default function Courier() {
 }
 
 function startOfDay() { const d = new Date(); d.setHours(0, 0, 0, 0); return d.toISOString(); }
-const mapsUrl = (a: string) => "https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(a);
+// the pin from the map when the customer set one (exact door), otherwise the typed address
+const mapsUrl = (a: string, lat?: number | null, lng?: number | null) =>
+  "https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(lat != null && lng != null ? `${lat},${lng}` : a);
 const payText = (o: Order) => o.payment === "online" ? "Plătit online" : `De încasat ${lei(Number(o.total))} · ${o.payment === "cash" ? "numerar" : "card"}`;
 
 function CourierApp({ me }: { me: Me }) {
@@ -119,7 +121,7 @@ function CourierApp({ me }: { me: Me }) {
               <p className="cr-who">{o.name}</p>
               <div className="cr-actions">
                 <a className="mini" href={`tel:${o.phone.replace(/\s+/g, "")}`}><Icon name="bell" size={14} /> Sună {o.phone}</a>
-                {o.address && <a className="mini" href={mapsUrl(o.address)} target="_blank" rel="noreferrer"><Icon name="send" size={14} /> Navighează</a>}
+                {o.address && <a className="mini" href={mapsUrl(o.address, o.lat, o.lng)} target="_blank" rel="noreferrer"><Icon name="send" size={14} /> Navighează</a>}
               </div>
               <ul className="cr-items">{o.items.map((l, i) => <li key={i}><b>{l.qty}×</b> {l.name}{l.variant ? ` (${l.variant})` : ""}</li>)}</ul>
               {o.note && <p className="cr-note"><b>Mențiune:</b> {o.note}</p>}

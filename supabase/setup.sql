@@ -267,6 +267,11 @@ declare
   rbase    numeric;
   rtier    smallint := 1;
   a        jsonb;
+  zn       record;          -- delivery_zones (04_delivery_zones.sql)
+  v_lat    numeric := nullif(p->>'lat','')::numeric;
+  v_lng    numeric := nullif(p->>'lng','')::numeric;
+  has_zones boolean;
+  zone_nm  text;
 begin
   select * into s from public.settings where id = 1;
   select * into cfg from public.rewards_settings where id = 1;
@@ -355,9 +360,22 @@ begin
       'grams', vitem.grams, 'allergens', to_jsonb(vitem.allergens), 'category', vitem.category_id, 'extras', '[]'::jsonb, 'note', '', 'pack', 0);
   end if;
 
-  -- livrare
-  if v_mode = 'livrare' and sub < s.free_delivery_over then
-    fee := s.delivery_fee;
+  -- livrare: zona de pe hartă (dacă există zone desenate), altfel taxa generală din setări
+  if v_mode = 'livrare' then
+    select exists (select 1 from public.delivery_zones where active) into has_zones;
+    if has_zones then
+      if v_lat is null or v_lng is null then
+        raise exception 'Alege adresa pe hartă ca să știm unde livrăm.' using errcode = 'P0001'; end if;
+      select * into zn from public.zone_for(v_lat, v_lng);
+      if zn.id is null then
+        raise exception 'Din păcate nu livrăm încă la această adresă. Poți alege ridicarea din restaurant.' using errcode = 'P0001'; end if;
+      if sub < zn.min_order then
+        raise exception 'Comanda minimă pentru zona % este % lei.', zn.name, zn.min_order using errcode = 'P0001'; end if;
+      if zn.free_over is null or sub < zn.free_over then fee := zn.fee; end if;
+      zone_nm := zn.name;
+    elsif sub < s.free_delivery_over then
+      fee := s.delivery_fee;
+    end if;
   end if;
 
   -- Lyra Rewards: puncte folosite, cel mult max_redeem_pct% din produse (după codul de reducere), FIFO pe loturi
@@ -376,12 +394,12 @@ begin
 
   insert into public.orders(customer_id, name, phone, email, address, mode, payment, note, items, allergies,
     subtotal, discount, discount_label, points_used, points_value, delivery_fee, packaging, total, points_earned, source,
-    reward_tier, reward_base, voucher_id)
+    reward_tier, reward_base, voucher_id, lat, lng, zone_name)
   values (cust.id, left(trim(p->>'name'),80), left(trim(p->>'phone'),30), coalesce(nullif(trim(p->>'email'),''), cust.email),
     case when v_mode = 'livrare' then left(trim(p->>'address'),200) else 'Ridicare din restaurant' end,
     v_mode, coalesce(p->>'payment','card'), left(p->>'note',300), lines, allg,
     sub, disc, disc_lbl, pts_used, pts_val, fee, pack, total, earn, left(p->>'source',30),
-    rtier, rbase, vo_id)
+    rtier, rbase, vo_id, case when v_mode = 'livrare' then v_lat end, case when v_mode = 'livrare' then v_lng end, zone_nm)
   returning * into o;
 
   -- consumă loturile planificate (rândul clientului e blocat, deci nu se pot folosi de două ori)
@@ -1317,6 +1335,75 @@ begin
   end loop;
   update public.rewards_settings set migrated = true where id = 1;
 end $$;
+
+
+-- =====================================================================
+-- Zone de livrare desenate pe hartă (admin → Zone livrare)
+--  * fiecare zonă: poligon [[lat,lng],…], taxă, comandă minimă, livrare gratuită peste X lei
+--  * o adresă din mai multe zone suprapuse primește zona cea mai mică (de ex. „Oraș” în „Împrejurimi”)
+--  * fără nicio zonă activă, livrarea merge ca înainte (taxa din setări, fără verificare pe hartă)
+-- =====================================================================
+create table if not exists public.delivery_zones (
+  id         uuid primary key default gen_random_uuid(),
+  name       text not null,
+  color      text not null default '#ff7a1a',
+  polygon    jsonb not null,                        -- [[lat,lng], …] minim 3 puncte
+  fee        numeric(10,2) not null default 0 check (fee >= 0),
+  min_order  numeric(10,2) not null default 0 check (min_order >= 0),
+  free_over  numeric(10,2) check (free_over >= 0),  -- null = taxa se plătește mereu
+  eta_extra  int not null default 0,                -- minute în plus față de timpul obișnuit (informativ)
+  active     boolean not null default true,
+  sort       int not null default 0,
+  updated_at timestamptz not null default now()
+);
+alter table public.orders add column if not exists lat numeric(9,6);
+alter table public.orders add column if not exists lng numeric(9,6);
+alter table public.orders add column if not exists zone_name text;
+
+alter table public.delivery_zones enable row level security;
+do $$ begin
+  drop policy if exists "zones read" on public.delivery_zones;
+  drop policy if exists "zones admin" on public.delivery_zones;
+end $$;
+create policy "zones read"  on public.delivery_zones for select using (active or public.is_staff());
+create policy "zones admin" on public.delivery_zones for all using (public.is_admin()) with check (public.is_admin());
+grant select on public.delivery_zones to anon, authenticated;
+grant insert, update, delete on public.delivery_zones to authenticated;
+
+-- punct în poligon (ray casting), coordonate [lat,lng]
+create or replace function public.point_in_zone(p_lat numeric, p_lng numeric, p_poly jsonb) returns boolean
+language plpgsql immutable as $$
+declare n int := jsonb_array_length(p_poly); i int; j int; yi numeric; xi numeric; yj numeric; xj numeric; inside boolean := false;
+begin
+  if n < 3 then return false; end if;
+  j := n - 1;
+  for i in 0 .. n - 1 loop
+    yi := (p_poly->i->>0)::numeric; xi := (p_poly->i->>1)::numeric;
+    yj := (p_poly->j->>0)::numeric; xj := (p_poly->j->>1)::numeric;
+    if ((yi > p_lat) <> (yj > p_lat)) and (p_lng < (xj - xi) * (p_lat - yi) / nullif(yj - yi, 0) + xi) then
+      inside := not inside;
+    end if;
+    j := i;
+  end loop;
+  return inside;
+end $$;
+
+-- aria aproximativă (pentru alegerea zonei celei mai mici)
+create or replace function public.zone_area(p_poly jsonb) returns numeric
+language sql immutable as $$
+  select abs(sum(((p_poly->i->>1)::numeric * (p_poly->((i + 1) % jsonb_array_length(p_poly))->>0)::numeric)
+               - ((p_poly->((i + 1) % jsonb_array_length(p_poly))->>1)::numeric * (p_poly->i->>0)::numeric))) / 2
+  from generate_series(0, jsonb_array_length(p_poly) - 1) i;
+$$;
+
+-- zona pentru un punct (null dacă e în afara tuturor)
+create or replace function public.zone_for(p_lat numeric, p_lng numeric) returns public.delivery_zones
+language sql stable security definer set search_path = public as $$
+  select * from public.delivery_zones
+  where active and p_lat is not null and p_lng is not null and public.point_in_zone(p_lat, p_lng, polygon)
+  order by public.zone_area(polygon), sort limit 1;
+$$;
+grant execute on function public.point_in_zone(numeric,numeric,jsonb), public.zone_area(jsonb) to anon, authenticated;
 
 
 -- Meniul Lyra (generat automat din lyra/data/menu.js). Nu suprascrie modificările făcute în admin.

@@ -265,6 +265,11 @@ declare
   rbase    numeric;
   rtier    smallint := 1;
   a        jsonb;
+  zn       record;          -- delivery_zones (04_delivery_zones.sql)
+  v_lat    numeric := nullif(p->>'lat','')::numeric;
+  v_lng    numeric := nullif(p->>'lng','')::numeric;
+  has_zones boolean;
+  zone_nm  text;
 begin
   select * into s from public.settings where id = 1;
   select * into cfg from public.rewards_settings where id = 1;
@@ -353,9 +358,22 @@ begin
       'grams', vitem.grams, 'allergens', to_jsonb(vitem.allergens), 'category', vitem.category_id, 'extras', '[]'::jsonb, 'note', '', 'pack', 0);
   end if;
 
-  -- livrare
-  if v_mode = 'livrare' and sub < s.free_delivery_over then
-    fee := s.delivery_fee;
+  -- livrare: zona de pe hartă (dacă există zone desenate), altfel taxa generală din setări
+  if v_mode = 'livrare' then
+    select exists (select 1 from public.delivery_zones where active) into has_zones;
+    if has_zones then
+      if v_lat is null or v_lng is null then
+        raise exception 'Alege adresa pe hartă ca să știm unde livrăm.' using errcode = 'P0001'; end if;
+      select * into zn from public.zone_for(v_lat, v_lng);
+      if zn.id is null then
+        raise exception 'Din păcate nu livrăm încă la această adresă. Poți alege ridicarea din restaurant.' using errcode = 'P0001'; end if;
+      if sub < zn.min_order then
+        raise exception 'Comanda minimă pentru zona % este % lei.', zn.name, zn.min_order using errcode = 'P0001'; end if;
+      if zn.free_over is null or sub < zn.free_over then fee := zn.fee; end if;
+      zone_nm := zn.name;
+    elsif sub < s.free_delivery_over then
+      fee := s.delivery_fee;
+    end if;
   end if;
 
   -- Lyra Rewards: puncte folosite, cel mult max_redeem_pct% din produse (după codul de reducere), FIFO pe loturi
@@ -374,12 +392,12 @@ begin
 
   insert into public.orders(customer_id, name, phone, email, address, mode, payment, note, items, allergies,
     subtotal, discount, discount_label, points_used, points_value, delivery_fee, packaging, total, points_earned, source,
-    reward_tier, reward_base, voucher_id)
+    reward_tier, reward_base, voucher_id, lat, lng, zone_name)
   values (cust.id, left(trim(p->>'name'),80), left(trim(p->>'phone'),30), coalesce(nullif(trim(p->>'email'),''), cust.email),
     case when v_mode = 'livrare' then left(trim(p->>'address'),200) else 'Ridicare din restaurant' end,
     v_mode, coalesce(p->>'payment','card'), left(p->>'note',300), lines, allg,
     sub, disc, disc_lbl, pts_used, pts_val, fee, pack, total, earn, left(p->>'source',30),
-    rtier, rbase, vo_id)
+    rtier, rbase, vo_id, case when v_mode = 'livrare' then v_lat end, case when v_mode = 'livrare' then v_lng end, zone_nm)
   returning * into o;
 
   -- consumă loturile planificate (rândul clientului e blocat, deci nu se pot folosi de două ori)

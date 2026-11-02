@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import type { Banner, CartLine, Category, Item, Promo, Settings } from "../lib/types";
@@ -6,6 +6,8 @@ import { ALLERGENS, MEAT, TAGS, imgUrl, lei, rememberOrder } from "../lib/format
 import { useCustomer } from "../lib/auth";
 import { TIER_CLS, nextTierInfo, planRedeem, redeemCap, tierName, useRewards, vppOf } from "../lib/rewards";
 import { flyToCart, haptic } from "../lib/fx";
+import { geocode, useZones, zoneFor, type LatLng } from "../lib/zones";
+const MapPicker = lazy(() => import("../components/MapPicker"));
 import Icon from "../components/Icon";
 import BottomNav from "../components/BottomNav";
 import SiteFooter from "../components/SiteFooter";
@@ -42,6 +44,10 @@ export default function Menu({ source }: { source?: string }) {
   const nav = useNavigate();
   const { customer } = useCustomer();
   const rw = useRewards(customer?.id);
+  const { zones } = useZones();
+  const [geo, setGeo] = useState<LatLng | null>(() => { try { return JSON.parse(localStorage.getItem("lyra-geo") || "null")?.p ?? null; } catch { return null; } });
+  const [geoFor, setGeoFor] = useState<string>(() => { try { return JSON.parse(localStorage.getItem("lyra-geo") || "null")?.a ?? ""; } catch { return ""; } });
+  const [geoMsg, setGeoMsg] = useState("");
   const [cats, setCats] = useState<Category[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [settings, setSettings] = useState<Settings | null>(null);
@@ -176,8 +182,13 @@ export default function Menu({ source }: { source?: string }) {
         ? validCart.filter(l => byId[l.id].category_id === code.category_id && l.promoPrice == null).reduce((s, l) => s + unitOf(l) * l.qty, 0)
         : sub) * code.percent) / 100
     : 0;
-  const freeOver = settings?.free_delivery_over ?? 100;
-  const fee = mode === "livrare" && settings && sub > 0 && sub < freeOver ? settings.delivery_fee : 0;
+  // delivery: the zone drawn in admin where the pin falls; without zones, the general fee from settings
+  const hasZones = zones.length > 0;
+  const zone = hasZones ? zoneFor(geo, zones) : null;
+  const feeKnown = !hasZones || !!zone;
+  const freeOver = hasZones ? (zone?.free_over ?? Infinity) : (settings?.free_delivery_over ?? 100);
+  const baseFee = hasZones ? (zone?.fee ?? 0) : (settings?.delivery_fee ?? 0);
+  const fee = mode === "livrare" && settings && sub > 0 && sub < freeOver ? baseFee : 0;
   // ---- Lyra Rewards (same rules as place_order: max % of products, oldest points first) ----
   const tierN = rw.me?.tier ?? customer?.tier ?? 1;
   const tierLabel = tierName(rw.cfg, tierN);
@@ -234,15 +245,46 @@ export default function Menu({ source }: { source?: string }) {
     else { setCode(null); setCodeMsg(`Codul „${v}” nu există sau a expirat.`); }
   }
 
+  function setPin(p: LatLng, addr = form.address) {
+    setGeo(p); setGeoFor(addr.trim());
+    try { localStorage.setItem("lyra-geo", JSON.stringify({ p, a: addr.trim() })); } catch { /* ignore */ }
+  }
+  // find the typed address on the map (once per address; a pin moved by hand stays where it was put)
+  useEffect(() => {
+    if (mode !== "livrare" || !hasZones || step !== "details") return;
+    const a = form.address.trim();
+    if (a.length < 6 || a === geoFor) return;
+    const t = setTimeout(async () => {
+      setGeoMsg("Caut adresa pe hartă…");
+      const r = await geocode(a);
+      if (r) { setPin({ lat: r.lat, lng: r.lng }, a); setGeoMsg("Verifică pinul și mută-l pe ușa ta, dacă e nevoie."); }
+      else setGeoMsg("Nu am găsit adresa. Apasă pe hartă unde livrăm.");
+    }, 900);
+    return () => clearTimeout(t);
+  }, [form.address, mode, hasZones, step]);
+  function locateMe() {
+    if (!navigator.geolocation) { setGeoMsg("Telefonul nu permite localizarea. Apasă pe hartă."); return; }
+    setGeoMsg("Te localizăm…");
+    navigator.geolocation.getCurrentPosition(
+      p => { setPin({ lat: p.coords.latitude, lng: p.coords.longitude }); setGeoMsg("Gata. Mută pinul dacă nu e exact."); },
+      () => setGeoMsg("Nu am primit acces la locație. Apasă pe hartă unde livrăm."), { enableHighAccuracy: true, timeout: 10000 });
+  }
+
   async function placeOrder() {
     setSendErr("");
     if (!form.name.trim() || !form.phone.trim() || (mode === "livrare" && !form.address.trim())) {
       setSendErr(mode === "livrare" ? "Completează numele, telefonul și adresa." : "Completează numele și telefonul."); return;
     }
+    if (mode === "livrare" && hasZones) {
+      if (!geo) { setSendErr("Arată-ne pe hartă unde livrăm (apasă pe hartă sau „Locația mea”)."); return; }
+      if (!zone) { setSendErr("Adresa e în afara zonei de livrare. Mută pinul sau alege ridicarea din restaurant."); return; }
+      if (sub < zone.min_order) { setSendErr(`Comanda minimă pentru zona ${zone.name} este ${lei(zone.min_order)}.`); return; }
+    }
     setSending(true);
     const { data, error } = await supabase.rpc("place_order", {
       p: {
         name: form.name, phone: form.phone, email: form.email, address: form.address, mode, payment: pay,
+        lat: mode === "livrare" && geo ? geo.lat : null, lng: mode === "livrare" && geo ? geo.lng : null,
         note: orderNote, code: code?.code || "", redeem_points: plan.points,
         voucher_id: voucherPick ? voucher!.id : null, voucher_item: voucherPick || null,
         source: source || new URLSearchParams(rloc.search).get("s") || "site",
@@ -320,7 +362,7 @@ export default function Menu({ source }: { source?: string }) {
         <div className="cp-empty">
           <div className="cp-empty-ic"><Icon name="bag" size={38} /></div>
           <b>Coșul este gol</b>
-          <p>Alege preparatele preferate din meniul Lyra's. Livrarea e gratuită peste {lei(freeOver)}.</p>
+          <p>Alege preparatele preferate din meniul Lyra's. {hasZones ? "Livrăm în Târgu Mureș și împrejurimi." : `Livrarea e gratuită peste ${lei(freeOver)}.`}</p>
           <button className="cp-empty-go" onClick={() => { setCartOpen(false); if (visibleCats[0]) jump(visibleCats[0].id); }}><Icon name="cutlery" size={18} />Vezi meniul</button>
         </div>
       ) : step === "cart" ? (<>
@@ -341,7 +383,7 @@ export default function Menu({ source }: { source?: string }) {
             );
           })}
         </div>
-        {mode === "livrare" && (sub < freeOver
+        {mode === "livrare" && feeKnown && freeOver !== Infinity && (sub < freeOver
           ? <div className="freebar"><span>Încă <b className="num">{lei(freeOver - sub)}</b> și livrarea e gratuită</span><div className="prog"><i style={{ width: `${Math.min(100, (sub / freeOver) * 100)}%` }} /></div></div>
           : <div className="freebar ok"><Icon name="check" size={16} /> Livrarea e gratuită</div>)}
         {(() => {
@@ -354,7 +396,7 @@ export default function Menu({ source }: { source?: string }) {
         <div className="cp-sum">
           <div><span>Produse</span><span className="num">{lei(sub)}</span></div>
           {pack > 0 && <div><span>Ambalaj</span><span className="num">{lei(pack)}</span></div>}
-          {mode === "livrare" && <div><span>Livrare</span><span className="num">{fee ? lei(fee) : "gratuit"}</span></div>}
+          {mode === "livrare" && <div><span>Livrare{zone ? ` · ${zone.name}` : ""}</span><span className="num">{!feeKnown ? "după adresă" : fee ? lei(fee) : "gratuit"}</span></div>}
           <div className="tot"><span>Total</span><span className="num">{lei(sub + pack + fee)}</span></div>
         </div>
         <button className="cta" onClick={() => setStep("details")}>Continuă <span>→</span></button>
@@ -377,6 +419,17 @@ export default function Menu({ source }: { source?: string }) {
               : null}
             {(!customer || (customer.addresses?.length || 0) < 2 || !form.address) && <input value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} autoComplete="street-address" placeholder="Strada, număr, bloc, apartament" />}
           </label>}
+          {mode === "livrare" && hasZones && <div className="fl wide geo-wrap">
+            <div className="geo-head"><span>Unde livrăm? <i>apasă pe hartă sau mută pinul</i></span><button type="button" className="mini" onClick={locateMe}><Icon name="pin" size={14} /> Locația mea</button></div>
+            <Suspense fallback={<div className="map-box" style={{ height: 240 }} />}>
+              <MapPicker value={geo} onChange={p => { setPin(p); setGeoMsg(""); }} zones={zones} height={240} />
+            </Suspense>
+            <div className={`geo-zone ${geo ? (zone ? "ok" : "out") : ""}`}>
+              {!geo ? (geoMsg || "Scrie adresa mai sus sau apasă pe hartă.")
+                : zone ? <><b>{zone.name}</b> · livrare {zone.free_over != null && sub >= zone.free_over ? "gratuită" : zone.fee ? lei(zone.fee) : "gratuită"}{zone.free_over != null && sub < zone.free_over ? ` · gratuit peste ${lei(zone.free_over)}` : ""}{zone.min_order ? ` · minim ${lei(zone.min_order)}` : ""}{geoMsg ? <small>{geoMsg}</small> : null}</>
+                : <>Din păcate nu livrăm aici încă. Mută pinul sau alege <button type="button" className="linkbtn" onClick={() => setMode("ridicare")}>ridicarea din restaurant</button>.</>}
+            </div>
+          </div>}
           {!customer && <label className="fl wide"><span>Email <i>opțional · strângi puncte Lyra Rewards pe email</i></span><input value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} inputMode="email" autoComplete="email" placeholder="nume@email.com" /></label>}
           <label className="fl wide"><span>Mențiuni <i>opțional</i></span><textarea rows={2} value={orderNote} onChange={e => setOrderNote(e.target.value)} placeholder="Interfon, etaj, fără tacâmuri…" /></label>
         </div>
@@ -413,7 +466,7 @@ export default function Menu({ source }: { source?: string }) {
           {ptsVal > 0 && <div className="neg"><span>Puncte Lyra Rewards ({plan.points})</span><span className="num">−{lei(ptsVal)}</span></div>}
           {voucherPick && <div className="neg"><span>Desert cadou: {nm(byId[voucherPick])}</span><span className="num">gratuit</span></div>}
           {pack > 0 && <div><span>Ambalaj</span><span className="num">{lei(pack)}</span></div>}
-          {mode === "livrare" && <div><span>Livrare</span><span className="num">{fee ? lei(fee) : "gratuit"}</span></div>}
+          {mode === "livrare" && <div><span>Livrare{zone ? ` · ${zone.name}` : ""}</span><span className="num">{!feeKnown ? "după adresă" : fee ? lei(fee) : "gratuit"}</span></div>}
           <div className="tot"><span>Total</span><span className="num">{lei(total)}</span></div>
           {rwOn && (customer || form.email.includes("@")) && earn > 0 && <div className="earn"><span>Câștigi la livrare</span><span className="num">+{earn} puncte · {lei(Math.floor(earn * vppOf(rw.cfg, customer ? tierN : 1) * 100) / 100)}</span></div>}
           {rwOn && customer && (() => {

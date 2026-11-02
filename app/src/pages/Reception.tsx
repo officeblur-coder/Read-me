@@ -324,7 +324,7 @@ function Ticket({ o }: { o: Order }) {
   const flagged = o.items.filter(l => l.allergens?.some(a => o.allergies.includes(a)));
   return (
     <div className="ticket">
-      <div className="tno"><b>#{o.number}</b><span>{hm(o.created_at)} · {o.mode === "livrare" ? "LIVRARE" : "RIDICARE"}</span></div>
+      <div className="tno"><b>#{o.number}</b><span>{hm(o.created_at)} · {o.mode === "livrare" ? `LIVRARE${o.zone_name ? " · " + o.zone_name.toUpperCase() : ""}` : "RIDICARE"}</span></div>
       {o.allergies.length > 0 && <div className="alert">ALERGIE CLIENT: {o.allergies.map(a => ALLERGENS[a]?.[0].toUpperCase()).join(", ")}{flagged.length > 0 && ` · verifică: ${flagged.map(l => l.name).join(", ")}`}</div>}
       {o.items.map((l, i) => (
         <div key={i} className="tl"><span className="q">{l.qty}×</span>
