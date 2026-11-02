@@ -107,6 +107,21 @@ function Console({ email }: { email: string }) {
   const soundRef = useRef(sound); soundRef.current = sound;
   const [showStart, setShowStart] = useState(true);
   const started = useRef(false);
+  // working session for the admin report: opened with the console, a heartbeat every minute, closed on "Ieși"
+  const sessionId = useRef<string | null>(null);
+  useEffect(() => {
+    let alive = true;
+    supabase.rpc("console_open", { p_device: navigator.userAgent.includes("Mobile") ? "telefon" : "calculator" })
+      .then(({ data }) => { if (alive) sessionId.current = (data as string) || null; });
+    const beat = setInterval(() => { if (sessionId.current) supabase.rpc("console_ping", { p_id: sessionId.current }); }, 60000);
+    const bye = () => { if (sessionId.current) supabase.rpc("console_close", { p_id: sessionId.current }); };
+    window.addEventListener("pagehide", bye);
+    return () => { alive = false; clearInterval(beat); window.removeEventListener("pagehide", bye); bye(); };
+  }, []);
+  async function logout() {
+    if (sessionId.current) { await supabase.rpc("console_close", { p_id: sessionId.current }); sessionId.current = null; }
+    supabase.auth.signOut();
+  }
   function start() {
     unlockAudio(); chime(); keepAwake();
     started.current = true; setShowStart(false);
@@ -200,7 +215,7 @@ function Console({ email }: { email: string }) {
             <button className="switch" role="switch" aria-checked={!!settings?.accepting_orders} aria-label="Preiau comenzi online"
               onClick={async () => { await supabase.from("settings").update({ accepting_orders: !settings?.accepting_orders }).eq("id", 1); loadMenu(); }} /></div>
           <span className="muted" style={{ fontSize: 11.5 }}>{email}</span>
-          <button className="rbtn" onClick={() => supabase.auth.signOut()}><Icon name="logout" size={15} />Ieși</button>
+          <button className="rbtn" onClick={logout}><Icon name="logout" size={15} />Ieși</button>
         </div>
       </aside>
 
