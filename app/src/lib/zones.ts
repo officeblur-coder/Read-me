@@ -48,15 +48,56 @@ export function zoneFor(p: LatLng | null, zones: Zone[]) {
     .sort((a, b) => area(a.polygon) - area(b.polygon) || a.sort - b.sort)[0] || null;
 }
 
+export const LOCALITIES = ["Târgu Mureș", "Sâncraiu de Mureș", "Sângeorgiu de Mureș", "Sântana de Mureș", "Corunca", "Livezeni", "Cristești",
+  "Ernei", "Acățari", "Gornești", "Ungheni", "Mureșeni", "Remetea", "Mădăraș", "Band", "Miercurea Nirajului", "Ceuașu de Câmpie", "Pănet"];
+
+const UA_HEADERS = { Accept: "application/json" };
+async function nominatim(params: Record<string, string>) {
+  const qs = new URLSearchParams({ format: "json", limit: "1", countrycodes: "ro", "accept-language": "ro", viewbox: "24.2,46.75,25.0,46.3", ...params });
+  try {
+    const r = await fetch("https://nominatim.openstreetmap.org/search?" + qs, { headers: UA_HEADERS });
+    const d = (await r.json()) as { lat: string; lon: string; display_name: string }[];
+    return d[0] ? { lat: +d[0].lat, lng: +d[0].lon, label: d[0].display_name } : null;
+  } catch { return null; }
+}
+const pause = () => new Promise(r => setTimeout(r, 1100));   // OpenStreetMap allows ~1 search per second
+
+/** Street as people write it → what the map search understands: no "Str." before "Aleea", no block/apartment. */
+export function cleanStreet(street: string, city: string) {
+  let s = " " + street.replace(/\s+/g, " ") + " ";
+  for (const c of [city, ...LOCALITIES]) if (c) s = s.replace(new RegExp("[,\\s]+" + c.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "[,\\s]*", "i"), " ");
+  s = s.replace(/[,\s]*\b(tg\.?|t[aâ]rgu)[\s-]*mure[sș]\b[,\s]*/gi, " ");
+  s = s.replace(/[,\s]+(bl(oc)?|sc(ara)?|et(aj)?|ap(artament)?|ap\.|int(erfon)?)\b\.?\s*[\w-]*/gi, " ");
+  s = s.replace(/\b(bd\.?|b-dul|blvd\.?)\s+/i, "Bulevardul ").replace(/\bstr\.\s*/i, "Strada ");
+  s = s.replace(/(\d+)\s*\/\s*\w+/, "$1");                                   // 11/4 → 11
+  s = s.replace(/\b(str(ada)?\.?)\s+(?=(aleea|bulevardul|bd\.?|b-dul|calea|pia[țt]a|pasajul|intrarea)\b)/i, ""); // "Str. Aleea X" → "Aleea X"
+  s = s.replace(/\bnr\.?\s*/gi, "").replace(/\s*,\s*/g, ", ").replace(/\s+/g, " ").trim().replace(/^,|,$/g, "").trim();
+  const m = s.match(/^(.*?)[,\s]+(\d+[a-zA-Z]?)$/);
+  return { street: m ? m[1].trim() : s, number: m ? m[2] : "" };
+}
+
+/** Address → coordinates (OpenStreetMap). Tries the exact number, then the street, then the locality itself,
+ *  so a typo in the number never blocks an order; only the zone check decides. */
+export async function geocodeAddress(street: string, city: string): Promise<(LatLng & { label: string; precision: "exact" | "street" | "city" }) | null> {
+  const loc = city.trim() || "Târgu Mureș";
+  const { street: st, number } = cleanStreet(street, loc);
+  if (st) {
+    if (number) {
+      const a = await nominatim({ street: `${number} ${st}`, city: loc, county: "Mureș" });
+      if (a) return { ...a, precision: "exact" };
+      await pause();
+    }
+    const b = await nominatim({ q: `${st}, ${loc}, Mureș` });
+    if (b) return { ...b, precision: "street" };
+    await pause();
+  }
+  const c = await nominatim({ q: `${loc}, Mureș` });
+  return c ? { ...c, precision: "city" } : null;
+}
+
 /** Address → coordinates (OpenStreetMap / Nominatim), biased to Mureș county. */
 export async function geocode(address: string): Promise<(LatLng & { label: string }) | null> {
   const q = address.trim();
   if (q.length < 4) return null;
-  const search = /mure[sș]|t[aâ]rgu|tg\.?\s*mure|acățari|acatari/i.test(q) ? q : `${q}, județul Mureș`;
-  const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=ro&accept-language=ro&viewbox=24.2,46.75,25.0,46.3&bounded=0&q=${encodeURIComponent(search)}`;
-  try {
-    const r = await fetch(url, { headers: { Accept: "application/json" } });
-    const d = (await r.json()) as { lat: string; lon: string; display_name: string }[];
-    return d[0] ? { lat: +d[0].lat, lng: +d[0].lon, label: d[0].display_name } : null;
-  } catch { return null; }
+  return nominatim({ q: /mure[sș]|t[aâ]rgu|tg\.?\s*mure/i.test(q) ? q : `${q}, județul Mureș` });
 }

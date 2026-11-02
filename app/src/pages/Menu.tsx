@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import type { Banner, CartLine, Category, Item, Promo, Settings } from "../lib/types";
@@ -6,8 +6,7 @@ import { ALLERGENS, MEAT, TAGS, imgUrl, lei, rememberOrder } from "../lib/format
 import { useCustomer } from "../lib/auth";
 import { TIER_CLS, nextTierInfo, planRedeem, redeemCap, tierName, useRewards, vppOf } from "../lib/rewards";
 import { flyToCart, haptic } from "../lib/fx";
-import { geocode, useZones, zoneFor, type LatLng } from "../lib/zones";
-const MapPicker = lazy(() => import("../components/MapPicker"));
+import { LOCALITIES, geocodeAddress, useZones, zoneFor, type LatLng } from "../lib/zones";
 import Icon from "../components/Icon";
 import BottomNav from "../components/BottomNav";
 import SiteFooter from "../components/SiteFooter";
@@ -16,7 +15,7 @@ import { BURGER_CATS, CAT_ICON, EXTRA_IDS, MAIN_CATS, POPULAR, SEARCH_PH, UPSELL
 type Lang = "ro" | "hu";
 type ItemSheet = { id: string; qty: number; vi: number; extras: string[]; note: string };
 type CodeInfo = { code: string; percent: number; category_id: string | null; label: string };
-type Form = { name: string; phone: string; email: string; address: string };
+type Form = { name: string; phone: string; email: string; address: string; city: string };
 
 const T = {
   ro: { deliv: "Livrare", pick: "Ridicare", search: SEARCH_PH.ro, add: "Adaugă", from: "de la", out: "Epuizat azi",
@@ -31,8 +30,8 @@ function loadCart(): CartLine[] {
   try { return JSON.parse(localStorage.getItem("lyra-cart") || "[]"); } catch { return []; }
 }
 function loadForm(): Form {
-  try { return { name: "", phone: "", email: "", address: "", ...JSON.parse(localStorage.getItem("lyra-form") || "{}") }; }
-  catch { return { name: "", phone: "", email: "", address: "" }; }
+  try { return { name: "", phone: "", email: "", address: "", city: "Târgu Mureș", ...JSON.parse(localStorage.getItem("lyra-form") || "{}") }; }
+  catch { return { name: "", phone: "", email: "", address: "", city: "Târgu Mureș" }; }
 }
 const DEFAULT_BANNERS: Banner[] = [
   { id: "d1", chip: "Nou · Smash Burgers", title: null, body: "Chiftele smash din vită, cheddar topit, chiflă artizanală. De la 25 lei.", cta: "Comandă acum", image: "double-smash.jpg", category_id: "smash", active: true, sort: 10 },
@@ -47,7 +46,7 @@ export default function Menu({ source }: { source?: string }) {
   const { zones } = useZones();
   const [geo, setGeo] = useState<LatLng | null>(() => { try { return JSON.parse(localStorage.getItem("lyra-geo") || "null")?.p ?? null; } catch { return null; } });
   const [geoFor, setGeoFor] = useState<string>(() => { try { return JSON.parse(localStorage.getItem("lyra-geo") || "null")?.a ?? ""; } catch { return ""; } });
-  const [geoMsg, setGeoMsg] = useState("");
+  const [geoBusy, setGeoBusy] = useState(false);
   const [cats, setCats] = useState<Category[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [settings, setSettings] = useState<Settings | null>(null);
@@ -141,7 +140,7 @@ export default function Menu({ source }: { source?: string }) {
   // signed-in members get their details filled in
   useEffect(() => {
     if (!customer) return;
-    setForm(f => ({
+    setForm(f => ({ ...f,
       name: f.name || customer.name || "", phone: f.phone || customer.phone || "",
       email: customer.email || f.email, address: f.address || customer.addresses?.[0] || "",
     }));
@@ -256,30 +255,27 @@ export default function Menu({ source }: { source?: string }) {
   }, [authReady, customer?.id, rw.cfg.enabled]);
   function closeJoin() { setJoinPop(false); try { localStorage.setItem("lyra-join-pop", String(Date.now())); } catch { /* ignore */ } }
 
-  function setPin(p: LatLng, addr = form.address) {
-    setGeo(p); setGeoFor(addr.trim());
-    try { localStorage.setItem("lyra-geo", JSON.stringify({ p, a: addr.trim() })); } catch { /* ignore */ }
+  // address → coordinates in the background (OpenStreetMap); the customer only types the address, no map
+  const addrKey = `${form.address.trim()}|${(form.city || "Târgu Mureș").trim()}`;
+  function setPin(p: LatLng, key: string) {
+    setGeo(p); setGeoFor(key);
+    try { localStorage.setItem("lyra-geo", JSON.stringify({ p, a: key })); } catch { /* ignore */ }
   }
-  // find the typed address on the map (once per address; a pin moved by hand stays where it was put)
+  async function locate(key = addrKey) {
+    const [street, city] = key.split("|");
+    setGeoBusy(true);
+    const r = await geocodeAddress(street, city);
+    setGeoBusy(false);
+    if (r) setPin({ lat: r.lat, lng: r.lng }, key);
+    else { setGeo(null); setGeoFor(key); }
+    return r;
+  }
   useEffect(() => {
     if (mode !== "livrare" || !hasZones || step !== "details") return;
-    const a = form.address.trim();
-    if (a.length < 6 || a === geoFor) return;
-    const t = setTimeout(async () => {
-      setGeoMsg("Caut adresa pe hartă…");
-      const r = await geocode(a);
-      if (r) { setPin({ lat: r.lat, lng: r.lng }, a); setGeoMsg("Verifică pinul și mută-l pe ușa ta, dacă e nevoie."); }
-      else setGeoMsg("Nu am găsit adresa. Apasă pe hartă unde livrăm.");
-    }, 900);
+    if (form.address.trim().length < 4 || addrKey === geoFor) return;
+    const t = setTimeout(() => { locate(addrKey); }, 900);
     return () => clearTimeout(t);
-  }, [form.address, mode, hasZones, step]);
-  function locateMe() {
-    if (!navigator.geolocation) { setGeoMsg("Telefonul nu permite localizarea. Apasă pe hartă."); return; }
-    setGeoMsg("Te localizăm…");
-    navigator.geolocation.getCurrentPosition(
-      p => { setPin({ lat: p.coords.latitude, lng: p.coords.longitude }); setGeoMsg("Gata. Mută pinul dacă nu e exact."); },
-      () => setGeoMsg("Nu am primit acces la locație. Apasă pe hartă unde livrăm."), { enableHighAccuracy: true, timeout: 10000 });
-  }
+  }, [addrKey, mode, hasZones, step]);
 
   async function placeOrder() {
     setSendErr("");
@@ -287,14 +283,18 @@ export default function Menu({ source }: { source?: string }) {
       setSendErr(mode === "livrare" ? "Completează numele, telefonul și adresa." : "Completează numele și telefonul."); return;
     }
     if (mode === "livrare" && hasZones) {
-      if (!geo) { setSendErr("Arată-ne pe hartă unde livrăm (apasă pe hartă sau „Locația mea”)."); return; }
-      if (!zone) { setSendErr("Adresa e în afara zonei de livrare. Mută pinul sau alege ridicarea din restaurant."); return; }
-      if (sub < zone.min_order) { setSendErr(`Comanda minimă pentru zona ${zone.name} este ${lei(zone.min_order)}.`); return; }
+      let p = addrKey === geoFor ? geo : null;
+      if (!p) { const r = await locate(); p = r ? { lat: r.lat, lng: r.lng } : null; }
+      if (!p) { setSendErr("Nu am putut verifica adresa. Verifică strada și localitatea."); return; }
+      if (!zoneFor(p, zones)) { setSendErr("Ne pare rău, adresa nu este în zona noastră de livrare. Poți alege ridicarea din restaurant."); return; }
+      const zn = zoneFor(p, zones)!;
+      if (sub < zn.min_order) { setSendErr(`Comanda minimă pentru zona ${zn.name} este ${lei(zn.min_order)}.`); return; }
     }
     setSending(true);
     const { data, error } = await supabase.rpc("place_order", {
       p: {
-        name: form.name, phone: form.phone, email: form.email, address: form.address, mode, payment: pay,
+        name: form.name, phone: form.phone, email: form.email, mode, payment: pay,
+        address: form.city && !form.address.toLowerCase().includes(form.city.toLowerCase().slice(0, 5)) ? `${form.address.trim()}, ${form.city.trim()}` : form.address,
         lat: mode === "livrare" && geo ? geo.lat : null, lng: mode === "livrare" && geo ? geo.lng : null,
         note: orderNote, code: code?.code || "", redeem_points: plan.points,
         voucher_id: voucherPick ? voucher!.id : null, voucher_item: voucherPick || null,
@@ -430,16 +430,14 @@ export default function Menu({ source }: { source?: string }) {
               : null}
             {(!customer || (customer.addresses?.length || 0) < 2 || !form.address) && <input value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} autoComplete="street-address" placeholder="Strada, număr, bloc, apartament" />}
           </label>}
-          {mode === "livrare" && hasZones && <div className="fl wide geo-wrap">
-            <div className="geo-head"><span>Unde livrăm? <i>apasă pe hartă sau mută pinul</i></span><button type="button" className="mini" onClick={locateMe}><Icon name="pin" size={14} /> Locația mea</button></div>
-            <Suspense fallback={<div className="map-box" style={{ height: 240 }} />}>
-              <MapPicker value={geo} onChange={p => { setPin(p); setGeoMsg(""); }} zones={zones} height={240} />
-            </Suspense>
-            <div className={`geo-zone ${geo ? (zone ? "ok" : "out") : ""}`}>
-              {!geo ? (geoMsg || "Scrie adresa mai sus sau apasă pe hartă.")
-                : zone ? <><b>{zone.name}</b> · livrare {zone.free_over != null && sub >= zone.free_over ? "gratuită" : zone.fee ? lei(zone.fee) : "gratuită"}{zone.free_over != null && sub < zone.free_over ? ` · gratuit peste ${lei(zone.free_over)}` : ""}{zone.min_order ? ` · minim ${lei(zone.min_order)}` : ""}{geoMsg ? <small>{geoMsg}</small> : null}</>
-                : <>Din păcate nu livrăm aici încă. Mută pinul sau alege <button type="button" className="linkbtn" onClick={() => setMode("ridicare")}>ridicarea din restaurant</button>.</>}
-            </div>
+          {mode === "livrare" && <label className="fl wide"><span>Localitatea</span>
+            <input list="lyra-localities" value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} autoComplete="address-level2" placeholder="Târgu Mureș" />
+            <datalist id="lyra-localities">{LOCALITIES.map(l => <option key={l} value={l} />)}</datalist>
+          </label>}
+          {mode === "livrare" && hasZones && form.address.trim().length >= 4 && <div className={`geo-zone wide ${geoBusy || addrKey !== geoFor ? "" : zone ? "ok" : "out"}`}>
+            {geoBusy || addrKey !== geoFor ? "Verificăm adresa…"
+              : zone ? <><b>Livrăm la tine</b> · {zone.free_over != null && sub >= zone.free_over ? "livrare gratuită" : zone.fee ? `livrare ${lei(zone.fee)}` : "livrare gratuită"}{zone.free_over != null && sub < zone.free_over ? ` · gratuit peste ${lei(zone.free_over)}` : ""}{zone.min_order ? ` · minim ${lei(zone.min_order)}` : ""}</>
+              : <>Ne pare rău, adresa nu este în zona noastră de livrare. Poți alege <button type="button" className="linkbtn" onClick={() => setMode("ridicare")}>ridicarea din restaurant</button>.</>}
           </div>}
           {!customer && <label className="fl wide"><span>Email <i>opțional · strângi puncte Lyra Rewards pe email</i></span><input value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} inputMode="email" autoComplete="email" placeholder="nume@email.com" /></label>}
           <label className="fl wide"><span>Mențiuni <i>opțional</i></span><textarea rows={2} value={orderNote} onChange={e => setOrderNote(e.target.value)} placeholder="Interfon, etaj, fără tacâmuri…" /></label>
