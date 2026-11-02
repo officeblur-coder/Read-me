@@ -1,0 +1,31 @@
+# Publishes the ordering app to the cyberFolks hosting over FTP.
+# Runs when the "productie" branch changes (or by hand from the Actions tab).
+# Needs three repository secrets: FTP_SERVER, FTP_USERNAME, FTP_PASSWORD (an FTP account limited to the site's folder).
+name: Publicare lyrasdelivery.ro
+on:
+  push:
+    branches: [productie]
+  workflow_dispatch:
+concurrency: deploy-cyberfolks
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - run: npm ci
+        working-directory: app
+      - run: npm run build
+        working-directory: app
+      - uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: app/dist/
+          server-dir: ./
+          dangerous-clean-slate: false
