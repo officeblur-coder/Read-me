@@ -27,7 +27,7 @@ const N = {
   "supa-salata": [43, 54, "400/300/70/30 gr"], "ciorba-pita-ciolan": [44, 39.5, "350/60/50 gr"], "gulas": [45, 39, "300/70 gr"],
   "burta": [46, 34, "300/120 gr"], "lascute": [47, 27, "400 ml/50 gr"],
   "ciolan-lyra": [48, 55, "180/110/50 gr"], "ceafa-tiganeasca": [49, 68, "170/250/45/75 gr"], "carne-garnita": [50, 63, "220/150/50 gr"],
-  "mititei": [51, 8.5, "1 bucată/70/20 gr"], "mix-grill": [52, 49, "350 gr"],
+  "mititei": [51, 34, "4 bucăți/280/80 gr"], "mix-grill": [52, 49, "350 gr"],
   "fasole-batuta": [53, 59, "250/150 gr"], "papricas": [54, 45, "300/130 gr"], "snitel-lyra": [55, 57, "350 gr"], "ficatei": [56, 47, "250/130 gr"],
   "piept-lyra": [58, 39, "80/100/40/40 gr"], "borzas": [59, 49], "cordon-bleu": [60, 49, "150/250 gr"], "salata-pui": [61, 52, "150/80/30 gr"],
   "crispy-pui": [62, 42, "300/150/90 gr"], "piept-carbune": [63, 36, "100/200 gr"], "piept-vienez": [64, 39, "230 gr"], "piept-palermo": [65, 46, "300 gr"],
@@ -53,6 +53,7 @@ const N = {
 const GONE = ["tarta-mere", "melba", "cartofi-coaja"];
 // packaging per piece (lei); everything else is 2
 const PACK7 = ["borzas", "ciorba-pita", "ciorba-pita-ciolan", "pastrav"];
+const PACK10 = ["platou-lyra", "platou-pui"];
 
 const NEW = [
   { id: "iaurt-oua-posate", c: "antreuri", ro: "Iaurt cu ouă poșate", hu: "Joghurt posírozott tojással", d: "Iaurt, mărar, ulei cu chili, focaccia, ouă, usturoi copt", dh: "Joghurt, kapor, chilis olaj, focaccia, tojás, sült fokhagyma", al: ["gluten", "ou", "lactoza"], t: ["new", "veg"] },
@@ -159,6 +160,7 @@ for (const it of [...M, ...NEW]) {
   if (g) next.g = g;
   if (PHOTOS.has(it.id)) next.img = it.id;
   if (PACK7.includes(it.id)) next.pk = 7;
+  if (PACK10.includes(it.id)) next.pk = 10;
   for (const k of Object.keys(next)) if (next[k] === undefined) delete next[k];
   out.push(next);
 }
