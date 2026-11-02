@@ -3,7 +3,8 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import type { Banner, CartLine, Category, Item, Promo, Settings } from "../lib/types";
 import { ALLERGENS, MEAT, TAGS, imgUrl, lei, rememberOrder } from "../lib/format";
-import { tierOf, useCustomer } from "../lib/auth";
+import { useCustomer } from "../lib/auth";
+import { TIER_CLS, nextTierInfo, planRedeem, redeemCap, tierName, useRewards, vppOf } from "../lib/rewards";
 import { flyToCart, haptic } from "../lib/fx";
 import Icon from "../components/Icon";
 import BottomNav from "../components/BottomNav";
@@ -40,6 +41,7 @@ const isDesktop = () => window.matchMedia("(min-width: 1100px)").matches;
 export default function Menu({ source }: { source?: string }) {
   const nav = useNavigate();
   const { customer } = useCustomer();
+  const rw = useRewards(customer?.id);
   const [cats, setCats] = useState<Category[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [settings, setSettings] = useState<Settings | null>(null);
@@ -59,7 +61,8 @@ export default function Menu({ source }: { source?: string }) {
   const [form, setForm] = useState<Form>(loadForm);
   const [orderNote, setOrderNote] = useState("");
   const [pay, setPay] = useState<"card" | "cash">("card");
-  const [usePts, setUsePts] = useState(false);
+  const [redeemWant, setRedeemWant] = useState(0);              // Lyra Rewards points the customer chose to use
+  const [voucherItem, setVoucherItem] = useState("");          // dessert picked for the free-dessert voucher
   const [codeInput, setCodeInput] = useState("");
   const [code, setCode] = useState<CodeInfo | null>(null);
   const [codeMsg, setCodeMsg] = useState("");
@@ -173,16 +176,25 @@ export default function Menu({ source }: { source?: string }) {
         ? validCart.filter(l => byId[l.id].category_id === code.category_id && l.promoPrice == null).reduce((s, l) => s + unitOf(l) * l.qty, 0)
         : sub) * code.percent) / 100
     : 0;
-  const tier = tierOf(customer?.lifetime || 0);
   const freeOver = settings?.free_delivery_over ?? 100;
-  const fee = mode === "livrare" && settings && sub > 0 && sub < freeOver && tier.name !== "Aur" ? settings.delivery_fee : 0;
-  const maxPts = customer ? Math.min(Math.floor(customer.points / 100) * 10, Math.floor((sub - disc) * 0.5 / 10) * 10) : 0;
-  const ptsVal = usePts && maxPts > 0 ? maxPts : 0;
+  const fee = mode === "livrare" && settings && sub > 0 && sub < freeOver ? settings.delivery_fee : 0;
+  // ---- Lyra Rewards (same rules as place_order: max % of products, oldest points first) ----
+  const tierN = rw.me?.tier ?? customer?.tier ?? 1;
+  const tierLabel = tierName(rw.cfg, tierN);
+  const rwOn = rw.cfg.enabled;
+  const lots = rw.me?.lots || [];
+  const cap = redeemCap(rw.cfg, sub - disc);
+  const maxPlan = rwOn && customer ? planRedeem(lots, Number.MAX_SAFE_INTEGER, cap) : { points: 0, value: 0 };
+  const plan = rwOn && customer ? planRedeem(lots, Math.min(redeemWant, maxPlan.points), cap) : { points: 0, value: 0 };
+  const ptsVal = plan.value;
+  const voucher = rwOn ? rw.me?.vouchers.find(v => v.status === "active" && new Date(v.expires_at).getTime() > Date.now()) : undefined;
+  const desserts = rw.cfg.dessert_ids.map(id => byId[id]).filter(it => it && it.available);
+  const voucherPick = voucher && desserts.some(d => d.id === voucherItem) ? voucherItem : "";
   // delivery packaging, per piece (dish + each extra); no discounts or points on it
   const pk = (it?: Item) => (it ? Number(it.packaging ?? 2) : 0);
   const pack = validCart.reduce((s, l) => s + (pk(byId[l.id]) + l.extras.reduce((t, k) => t + pk(byId[k]), 0)) * l.qty, 0);
   const total = Math.max(0, sub - disc - ptsVal + fee) + pack;
-  const earn = Math.floor((total - pack) * tier.mult);
+  const earn = rwOn ? Math.floor(Math.max(0, sub - disc - ptsVal)) : 0;
   const count = validCart.reduce((s, l) => s + l.qty, 0);
   const qtyOf = (id: string) => validCart.filter(l => l.id === id && !l.promo).reduce((s, l) => s + l.qty, 0);
 
@@ -231,7 +243,8 @@ export default function Menu({ source }: { source?: string }) {
     const { data, error } = await supabase.rpc("place_order", {
       p: {
         name: form.name, phone: form.phone, email: form.email, address: form.address, mode, payment: pay,
-        note: orderNote, code: code?.code || "", use_points: ptsVal > 0,
+        note: orderNote, code: code?.code || "", redeem_points: plan.points,
+        voucher_id: voucherPick ? voucher!.id : null, voucher_item: voucherPick || null,
         source: source || new URLSearchParams(rloc.search).get("s") || "site",
         items: validCart.map(l => ({ id: l.id, qty: l.qty, vi: l.vi, extras: l.extras, note: l.note, promo: l.promo })),
       },
@@ -243,7 +256,7 @@ export default function Menu({ source }: { source?: string }) {
     if (customer && form.address && !customer.addresses?.includes(form.address)) {
       supabase.from("customers").update({ addresses: [form.address, ...(customer.addresses || [])].slice(0, 5), phone: customer.phone || form.phone, name: customer.name || form.name }).eq("id", customer.id).then(() => {});
     }
-    setCart([]); setCartOpen(false); setStep("cart"); setOrderNote(""); setCode(null); setCodeInput(""); setCodeMsg(""); setUsePts(false);
+    setCart([]); setCartOpen(false); setStep("cart"); setOrderNote(""); setCode(null); setCodeInput(""); setCodeMsg(""); setRedeemWant(0); setVoucherItem(""); rw.reload();
     nav("/comanda/" + res.token, { state: { fresh: true } });
   }
 
@@ -328,8 +341,7 @@ export default function Menu({ source }: { source?: string }) {
             );
           })}
         </div>
-        {mode === "livrare" && (tier.name === "Aur" ? <div className="freebar ok"><Icon name="star" size={16} fill /> Livrare gratuită: ești membru Aur</div>
-          : sub < freeOver
+        {mode === "livrare" && (sub < freeOver
           ? <div className="freebar"><span>Încă <b className="num">{lei(freeOver - sub)}</b> și livrarea e gratuită</span><div className="prog"><i style={{ width: `${Math.min(100, (sub / freeOver) * 100)}%` }} /></div></div>
           : <div className="freebar ok"><Icon name="check" size={16} /> Livrarea e gratuită</div>)}
         {(() => {
@@ -347,9 +359,9 @@ export default function Menu({ source }: { source?: string }) {
         </div>
         <button className="cta" onClick={() => setStep("details")}>Continuă <span>→</span></button>
       </>) : (<>
-        {customer
-          ? <div className="club-strip"><span className={`club-dot ${tier.cls}`} /><div><b>{customer.points} puncte</b><small>Membru {tier.name} · câștigi +{earn} puncte la comanda asta</small></div></div>
-          : <Link to="/cont" className="club-strip guest"><Icon name="star" size={18} fill /><div><b>Ai cont Lyra Club?</b><small>Intră ca să folosești punctele și să-ți salvăm adresa.</small></div><span>→</span></Link>}
+        {rwOn && (customer
+          ? <div className="club-strip"><span className={`club-dot ${TIER_CLS[tierN - 1]}`} /><div><b>Lyra {tierLabel} · {rw.me?.points ?? customer.points} puncte</b><small>Valorează {lei(rw.me?.value ?? 0)} · câștigi +{earn} puncte la comanda asta</small></div></div>
+          : <Link to="/cont" className="club-strip guest"><Icon name="star" size={18} fill /><div><b>Ai cont Lyra Rewards?</b><small>Intră ca să folosești punctele și să-ți salvăm adresa.</small></div><span>→</span></Link>)}
         <p className="cp-lbl">Cum vrei comanda?</p>
         <div className="seg big2">
           <button aria-pressed={mode === "livrare"} onClick={() => setMode("livrare")}><Icon name="bike" size={18} />{t.deliv}</button>
@@ -365,12 +377,25 @@ export default function Menu({ source }: { source?: string }) {
               : null}
             {(!customer || (customer.addresses?.length || 0) < 2 || !form.address) && <input value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} autoComplete="street-address" placeholder="Strada, număr, bloc, apartament" />}
           </label>}
-          {!customer && <label className="fl wide"><span>Email <i>opțional · primești puncte Lyra Club pe email</i></span><input value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} inputMode="email" autoComplete="email" placeholder="nume@email.com" /></label>}
+          {!customer && <label className="fl wide"><span>Email <i>opțional · strângi puncte Lyra Rewards pe email</i></span><input value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} inputMode="email" autoComplete="email" placeholder="nume@email.com" /></label>}
           <label className="fl wide"><span>Mențiuni <i>opțional</i></span><textarea rows={2} value={orderNote} onChange={e => setOrderNote(e.target.value)} placeholder="Interfon, etaj, fără tacâmuri…" /></label>
         </div>
-        {customer && <div className={`ptsbox ${maxPts ? "" : "dis"}`}>
-          <div><b>Folosește {maxPts * 10} puncte</b><small>{maxPts ? `−${lei(maxPts)} din comandă` : "Poți folosi punctele de la 100 în sus."}</small></div>
-          <button className="switch" role="switch" aria-checked={ptsVal > 0} disabled={!maxPts} onClick={() => setUsePts(!usePts)} aria-label="Folosește punctele" />
+        {rwOn && customer && <div className={`rw-box ${maxPlan.points ? "" : "dis"}`}>
+          <div className="rw-head"><div><b>Folosește puncte</b>
+            <small>{maxPlan.points ? `Poți folosi până la ${maxPlan.points} puncte (${lei(maxPlan.value)}, maxim ${rw.cfg.max_redeem_pct}% din produse)` : (rw.me?.points ? `Poți folosi punctele când produsele depășesc ${lei(Math.ceil(100 / rw.cfg.max_redeem_pct))}.` : "Punctele câștigate azi le folosești de la comanda următoare.")}</small></div>
+            {maxPlan.points > 0 && <button className="mini" onClick={() => setRedeemWant(plan.points === maxPlan.points ? 0 : maxPlan.points)}>{plan.points === maxPlan.points ? "Anulează" : "Folosește tot"}</button>}</div>
+          {maxPlan.points > 0 && <>
+            <input type="range" className="rw-range" min={0} max={maxPlan.points} step={1} value={plan.points} onChange={e => setRedeemWant(Number(e.target.value))} aria-label="Câte puncte folosești" />
+            <div className="rw-val"><span className="num">{plan.points} puncte</span><b className="num">−{lei(plan.value)}</b></div>
+          </>}
+        </div>}
+        {voucher && desserts.length > 0 && <div className="rw-voucher">
+          <div className="rw-head"><div><b>🍰 Desert cadou Lyra {tierName(rw.cfg, voucher.tier)}</b>
+            <small>Alege unul, e din partea casei. Valabil până pe {new Date(voucher.expires_at).toLocaleDateString("ro-RO", { day: "numeric", month: "long" })}.</small></div></div>
+          <div className="rw-desserts">
+            {desserts.map(d => <button key={d.id} aria-pressed={voucherPick === d.id} onClick={() => setVoucherItem(voucherPick === d.id ? "" : d.id)}>
+              {d.image && <img src={imgUrl(d.image)!} alt="" />}<span>{nm(d)}</span><em>{voucherPick === d.id ? "Ales ✓" : "gratuit"}</em></button>)}
+          </div>
         </div>}
         <p className="cp-lbl">Plata</p>
         <div className="paygrid">
@@ -385,11 +410,19 @@ export default function Menu({ source }: { source?: string }) {
         <div className="cp-sum">
           <div><span>Produse ({count})</span><span className="num">{lei(sub)}</span></div>
           {disc > 0 && <div className="neg"><span>{code?.label}</span><span className="num">−{lei(disc)}</span></div>}
-          {ptsVal > 0 && <div className="neg"><span>Puncte Lyra Club</span><span className="num">−{lei(ptsVal)}</span></div>}
+          {ptsVal > 0 && <div className="neg"><span>Puncte Lyra Rewards ({plan.points})</span><span className="num">−{lei(ptsVal)}</span></div>}
+          {voucherPick && <div className="neg"><span>Desert cadou: {nm(byId[voucherPick])}</span><span className="num">gratuit</span></div>}
           {pack > 0 && <div><span>Ambalaj</span><span className="num">{lei(pack)}</span></div>}
           {mode === "livrare" && <div><span>Livrare</span><span className="num">{fee ? lei(fee) : "gratuit"}</span></div>}
           <div className="tot"><span>Total</span><span className="num">{lei(total)}</span></div>
-          {(customer || form.email.includes("@")) && <div className="earn"><span>Câștigi</span><span className="num">+{earn} puncte · +1 stea</span></div>}
+          {rwOn && (customer || form.email.includes("@")) && earn > 0 && <div className="earn"><span>Câștigi la livrare</span><span className="num">+{earn} puncte · {lei(Math.floor(earn * vppOf(rw.cfg, customer ? tierN : 1) * 100) / 100)}</span></div>}
+          {rwOn && customer && (() => {
+            const before = nextTierInfo(rw.cfg, tierN, rw.me?.spent ?? 0);
+            if (!before || !earn) return null;
+            if (earn >= before.left) return <p className="rw-near">Cu această comandă urci la Lyra {tierName(rw.cfg, before.tier)} 🎉 și primești un desert cadou.</p>;
+            const left = before.left - earn;
+            return left <= rw.cfg.near_tier_lei ? <p className="rw-near">După comanda asta mai ai doar {lei(left)} până la Lyra {tierName(rw.cfg, before.tier)}: {rw.cfg.rates[before.tier - 1]}% cashback și un desert cadou.</p> : null;
+          })()}
         </div>
         <button className="cta" onClick={placeOrder} disabled={sending || !settings?.accepting_orders}>
           {!settings?.accepting_orders ? "Nu preluăm comenzi acum" : sending ? "Se trimite…" : <>Trimite comanda · <span className="num">{lei(total)}</span></>}
@@ -414,7 +447,7 @@ export default function Menu({ source }: { source?: string }) {
             <Icon name="pin" size={17} /><span>{mode === "livrare" ? `${t.deliv} · Mureș` : `${t.pick} · Acățari`}</span><Icon name="chev" size={15} />
           </button>
           <label className="tb-search"><Icon name="search" size={18} /><input type="search" value={q} onChange={e => setQ(e.target.value)} placeholder={t.search} aria-label="Caută în meniu" /></label>
-          <Link to="/cont" className="tb-ic tb-user" aria-label="Contul meu · Lyra Club"><Icon name="user" size={20} />{customer && <em className="num">{customer.points}</em>}</Link>
+          <Link to="/cont" className="tb-ic tb-user" aria-label="Contul meu · Lyra Rewards"><Icon name="user" size={20} />{customer && <em className="num">{customer.points}</em>}</Link>
           <button className="tb-cart" onClick={() => { if (window.matchMedia("(min-width:1100px)").matches) document.querySelector(".cartcol")?.scrollIntoView({ behavior: "smooth", block: "nearest" }); else setCartOpen(true); }} aria-label="Coșul tău">
             <Icon name="cart" size={20} /><b className="num">{lei(sub)}</b>{count > 0 && <i className="num">{count}</i>}
           </button>
@@ -424,7 +457,7 @@ export default function Menu({ source }: { source?: string }) {
         <nav className="drawer" aria-label="Meniu principal">
           <div className="dr-head"><span className="wordmark sm"><b>LYRA’S</b><span>DELIVERY</span></span><button className="x-btn" onClick={() => setDrawer(false)} aria-label="Închide">×</button></div>
           <button onClick={() => { setDrawer(false); window.scrollTo({ top: 0, behavior: "smooth" }); }}><Icon name="cutlery" size={19} />{t.menu}</button>
-          <Link to="/cont" onClick={() => setDrawer(false)}><Icon name="star" size={19} />{customer ? `Lyra Club · ${customer.points} puncte` : "Lyra Club · intră în cont"}</Link>
+          <Link to="/cont" onClick={() => setDrawer(false)}><Icon name="star" size={19} />{customer ? `Lyra Rewards · ${customer.points} puncte` : "Lyra Rewards · intră în cont"}</Link>
           <Link to="/cont" onClick={() => setDrawer(false)}><Icon name="orders" size={19} />Comenzile mele</Link>
           <div className="dr-row"><button onClick={toggleTheme}><Icon name={dark ? "sun" : "moon"} size={19} />{dark ? "Temă deschisă" : "Temă întunecată"}</button>
             <button onClick={() => setLang(lang === "ro" ? "hu" : "ro")}><b className="dr-lang">{lang === "ro" ? "HU" : "RO"}</b>{lang === "ro" ? "Magyarul" : "Românește"}</button></div>

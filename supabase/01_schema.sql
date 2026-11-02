@@ -209,15 +209,10 @@ $$;
 -- Clientul se creează automat la prima logare (email).
 create or replace function public.handle_new_user() returns trigger
 language plpgsql security definer set search_path = public as $$
-declare pp public.pending_points;
 begin
-  insert into public.customers(id, email) values (new.id, new.email) on conflict (id) do nothing;
-  delete from public.pending_points where email = lower(new.email) returning * into pp;
-  if pp.email is not null then
-    update public.customers set points = points + pp.points, lifetime = lifetime + pp.lifetime,
-      orders_count = orders_count + pp.orders, spent = spent + pp.spent, stars = pp.stars, free_gift = pp.free_gift
-    where id = new.id;
-  end if;
+  insert into public.customers(id, email, last_activity_at) values (new.id, new.email, now()) on conflict (id) do nothing;
+  -- Lyra Rewards: preia punctele și progresul strânse fără cont (după email)
+  perform public.rewards_attach_guest(new.id, new.email);
   return new;
 end $$;
 drop trigger if exists on_auth_user_created on auth.users;
@@ -225,7 +220,8 @@ create trigger on_auth_user_created after insert on auth.users
   for each row execute function public.handle_new_user();
 
 -- Plasare comandă. Prețurile se calculează AICI, din meniu, nu se acceptă de la browser.
--- p: { name, phone, email, address, mode, payment, note, code, use_points, source,
+-- p: { name, phone, email, address, mode, payment, note, code, source,
+--      redeem_points (Lyra Rewards; use_points=true înseamnă „maximul permis”), voucher_id, voucher_item,
 --      items: [ { id, qty, vi, extras: [id], note } ] }
 create or replace function public.place_order(p jsonb) returns jsonb
 language plpgsql security definer set search_path = public as $$
@@ -258,8 +254,20 @@ declare
   is_promo boolean;
   pack     numeric := 0;  -- ambalaj, nu intră la reduceri
   lpack    numeric;
+  cfg      record;          -- rewards_settings (tabelul e creat în 03_rewards.sql)
+  want     int;
+  pts_used int := 0;
+  alloc    jsonb := '[]';
+  plan     record;
+  vo_id    uuid;
+  vo_ok    boolean;
+  vitem    public.items;
+  rbase    numeric;
+  rtier    smallint := 1;
+  a        jsonb;
 begin
   select * into s from public.settings where id = 1;
+  select * into cfg from public.rewards_settings where id = 1;
   if not s.accepting_orders then raise exception 'Restaurantul nu preia comenzi acum.' using errcode = 'P0001'; end if;
   if coalesce(trim(p->>'name'),'') = '' or coalesce(trim(p->>'phone'),'') = '' then
     raise exception 'Completează numele și telefonul.' using errcode = 'P0001'; end if;
@@ -332,37 +340,64 @@ begin
     end if;
   end if;
 
-  -- cadou Lyra Club (a 6-a stea)
-  if cust.id is not null and cust.free_gift and s.gift_item_id is not null then
-    select * into it from public.items where id = s.gift_item_id;
-    if found then
-      lines := lines || jsonb_build_object('id', it.id, 'name', it.name_ro, 'qty', 1, 'unit', 0, 'gift', true,
-        'grams', it.grams, 'allergens', to_jsonb(it.allergens), 'category', it.category_id, 'extras', '[]'::jsonb, 'note', '');
-      update public.customers set free_gift = false where id = cust.id;
-    end if;
+  -- Lyra Rewards: desert cadou din voucher (nu se plătește, nu are ambalaj)
+  if coalesce(p->>'voucher_id','') <> '' then
+    if cust.id is null then raise exception 'Intră în cont ca să folosești voucherul.' using errcode = 'P0001'; end if;
+    select id, status = 'active' and expires_at > now() into vo_id, vo_ok
+      from public.vouchers where id = (p->>'voucher_id')::uuid and customer_id = cust.id for update;
+    if vo_id is null or not vo_ok then
+      raise exception 'Voucherul nu mai este valabil.' using errcode = 'P0001'; end if;
+    select * into vitem from public.items where id = p->>'voucher_item' and active and available and id = any(cfg.dessert_ids);
+    if not found then raise exception 'Alege un desert din lista voucherului.' using errcode = 'P0001'; end if;
+    lines := lines || jsonb_build_object('id', vitem.id, 'name', vitem.name_ro, 'qty', 1, 'unit', 0, 'gift', true, 'voucher', vo_id,
+      'grams', vitem.grams, 'allergens', to_jsonb(vitem.allergens), 'category', vitem.category_id, 'extras', '[]'::jsonb, 'note', '', 'pack', 0);
   end if;
 
   -- livrare
-  if v_mode = 'livrare' and sub < s.free_delivery_over and not (cust.id is not null and cust.lifetime >= 1500) then
+  if v_mode = 'livrare' and sub < s.free_delivery_over then
     fee := s.delivery_fee;
   end if;
 
-  -- puncte: 100 puncte = 10 lei, maxim 50% din comandă
-  if cust.id is not null and coalesce((p->>'use_points')::boolean, false) then
-    pts_val := least(floor(cust.points / 100.0) * 10, floor((sub - disc) * 0.5 / 10) * 10);
-    if pts_val > 0 then update public.customers set points = points - (pts_val * 10)::int where id = cust.id; end if;
+  -- Lyra Rewards: puncte folosite, cel mult max_redeem_pct% din produse (după codul de reducere), FIFO pe loturi
+  if cust.id is not null and coalesce(cfg.enabled, false) then
+    rtier := cust.tier;
+    want := coalesce((p->>'redeem_points')::int, case when coalesce((p->>'use_points')::boolean, false) then 2147483647 else 0 end);
+    if want > 0 then
+      select * into plan from public.rewards_plan(cust.id, want, floor((sub - disc) * cfg.max_redeem_pct) / 100);
+      pts_used := plan.points; pts_val := plan.value; alloc := plan.alloc;
+    end if;
   end if;
+  rbase := greatest(sub - disc - pts_val, 0);   -- doar produsele plătite cu bani aduc puncte
+  earn  := case when coalesce(cfg.enabled, false) then floor(rbase)::int else 0 end;
 
   total := greatest(sub - disc - pts_val + fee, 0) + pack;
-  earn  := floor((total - pack) * s.points_per_leu * public.tier_mult(coalesce(cust.lifetime, 0)));  -- ambalajul nu aduce puncte
 
   insert into public.orders(customer_id, name, phone, email, address, mode, payment, note, items, allergies,
-    subtotal, discount, discount_label, points_used, points_value, delivery_fee, packaging, total, points_earned, source)
+    subtotal, discount, discount_label, points_used, points_value, delivery_fee, packaging, total, points_earned, source,
+    reward_tier, reward_base, voucher_id)
   values (cust.id, left(trim(p->>'name'),80), left(trim(p->>'phone'),30), coalesce(nullif(trim(p->>'email'),''), cust.email),
     case when v_mode = 'livrare' then left(trim(p->>'address'),200) else 'Ridicare din restaurant' end,
     v_mode, coalesce(p->>'payment','card'), left(p->>'note',300), lines, allg,
-    sub, disc, disc_lbl, (pts_val*10)::int, pts_val, fee, pack, total, earn, left(p->>'source',30))
+    sub, disc, disc_lbl, pts_used, pts_val, fee, pack, total, earn, left(p->>'source',30),
+    rtier, rbase, vo_id)
   returning * into o;
+
+  -- consumă loturile planificate (rândul clientului e blocat, deci nu se pot folosi de două ori)
+  for a in select * from jsonb_array_elements(alloc) loop
+    update public.point_lots set remaining = remaining - (a->>'points')::int
+      where id = (a->>'lot')::uuid and remaining >= (a->>'points')::int and expired_at is null;
+    if not found then raise exception 'Punctele s-au schimbat între timp. Reîncearcă.' using errcode = 'P0001'; end if;
+    insert into public.order_redemptions(order_id, lot_id, points, value) values (o.id, (a->>'lot')::uuid, (a->>'points')::int, (a->>'value')::numeric);
+  end loop;
+  if pts_used > 0 then
+    insert into public.point_ledger(customer_id, order_id, order_no, kind, points, value, tier, note)
+      values (cust.id, o.id, o.number, 'redeem', -pts_used, -pts_val, cust.tier, 'Folosite la comanda #' || o.number);
+    update public.customers set last_activity_at = now() where id = cust.id;
+    perform public.rewards_sync(cust.id);
+  end if;
+  if vo_id is not null then
+    update public.vouchers set status = 'used', used_order_id = o.id, used_at = now(), item_id = vitem.id, value = vitem.price where id = vo_id;
+  end if;
 
   return jsonb_build_object('id', o.id, 'number', o.number, 'token', o.token, 'total', o.total);
 end $$;
@@ -392,47 +427,25 @@ language sql security definer set search_path = public as $$
   update public.orders set rating = least(greatest(p_rating,1),5) where token = p_token and status = 'done';
 $$;
 
--- Puncte, stele și cadou se acordă o singură dată, când comanda devine „livrată”.
+-- Lyra Rewards: punctele se acordă o singură dată, când comanda devine „livrată” (finalizată și achitată).
+-- Refuz/anulare: se returnează punctele și voucherul folosite. Rambursare după livrare: se retrag punctele câștigate.
 create or replace function public.on_order_status() returns trigger
 language plpgsql security definer set search_path = public as $$
-declare s public.settings; cid uuid;
 begin
   if new.status = 'prep' and old.status = 'new' and new.accepted_at is null then new.accepted_at := now(); end if;
   if new.status = 'road' and new.road_at is null then new.road_at := now(); end if;
   if new.status = 'done' and new.done_at is null then new.done_at := now(); end if;
-  if new.status = 'rejected' and old.status <> 'rejected' and old.points_used > 0 and old.customer_id is not null then
-    update public.customers set points = points + old.points_used where id = old.customer_id;
+  if new.status = old.status then return new; end if;
+  if old.status in ('rejected','refunded') then
+    raise exception 'Comanda #% este închisă (%).', old.number, old.status using errcode = 'P0001';
   end if;
-  if new.status = 'done' and not old.credited and new.customer_id is not null then
-    select * into s from public.settings where id = 1;
-    update public.customers c set
-      points = c.points + new.points_earned,
-      lifetime = c.lifetime + new.points_earned,
-      orders_count = c.orders_count + 1,
-      spent = c.spent + new.total,
-      stars = case when c.stars + 1 >= s.stars_for_gift then 0 else c.stars + 1 end,
-      free_gift = c.free_gift or (c.stars + 1 >= s.stars_for_gift)
-    where c.id = new.customer_id;
-    new.credited := true;
-  elsif new.status = 'done' and not old.credited and coalesce(new.email,'') <> '' then
-    select * into s from public.settings where id = 1;
-    select c.id into cid from public.customers c where lower(c.email) = lower(new.email) limit 1;
-    if cid is not null then
-      update public.customers c set
-        points = c.points + new.points_earned, lifetime = c.lifetime + new.points_earned,
-        orders_count = c.orders_count + 1, spent = c.spent + new.total,
-        stars = case when c.stars + 1 >= s.stars_for_gift then 0 else c.stars + 1 end,
-        free_gift = c.free_gift or (c.stars + 1 >= s.stars_for_gift)
-      where c.id = cid;
-    else
-      insert into public.pending_points as p (email, points, lifetime, orders, spent, stars, free_gift)
-        values (lower(new.email), new.points_earned, new.points_earned, 1, new.total, 1, 1 >= s.stars_for_gift)
-      on conflict (email) do update set
-        points = p.points + excluded.points, lifetime = p.lifetime + excluded.lifetime,
-        orders = p.orders + 1, spent = p.spent + excluded.spent,
-        stars = case when p.stars + 1 >= s.stars_for_gift then 0 else p.stars + 1 end,
-        free_gift = p.free_gift or (p.stars + 1 >= s.stars_for_gift), updated_at = now();
-    end if;
+  if new.status = 'rejected' or (new.status = 'refunded' and old.status <> 'done') then
+    perform public.rewards_release(old);
+  elsif new.status = 'refunded' and old.status = 'done' then
+    new.refunded_at := now();
+    if old.credited then perform public.rewards_reverse(old); else perform public.rewards_release(old); end if;
+  elsif new.status = 'done' and not old.credited then
+    new.points_earned := public.rewards_credit(new);
     new.credited := true;
   end if;
   return new;
@@ -583,62 +596,80 @@ end $$;
 create or replace function public.send_thanks_email(o public.orders) returns void
 language plpgsql security definer set search_path = public as $$
 declare
-  s public.settings; key text; pts int; total_pts int; stars int; has_acc boolean := false;
+  s public.settings; cfg record; key text; pts int; vpp numeric; has_acc boolean := false;
+  bal_pts int := 0; bal_val numeric := 0; tier int := 1; spent numeric := 0; nxt text := '';
   first text; html text; lines text := ''; l jsonb;
 begin
   if coalesce(o.email,'') = '' then return; end if;
   select * into s from public.settings where id = 1;
+  select * into cfg from public.rewards_settings where id = 1;
   begin
     select decrypted_secret into key from vault.decrypted_secrets where name = 'resend_api_key' limit 1;
   exception when others then key := null; end;
   if key is null then return; end if;
 
-  select c.points, c.stars into total_pts, stars from public.customers c where lower(c.email) = lower(o.email) limit 1;
+  pts := coalesce(o.points_earned, 0);
+  select pl.vpp into vpp from public.point_lots pl where pl.order_id = o.id and pl.source = 'order';
+  select c.tier, c.reward_spent, c.points,
+         (select coalesce(floor(sum(remaining * l2.vpp) * 100) / 100, 0) from public.point_lots l2 where l2.customer_id = c.id and l2.remaining > 0 and l2.expired_at is null)
+    into tier, spent, bal_pts, bal_val
+    from public.customers c where c.id = o.customer_id or lower(c.email) = lower(o.email) limit 1;
   if found then has_acc := true;
-  else select p.points, p.stars into total_pts, stars from public.pending_points p where p.email = lower(o.email); end if;
-  pts := o.points_earned; total_pts := coalesce(total_pts, pts); stars := coalesce(stars, 0);
+  else
+    select coalesce(sum(remaining), 0), coalesce(floor(sum(remaining * l3.vpp) * 100) / 100, 0) into bal_pts, bal_val
+      from public.point_lots l3 where l3.customer_id is null and lower(l3.email) = lower(o.email) and l3.remaining > 0 and l3.expired_at is null;
+  end if;
+  if has_acc and tier < 3 and cfg.thresholds[tier + 1] > spent then
+    nxt := format('Mai ai %s lei până la Lyra %s (%s%% cashback + desert cadou).',
+      to_char(ceil(cfg.thresholds[tier + 1] - spent), 'FM999990'), cfg.tier_names[tier + 1], to_char(cfg.rates[tier + 1], 'FM990.##'));
+  end if;
   first := split_part(trim(o.name), ' ', 1);
   for l in select * from jsonb_array_elements(o.items) loop
-    lines := lines || format('<tr><td style="padding:4px 0;color:#1f1712">%s× %s</td><td align="right" style="padding:4px 0;color:#6b5d52">%s lei</td></tr>',
-      l->>'qty', l->>'name', to_char((l->>'unit')::numeric * (l->>'qty')::int, 'FM999990.00'));
+    lines := lines || format('<tr><td style="padding:4px 0;color:#fbf3ea">%s× %s</td><td align="right" style="padding:4px 0;color:#bba897">%s</td></tr>',
+      l->>'qty', l->>'name', case when (l->>'unit')::numeric = 0 then 'cadou' else to_char((l->>'unit')::numeric * (l->>'qty')::int, 'FM999990.00') || ' lei' end);
   end loop;
 
-  html := format($h$<!doctype html><html><body style="margin:0;background:#faf5ee;font-family:Arial,Helvetica,sans-serif">
-<table width="100%%" cellpadding="0" cellspacing="0" style="background:#faf5ee;padding:24px 12px"><tr><td align="center">
-<table width="100%%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border-radius:24px;overflow:hidden">
-<tr><td align="center" style="padding:28px 24px 8px"><img src="%1$s/img/logo-lyra.jpg" alt="Lyra" height="56" style="border-radius:10px"></td></tr>
-<tr><td style="padding:8px 28px 0;text-align:center">
-  <h1 style="margin:0;font-size:28px;line-height:1.1;color:#1f1712">Mulțumim, %2$s!</h1>
-  <p style="margin:10px 0 0;color:#6b5d52;font-size:15px">Comanda ta #%3$s a ajuns. Poftă bună de la toată echipa Lyra's Delivery!</p>
+  html := format($h$<!doctype html><html><body style="margin:0;background:#0b0806;font-family:Arial,Helvetica,sans-serif">
+<table width="100%%" cellpadding="0" cellspacing="0" style="background:#0b0806;padding:24px 12px"><tr><td align="center">
+<table width="100%%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#16110d;border-radius:24px;overflow:hidden;color:#fbf3ea">
+<tr><td align="center" style="padding:28px 24px 4px"><div style="font-size:28px;font-weight:800;letter-spacing:2px">LYRA’S</div>
+<div style="font-size:11px;font-weight:700;letter-spacing:6px;color:#ff7a1a">DELIVERY</div></td></tr>
+<tr><td style="padding:14px 28px 0;text-align:center">
+  <h1 style="margin:0;font-size:28px;line-height:1.1">Mulțumim, %2$s!</h1>
+  <p style="margin:10px 0 0;color:#bba897;font-size:15px">Comanda ta #%3$s a ajuns. Poftă bună de la toată echipa Lyra's Delivery!</p>
 </td></tr>
 <tr><td style="padding:22px 28px 0">
-  <table width="100%%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,#ff9a4a,#ee4a28);background-color:#ee4a28;border-radius:20px">
+  <table width="100%%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,#ff9a3c,#ff7a1a);background-color:#ff7a1a;border-radius:20px">
   <tr><td style="padding:22px 24px;color:#ffffff">
-    <div style="font-size:12px;letter-spacing:2px;text-transform:uppercase;opacity:.85">Lyra Club</div>
-    <div style="font-size:40px;font-weight:bold;line-height:1.1;margin-top:6px">+%4$s puncte</div>
-    <div style="font-size:15px;margin-top:6px">Ai acum <b>%5$s puncte</b> · %6$s din 6 stele în constelația Lyra</div>
-    <div style="font-size:13px;margin-top:8px;opacity:.9">100 de puncte = 10 lei reducere. La a 6-a stea, desertul e din partea casei.</div>
+    <div style="font-size:12px;letter-spacing:3px;text-transform:uppercase;opacity:.9">Lyra Rewards · Lyra %4$s</div>
+    <div style="font-size:40px;font-weight:bold;line-height:1.1;margin-top:6px">+%5$s puncte</div>
+    <div style="font-size:15px;margin-top:6px">valorează %6$s lei la comenzile următoare</div>
+    <div style="font-size:14px;margin-top:10px">Sold: <b>%7$s puncte = %8$s lei</b></div>
+    <div style="font-size:13px;margin-top:8px;opacity:.95">%9$s</div>
   </td></tr></table>
 </td></tr>
-<tr><td style="padding:20px 28px 0"><table width="100%%" style="font-size:14px">%7$s
-  <tr><td style="padding-top:8px;border-top:1px dashed #e5d9cb;font-weight:bold">Total</td><td align="right" style="padding-top:8px;border-top:1px dashed #e5d9cb;font-weight:bold">%8$s lei</td></tr></table></td></tr>
+<tr><td style="padding:20px 28px 0"><table width="100%%" style="font-size:14px">%10$s
+  <tr><td style="padding-top:8px;border-top:1px dashed #3a2d24;font-weight:bold">Total</td><td align="right" style="padding-top:8px;border-top:1px dashed #3a2d24;font-weight:bold">%11$s lei</td></tr></table></td></tr>
 <tr><td align="center" style="padding:24px 28px 8px">
-  <a href="%1$s/cont" style="display:inline-block;background:#ee4a28;color:#ffffff;text-decoration:none;font-weight:bold;padding:14px 26px;border-radius:999px">%9$s</a>
+  <a href="%1$s/cont" style="display:inline-block;background:#ff7a1a;color:#ffffff;text-decoration:none;font-weight:bold;padding:14px 26px;border-radius:999px">%12$s</a>
 </td></tr>
 <tr><td align="center" style="padding:6px 28px 28px">
-  <a href="%10$s" style="color:#1f1712;font-size:14px">Ți-a plăcut? Lasă-ne o recenzie pe Google ★★★★★</a>
+  <a href="%13$s" style="color:#ffb24a;font-size:14px">Ți-a plăcut? Lasă-ne o recenzie pe Google ★★★★★</a>
 </td></tr>
 </table>
-<p style="color:#9a8b7f;font-size:12px;margin:16px 0 0">Lyras Delivery · by Lyra Pensiune Restaurant · Tradiții din 1999</p>
+<p style="color:#86756a;font-size:12px;margin:16px 0 0">Lyra's Delivery · lyrasdelivery.ro</p>
 </td></tr></table></body></html>$h$,
-    s.site_url, coalesce(nullif(first,''),'dragă client'), o.number, pts, total_pts, stars, lines,
-    to_char(o.total,'FM999990.00'),
-    case when has_acc then 'Vezi punctele în Lyra Club' else 'Fă-ți cont și păstrează punctele' end, s.review_url);
+    s.site_url, coalesce(nullif(first,''),'dragă client'), o.number,
+    cfg.tier_names[greatest(1, least(3, coalesce(o.reward_tier, tier)))], pts,
+    replace(to_char(round(pts * coalesce(vpp, 0.01), 2), 'FM999990.00'), '.', ','), bal_pts, replace(to_char(bal_val, 'FM999990.00'), '.', ','),
+    case when has_acc then nxt else 'Fă-ți cont cu acest email și păstrezi punctele, urci de nivel și primești deserturi cadou.' end,
+    lines, to_char(o.total,'FM999990.00'),
+    case when has_acc then 'Vezi Lyra Rewards' else 'Fă-ți cont și păstrează punctele' end, s.review_url);
 
   perform net.http_post(
     url := 'https://api.resend.com/emails',
     body := jsonb_build_object('from', s.email_from, 'to', jsonb_build_array(o.email), 'reply_to', coalesce(s.email_reply_to, 'comenzi@lyrasdelivery.ro'),
-      'subject', format('Mulțumim! Ai primit %s puncte Lyra Club 🌟', pts), 'html', html),
+      'subject', case when pts > 0 then format('Mulțumim! Ai primit %s puncte Lyra Rewards', pts) else 'Mulțumim pentru comandă!' end, 'html', html),
     headers := jsonb_build_object('Authorization', 'Bearer ' || key, 'Content-Type', 'application/json'));
 exception when others then
   raise warning 'Emailul de mulțumire nu a putut fi trimis: %', sqlerrm;

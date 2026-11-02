@@ -26,10 +26,11 @@ select * from (values
   ('BBQ Pit Box Smoker', 'Afumat lent, ore întregi', null, 'Specialitățile casei', 'pitbox.jpg', 'specialitati', 20)
 ) v where not exists (select 1 from public.banners);`);
 out.push("commit;");
+const schema = fs.readFileSync(path.join(root, "supabase/01_schema.sql"), "utf8") + "\n\n" + fs.readFileSync(path.join(root, "supabase/03_rewards.sql"), "utf8");
 fs.writeFileSync(path.join(root, "supabase/02_seed_menu.sql"), out.join("\n") + "\n");
 fs.writeFileSync(path.join(root, "supabase/setup.sql"),
   "-- Lyra Comenzi: fișier unic de instalare. Supabase → SQL Editor → New query → lipiți tot → Run.\n\n" +
-  fs.readFileSync(path.join(root, "supabase/01_schema.sql"), "utf8") + "\n\n" + out.join("\n") + "\n");
+  schema + "\n\n" + out.join("\n") + "\n");
 // Actualizarea meniului pe o bază existentă: suprascrie categoriile și preparatele cu cele din lyra/data/menu.js
 // (inclusiv prețuri, poze, ambalaj); preparatele marcate x rămân în bază, dar ascunse.
 const upd = ["-- Actualizare meniu (generat din lyra/data/menu.js). ATENȚIE: suprascrie prețurile, textele și pozele din admin.", "begin;",
@@ -40,5 +41,7 @@ const upd = ["-- Actualizare meniu (generat din lyra/data/menu.js). ATENȚIE: su
   "commit;"];
 fs.writeFileSync(path.join(root, "supabase/actualizare_meniu.sql"),
   "-- Lyra: schema + actualizarea meniului. Supabase → SQL Editor → New query → lipiți tot → Run.\n\n" +
-  fs.readFileSync(path.join(root, "supabase/01_schema.sql"), "utf8") + "\n\n" + upd.join("\n") + "\n");
+  schema + "\n\n" + upd.join("\n") + "\n");
+fs.writeFileSync(path.join(root, "supabase/lyra_rewards.sql"),
+  "-- Lyra: actualizare schemă + Lyra Rewards. Nu modifică meniul. Supabase → SQL Editor → New query → lipiți tot → Run.\n\n" + schema + "\n");
 console.log("categorii", ctx.CATS.length, "preparate", ctx.M.length);

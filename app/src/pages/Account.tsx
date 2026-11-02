@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import { STARS, TIERS, nextTier, tierOf, useCustomer, type Customer } from "../lib/auth";
+import { useCustomer, type Customer } from "../lib/auth";
+import { LEDGER_LABEL, TIER_CLS, nextTierInfo, rateOf, tierName, useRewards, vppOf, type RewardsCfg } from "../lib/rewards";
+import { confetti } from "../lib/fx";
 import type { Order } from "../lib/types";
 import { ALLERGENS, imgUrl, lei } from "../lib/format";
 import Icon from "../components/Icon";
@@ -9,26 +11,12 @@ import Wordmark from "../components/Wordmark";
 import BottomNav from "../components/BottomNav";
 import SiteFooter from "../components/SiteFooter";
 
-// six stars of the Lyra constellation; Vega (the brightest) lights up last
-const PTS: [number, number][] = [[60, 22], [92, 14], [78, 62], [118, 72], [104, 124], [54, 112]];
-const LIGHT_ORDER = [1, 2, 5, 4, 3, 0];
-const LINES: [number, number][] = [[0, 1], [0, 2], [2, 3], [3, 4], [4, 5], [5, 2]];
-export function Constellation({ lit, size = 150 }: { lit: number; size?: number }) {
-  const on = new Set(LIGHT_ORDER.slice(0, lit));
-  return (
-    <svg viewBox="0 0 150 150" width={size} height={size} role="img" aria-label={`${lit} din ${STARS} stele aprinse`} className="constel">
-      {LINES.map(([a, b], i) => <line key={i} x1={PTS[a][0]} y1={PTS[a][1]} x2={PTS[b][0]} y2={PTS[b][1]} className={on.has(a) && on.has(b) ? "ln on" : "ln"} />)}
-      {PTS.map(([x, y], i) => <circle key={i} cx={x} cy={y} r={i === 0 ? 9 : 6} className={on.has(i) ? "st on" : "st"} />)}
-    </svg>
-  );
-}
-
 export default function Account() {
   const { session, customer, ready, refresh } = useCustomer();
   if (!ready) return <div className="acc"><p className="muted" style={{ padding: 40, textAlign: "center" }}>Se încarcă…</p></div>;
   return (
     <div className="acc">
-      <header className="acc-top"><Link to="/"><Wordmark small /></Link><b>Lyra Club</b>
+      <header className="acc-top"><Link to="/"><Wordmark small /></Link><b>Lyra Rewards</b>
         {session && <button className="mini" onClick={() => supabase.auth.signOut()}>Ieși din cont</button>}</header>
       {session && customer ? <Member c={customer} refresh={refresh} /> : <SignIn />}
       <SiteFooter />
@@ -61,16 +49,7 @@ function SignIn() {
   return (
     <main className="acc-main">
       <section className="join">
-        <div className="join-card">
-          <Constellation lit={4} size={120} />
-          <h1>Fiecare comandă aprinde o stea.</h1>
-          <p>Strânge puncte la fiecare comandă, urcă de la Bronz la Aur și primește desertul din partea casei la a 6-a stea.</p>
-          <ul className="perks">
-            <li><b>1 leu = 1 punct</b><span>100 de puncte = 10 lei reducere</span></li>
-            <li><b>Constelația Lyra</b><span>a 6-a comandă vine cu Papanaș gratuit</span></li>
-            <li><b>Nivel Aur</b><span>livrare gratuită mereu și +10% puncte</span></li>
-          </ul>
-        </div>
+        <JoinCard />
         <div className="join-form">
           {!sent ? <>
             <h2>Intră sau fă-ți cont</h2>
@@ -97,9 +76,7 @@ function Member({ c, refresh }: { c: Customer; refresh: () => void }) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [profile, setProfile] = useState({ name: c.name || "", phone: c.phone || "", address: c.addresses?.[0] || "", allergies: c.allergies || [], marketing_ok: c.marketing_ok });
   const [saved, setSaved] = useState("");
-  const tier = tierOf(c.lifetime), nt = nextTier(c.lifetime);
-  const pct = nt ? Math.round(((c.lifetime - tier.min) / (nt.min - tier.min)) * 100) : 100;
-
+  const { cfg, me, reload } = useRewards(c.id);
   useEffect(() => {
     supabase.from("orders").select("*").eq("customer_id", c.id).order("created_at", { ascending: false }).limit(20).then(({ data }) => setOrders((data || []) as Order[]));
     if (location.hash === "#comenzi") setTimeout(() => document.getElementById("comenzi")?.scrollIntoView({ behavior: "smooth" }), 300);
@@ -124,26 +101,8 @@ function Member({ c, refresh }: { c: Customer; refresh: () => void }) {
   return (
     <main className="acc-main">
       <h1 className="acc-hello">Salut{c.name ? `, ${c.name.split(" ")[0]}` : ""}!</h1>
-      <div className={`mcard ${tier.cls}`}>
-        <Constellation lit={c.stars} size={170} />
-        <div className="mc-top"><b>LYRA</b><span>Membru {tier.name}</span></div>
-        <div className="mc-pts"><small>Puncte disponibile</small><b className="num">{c.points}</b><span>= {lei(Math.floor(c.points / 100) * 10)} reducere</span></div>
-        <div className="mc-foot"><span>{(c.name || c.email || "").toUpperCase()}</span><span>din {new Date(c.created_at).toLocaleDateString("ro-RO", { month: "short", year: "numeric" })}</span></div>
-      </div>
-
-      <div className="acc-grid">
-        <section className="acc-box">
-          <h2>Nivelul tău</h2>
-          <div className="tiers">{TIERS.map(t => <div key={t.name} className={`tier-step ${t.name === tier.name ? "on" : c.lifetime >= t.min ? "done" : ""}`}><span className={`club-dot ${t.cls}`} /><b>{t.name}</b><small>{t.perk}</small></div>)}</div>
-          <div className="prog big"><i style={{ width: pct + "%" }} /></div>
-          <p className="muted">{nt ? <>Încă <b>{nt.min - c.lifetime} puncte</b> până la {nt.name}.</> : "Ești la nivelul maxim. Mulțumim!"}</p>
-        </section>
-        <section className="acc-box">
-          <h2>Constelația Lyra</h2>
-          <p className="muted"><b>{c.stars} din {STARS}</b> stele aprinse. {c.free_gift ? "Papanașul din partea casei te așteaptă la următoarea comandă!" : `Încă ${STARS - c.stars} comenzi până la desertul din partea casei.`}</p>
-          <div className="stars-row">{Array.from({ length: STARS }, (_, i) => <span key={i} className={i < c.stars ? "on" : ""}><Icon name="star" size={22} fill /></span>)}</div>
-        </section>
-      </div>
+      {me ? <Rewards cfg={cfg} me={me} name={c.name || c.email || ""} since={c.created_at} onSeen={async () => { await supabase.rpc("rewards_mark_read"); reload(); }} />
+        : <p className="muted">Se încarcă Lyra Rewards…</p>}
 
       <section className="acc-box" id="comenzi">
         <div className="row-btw"><h2>Comenzile tale</h2><Link to="/" className="mini">Comandă acum</Link></div>
@@ -155,7 +114,7 @@ function Member({ c, refresh }: { c: Customer; refresh: () => void }) {
               <div key={o.id} className="hist-row">
                 <div className="hist-imgs">{imgs.map(id => <img key={id} src={imgUrl(id + ".jpg")!} alt="" onError={e => (e.currentTarget.style.visibility = "hidden")} />)}</div>
                 <Link to={"/comanda/" + o.token} className="hist-txt"><b>{o.items.map(l => l.name).join(", ")}</b>
-                  <small>#{o.number} · {new Date(o.created_at).toLocaleDateString("ro-RO", { day: "numeric", month: "short" })} · {lei(Number(o.total))}{o.points_earned && o.status === "done" ? ` · +${o.points_earned} puncte` : ""}</small></Link>
+                  <small>#{o.number} · {new Date(o.created_at).toLocaleDateString("ro-RO", { day: "numeric", month: "short" })} · {lei(Number(o.total))}{o.points_earned && o.status === "done" ? ` · +${o.points_earned} puncte` : o.status === "refunded" ? " · rambursată" : o.status === "rejected" ? " · refuzată" : ""}</small></Link>
                 <button className="mini" onClick={() => reorder(o)}>Din nou</button>
               </div>
             );
@@ -178,4 +137,100 @@ function Member({ c, refresh }: { c: Customer; refresh: () => void }) {
       </section>
     </main>
   );
+}
+
+const fmtDate = (d: string) => new Date(d).toLocaleDateString("ro-RO", { day: "numeric", month: "short", year: "numeric" });
+
+/** Signed-out pitch: the three levels with their real numbers from the admin settings. */
+function JoinCard() {
+  const { cfg } = useRewards(null);
+  return (
+    <div className="join-card rw-join">
+      <span className="rw-kicker">{cfg.program_name.toUpperCase()}</span>
+      <h1>Fiecare comandă îți dă înapoi.</h1>
+      <p>1 leu = 1 punct. Cu cât comanzi mai des, cu atât punctele valorează mai mult. Fără card, fără parolă.</p>
+      <ul className="perks">
+        {[1, 2, 3].map(t => <li key={t}><b>Lyra {tierName(cfg, t)} · {rateOf(cfg, t)}% cashback</b>
+          <span>{t === 1 ? "de la prima comandă" : `după ${lei(cfg.thresholds[t - 1])} cumulat · desert cadou la promovare`}</span></li>)}
+      </ul>
+    </div>
+  );
+}
+
+/** Lyra Rewards dashboard: card, progress, levels, vouchers, messages, history. */
+function Rewards({ cfg, me, name, since, onSeen }: { cfg: RewardsCfg; me: import("../lib/rewards").MyRewards; name: string; since: string; onSeen: () => void }) {
+  const t = me.tier, nx = nextTierInfo(cfg, t, me.spent);
+  const promo = me.notifications.find(n => n.kind === "promotion" && !n.read_at);
+  const unread = me.notifications.filter(n => !n.read_at).length;
+  const active = me.vouchers.filter(v => v.status === "active" && new Date(v.expires_at).getTime() > Date.now());
+  useEffect(() => { if (promo) setTimeout(confetti, 300); }, [promo?.id]);
+  if (!cfg.enabled) return <section className="acc-box"><h2>{cfg.program_name}</h2><p className="muted">Programul de fidelitate este momentan oprit. Punctele tale ({me.points}) sunt păstrate.</p></section>;
+  return (<>
+    {promo && <div className="rw-celebrate" role="status">
+      <div className="rw-cel-ic">✦</div>
+      <div><b>{promo.title}</b><p>{promo.body}</p></div>
+      <button className="mini" onClick={onSeen}>Mulțumesc!</button>
+    </div>}
+
+    <div className="rw-top">
+      <div className={`rw-card ${TIER_CLS[t - 1]}`}>
+        <div className="rw-card-top"><span className="rw-kicker">LYRA REWARDS</span><span className="rw-tier">Lyra {tierName(cfg, t)}</span></div>
+        <div className="rw-pts"><small>Puncte disponibile</small><b className="num">{me.points.toLocaleString("ro-RO")}</b><span>valorează <b className="num">{lei(me.value)}</b></span></div>
+        <div className="rw-card-foot"><span>{name.toUpperCase()}</span><span>{rateOf(cfg, t)}% cashback · membru din {new Date(since).toLocaleDateString("ro-RO", { month: "short", year: "numeric" })}</span></div>
+      </div>
+      <section className="acc-box rw-progress">
+        {nx ? <>
+          <h2>Mai ai doar {lei(nx.left)} până la Lyra {tierName(cfg, nx.tier)}!</h2>
+          <p className="muted">Deblochezi {rateOf(cfg, nx.tier)}% cashback (1 punct = {vppOf(cfg, nx.tier).toFixed(2).replace(".", ",")} lei) și un desert cadou.</p>
+          <div className="rw-bar"><i style={{ width: nx.pct + "%" }} /></div>
+          <div className="rw-bar-lbl"><span>Lyra {tierName(cfg, t)}</span><span className="num">{lei(me.spent)} din {lei(cfg.thresholds[nx.tier - 1])}</span><span>Lyra {tierName(cfg, nx.tier)}</span></div>
+        </> : <>
+          <h2>Ești Lyra {tierName(cfg, t)}, nivelul maxim ✦</h2>
+          <p className="muted">Primești {rateOf(cfg, t)}% înapoi în puncte la fiecare comandă. Mulțumim că ești alături de noi!</p>
+          <div className="rw-bar"><i style={{ width: "100%" }} /></div>
+        </>}
+        {me.expires_at && me.points > 0 && <p className="fine" style={{ textAlign: "left", margin: 0 }}>Punctele rămân active cât timp comanzi cel puțin o dată la {cfg.expiry_months} luni (următoarea dată: {fmtDate(me.expires_at)}).</p>}
+      </section>
+    </div>
+
+    {active.length > 0 && <section className="acc-box rw-vouchers">
+      <h2>Vouchere</h2>
+      {active.map(v => <div key={v.id} className="rw-v">
+        <span className="rw-v-ic">🍰</span>
+        <div><b>Desert cadou · Lyra {tierName(cfg, v.tier)}</b><small>Îl alegi în coș, la următoarea comandă. Valabil până pe {fmtDate(v.expires_at)}. O singură folosire.</small></div>
+        <Link to="/?cart=1" className="mini">Folosește</Link>
+      </div>)}
+    </section>}
+
+    <section className="acc-box">
+      <h2>Nivelurile Lyra Rewards</h2>
+      <div className="rw-levels">
+        {[1, 2, 3].map(n => <div key={n} className={`rw-level ${TIER_CLS[n - 1]} ${n === t ? "on" : n < t ? "done" : ""}`}>
+          <span className="rw-dot" />
+          <b>Lyra {tierName(cfg, n)}</b>
+          <em className="num">{rateOf(cfg, n)}%</em>
+          <small>{n === 1 ? "Nivel de start" : `De la ${lei(cfg.thresholds[n - 1])} cumulat`}</small>
+          <small>1 punct = {vppOf(cfg, n).toFixed(2).replace(".", ",")} lei{n > 1 ? " · desert cadou la promovare" : ""}</small>
+        </div>)}
+      </div>
+      <p className="fine" style={{ textAlign: "left", margin: 0 }}>1 leu plătit pe produse = 1 punct, acordat la livrare. Poți plăti cu puncte până la {cfg.max_redeem_pct}% din produse, de la comanda următoare. Punctele își păstrează valoarea nivelului la care le-ai câștigat. Nivelul nu scade niciodată.</p>
+    </section>
+
+    <div className="acc-grid">
+      <section className="acc-box">
+        <h2>Mesaje {unread > 0 && <span className="rw-badge">{unread}</span>}</h2>
+        {me.notifications.length === 0 && <p className="muted">Aici apar punctele câștigate, promovările și voucherele.</p>}
+        <div className="rw-notes">{me.notifications.slice(0, 8).map(n => <div key={n.id} className={n.read_at ? "" : "new"}><b>{n.title}</b><small>{n.body}</small><time>{fmtDate(n.created_at)}</time></div>)}</div>
+        {unread > 0 && <button className="mini" style={{ justifySelf: "start" }} onClick={onSeen}>Marchează ca citite</button>}
+      </section>
+      <section className="acc-box">
+        <h2>Istoric puncte</h2>
+        {me.ledger.length === 0 && <p className="muted">Primele puncte apar după prima comandă livrată.</p>}
+        <div className="rw-ledger">{me.ledger.map((l, i) => <div key={i}>
+          <div><b>{LEDGER_LABEL[l.kind] || l.kind}</b><small>{l.note || ""} · {fmtDate(l.created_at)}</small></div>
+          <span className={`num ${l.points >= 0 ? "plus" : "minus"}`}>{l.points >= 0 ? "+" : ""}{l.points}<small>{lei(Math.abs(Number(l.value)))}</small></span>
+        </div>)}</div>
+      </section>
+    </div>
+  </>);
 }

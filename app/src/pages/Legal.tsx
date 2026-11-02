@@ -4,7 +4,7 @@ import { COMPANY } from "../lib/company";
 import SiteFooter from "../components/SiteFooter";
 import Wordmark from "../components/Wordmark";
 
-const UPDATED = "9 octombrie 2026";
+const UPDATED = "2 noiembrie 2026";
 const contact = [COMPANY.email && `email ${COMPANY.email}`, COMPANY.phone && `telefon ${COMPANY.phone}`].filter(Boolean).join(" sau ")
   || "datele de contact din subsolul site-ului";
 
@@ -26,7 +26,7 @@ function Page({ title, children }: { title: string; children: React.ReactNode })
 export function Privacy() {
   return (
     <Page title="Politica de confidențialitate">
-      <p>Această politică explică ce date personale colectăm când comanzi pe acest site sau îți faci cont Lyra Club, de ce le folosim și ce drepturi ai, conform Regulamentului (UE) 2016/679 (GDPR).</p>
+      <p>Această politică explică ce date personale colectăm când comanzi pe acest site sau îți faci cont Lyra Rewards, de ce le folosim și ce drepturi ai, conform Regulamentului (UE) 2016/679 (GDPR).</p>
 
       <h2>1. Cine suntem</h2>
       <p>Operatorul datelor este <b>{COMPANY.name}</b>, CUI {COMPANY.cui}, Nr. Reg. Com. {COMPANY.regCom}, cu sediul în {COMPANY.address}, care operează {COMPANY.brand}. Ne poți contacta pentru orice întrebare legată de date prin {contact}.</p>
@@ -34,8 +34,8 @@ export function Privacy() {
       <h2>2. Ce date colectăm</h2>
       <ul>
         <li><b>Date de comandă:</b> nume, telefon, adresa de livrare, produsele comandate, mențiunile tale, metoda de plată, data și ora.</li>
-        <li><b>Email (opțional):</b> dacă îl introduci la comandă sau îți faci cont, ca să primești punctele Lyra Club și emailul de mulțumire.</li>
-        <li><b>Cont Lyra Club:</b> email, nume, telefon, adrese salvate, puncte, nivel, istoricul comenzilor.</li>
+        <li><b>Email (opțional):</b> dacă îl introduci la comandă sau îți faci cont, ca să primești punctele Lyra Rewards și emailul de mulțumire.</li>
+        <li><b>Cont Lyra Rewards:</b> email, nume, telefon, adrese salvate, puncte, nivel, istoricul comenzilor.</li>
         <li><b>Alergii (opțional):</b> doar dacă le bifezi tu, ca bucătăria să vadă o alertă pe bon. Sunt date despre sănătate, le folosim exclusiv în acest scop și le poți șterge oricând din cont.</li>
         <li><b>Evaluarea comenzii:</b> nota cu stele, dacă o dai.</li>
       </ul>
@@ -44,7 +44,7 @@ export function Privacy() {
       <h2>3. De ce le folosim și pe ce temei</h2>
       <ul>
         <li><b>Preluarea și livrarea comenzii</b> (executarea contractului): pregătirea comenzii, livrarea, contactarea ta dacă e nevoie, urmărirea comenzii.</li>
-        <li><b>Lyra Club</b> (executarea contractului): acordarea și folosirea punctelor, nivelurile, cadourile.</li>
+        <li><b>Lyra Rewards</b> (executarea contractului): acordarea și folosirea punctelor, nivelurile, cadourile.</li>
         <li><b>Obligații legale</b>: evidențe contabile și fiscale.</li>
         <li><b>Emailuri despre comandă</b> (interes legitim): confirmarea și mulțumirea după livrare, cu punctele câștigate.</li>
         <li><b>Oferte și noutăți</b> (consimțământ): doar dacă bifezi că vrei să le primești. Te poți dezabona oricând, din linkul din fiecare email sau din contul tău.</li>
@@ -62,7 +62,7 @@ export function Privacy() {
       <h2>5. Cât timp le păstrăm</h2>
       <ul>
         <li>Comenzile: cât cer legile contabile și fiscale (de regulă 5 ani pentru documentele financiar-contabile).</li>
-        <li>Contul Lyra Club: până îl ștergi sau ne ceri ștergerea. Conturile inactive de peste 3 ani le putem șterge.</li>
+        <li>Contul Lyra Rewards: până îl ștergi sau ne ceri ștergerea. Conturile inactive de peste 3 ani le putem șterge.</li>
         <li>Acordul pentru oferte: până îl retragi.</li>
       </ul>
 
@@ -98,7 +98,7 @@ export function Terms() {
       <ul>
         <li>Prețurile sunt în lei și includ TVA. Taxa de livrare, dacă există, este afișată în coș înainte de trimiterea comenzii.</li>
         <li>Plata se face la livrare sau la ridicare, numerar sau cu cardul.</li>
-        <li>Reducerile din coduri promoționale și din punctele Lyra Club nu se cumulează peste limitele afișate în coș și nu se pot transforma în bani.</li>
+        <li>Reducerile din coduri promoționale și din punctele Lyra Rewards nu se cumulează peste limitele afișate în coș și nu se pot transforma în bani.</li>
       </ul>
 
       <h2>4. Dreptul de retragere</h2>
@@ -110,13 +110,18 @@ export function Terms() {
       <h2>6. Alergeni</h2>
       <p>Alergenii fiecărui preparat sunt afișați pe site. Bucătăria noastră lucrează cu toți alergenii majori, așa că nu putem garanta absența urmelor. Dacă ai o alergie severă, scrie-o în mențiuni sau sună-ne înainte de a comanda.</p>
 
-      <h2>7. Lyra Club</h2>
+      <h2>7. Lyra Rewards</h2>
       <ul>
-        <li>Primești puncte pentru comenzile <b>livrate sau ridicate</b>: 1 punct pentru fiecare leu plătit, plus bonus după nivel (Argint +5%, Aur +10%).</li>
-        <li>100 de puncte valorează 10 lei reducere și pot acoperi cel mult 50% dintr-o comandă. Punctele nu au valoare în bani și nu se pot transfera.</li>
-        <li>La fiecare a 6-a comandă finalizată primești un desert din partea casei la comanda următoare.</li>
+        <li>Programul are trei niveluri: <b>Classic</b> (de la prima comandă), <b>Select</b> (după 500 lei cheltuiți cumulat) și <b>Signature</b> (după 1.500 lei cumulat). Pragurile și procentele actuale sunt afișate în pagina Lyra Rewards din cont și prevalează.</li>
+        <li>Primești 1 punct pentru fiecare leu plătit pe produse, la comenzile <b>livrate sau ridicate</b> și achitate. Livrarea, ambalajul, bacșișul și suma plătită cu puncte nu aduc puncte.</li>
+        <li>Valoarea unui punct depinde de nivelul la care l-ai câștigat: Classic 1% (0,01 lei), Select 2% (0,02 lei), Signature 4% (0,04 lei). Promovarea nu modifică valoarea punctelor câștigate anterior.</li>
+        <li>Noul nivel se aplică de la comanda următoare. Nivelurile nu scad.</li>
+        <li>Poți plăti cu puncte cel mult 20% din valoarea produselor unei comenzi, începând cu comanda următoare celei în care le-ai câștigat.</li>
+        <li>La promovarea în Select și în Signature primești câte un voucher pentru un desert gratuit, la alegere din lista afișată, valabil 30 de zile, de o singură folosire. Voucherul nu se transformă în bani.</li>
+        <li>Punctele expiră dacă nu plasezi nicio comandă timp de 12 luni. Te anunțăm înainte, pe email și în cont.</li>
+        <li>Comenzile refuzate, anulate sau rambursate nu aduc puncte și nu contează pentru nivel. Punctele și voucherele folosite la o astfel de comandă îți sunt returnate.</li>
         <li>Punctele câștigate cu emailul, fără cont, se transferă în cont când îl creezi cu același email.</li>
-        <li>Putem modifica regulile programului cu anunț pe site. Punctele deja câștigate rămân valabile.</li>
+        <li>Punctele și voucherele nu au valoare în bani și nu se pot transfera. Putem modifica regulile programului cu anunț pe site; punctele deja câștigate își păstrează valoarea.</li>
       </ul>
 
       <h2>8. Soluționarea litigiilor</h2>

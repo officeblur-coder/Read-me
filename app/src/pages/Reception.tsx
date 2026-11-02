@@ -296,6 +296,11 @@ function Console({ email }: { email: string }) {
             </button>
           </>}
           {drawerOrder.rating && <p style={{ color: "var(--gold)", fontSize: 22 }}>{"★".repeat(drawerOrder.rating)}</p>}
+          {drawerOrder.status === "done" && <button className="big ghost" style={{ marginTop: 14 }} onClick={() => {
+            if (confirm(`Rambursezi comanda #${drawerOrder.number}? Clientul pierde punctele câștigate pe ea, iar punctele și desertul cadou folosite îi revin.`))
+              setStatus(drawerOrder, "refunded", {}, "Comanda ta a fost rambursată. Punctele folosite au revenit în contul Lyra Rewards.");
+          }}>Rambursează comanda</button>}
+          {drawerOrder.status === "refunded" && <p className="tag red" style={{ justifySelf: "start" }}>Rambursată</p>}
         </aside>
       </>}
       {toast && <div className="toast">{toast}</div>}
@@ -324,7 +329,7 @@ function Ticket({ o }: { o: Order }) {
       {o.items.map((l, i) => (
         <div key={i} className="tl"><span className="q">{l.qty}×</span>
           <div><b>{l.name}</b>{l.variant && <span className="x">{l.variant}</span>}{l.extras.map(e => <span key={e.id} className="x">+ {e.name}</span>)}
-            {l.note && <span className="x">„{l.note}”</span>}{l.gift && <span className="x">CADOU LYRA CLUB</span>}{l.promo && <span className="x">ofertă: {l.promo}</span>}
+            {l.note && <span className="x">„{l.note}”</span>}{l.gift && <span className="x">DESERT CADOU · LYRA REWARDS</span>}{l.promo && <span className="x">ofertă: {l.promo}</span>}
             <small>{l.grams}{l.hot ? " · tigaie fierbinte" : ""}</small></div>
           <span>{l.unit === 0 ? "0.00" : (l.unit * l.qty).toFixed(2)}</span></div>
       ))}
@@ -333,6 +338,7 @@ function Ticket({ o }: { o: Order }) {
       {Number(o.delivery_fee) > 0 && <div className="tl"><span className="q" /><div><b>Livrare</b></div><span>{Number(o.delivery_fee).toFixed(2)}</span></div>}
       <div className="tot"><span>TOTAL · {o.payment === "cash" ? "numerar" : o.payment === "online" ? "plătit online" : "card la livrare"}</span><b>{lei(Number(o.total))}</b></div>
       {Number(o.discount) > 0 && <small>{o.discount_label}: −{lei(Number(o.discount))}</small>}
+      {Number(o.points_value) > 0 && <small>Puncte Lyra Rewards ({o.points_used}): −{lei(Number(o.points_value))}</small>}
     </div>
   );
 }

@@ -85,7 +85,7 @@ export type OrderLine = {
   pack?: number;   // ambalaj pe bucată
 };
 
-export type OrderStatus = "new" | "prep" | "road" | "done" | "rejected";
+export type OrderStatus = "new" | "prep" | "road" | "done" | "rejected" | "refunded";
 
 export type Order = {
   id: string;

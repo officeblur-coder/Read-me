@@ -38,7 +38,7 @@ export default function Track() {
   if (!o) return <div className="app"><p className="t-sub" style={{ padding: 24, textAlign: "center" }}>Se încarcă comanda…</p></div>;
 
   const pick = o.mode === "ridicare";
-  const si = { new: 0, prep: 1, road: 2, done: 3, rejected: 0 }[o.status];
+  const si = { new: 0, prep: 1, road: 2, done: 3, rejected: 0, refunded: 3 }[o.status];
   const labels = ["Trimisă", "În bucătărie", pick ? "Gata de ridicare" : "Pe drum", pick ? "Ridicată" : "Livrată"];
   const due = o.accepted_at && o.eta_min ? new Date(o.accepted_at).getTime() + o.eta_min * 60000 : 0;
   const rem = due - now;
@@ -48,6 +48,8 @@ export default function Track() {
   if (o.status === "new") {
     ring = <div className="ring wait"><svg viewBox="0 0 184 184"><circle cx="92" cy="92" r={R} style={{ stroke: "var(--surface-3)" }} strokeWidth="10" fill="none" /><circle cx="92" cy="92" r={R} style={{ stroke: "var(--brand)", transition: "stroke-dashoffset 1s linear" }} strokeWidth="10" fill="none" strokeLinecap="round" strokeDasharray={`${CIRC * 0.22} ${CIRC}`} /></svg><div className="c"><b style={{ fontSize: 32 }}>#{o.number}</b><small>trimisă</small></div></div>;
     title = "Restaurantul confirmă comanda"; sub = "De obicei durează sub un minut. Ora estimată apare aici.";
+  } else if (o.status === "refunded") {
+    title = "Comanda a fost rambursată"; sub = "Suma ți-a fost returnată. Punctele folosite au revenit în contul tău Lyra Rewards.";
   } else if (o.status === "rejected") {
     title = "Comanda nu a putut fi preluată"; sub = <>{o.reject_reason ? o.reject_reason + ". " : ""}Nu ți-a fost reținută nicio sumă. Ne poți suna pentru detalii.</>;
   } else if (o.status === "done") {
@@ -66,7 +68,7 @@ export default function Track() {
         {ring}
         <h1 className="t-title">{title}</h1>
         <p className="t-sub">{sub}</p>
-        {o.status !== "rejected" && <div className="steps">{labels.map((l, i) => <div key={l} className={i < si || o.status === "done" ? "done" : i === si ? "now" : ""}><i />{l}</div>)}</div>}
+        {o.status !== "rejected" && o.status !== "refunded" && <div className="steps">{labels.map((l, i) => <div key={l} className={i < si || o.status === "done" ? "done" : i === si ? "now" : ""}><i />{l}</div>)}</div>}
         {o.status === "done" && <>
           <div className="stars" role="group" aria-label="Evaluează comanda">{[1, 2, 3, 4, 5].map(n => <button key={n} className={(o.rating || 0) >= n ? "on" : ""} onClick={() => rate(n)} aria-label={`${n} stele`}><Icon name="star" size={32} fill /></button>)}</div>
           {!o.rating && <p className="t-sub">Cum a fost? Apasă pe stele. Evaluarea ajunge direct la bucătar.</p>}
@@ -83,12 +85,12 @@ export default function Track() {
       </div>
       <div className="receipt">
         {o.items.map((l, i) => (
-          <div key={i} className="ln"><div>{l.qty}× {l.name}<small>{[l.variant, ...l.extras.map(e => "+ " + e.name), l.gift ? "Cadou Lyra Club" : "", l.promo ? "Ofertă: " + l.promo : "", l.note ? `„${l.note}”` : ""].filter(Boolean).join(" · ")}</small></div><span className="num">{l.unit === 0 ? "gratuit" : lei(l.unit * l.qty)}</span></div>
+          <div key={i} className="ln"><div>{l.qty}× {l.name}<small>{[l.variant, ...l.extras.map(e => "+ " + e.name), l.gift ? "Desert cadou Lyra Rewards" : "", l.promo ? "Ofertă: " + l.promo : "", l.note ? `„${l.note}”` : ""].filter(Boolean).join(" · ")}</small></div><span className="num">{l.unit === 0 ? "gratuit" : lei(l.unit * l.qty)}</span></div>
         ))}
         <div className="sum">
           <div><span>Produse</span><span className="num">{lei(o.subtotal)}</span></div>
           {o.discount > 0 && <div className="neg"><span>{o.discount_label}</span><span className="num">−{lei(o.discount)}</span></div>}
-          {o.points_value > 0 && <div className="neg"><span>Puncte Lyra Club</span><span className="num">−{lei(o.points_value)}</span></div>}
+          {o.points_value > 0 && <div className="neg"><span>Puncte Lyra Rewards</span><span className="num">−{lei(o.points_value)}</span></div>}
           {Number(o.packaging) > 0 && <div><span>Ambalaj</span><span className="num">{lei(Number(o.packaging))}</span></div>}
           {!pick && <div><span>Livrare</span><span className="num">{o.delivery_fee ? lei(o.delivery_fee) : "gratuit"}</span></div>}
           <div className="tot"><span>Total</span><span className="num">{lei(o.total)}</span></div>
