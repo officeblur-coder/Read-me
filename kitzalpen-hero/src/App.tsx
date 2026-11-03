@@ -9,6 +9,7 @@ import { Hero } from './components/Hero';
 import { RoomsSection } from './components/rooms/RoomsSection';
 import { AmenitiesSection } from './components/amenities/AmenitiesSection';
 import { QuickActions } from './components/QuickActions';
+import { ChaletSection } from './components/chalet/ChaletSection';
 import type { BookingBarHandle, BookingRequest } from './components/BookingBar';
 import { useFinePointer, useReducedMotion } from './lib/hooks';
 
@@ -62,6 +63,7 @@ export default function App() {
         <Hero lang={lang} copy={copy} bookingRef={booking} onBookingSubmit={onSubmit} />
         <RoomsSection lang={lang} />
         <AmenitiesSection lang={lang} />
+        <ChaletSection lang={lang} />
         <section ref={next} aria-label="Platzhalter" className="relative bg-cream px-[max(16px,env(safe-area-inset-left))] py-24 text-forest md:px-14 md:py-36">
           <div className="js-next-mask mx-auto max-w-[1100px] rounded-[2px] bg-[#ebe4d5] px-6 py-24 text-center md:py-36">
             <p className="text-[12px] font-semibold uppercase tracking-[.3em] text-champagne-dark">Platzhalter</p>

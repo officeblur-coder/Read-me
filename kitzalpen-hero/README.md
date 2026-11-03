@@ -151,3 +151,24 @@ Note: the hero's "Verfügbarkeit prüfen" can now be wired to `kitzbuhel.pynbook
 - Hover (desktop): lift 4 px, photo zoom 1.04, lighter veil, stronger gold border, plus a one-shot icon animation: Wi-Fi waves, TV light sweep, bold P, cloche lifts 2 px, steam draws, two drops fall, ridge redraws, card tilts. Touch: the same animation plays once on tap, and scrolling is never blocked. Keyboard focus triggers it too.
 - Bottom: the cream ridge rises and the gold crest line traces itself into the next section.
 - `prefers-reduced-motion`: everything is static.
+
+---
+
+# Section 04 – KitzAlpen Chalet
+
+```
+src/content/chalet.ts                           texts DE/EN, three photos, five features (all from kitzalpen.at/chalet/)
+src/components/chalet/ChaletSection.tsx           layout, reveal timeline, contour hand-over at the bottom
+src/components/chalet/ChaletGallery.tsx           gallery: side arrows, dots, 01 / 03, thumbnails, swipe, keyboard, lightbox
+src/components/chalet/SeasonalImageTransition.tsx scroll-scrubbed summer → winter on the first slide (reversible)
+src/components/chalet/ChaletFeatures.tsx          five line icons; they redraw on hover / tap
+public/images/chalet/                             winter, summer (supplied), bunk (= interior-03 from the live chalet gallery)
+```
+
+Mount after the amenities section: `<AmenitiesSection/><ChaletSection lang={lang}/>`.
+
+Facts: "bis zu 4 Gäste" is stated on kitzalpen.at/chalet/ (and the homepage). Features match the site's list: kitchen, bathroom with WC, living area, double bed & bunk bed ("Doppelbett und Etagenbett"). "Mehr Details" links to /chalet/. Booking stays with the global quick actions (chalet-kitzalpen.pynbooking.direct).
+
+Summer → winter: the photos come from different viewpoints, so nothing is overlaid or warped. Winter descends over summer through a feathered mask while summer slowly pushes in (1 → 1.07) and winter settles (1.08 → 1). It is scrubbed from `top 78%` to `bottom 30%` of the photo, fully reversible, and a label switches Sommer → Winter. With reduced motion, the winter photo is shown statically.
+
+Gallery change: a cinematic wipe from the side you travel to, 800 ms, `cubic-bezier(0.22,1,0.36,1)`, with the new photo settling from 1.06 and the old one drifting 4 %.

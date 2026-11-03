@@ -66,11 +66,11 @@ export function QuickActions({ lang, reduced }: { lang: Lang; reduced: boolean }
       </nav>
 
       {/* desktop dock */}
-      <nav ref={dock} aria-label={t.nav} className="qa-dock invisible fixed left-4 top-1/2 z-40 hidden -translate-y-1/2 md:block">
-        <div className="flex flex-col gap-2 rounded-[22px] border border-gold/30 bg-[#071C16]/85 p-2 shadow-[0_20px_50px_rgba(0,0,0,.28)] backdrop-blur-xl">
+      <nav ref={dock} aria-label={t.nav} className="qa-dock invisible fixed left-3 top-1/2 z-40 hidden -translate-y-1/2 md:block">
+        <div className="flex flex-col gap-1.5 rounded-[20px] border border-gold/30 bg-[#071C16]/85 p-1.5 shadow-[0_20px_50px_rgba(0,0,0,.28)] backdrop-blur-xl">
           {items.map((it) => (
             <a key={it.cls} href={it.href} target="_blank" rel="noopener noreferrer" title={it.label} className="qa-dock-item group/q flex items-center rounded-[16px] p-1 text-cream transition-colors hover:bg-cream/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-gold">
-              <span className={`qa ${it.cls} grid h-11 w-11 shrink-0 place-items-center rounded-[13px]`}>{it.icon}</span>
+              <span className={`qa ${it.cls} grid h-10 w-10 shrink-0 place-items-center rounded-[12px]`}>{it.icon}</span>
               <span className="qa-dock-label flex flex-col overflow-hidden whitespace-nowrap">
                 <span className="text-[14px] font-semibold leading-tight">{it.label}</span>
                 <span className="text-[11px] uppercase tracking-[.12em] text-cream/55">{it.sub}</span>

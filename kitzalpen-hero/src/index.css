@@ -153,6 +153,38 @@
   .qa-dock-label { max-width: 0; opacity: 0; padding-left: 0; transition: max-width .4s cubic-bezier(.22,1,.36,1), opacity .3s, padding .4s; }
   .qa-dock:hover .qa-dock-label, .qa-dock:focus-within .qa-dock-label { max-width: 14rem; opacity: 1; padding: 0 12px; }
 
+
+  /* ------------------------------------------------ chalet */
+  .sit-winter {
+    -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 40%, transparent 60%, transparent 100%);
+    mask-image: linear-gradient(180deg, #000 0%, #000 40%, transparent 60%, transparent 100%);
+    -webkit-mask-size: 100% 250%; mask-size: 100% 250%;
+    -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+    -webkit-mask-position: 50% 0%; mask-position: 50% 0%;
+  }
+  .cg-arrow {
+    position: absolute; top: 50%; z-index: 5; transform: translateY(-50%);
+    display: grid; place-items: center; width: 46px; height: 46px; border-radius: 999px;
+    background: rgba(245,241,233,.95); color: #102E23; box-shadow: 0 8px 22px rgba(0,0,0,.2);
+    transition: transform .3s cubic-bezier(.22,1,.36,1), background-color .3s;
+  }
+  .cg-arrow:hover { background: #fff; transform: translateY(-50%) scale(1.06); }
+  .cg-arrow:active { transform: translateY(-50%) scale(.92); }
+  .cg-arrow:focus-visible { outline: 2px solid #D7B77B; outline-offset: 2px; }
+  .cg-dot { width: 7px; height: 7px; border-radius: 999px; background: rgba(245,241,233,.55); transition: width .45s cubic-bezier(.22,1,.36,1), background-color .3s; position: relative; }
+  .cg-dot::before { content: ''; position: absolute; inset: -10px; }
+  .cg-dot.is-on { width: 22px; background: #D7B77B; }
+  .cg-dot:focus-visible { outline: 2px solid #D7B77B; outline-offset: 3px; }
+  .cg-thumb { outline: 1px solid transparent; outline-offset: 3px; transition: outline-color .35s, filter .35s; }
+  .cg-thumb:hover { outline-color: #D7B77B; filter: brightness(1.06); }
+  .cg-thumb:focus-visible { outline: 2px solid #102E23; }
+  .cf-item { transition: background-color .3s, transform .2s; }
+  .cf-item:active { transform: scale(.98); }
+  .cf-item:is(:hover,.tap) .cf-icon path { animation: cf-draw .9s cubic-bezier(.65,0,.35,1) 1; }
+  .cf-item:is(:hover,.tap) .cf-icon path:nth-child(2) { animation-delay: .08s; }
+  .cf-item:is(:hover,.tap) .cf-icon path:nth-child(3) { animation-delay: .16s; }
+  @keyframes cf-draw { 0% { stroke-dasharray: 1; stroke-dashoffset: 1; } 100% { stroke-dasharray: 1; stroke-dashoffset: 0; } }
+
   .field { transition: background-color .3s; }
   .field:hover, .field:focus-within { background: rgba(244,239,228,.06); }
   .field:focus-within { box-shadow: inset 0 -2px 0 #d8bf8a; }
