@@ -1,0 +1,76 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { -webkit-text-size-adjust: 100%; }
+  body { @apply bg-charcoal font-sans text-ivory antialiased; overflow-x: hidden; }
+  ::selection { background: #d8bf8a; color: #0f1b14; }
+}
+
+@layer components {
+  /* header spacing with safe-area */
+  .site-header { padding-top: calc(20px + env(safe-area-inset-top, 0px)); padding-bottom: 20px; }
+  @media (min-width: 768px) { .site-header { padding-top: calc(28px + env(safe-area-inset-top, 0px)); padding-bottom: 28px; } }
+  .site-header[data-compact='true'] { padding-top: calc(10px + env(safe-area-inset-top, 0px)); padding-bottom: 10px; }
+
+  .nav-link::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: 8px; height: 1px; background: #d8bf8a;
+    transform: scaleX(0); transform-origin: right; transition: transform .45s cubic-bezier(.22,.8,.2,1);
+  }
+  .nav-link:hover::after, .nav-link:focus-visible::after { transform: scaleX(1); transform-origin: left; }
+
+  /* champagne gold button */
+  .btn-gold {
+    position: relative; color: #17231b; isolation: isolate;
+    background: linear-gradient(180deg, #ecdcb4 0%, #d8bf8a 55%, #c7a56c 100%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.55), 0 10px 26px rgba(0,0,0,.22);
+    border: 1px solid rgba(255,244,214,.55);
+    transition: filter .45s cubic-bezier(.22,.8,.2,1), box-shadow .45s, border-color .45s;
+  }
+  .btn-gold:hover { filter: brightness(1.06) saturate(1.05); border-color: rgba(255,248,228,.95); box-shadow: inset 0 1px 0 rgba(255,255,255,.7), 0 14px 32px rgba(0,0,0,.28), 0 0 0 4px rgba(216,191,138,.18); }
+  .btn-gold:focus-visible { outline: 2px solid #f4efe4; outline-offset: 3px; }
+  .btn-gold .arrow, .btn-outline .arrow { display: inline-block; transition: transform .45s cubic-bezier(.22,.8,.2,1); }
+  .btn-gold:hover .arrow { transform: translateX(4px); }
+
+  .btn-outline { transition: background-color .45s, border-color .45s, color .45s; }
+  .btn-outline:hover { background: rgba(216,191,138,.14); border-color: #ecdcb4; }
+  .btn-outline:focus-visible { outline: 2px solid #d8bf8a; outline-offset: 3px; }
+
+  /* season toggle knob */
+  .season-knob {
+    background: linear-gradient(180deg, #ecdcb4, #d3b77f);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 6px 16px rgba(0,0,0,.25);
+    transition: transform .7s cubic-bezier(.22,.8,.2,1);
+  }
+
+  /* divider handle: tactile feedback + one quiet hint after the intro */
+  .seam-handle.is-pressed { transform: translate(-50%, -50%) scale(.92) !important; box-shadow: 0 4px 14px rgba(0,0,0,.3), 0 0 0 10px rgba(244,239,228,.18); }
+  .seam-handle::after {
+    content: ''; position: absolute; inset: 0; border-radius: 999px; border: 1px solid rgba(244,239,228,.8);
+    opacity: 0; pointer-events: none;
+  }
+  .seam-handle.hint::after { animation: seam-hint 1.8s cubic-bezier(.22,.8,.2,1) 2; }
+  @keyframes seam-hint { 0% { opacity: .9; transform: scale(1); } 100% { opacity: 0; transform: scale(1.7); } }
+
+  .field { transition: background-color .3s; }
+  .field:hover, .field:focus-within { background: rgba(244,239,228,.06); }
+  .field:focus-within { box-shadow: inset 0 -2px 0 #d8bf8a; }
+
+  .step-btn {
+    display: grid; place-items: center; width: 44px; height: 44px; border-radius: 999px;
+    border: 1px solid rgba(244,239,228,.3); font-size: 20px; line-height: 1; transition: border-color .3s, background-color .3s;
+  }
+  .step-btn:hover:not(:disabled) { border-color: #d8bf8a; background: rgba(216,191,138,.12); }
+  .step-btn:disabled { opacity: .35; }
+  .step-btn:focus-visible { outline: 2px solid #d8bf8a; outline-offset: 2px; }
+}
+
+/* the first paint before React hydrates the intro: keep animated bits hidden only when JS + motion are on */
+@media (prefers-reduced-motion: no-preference) {
+  .js .js-head, .js .js-fade, .js .js-toggle, .js .js-booking, .js .js-handle { visibility: hidden; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
