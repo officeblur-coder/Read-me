@@ -5,6 +5,7 @@ import { useGSAP } from '@gsap/react';
 import type { Lang } from '../../content/hero';
 import { CHALET_COPY, CHALET_PHOTOS } from '../../content/chalet';
 import { useFinePointer, useReducedMotion } from '../../lib/hooks';
+import { useSeason } from '../../lib/season';
 import { ChaletGallery } from './ChaletGallery';
 import { ChaletFeatures } from './ChaletFeatures';
 
@@ -27,6 +28,9 @@ export function ChaletSection({ lang }: { lang: Lang }) {
   const copy = CHALET_COPY[lang];
   const reduced = useReducedMotion();
   const fine = useFinePointer();
+  const { season } = useSeason();
+  const [winterPhoto, summerPhoto, interior] = CHALET_PHOTOS;
+  const photos = season === 'winter' ? [winterPhoto, summerPhoto, interior] : [summerPhoto, winterPhoto, interior];
 
   useGSAP(() => {
     if (reduced) return;
@@ -83,7 +87,7 @@ export function ChaletSection({ lang }: { lang: Lang }) {
 
         {/* gallery */}
         <div className="order-2 min-w-0 lg:order-none lg:col-span-7">
-          <ChaletGallery photos={CHALET_PHOTOS} copy={copy} lang={lang} fine={fine && !reduced} reduced={reduced} />
+          <ChaletGallery photos={photos} pair={{ summer: summerPhoto, winter: winterPhoto }} season={season} copy={copy} lang={lang} fine={fine && !reduced} reduced={reduced} />
         </div>
       </div>
       <ContourEdge />

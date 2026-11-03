@@ -22,45 +22,44 @@ export function ChaletPic({ p, lang, sizes, eager, className = '' }: { p: Chalet
 interface Props {
   summer: ChaletPhoto;
   winter: ChaletPhoto;
+  season: 'summer' | 'winter';
   lang: Lang;
   labels: { summer: string; winter: string };
   reduced: boolean;
 }
 
 /**
- * Summer → winter, driven by scroll (scrubbed, fully reversible).
- * The two photos are NOT forced on top of each other – they were taken from
- * different spots. Winter descends over summer through a soft, feathered
- * mask (like weather moving down the valley), while summer slowly pushes in
- * and winter settles from 1.08 to 1. A small label follows the season.
+ * Follows the global season: winter descends over summer through a soft,
+ * feathered mask (like weather moving down the valley) and lifts again for
+ * summer. The two photos are NOT forced on top of each other – they were taken
+ * from different spots, so nothing is warped; it is a wipe, not a morph.
  */
-export function SeasonalImageTransition({ summer, winter, lang, labels, reduced }: Props) {
+export function SeasonalImageTransition({ summer, winter, season, lang, labels, reduced }: Props) {
   const root = useRef<HTMLDivElement>(null);
+  const first = useRef(true);
+  const st = useRef({ p: season === 'winter' ? 0 : 100 });
 
   useGSAP(() => {
     const q = gsap.utils.selector(root);
     const win = q('.js-sit-winter')[0] as HTMLElement | undefined;
     if (!win) return;
-    const setMask = (y: number) => {
-      const v = `50% ${y}%`;
+    const setMask = () => {
+      const v = `50% ${st.current.p}%`;
       win.style.setProperty('-webkit-mask-position', v);
       win.style.setProperty('mask-position', v);
     };
-    if (reduced) { setMask(0); return; }   // static: winter shown, as on the live site
-
-    const st = { p: 100 };
-    setMask(100);
-    gsap.timeline({
-      scrollTrigger: { trigger: root.current, start: 'top 78%', end: 'bottom 30%', scrub: 0.8 },
-      defaults: { ease: 'none' },
-    })
-      .to(st, { p: 0, onUpdate: () => setMask(st.p) }, 0)
-      .fromTo(q('.js-sit-summer img'), { scale: 1 }, { scale: 1.07 }, 0)
-      .fromTo(q('.js-sit-winter img'), { scale: 1.08 }, { scale: 1 }, 0)
-      .fromTo(q('.js-sit-l-summer'), { autoAlpha: 1, y: 0 }, { autoAlpha: 0, y: -8, duration: 0.12 }, 0.28)
-      .fromTo(q('.js-sit-l-winter'), { autoAlpha: 0, y: 8 }, { autoAlpha: 1, y: 0, duration: 0.12 }, 0.36)
-      .fromTo(q('.js-sit-bar'), { scaleX: 0 }, { scaleX: 1 }, 0);
-  }, { scope: root, dependencies: [reduced] });
+    const toWinter = season === 'winter';
+    const instant = reduced || first.current;
+    first.current = false;
+    gsap.killTweensOf(st.current);
+    gsap.to(st.current, { p: toWinter ? 0 : 100, duration: instant ? 0 : 1.6, ease: 'power2.inOut', onUpdate: setMask, onComplete: setMask });
+    gsap.to(q('.js-sit-summer img'), { scale: toWinter ? 1.06 : 1, duration: instant ? 0 : 1.8, ease: 'power2.out' });
+    gsap.fromTo(q('.js-sit-winter img'), { scale: toWinter ? 1.08 : 1 }, { scale: toWinter ? 1 : 1.04, duration: instant ? 0 : 1.8, ease: 'power2.out' });
+    gsap.to(q('.js-sit-l-summer'), { autoAlpha: toWinter ? 0 : 1, y: toWinter ? -8 : 0, duration: instant ? 0 : 0.5, delay: instant ? 0 : 0.5 });
+    gsap.to(q('.js-sit-l-winter'), { autoAlpha: toWinter ? 1 : 0, y: toWinter ? 0 : 8, duration: instant ? 0 : 0.5, delay: instant ? 0 : 0.6 });
+    gsap.fromTo(q('.js-sit-bar'), { scaleX: 0 }, { scaleX: 1, duration: instant ? 0 : 1.6, ease: 'power2.inOut' });
+    setMask();
+  }, { scope: root, dependencies: [season, reduced] });
 
   return (
     <div ref={root} className="absolute inset-0">

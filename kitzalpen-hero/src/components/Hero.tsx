@@ -30,9 +30,9 @@ export function Hero({ lang, copy, bookingRef, onBookingSubmit }: Props) {
   const mobile = useIsMobile();
   const [season, setSeason] = useState<Season>('summer');
   const [fx, setFx] = useState<Season | null>(null);
-  const { stored, season: globalSeason, setSeason: setGlobalSeason } = useSeason();
-  // season to glide to after the intro: the stored choice, or the one active when returning from a sub-page
-  const resumeTo = useRef<Season | null>(stored || globalSeason !== 'summer' ? globalSeason : null);
+  const { season: globalSeason, setSeason: setGlobalSeason } = useSeason();
+  // after the 50/50 intro the divider glides to the active season (calendar default or the visitor's choice)
+  const resumeTo = useRef<Season | null>(globalSeason);
   useMagnetic(ctaRef, fine && !reduced);
   const ready = w > 0 && h > 0;
 

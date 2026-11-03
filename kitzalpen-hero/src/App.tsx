@@ -9,6 +9,7 @@ import { Hero } from './components/Hero';
 import { RoomsSection } from './components/rooms/RoomsSection';
 import { AmenitiesSection } from './components/amenities/AmenitiesSection';
 import { QuickActions } from './components/QuickActions';
+import { WeatherBand } from './components/WeatherBand';
 import { ChaletSection } from './components/chalet/ChaletSection';
 import { RestaurantSection } from './components/restaurant/RestaurantSection';
 import { ActivitiesSection } from './components/activities/ActivitiesSection';
@@ -70,7 +71,8 @@ export default function App() {
   return (
     <>
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-ivory focus:px-4 focus:py-2 focus:text-forest">{copy.skip}</a>
-      <Header lang={lang} copy={copy} compact={compact} fine={fine && !reduced} menuOpen={menu} onLang={setLang} onBook={onBook} onMenu={() => setMenu(true)} />
+      <WeatherBand lang={lang} reduced={reduced} />
+      <Header lang={lang} copy={copy} compact={compact} fine={fine && !reduced} menuOpen={menu} onLang={setLang} onMenu={() => setMenu(true)} />
       <MobileMenu open={menu} lang={lang} copy={copy} reduced={reduced} onClose={() => setMenu(false)} onLang={setLang} onBook={onBook} />
       {page ? (
         <main id="main"><ActivitiesPage season={page} lang={lang} /><div aria-hidden className="h-[96px] bg-cream lg:hidden" /></main>

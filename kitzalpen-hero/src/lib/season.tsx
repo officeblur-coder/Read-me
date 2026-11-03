@@ -3,15 +3,27 @@ import type { Season } from '../content/hero';
 
 /**
  * One shared season for the whole site. The Hero's Sommer / Winter selector writes
- * it; every section reads it. The value lives on <html data-season> (drives the CSS
- * palette) and in localStorage. index.html sets the attribute before first paint,
- * so a returning winter visitor never sees a summer flash.
+ * it; every section reads it. It is mirrored to <html data-season> (drives the CSS
+ * palette).
+ *
+ * Opening the site: the season follows the calendar in Hollersbach –
+ * 1 November to 15 April = winter, the rest of the year = summer.
+ * A choice made by the visitor is kept for the current browser tab (sessionStorage),
+ * so reloads and the activities pages keep it; a new visit starts from the calendar again.
+ * index.html runs the same rule before first paint, so there is no flash.
  */
 export const SEASON_KEY = 'kitzalpen-season';
 
+export function seasonByDate(now = new Date()): Season {
+  const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Vienna', month: 'numeric', day: 'numeric' }).formatToParts(now);
+  const m = +(parts.find((p) => p.type === 'month')?.value ?? 1);
+  const d = +(parts.find((p) => p.type === 'day')?.value ?? 1);
+  return m >= 11 || m <= 3 || (m === 4 && d <= 15) ? 'winter' : 'summer';
+}
+
 export function readStoredSeason(): Season | null {
   try {
-    const v = window.localStorage.getItem(SEASON_KEY);
+    const v = window.sessionStorage.getItem(SEASON_KEY);
     return v === 'winter' || v === 'summer' ? v : null;
   } catch { return null; }
 }
@@ -21,11 +33,11 @@ const SeasonContext = createContext<Ctx>({ season: 'summer', stored: null, setSe
 
 export function SeasonProvider({ children }: { children: ReactNode }) {
   const [stored] = useState(readStoredSeason);
-  const [season, set] = useState<Season>(() => stored ?? 'summer');
+  const [season, set] = useState<Season>(() => stored ?? seasonByDate());
 
   useEffect(() => {
     document.documentElement.dataset.season = season;
-    try { window.localStorage.setItem(SEASON_KEY, season); } catch { /* private mode – keep in memory only */ }
+    try { window.sessionStorage.setItem(SEASON_KEY, season); } catch { /* storage blocked – keep in memory only */ }
   }, [season]);
 
   const setSeason = useCallback((s: Season) => set((cur) => (cur === s ? cur : s)), []);

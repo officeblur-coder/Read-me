@@ -16,10 +16,10 @@ const Chevron = ({ dir }: { dir: 1 | -1 }) => (
   </svg>
 );
 
-interface Props { photos: ChaletPhoto[]; copy: ChaletCopy; lang: Lang; fine: boolean; reduced: boolean }
+interface Props { photos: ChaletPhoto[]; pair: { summer: ChaletPhoto; winter: ChaletPhoto }; season: 'summer' | 'winter'; copy: ChaletCopy; lang: Lang; fine: boolean; reduced: boolean }
 
-/** photos[0] = winter, photos[1] = summer – slide 0 is the scroll-driven summer→winter transition. */
-export function ChaletGallery({ photos, copy, lang, fine, reduced }: Props) {
+/** photos are ordered for the current season: [this season, other season, interior]. Slide 0 follows the global season. */
+export function ChaletGallery({ photos, pair, season, copy, lang, fine, reduced }: Props) {
   const n = photos.length;
   const [index, setIndex] = useState(0);
   const [box, setBox] = useState(false);
@@ -121,11 +121,11 @@ export function ChaletGallery({ photos, copy, lang, fine, reduced }: Props) {
           style={{ touchAction: 'pan-y' }}
         >
           {photos.map((ph, i) => (
-            <div key={ph.id} ref={(el) => (slides.current[i] = el)} className="absolute inset-0" aria-hidden={i !== index}>
+            <div key={`slot-${i}`} ref={(el) => (slides.current[i] = el)} className="absolute inset-0" aria-hidden={i !== index}>
               <div className="js-cg-inner absolute inset-0 will-change-transform">
                 <div className="absolute inset-0 transition-transform duration-[1200ms] ease-[cubic-bezier(.22,1,.36,1)] group-hover:scale-[1.025]">
                   {i === 0
-                    ? <SeasonalImageTransition winter={photos[0]} summer={photos[1]} lang={lang} labels={copy.season} reduced={reduced} />
+                    ? <SeasonalImageTransition winter={pair.winter} summer={pair.summer} season={season} lang={lang} labels={copy.season} reduced={reduced} />
                     : <ChaletPic p={ph} lang={lang} sizes="(min-width:1024px) 58vw, 100vw" />}
                 </div>
               </div>

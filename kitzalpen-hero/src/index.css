@@ -54,9 +54,9 @@
 
 @layer components {
   /* header spacing with safe-area */
-  .site-header { padding-top: calc(20px + env(safe-area-inset-top, 0px)); padding-bottom: 20px; }
-  @media (min-width: 768px) { .site-header { padding-top: calc(28px + env(safe-area-inset-top, 0px)); padding-bottom: 28px; } }
-  .site-header[data-compact='true'] { padding-top: calc(10px + env(safe-area-inset-top, 0px)); padding-bottom: 10px; }
+  .site-header { top: calc(34px + env(safe-area-inset-top, 0px)); padding-top: 18px; padding-bottom: 18px; }
+  @media (min-width: 768px) { .site-header { padding-top: 24px; padding-bottom: 24px; } }
+  .site-header[data-compact='true'] { padding-top: 10px; padding-bottom: 10px; }
 
   .nav-link::after {
     content: ''; position: absolute; left: 0; right: 0; bottom: 8px; height: 1px; background: var(--k-gold);
@@ -186,16 +186,34 @@
   .amenity:is(:hover,.tap,:focus-visible) .gcard { transform: rotate(-8deg); }
   .amenity:is(:hover,.tap,:focus-visible) .gcard-bg { transform: rotate(-3deg) translateY(-3px); }
 
-  /* ------------------------------------------------ quick actions */
-  .qa { box-shadow: 0 8px 22px rgba(15,31,23,.16); transition: filter .3s, transform .2s; }
-  .qa:active { transform: scale(.97); }
-  .qa-wa { background: #2f8f4e; color: #fff; }
-  .qa-chalet { background: linear-gradient(180deg, var(--k-gold), var(--k-gold-dark)); color: var(--k-deep); }
-  .qa-room { background: var(--k-pine); color: var(--k-cream); }
-  .qa:hover { filter: brightness(1.07); }
-  .qa-dock .qa { box-shadow: none; }
-  .qa-dock-label { max-width: 0; opacity: 0; padding-left: 0; transition: max-width .4s cubic-bezier(.22,1,.36,1), opacity .3s, padding .4s; }
-  .qa-dock:hover .qa-dock-label, .qa-dock:focus-within .qa-dock-label { max-width: 14rem; opacity: 1; padding: 0 12px; }
+  /* ------------------------------------------------ quick actions (concierge capsule) */
+  .qa-capsule {
+    background: color-mix(in srgb, var(--k-deep) 88%, transparent);
+    border: 1px solid color-mix(in srgb, var(--k-gold) 32%, transparent);
+    box-shadow: 0 18px 40px -14px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.06);
+    backdrop-filter: blur(14px) saturate(1.2); -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  }
+  .qa-wa { color: #fff; background: #2f8f4e; transition: filter .3s, transform .2s; }
+  .qa-wa:hover { filter: brightness(1.1); }
+  .qa-book {
+    color: var(--k-deep);
+    background: linear-gradient(180deg, var(--k-gold-light), var(--k-gold) 60%, var(--k-gold-dark));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.5);
+    transition: filter .3s, transform .2s, height .3s;
+  }
+  .qa-book:hover { filter: brightness(1.06); }
+  .qa-wa:active, .qa-book:active { transform: scale(.96); }
+  .qa-wa:focus-visible, .qa-book:focus-visible { outline: 2px solid var(--k-cream); outline-offset: 3px; }
+  .qa-panel {
+    background: color-mix(in srgb, var(--k-deep) 96%, transparent);
+    border: 1px solid color-mix(in srgb, var(--k-gold) 28%, transparent);
+    box-shadow: 0 30px 70px -20px rgba(0,0,0,.55);
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  }
+  .qa-card { background: color-mix(in srgb, var(--k-cream) 6%, transparent); transition: background-color .3s; }
+  .qa-card:hover, .qa-card:focus-visible { background: color-mix(in srgb, var(--k-cream) 12%, transparent); outline: none; }
+  .qa-go { transition: transform .4s cubic-bezier(.22,1,.36,1), background-color .3s, color .3s; }
+  .qa-card:hover .qa-go { transform: translate(2px,-2px); background: var(--k-gold); color: var(--k-deep); }
 
 
   /* ------------------------------------------------ chalet */
@@ -255,6 +273,11 @@
   .act-cta-arrow { display: inline-block; transition: transform .4s cubic-bezier(.22,1,.36,1); }
   .act-cta:hover .act-cta-arrow { transform: translate(3px, -3px); }
   .act-cta:focus-visible { outline: 2px solid var(--k-gold); outline-offset: 4px; }
+
+  /* ------------------------------------------------ weather band */
+  .wb-run { animation: wb-run 70s linear infinite; }
+  .weather-band:hover .wb-run, .weather-band:focus-within .wb-run { animation-play-state: paused; }
+  @keyframes wb-run { to { transform: translate3d(-50%, 0, 0); } }
 
   .field { transition: background-color .3s; }
   .field:hover, .field:focus-within { background: rgba(244,239,228,.06); }

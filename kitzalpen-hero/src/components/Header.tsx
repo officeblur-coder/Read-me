@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import { BOOKING_ENGINE } from './BookingBar';
 import { NAV, type Copy, type Lang } from '../content/hero';
 import { useMagnetic } from '../lib/hooks';
 import { Logo } from './Logo';
@@ -10,7 +11,7 @@ interface Props {
   fine: boolean;
   menuOpen: boolean;
   onLang: (l: Lang) => void;
-  onBook: () => void;
+  onBook?: () => void;
   onMenu: () => void;
 }
 
@@ -34,14 +35,14 @@ export function LangSwitch({ lang, onLang, label, className = '' }: { lang: Lang
   );
 }
 
-export function Header({ lang, copy, compact, fine, menuOpen, onLang, onBook, onMenu }: Props) {
-  const bookRef = useRef<HTMLButtonElement>(null);
+export function Header({ lang, copy, compact, fine, menuOpen, onLang, onMenu }: Props) {
+  const bookRef = useRef<HTMLAnchorElement>(null);
   useMagnetic(bookRef, fine);
 
   return (
     <header
       data-compact={compact}
-      className={`site-header fixed inset-x-0 top-0 z-40 text-ivory transition-[background-color,padding,box-shadow] duration-[450ms] ease-premium ${
+      className={`site-header fixed inset-x-0 z-40 text-ivory transition-[background-color,padding,box-shadow] duration-[450ms] ease-premium ${
         compact ? 'bg-forest/80 shadow-[0_8px_30px_rgba(0,0,0,.18)] backdrop-blur-md' : 'bg-transparent'
       }`}
     >
@@ -64,15 +65,16 @@ export function Header({ lang, copy, compact, fine, menuOpen, onLang, onBook, on
 
         <div className="flex items-center gap-2 md:gap-5">
           <LangSwitch lang={lang} onLang={onLang} label={copy.lang} className="js-head" />
-          <button
+          <a
             ref={bookRef}
-            type="button"
-            onClick={onBook}
+            href={BOOKING_ENGINE}
+            target="_blank"
+            rel="noopener noreferrer"
             className="js-head btn-outline hidden min-h-11 items-center gap-2.5 rounded-full border border-champagne/70 px-6 text-[15px] font-semibold lg:inline-flex"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden><rect x="3.5" y="5" width="17" height="15" rx="2" /><path d="M3.5 10h17M8 3v4M16 3v4" /></svg>
             {copy.book}
-          </button>
+          </a>
           <button
             type="button"
             onClick={onMenu}

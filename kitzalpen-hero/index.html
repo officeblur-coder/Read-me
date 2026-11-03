@@ -11,7 +11,7 @@
     <!-- LCP: the summer photograph is the first thing painted -->
     <link rel="preload" as="image" type="image/avif" href="./images/summer-1600.avif" fetchpriority="high" />
     <!-- season before first paint: no flash of the wrong palette -->
-    <script>try{var s=localStorage.getItem('kitzalpen-season');if(s==='winter'||s==='summer')document.documentElement.dataset.season=s;}catch(e){}</script>
+    <script>try{var s=sessionStorage.getItem('kitzalpen-season');if(s!=='winter'&&s!=='summer'){var p=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Vienna',month:'numeric',day:'numeric'}).formatToParts(new Date()),m=+p.find(function(x){return x.type==='month'}).value,d=+p.find(function(x){return x.type==='day'}).value;s=(m>=11||m<=3||(m===4&&d<=15))?'winter':'summer';}document.documentElement.dataset.season=s;}catch(e){}</script>
   </head>
   <body>
     <div id="root"></div>

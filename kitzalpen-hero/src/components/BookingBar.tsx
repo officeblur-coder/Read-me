@@ -7,13 +7,29 @@ export interface BookingRequest {
   nights: number;
   adults: number;
   children: number;
+  childAges: number[];
+  url: string;       // deep link into the booking engine
+}
+
+/** The real booking engine of the pension (as linked on kitzalpen.at). */
+export const BOOKING_ENGINE = 'https://kitzbuhel.pynbooking.direct/';
+/**
+ * Deep link format (checked against the engine on 3 Nov 2026):
+ *   /search?checkin=YYYY-MM-DD&checkout=YYYY-MM-DD&room1=A,A,8
+ * room1 lists the guests of room 1: "A" = adult (18+), a number = child's age (0–17).
+ * Without dates the engine opens on its availability calendar.
+ */
+export function bookingUrl(checkIn?: string, checkOut?: string, adults = 2, ages: number[] = []) {
+  if (!checkIn || !checkOut) return BOOKING_ENGINE;
+  const room = [...Array(adults).fill('A'), ...ages.map(String)].join(',');
+  return `${BOOKING_ENGINE}search?checkin=${checkIn}&checkout=${checkOut}&room1=${room}`;
 }
 export interface BookingBarHandle { focusArrival: () => void }
 
 interface Props {
   copy: Copy;
   lang: Lang;
-  /** Connect the real booking engine here during integration. */
+  /** Fired when the visitor continues to the booking engine (analytics hook). */
   onSubmit: (req: BookingRequest) => void;
 }
 
@@ -81,7 +97,9 @@ export const BookingBar = forwardRef<BookingBarHandle, Props>(function BookingBa
   const [checkIn, setIn] = useState('');
   const [checkOut, setOut] = useState('');
   const [adults, setAdults] = useState(2);
-  const [kids, setKids] = useState(0);
+  const [kids, setKidsRaw] = useState(0);
+  const [ages, setAges] = useState<(number | null)[]>([]);
+  const setKids = (n: number) => { setKidsRaw(n); setAges((a) => Array.from({ length: n }, (_, i) => a[i] ?? null)); setMsg(null); };
   const [guestsOpen, setGuestsOpen] = useState(false);
   const [msg, setMsg] = useState<{ kind: 'err' | 'ok'; text: string } | null>(null);
   const arrivalRef = useRef<HTMLInputElement>(null);
@@ -113,18 +131,21 @@ export const BookingBar = forwardRef<BookingBarHandle, Props>(function BookingBa
     if (v && (!checkOut || checkOut <= v)) setOut(addDays(v, 1));
   };
 
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!checkIn || !checkOut) { setMsg({ kind: 'err', text: copy.errDates }); if (!checkIn) arrivalRef.current?.focus(); return; }
-    if (checkOut <= checkIn) { setMsg({ kind: 'err', text: copy.errOrder }); return; }
-    const req: BookingRequest = { checkIn, checkOut, nights, adults, children: kids };
-    onSubmit(req);
-    const f = (s: string) => new Date(s + 'T12:00:00').toLocaleDateString(lang === 'de' ? 'de-AT' : 'en-GB', { day: 'numeric', month: 'short' });
-    setMsg({ kind: 'ok', text: `${copy.sent}: ${f(checkIn)} – ${f(checkOut)} · ${copy.nights(nights)} · ${copy.guestCount(guests)}. ${copy.sentNote}` });
+  const agesOk = ages.every((x) => x !== null);
+  const url = bookingUrl(checkIn, checkOut, adults, ages.filter((x): x is number => x !== null));
+
+  /** The button is a real link to the booking engine; it only stops when input is incomplete. */
+  const go = (e: React.MouseEvent<HTMLAnchorElement> | React.FormEvent) => {
+    if ((checkIn && !checkOut) || (!checkIn && checkOut)) { e.preventDefault(); setMsg({ kind: 'err', text: copy.errDates }); return; }
+    if (checkIn && checkOut <= checkIn) { e.preventDefault(); setMsg({ kind: 'err', text: copy.errOrder }); return; }
+    if (!agesOk) { e.preventDefault(); setGuestsOpen(true); setMsg({ kind: 'err', text: copy.errAges }); return; }
+    onSubmit({ checkIn, checkOut, nights, adults, children: kids, childAges: ages as number[], url });
+    if ('key' in e || e.type === 'submit') { e.preventDefault(); window.open(url, '_blank', 'noopener'); }
+    setMsg({ kind: 'ok', text: copy.opened });
   };
 
   return (
-    <form onSubmit={submit} noValidate className="booking relative w-full" aria-label={copy.check}>
+    <form onSubmit={go} noValidate className="booking relative w-full" aria-label={copy.check}>
       <div className="booking-shell relative rounded-[22px] border border-champagne/35 bg-forest-deep/70 text-ivory shadow-[0_24px_60px_rgba(0,0,0,.35)] backdrop-blur-xl md:rounded-full">
         <div className="grid grid-cols-2 md:flex md:items-center md:py-2 md:pl-3 md:pr-2">
           <DateField label={copy.arrival} value={checkIn} min={today} onChange={setArrival} lang={lang} inputRef={arrivalRef} />
@@ -150,11 +171,11 @@ export const BookingBar = forwardRef<BookingBarHandle, Props>(function BookingBa
           </div>
 
           <div className="col-span-1 flex items-center border-t border-ivory/15 p-2 md:border-0 md:p-0 md:pl-2">
-            <button type="submit" className="btn-gold flex min-h-11 w-full items-center justify-center gap-2.5 whitespace-nowrap rounded-full px-5 text-[15px] font-semibold md:min-h-[54px] md:px-8 md:text-[16px]">
+            <a href={url} target="_blank" rel="noopener noreferrer" onClick={go} className="btn-gold flex min-h-11 w-full items-center justify-center gap-2.5 whitespace-nowrap rounded-full px-5 text-[15px] font-semibold md:min-h-[54px] md:px-8 md:text-[16px]">
               <span className="md:hidden">{copy.book}</span>
               <span className="hidden md:inline">{copy.check}</span>
-              <span className="arrow" aria-hidden>→</span>
-            </button>
+              <span className="arrow" aria-hidden>↗</span>
+            </a>
           </div>
         </div>
 
@@ -169,6 +190,20 @@ export const BookingBar = forwardRef<BookingBarHandle, Props>(function BookingBa
             <Stepper label={copy.adults} hint={copy.adultsHint} value={adults} min={1} max={10} onChange={setAdults} />
             <div className="h-px bg-ivory/10" />
             <Stepper label={copy.children} hint={copy.childrenHint} value={kids} min={0} max={8} onChange={setKids} />
+            {kids > 0 && (
+              <div className="grid grid-cols-2 gap-2 pb-2 sm:grid-cols-3">
+                {ages.map((age, i) => (
+                  <label key={i} className="flex flex-col gap-1 text-[12px] text-ivory/70">
+                    {copy.childAge(i + 1)}
+                    <select value={age ?? ''} onChange={(e) => { const v = e.target.value; setAges((a) => a.map((x, k) => (k === i ? (v === '' ? null : +v) : x))); setMsg(null); }}
+                      className={`min-h-11 rounded-[10px] border bg-forest-deep px-2 text-[15px] text-ivory ${age === null ? 'border-champagne/70' : 'border-ivory/25'}`} style={{ colorScheme: 'dark' }}>
+                      <option value="">{copy.choose}</option>
+                      {Array.from({ length: 18 }, (_, y) => <option key={y} value={y}>{copy.years(y)}</option>)}
+                    </select>
+                  </label>
+                ))}
+              </div>
+            )}
             <button type="button" onClick={() => { setGuestsOpen(false); guestBtn.current?.focus(); }} className="mt-2 min-h-11 w-full rounded-full border border-ivory/25 text-[14px] font-semibold hover:border-champagne">
               {copy.done}
             </button>

@@ -2,83 +2,126 @@ import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import type { Lang } from '../content/hero';
 import { QUICK_ACTIONS } from '../content/amenities';
+import { useSeason } from '../lib/season';
+
+const IMG = `${import.meta.env.BASE_URL}images/`;
 
 const WA = (
-  <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden><path d="M17.5 14.4c-.3-.1-1.8-.9-2-1-.3-.1-.5-.1-.7.1-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-.3-.1-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6l.4-.5c.2-.2.2-.3.3-.5.1-.2 0-.4 0-.5l-.9-2.2c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.1.2 2.1 3.2 5.1 4.5.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.8-.7 2-1.5.3-.7.3-1.3.2-1.5-.1-.1-.3-.2-.6-.3ZM12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.3c-1.5 0-3-.4-4.3-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.3 8.3 0 1 1 12 20.3Z" /></svg>
+  <svg viewBox="0 0 24 24" fill="currentColor" className="h-[22px] w-[22px]" aria-hidden><path d="M17.5 14.4c-.3-.1-1.8-.9-2-1-.3-.1-.5-.1-.7.1-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-.3-.1-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6l.4-.5c.2-.2.2-.3.3-.5.1-.2 0-.4 0-.5l-.9-2.2c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.1.2 2.1 3.2 5.1 4.5.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.8-.7 2-1.5.3-.7.3-1.3.2-1.5-.1-.1-.3-.2-.6-.3ZM12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.3c-1.5 0-3-.4-4.3-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.3 8.3 0 1 1 12 20.3Z" /></svg>
 );
-const HOUSE = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden><path d="M3 11.5 12 4l9 7.5" /><path d="M5 10v10h14V10" /><path d="M10 20v-6h4v6" /></svg>
-);
-const BED = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden><path d="M3 18v-7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v7" /><path d="M3 18h18" /><path d="M5 9V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3" /><path d="M8 9V7h3v2M13 9V7h3v2" /></svg>
+const Cal = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden><rect x="3.5" y="5" width="17" height="15" rx="2" /><path d="M3.5 10h17M8 3v4M16 3v4" /></svg>
 );
 
 /**
- * Global quick actions (one instance, mounted in App).
- * Mobile: sticky bar at the bottom, appears after the hero (the hero has its own
- * booking bar) and turns compact while scrolling down.
- * Desktop: a slim dock on the left edge, labels slide out on hover – like the live site.
+ * One calm "concierge" capsule instead of three loose buttons.
+ *   [ WhatsApp ]  [ Buchen  ▴ ]
+ * "Buchen" opens a small panel (desktop) / bottom sheet (mobile) with the two real
+ * booking engines – Zimmer (Pension) and Chalet – each with a photo.
+ * It appears after the hero (the hero has its own booking bar) and slims down while
+ * scrolling down. Mount once (global).
  */
 export function QuickActions({ lang, reduced }: { lang: Lang; reduced: boolean }) {
-  const t = QUICK_ACTIONS.label[lang];
+  const { season } = useSeason();
   const [shown, setShown] = useState(false);
-  const [compact, setCompact] = useState(false);
-  const bar = useRef<HTMLElement>(null);
-  const dock = useRef<HTMLElement>(null);
+  const [slim, setSlim] = useState(false);
+  const [open, setOpen] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
+  const panel = useRef<HTMLDivElement>(null);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const de = lang === 'de';
+  const t = {
+    nav: de ? 'Schnellaktionen' : 'Quick actions', book: de ? 'Buchen' : 'Book', wa: de ? 'Per WhatsApp schreiben' : 'Message on WhatsApp',
+    title: de ? 'Was möchten Sie buchen?' : 'What would you like to book?', close: de ? 'Schließen' : 'Close',
+    room: de ? 'Zimmer in der Pension' : 'Room in the guesthouse', roomSub: de ? '17 Zimmer · Frühstück im Haus' : '17 rooms · breakfast in house',
+    chalet: de ? 'KitzAlpen Chalet' : 'KitzAlpen Chalet', chaletSub: de ? 'Eigenes Haus · bis 4 Gäste' : 'Private house · up to 4 guests',
+    waLine: de ? 'Fragen? Schreiben Sie uns auf WhatsApp' : 'Questions? Message us on WhatsApp',
+  };
 
   useEffect(() => {
     let last = window.scrollY;
     const on = () => {
       const y = window.scrollY;
       setShown(y > window.innerHeight * 0.75);
-      if (Math.abs(y - last) > 6) { setCompact(y > last); last = y; }
+      if (Math.abs(y - last) > 8) { setSlim(y > last); last = y; }
     };
     on();
     window.addEventListener('scroll', on, { passive: true });
     return () => window.removeEventListener('scroll', on);
   }, []);
+  useEffect(() => { if (!shown) setOpen(false); }, [shown]);
 
   useEffect(() => {
-    const d = reduced ? 0 : 0.6;
-    gsap.to(bar.current, { yPercent: shown ? 0 : 130, autoAlpha: shown ? 1 : 0, duration: d, ease: shown ? 'power3.out' : 'power2.in' });
-    gsap.to(dock.current, { x: shown ? 0 : -90, autoAlpha: shown ? 1 : 0, duration: d, ease: 'power3.out' });
-    if (shown && !reduced) gsap.fromTo(bar.current?.querySelectorAll('a') ?? [], { y: 18, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.5, stagger: 0.07, ease: 'power3.out', delay: 0.1 });
+    gsap.to(root.current, { y: shown ? 0 : 120, autoAlpha: shown ? 1 : 0, duration: reduced ? 0 : 0.7, ease: shown ? 'expo.out' : 'power2.in' });
   }, [shown, reduced]);
 
-  const items = [
-    { href: QUICK_ACTIONS.whatsapp, label: t.whatsapp, sub: '+40 748 192 821', icon: WA, cls: 'qa-wa' },
-    { href: QUICK_ACTIONS.chalet, label: t.chalet, sub: 'KitzAlpen Chalet', icon: HOUSE, cls: 'qa-chalet' },
-    { href: QUICK_ACTIONS.room, label: t.room, sub: 'Pension · 17 Zimmer', icon: BED, cls: 'qa-room' },
+  useEffect(() => {
+    const p = panel.current;
+    if (!p) return;
+    if (open) {
+      gsap.set(p, { display: 'block' });
+      gsap.fromTo(p, { autoAlpha: 0, y: 16, scale: 0.98 }, { autoAlpha: 1, y: 0, scale: 1, duration: reduced ? 0 : 0.45, ease: 'power3.out' });
+      gsap.fromTo(p.querySelectorAll('.qa-opt'), { autoAlpha: 0, y: 12 }, { autoAlpha: 1, y: 0, duration: reduced ? 0 : 0.5, stagger: 0.07, ease: 'power3.out', delay: 0.05 });
+      const off = (e: PointerEvent) => { if (!root.current?.contains(e.target as Node)) setOpen(false); };
+      const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') { setOpen(false); trigger.current?.focus(); } };
+      window.addEventListener('pointerdown', off); window.addEventListener('keydown', esc);
+      return () => { window.removeEventListener('pointerdown', off); window.removeEventListener('keydown', esc); };
+    }
+    gsap.to(p, { autoAlpha: 0, y: 10, duration: reduced ? 0 : 0.25, ease: 'power2.in', onComplete: () => { gsap.set(p, { display: 'none' }); } });
+  }, [open, reduced]);
+
+  const opts = [
+    { href: QUICK_ACTIONS.room, label: t.room, sub: t.roomSub, img: 'rooms/room-1-800.webp' },
+    { href: QUICK_ACTIONS.chalet, label: t.chalet, sub: t.chaletSub, img: `chalet/${season === 'winter' ? 'winter' : 'summer'}-800.webp` },
   ];
 
   return (
-    <>
-      {/* mobile */}
-      <nav ref={bar} aria-label={t.nav} className="invisible fixed inset-x-0 bottom-0 z-40 bg-gradient-to-t from-cream via-cream/90 to-cream/0 px-[max(14px,env(safe-area-inset-left))] pt-4 lg:hidden" style={{ paddingBottom: 'calc(10px + env(safe-area-inset-bottom, 0px))' }}>
-        <div className="mx-auto grid max-w-[560px] grid-cols-3 gap-2.5">
-          {items.map((it) => (
-            <a key={it.cls} href={it.href} target="_blank" rel="noopener noreferrer" className={`qa ${it.cls} flex flex-col items-center justify-center gap-1 rounded-[16px] px-1.5 text-[11.5px] font-semibold leading-none min-[380px]:text-[13px] transition-[min-height,padding] duration-300 ${compact ? 'min-h-[46px] flex-row gap-2' : 'min-h-[60px]'}`}>
-              <span className={`transition-transform duration-300 ${compact ? 'scale-90' : ''}`}>{it.icon}</span>
-              <span className="truncate">{it.label}</span>
-            </a>
-          ))}
+    <div
+      ref={root}
+      role="navigation"
+      aria-label={t.nav}
+      className="qa-root invisible fixed bottom-0 left-1/2 z-40 w-[min(100%-24px,420px)] -translate-x-1/2 lg:left-auto lg:right-6 lg:w-auto lg:translate-x-0"
+      style={{ marginBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))' }}
+    >
+      {/* panel / sheet */}
+      <div ref={panel} id="qa-panel" role="dialog" aria-label={t.title} className="qa-panel absolute bottom-[calc(100%+10px)] left-0 right-0 hidden rounded-[22px] p-3 lg:left-auto lg:w-[380px]">
+        <div className="flex items-center justify-between px-2 pb-2 pt-1">
+          <p className="font-display text-[22px] italic text-cream">{t.title}</p>
+          <button type="button" onClick={() => setOpen(false)} aria-label={t.close} className="grid h-10 w-10 place-items-center rounded-full text-cream/70 hover:bg-cream/10 hover:text-cream focus-visible:outline focus-visible:outline-2 focus-visible:outline-gold">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden><path d="M6 6l12 12M18 6 6 18" /></svg>
+          </button>
         </div>
-      </nav>
+        <ul className="flex flex-col gap-2">
+          {opts.map((o) => (
+            <li key={o.href} className="qa-opt">
+              <a href={o.href} target="_blank" rel="noopener noreferrer" className="qa-card group flex items-center gap-3.5 rounded-[16px] p-2 pr-4">
+                <span className="h-[64px] w-[84px] shrink-0 overflow-hidden rounded-[12px]"><img src={IMG + o.img} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.06]" /></span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[15.5px] font-semibold leading-tight text-cream">{o.label}</span>
+                  <span className="mt-0.5 block text-[12.5px] text-cream/60">{o.sub}</span>
+                </span>
+                <span aria-hidden className="qa-go grid h-9 w-9 shrink-0 place-items-center rounded-full border border-gold/50 text-gold-light">↗</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+        <a href={QUICK_ACTIONS.whatsapp} target="_blank" rel="noopener noreferrer" className="qa-opt mt-2 flex min-h-11 items-center justify-center gap-2 rounded-[14px] text-[13px] font-medium text-cream/75 hover:text-cream">
+          <span className="text-[#5ec27a]">{WA}</span>{t.waLine}
+        </a>
+      </div>
 
-      {/* desktop dock */}
-      <nav ref={dock} aria-label={t.nav} className="qa-dock invisible fixed left-3 top-1/2 z-40 hidden -translate-y-1/2 lg:block">
-        <div className="flex flex-col gap-1.5 rounded-[20px] border border-gold/30 bg-deep/85 p-1.5 shadow-[0_20px_50px_rgba(0,0,0,.28)] backdrop-blur-xl">
-          {items.map((it) => (
-            <a key={it.cls} href={it.href} target="_blank" rel="noopener noreferrer" title={it.label} className="qa-dock-item group/q flex items-center rounded-[16px] p-1 text-cream transition-colors hover:bg-cream/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-gold">
-              <span className={`qa ${it.cls} grid h-10 w-10 shrink-0 place-items-center rounded-[12px]`}>{it.icon}</span>
-              <span className="qa-dock-label flex flex-col overflow-hidden whitespace-nowrap">
-                <span className="text-[14px] font-semibold leading-tight">{it.label}</span>
-                <span className="text-[11px] uppercase tracking-[.12em] text-cream/55">{it.sub}</span>
-              </span>
-            </a>
-          ))}
-        </div>
-      </nav>
-    </>
+      {/* the capsule */}
+      <div className={`qa-capsule flex items-center gap-1.5 rounded-full p-1.5 transition-[padding] duration-300 ${slim ? 'lg:p-1' : ''}`}>
+        <a href={QUICK_ACTIONS.whatsapp} target="_blank" rel="noopener noreferrer" aria-label={t.wa} title="WhatsApp · +40 748 192 821"
+          className={`qa-wa grid shrink-0 place-items-center rounded-full transition-[width,height] duration-300 ${slim ? 'h-11 w-11' : 'h-12 w-12'}`}>
+          {WA}
+        </a>
+        <button ref={trigger} type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-controls="qa-panel"
+          className={`qa-book flex flex-1 items-center justify-center gap-2.5 rounded-full px-6 text-[15px] font-semibold transition-[height] duration-300 lg:flex-none lg:px-7 ${slim ? 'h-11' : 'h-12'}`}>
+          <Cal /> {t.book}
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden className={`transition-transform duration-300 ${open ? '' : 'rotate-180'}`}><path d="m6 9 6 6 6-6" /></svg>
+        </button>
+      </div>
+    </div>
   );
 }

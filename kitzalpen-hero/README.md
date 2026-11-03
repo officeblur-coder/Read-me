@@ -222,3 +222,25 @@ Motion:
 - Season change: if the section is visible, it plays out (headline lifts out, feature mask closes, cards fade), swaps the data, then plays in. If it is offscreen, it updates silently without scrolling. Rapid toggling kills the running timeline, so no mixed content.
 - Ambient: faint topographic lines drift slowly; restrained parallax on the feature photo (fine pointer only).
 - `prefers-reduced-motion`: static.
+
+---
+
+# Update: season calendar, chalet, weather band, booking, concierge capsule
+
+**Default season by date.** When the site opens, the season follows the calendar in Hollersbach (Europe/Vienna): **1 Nov – 15 Apr = winter**, otherwise summer (`seasonByDate()` in `src/lib/season.tsx`, same rule inline in `index.html` before first paint). A visitor's own choice is kept for the browser tab (`sessionStorage`), and a new visit starts from the calendar again. After the 50/50 intro, the hero divider glides to that season.
+
+**Chalet follows the season.** The main photo shows summer or winter to match the selection. On a switch, winter descends over summer through the feathered mask, or lifts again. Thumbnails show the other season and the bunk-bed room.
+
+**Weather band** (`src/components/WeatherBand.tsx`, `src/content/weather.ts`). A thin band fixed above the header that stays while scrolling and runs as a slow ticker (pauses on hover).
+- Winter: Hollersbach, KitzSki, Wildkogel and Kaprun/Kitzsteinhorn with sky, temperature, today's min/max, plus snow depth and fresh snow for the ski areas.
+- Summer: weather only.
+- Data: [Open-Meteo](https://open-meteo.com), free, no key, CORS enabled, CC BY 4.0 (attribution shown). It loads live and refreshes every 15 min.
+- Snow depth is a **model value** for the given point and altitude, not the resort's official snow report (the band says so). If official numbers are wanted, they need a licensed feed (e.g. the resorts' or a snow-report provider's API).
+- `scripts/weather-snapshot.mjs` writes `public/weather.json`, a fallback used only where the live call is blocked (sandboxed previews).
+
+**Booking → pynbooking.** All booking actions lead to the real engine `https://kitzbuhel.pynbooking.direct/`.
+- Hero bar: the button is a real link built by `bookingUrl()`, e.g. `/search?checkin=2026-12-20&checkout=2026-12-27&room1=A,A,8`. `A` = adult (18+), a number = child's age (0–17), checked against the engine. The guest panel therefore asks each child's age. Without dates it opens the engine's availability calendar.
+- Header "Jetzt buchen" and the mobile menu button link straight to the engine.
+- The engine's own calendar/prices are not embedded: it has no public embeddable widget or CORS API, so the site hands over with the search already filled in.
+
+**Concierge capsule** (replaces the dock and bottom bar). It is one capsule, `[WhatsApp] [Buchen ▴]`: bottom-right on desktop, bottom-centre on mobile, safe-area aware. It appears after the hero and slims while scrolling down. "Buchen" opens a small panel or sheet with two photo cards, Zimmer (Pension) and Chalet (photo follows the season), linking to their pynbooking engines, plus the WhatsApp line. Escape or an outside click closes it.

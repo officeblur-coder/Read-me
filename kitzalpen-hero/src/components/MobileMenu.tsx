@@ -4,11 +4,12 @@ import { useGSAP } from '@gsap/react';
 import { NAV, type Copy, type Lang } from '../content/hero';
 import { Logo } from './Logo';
 import { LangSwitch } from './Header';
+import { BOOKING_ENGINE } from './BookingBar';
 
-interface Props { open: boolean; lang: Lang; copy: Copy; reduced: boolean; onClose: () => void; onLang: (l: Lang) => void; onBook: () => void }
+interface Props { open: boolean; lang: Lang; copy: Copy; reduced: boolean; onClose: () => void; onLang: (l: Lang) => void; onBook?: () => void }
 
 /** Full-screen forest panel. Opening plays a timeline, closing reverses it. */
-export function MobileMenu({ open, lang, copy, reduced, onClose, onLang, onBook }: Props) {
+export function MobileMenu({ open, lang, copy, reduced, onClose, onLang }: Props) {
   const root = useRef<HTMLDivElement>(null);
   const tl = useRef<gsap.core.Timeline | null>(null);
   const closeBtn = useRef<HTMLButtonElement>(null);
@@ -69,9 +70,9 @@ export function MobileMenu({ open, lang, copy, reduced, onClose, onLang, onBook 
       </nav>
 
       <div className="js-mm-foot px-[max(24px,env(safe-area-inset-left))] pb-8 pt-6">
-        <button type="button" onClick={() => { onClose(); onBook(); }} className="btn-gold flex min-h-[52px] w-full items-center justify-center gap-3 rounded-full text-[16px] font-semibold">
+        <a href={BOOKING_ENGINE} target="_blank" rel="noopener noreferrer" onClick={onClose} className="btn-gold flex min-h-[52px] w-full items-center justify-center gap-3 rounded-full text-[16px] font-semibold">
           {copy.cta} <span className="arrow" aria-hidden>→</span>
-        </button>
+        </a>
         <p className="mt-5 text-center text-[13px] text-ivory/60">{copy.address}</p>
       </div>
     </div>
