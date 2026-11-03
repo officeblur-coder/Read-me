@@ -259,3 +259,35 @@ Mounted right after `<ActivitiesSection/>`. It reads the shared season from `use
 - Season switch: text lifts out, photos crossfade (about 1 s, new one settles 1.06 → 1), new text reveals. Scroll position is untouched. Rapid toggling kills the running timeline. If the visitor switches back mid-swap, the section restores the current season (the same fix was applied to Activities).
 - Desktop parallax ±4 %. `prefers-reduced-motion`: static.
 - Note: the supplied winter photo is 1024 px wide, so on large desktop screens it is upscaled. A larger original (≥ 2000 px) would look sharper.
+
+---
+
+# Section 08 – Interactive Alpine Map
+
+`src/components/map/AlpineMapSection.tsx`, `src/content/map.ts`, `src/content/map-points.json`, `scripts/build-map-assets.py`, `public/map/`.
+
+**Technology.** [MapLibre GL JS](https://maplibre.org) 4.7.1 is the open-source fork of Mapbox GL with the same API (3D terrain, flyTo, HTML markers) and needs no API key. It is loaded lazily from unpkg when the section approaches; its CSS is bundled. Mapbox was the brief's preference, but no Mapbox token exists for this project and none was invented. To switch later, create a Mapbox account and token, swap the script for `mapbox-gl`, and use `mapbox://styles/mapbox/satellite-v9` + `mapbox.mapbox-terrain-dem-v1`. The component code stays the same.
+
+**Data – self-hosted, licensed:**
+- Satellite: **EOxCloudless 2016** by EOX IT Services GmbH (contains modified Copernicus Sentinel data 2016 & 2017), CC BY 4.0. It is stitched by `scripts/build-map-assets.py` into one 4096 px JPEG for the region (Krimml/Königsleiten → Zell am See, Weißsee → Pass Thurn) and draped on the terrain.
+- Terrain: AWS Terrain Tiles (Mapzen, terrarium), zoom 8–11, exaggeration 1.2.
+- Attribution is shown in the map (ⓘ).
+- Self-hosting keeps the map working in restrictive previews too. On the live site you may switch to hosted tiles, but keep the attribution.
+
+**Places – verified.**
+- The pension was geocoded with OpenStreetMap Nominatim to the building at Reitlehen 42: 47.27268, 12.42573.
+- Every place has a marker position (`pos`) and a real **access point** (`nav`): valley station or car park. Examples: Talstation Wildkogelbahn, Dorfbahn Königsleiten, Talstation Schmittenhöhebahn, Gletscherjet 1, Parkplatz Hintersee, Enzingerboden for Weißsee, and Kesselfall Alpenhaus for the Kaprun reservoirs (the bus start; the road above is closed to cars). Resterkogel is reached via the Panoramabahn, so its directions go to the Panoramabahn valley station.
+- Hollersbachtal has no mapped car park, so its directions use the place name.
+- The brief's "Panoramabahn Kitzbüheler Alpen" (winter) and "Panoramabahn Hollersbach" (summer) are the same lift.
+- Winter adventures: Rodelbahn Wildkogel (arrival in Bramberg, per kitzalpen.at/ski) and Nationalparkzentrum.
+- Driving distance/time: computed with OSRM (OpenStreetMap data) from the pension to each access point and stored in `public/map/routes.json`. Re-run the script to refresh.
+
+**Directions.** `https://www.google.com/maps/dir/?api=1&origin=KITZALPEN Pension, Reitlehen 42, …&destination=<lat,lon>&travelmode=driving`, URL-encoded, opened in a new tab with `rel="noopener noreferrer"`.
+
+**Behaviour.**
+- Season comes from the shared `useSeason()`. Markers are swapped (old ones fade out, new ones pop in staggered) and the camera keeps its position. Filters: winter = All / Ski resorts / Winter adventures; summer = All / Lakes / Hiking / Cable cars / Family.
+- Intro (once): headline lines, then a map mask reveal, then a camera flight from the regional view to Hollersbach (pitch 56°), then the KitzAlpen marker, then the places.
+- Desktop: floating panel (home, filters, list → selected card with photo, access point, driving distance, Get directions). Marker hover scales to 1.12 with a halo and tooltip. Selection flies the camera (zoom 12.6, pitch 60) and slides up the card.
+- Mobile: 70svh map with pinch, pan and rotate. A bottom sheet holds swipeable cards, synced both ways with the markers. The handle expands it to full cards with photos and filters.
+- Custom controls: zoom, 2D/3D, reset view. `prefers-reduced-motion` uses jumpTo instead of flights and no staggers.
+- Photos: only those already on kitzalpen.at. Places without one get an editorial contour card.

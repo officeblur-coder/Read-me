@@ -1,3 +1,4 @@
+@import 'maplibre-gl/dist/maplibre-gl.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -292,6 +293,68 @@
   .ax-cta:hover { filter: brightness(1.08); }
   .ax-cta:hover .arrow { transform: translateX(5px); }
   .ax-cta:focus-visible { outline: 2px solid var(--k-cream); outline-offset: 4px; }
+
+
+  /* ------------------------------------------------ alpine map */
+  .map-holder .maplibregl-canvas { outline: none; }
+  .map-panel, .map-sheet {
+    background: color-mix(in srgb, var(--k-deep) 90%, transparent);
+    border: 1px solid color-mix(in srgb, var(--k-gold) 25%, transparent);
+    backdrop-filter: blur(14px) saturate(1.2); -webkit-backdrop-filter: blur(14px) saturate(1.2);
+    box-shadow: 0 24px 60px -24px rgba(0,0,0,.6);
+  }
+  .map-sheet { border-radius: 20px 20px 0 0; border-bottom: 0; max-height: 46%; transition: max-height .5s cubic-bezier(.22,1,.36,1); }
+  .map-sheet.is-open { max-height: 88%; overflow-y: auto; }
+  .map-strip { scrollbar-width: none; overscroll-behavior-x: contain; }
+  .map-strip::-webkit-scrollbar { display: none; }
+  .map-strip .is-active .map-card { border-color: var(--k-gold); }
+  .map-card { background: color-mix(in srgb, var(--k-cream) 7%, transparent); border: 1px solid color-mix(in srgb, var(--k-gold) 22%, transparent); transition: border-color .4s; }
+  .map-card-photo img { transition: transform .9s cubic-bezier(.22,1,.36,1); }
+  .map-card:hover .map-card-photo img { transform: scale(1.04); }
+  .map-dir { color: var(--k-deep); background: linear-gradient(180deg, var(--k-gold-light), var(--k-gold)); transition: filter .3s; }
+  .map-dir .arrow { display: inline-block; transition: transform .3s; }
+  .map-dir:hover { filter: brightness(1.07); }
+  .map-dir:hover .arrow { transform: translate(3px,-3px); }
+  .map-dir:focus-visible { outline: 2px solid var(--k-cream); outline-offset: 3px; }
+  .map-filter { min-height: 36px; padding: 0 14px; border-radius: 999px; font-size: 12.5px; font-weight: 600; color: color-mix(in srgb, var(--k-cream) 80%, transparent); border: 1px solid color-mix(in srgb, var(--k-cream) 22%, transparent); transition: background-color .3s, color .3s, border-color .3s; }
+  .map-filter:hover { border-color: var(--k-gold); color: var(--k-cream); }
+  .map-filter.is-on { background: var(--k-gold); border-color: var(--k-gold); color: var(--k-deep); }
+  .map-filter:focus-visible { outline: 2px solid var(--k-gold); outline-offset: 2px; }
+  .map-row { transition: background-color .3s; }
+  .map-row:hover, .map-row:focus-visible { background: color-mix(in srgb, var(--k-cream) 8%, transparent); outline: none; }
+  .map-row-arrow { transition: transform .3s; }
+  .map-row:hover .map-row-arrow { transform: translateX(4px); }
+  .map-ctl { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 14px; font-size: 20px; line-height: 1;
+    color: var(--k-cream); background: color-mix(in srgb, var(--k-deep) 82%, transparent); border: 1px solid color-mix(in srgb, var(--k-gold) 30%, transparent);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); transition: background-color .3s, border-color .3s; }
+  .map-ctl:hover { border-color: var(--k-gold); }
+  .map-ctl:focus-visible { outline: 2px solid var(--k-gold); outline-offset: 2px; }
+
+  .map-pin { display: grid; place-items: center; width: 44px; height: 44px; background: none; border: 0; cursor: pointer; }
+  .map-pin-dot { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 999px; color: var(--k-deep);
+    background: var(--k-gold-light); border: 2px solid var(--k-cream); box-shadow: 0 6px 16px rgba(0,0,0,.45), 0 0 0 0 color-mix(in srgb, var(--k-gold) 50%, transparent);
+    transition: transform .25s ease, box-shadow .25s ease, background-color .3s; }
+  .map-pin-tip { position: absolute; bottom: calc(100% + 2px); left: 50%; transform: translate(-50%, 4px); white-space: nowrap; pointer-events: none;
+    padding: 5px 10px; border-radius: 999px; font: 600 12px/1.2 Manrope, system-ui, sans-serif; color: var(--k-cream);
+    background: color-mix(in srgb, var(--k-deep) 92%, transparent); opacity: 0; transition: opacity .25s ease, transform .25s ease; }
+  .map-pin:hover .map-pin-dot, .map-pin.is-hover .map-pin-dot, .map-pin:focus-visible .map-pin-dot { transform: scale(1.12); box-shadow: 0 6px 16px rgba(0,0,0,.45), 0 0 0 8px color-mix(in srgb, var(--k-gold) 30%, transparent); }
+  .map-pin:hover .map-pin-tip, .map-pin.is-hover .map-pin-tip, .map-pin:focus-visible .map-pin-tip, .map-pin.is-active .map-pin-tip { opacity: 1; transform: translate(-50%, 0); }
+  .map-pin.is-active .map-pin-dot { background: var(--k-gold); transform: scale(1.18); box-shadow: 0 6px 18px rgba(0,0,0,.5), 0 0 0 10px color-mix(in srgb, var(--k-gold) 30%, transparent); }
+  .map-pin:focus-visible { outline: none; }
+
+  .map-home { display: flex; flex-direction: column; align-items: center; pointer-events: none; }
+  .map-home-pin { display: grid; place-items: center; width: 62px; height: 62px; border-radius: 999px 999px 999px 4px; transform: rotate(-45deg);
+    background: var(--k-pine); border: 2px solid var(--k-gold); box-shadow: 0 10px 26px rgba(0,0,0,.55); }
+  .map-home-logo { display: block; width: 44px; height: 18px; transform: rotate(45deg); background: var(--k-cream);
+    -webkit-mask-size: contain; mask-size: contain; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; }
+  .map-home-halo { position: absolute; left: 50%; bottom: -14px; width: 70px; height: 26px; margin-left: -35px; border-radius: 50%;
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--k-gold) 55%, transparent), transparent); animation: map-halo 2.8s ease-out infinite; }
+  .map-home-label { margin-top: 10px; padding: 3px 9px; border-radius: 999px; font: 700 11px/1.2 Manrope, system-ui, sans-serif; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--k-deep); background: var(--k-gold-light); }
+  @keyframes map-halo { 0% { transform: scale(.6); opacity: .9; } 100% { transform: scale(1.8); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .map-home-halo { animation: none; } }
+  .maplibregl-ctrl-attrib { font: 11px/1.4 Manrope, system-ui, sans-serif; }
+  @media (max-width: 767px) { .map-holder .maplibregl-ctrl-bottom-right { bottom: auto; top: 0; right: 56px; } }
 
   .field { transition: background-color .3s; }
   .field:hover, .field:focus-within { background: rgba(244,239,228,.06); }
