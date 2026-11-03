@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabase";
 import { useCustomer, type Customer } from "../lib/auth";
 import { LEDGER_LABEL, TIER_CLS, nextTierInfo, rateOf, tierName, useRewards, vppOf, type RewardsCfg } from "../lib/rewards";
 import { confetti } from "../lib/fx";
+import { track } from "../lib/track";
 import type { Order } from "../lib/types";
 import { ALLERGENS, imgUrl, lei } from "../lib/format";
 import Icon from "../components/Icon";
@@ -13,6 +14,7 @@ import SiteFooter from "../components/SiteFooter";
 
 export default function Account() {
   const { session, customer, ready, refresh } = useCustomer();
+  useEffect(() => { track("account"); }, []);
   if (!ready) return <div className="acc"><p className="muted" style={{ padding: 40, textAlign: "center" }}>Se încarcă…</p></div>;
   return (
     <div className="acc">
@@ -46,7 +48,7 @@ function SignIn() {
     setErr(""); setBusy(true);
     const { error } = await supabase.auth.verifyOtp({ email: email.trim(), token: code.trim(), type: "email" });
     setBusy(false);
-    if (error) setErr("Codul nu e corect sau a expirat. Cere unul nou.");
+    if (error) setErr("Codul nu e corect sau a expirat. Cere unul nou."); else track("signup");
   }
   return (
     <main className="acc-main">

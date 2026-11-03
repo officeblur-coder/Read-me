@@ -9,6 +9,7 @@ import { flyToCart, haptic } from "../lib/fx";
 import { LOCALITIES, geocodeAddress, useZones, zoneFor, type LatLng } from "../lib/zones";
 import { hoursLabel, isOpenNow, slotDays, whenLabel } from "../lib/schedule";
 import { cut, useDiscounts } from "../lib/discounts";
+import { track } from "../lib/track";
 import Icon from "../components/Icon";
 import BottomNav from "../components/BottomNav";
 import SiteFooter from "../components/SiteFooter";
@@ -183,6 +184,7 @@ export default function Menu({ source }: { source?: string }) {
 
   const byId = useMemo(() => Object.fromEntries(items.map(x => [x.id, x])), [items]);
   const dsc = useDiscounts();
+  useEffect(() => { track("visit"); }, []);
   const nm = (it: Item) => (L && it.name_hu) || it.name_ro;
   const ds = (it: Item) => (L && it.desc_hu) || it.desc_ro || "";
   const catName = (c: Category) => (L && c.name_hu) || c.name_ro;
@@ -247,6 +249,7 @@ export default function Menu({ source }: { source?: string }) {
   const qtyOf = (id: string) => validCart.filter(l => l.id === id && !l.promo).reduce((s, l) => s + l.qty, 0);
 
   function addLine(line: Omit<CartLine, "key">, from?: Element | null) {
+    track("add_cart", line.id);
     const key = [line.id, line.vi ?? "", [...line.extras].sort().join(","), line.note, line.promo ?? ""].join("|");
     setCart(c => {
       const ex = c.find(l => l.key === key);
@@ -254,7 +257,7 @@ export default function Menu({ source }: { source?: string }) {
     });
     haptic(); flyToCart(from || null);
   }
-  const openItem = (it: Item) => setSheet({ id: it.id, qty: 1, vi: 0, extras: [], note: "" });
+  const openItem = (it: Item) => { setSheet({ id: it.id, qty: 1, vi: 0, extras: [], note: "" }); track("view_item", it.id); };
   function quickAdd(it: Item, e?: React.MouseEvent) {
     if (it.variants?.length) { openItem(it); return; }
     const card = (e?.currentTarget as HTMLElement | undefined)?.closest("[data-card]");
@@ -346,6 +349,7 @@ export default function Menu({ source }: { source?: string }) {
     if (error) { setSendErr(error.message || "Comanda nu a putut fi trimisă. Încearcă din nou."); return; }
     const res = data as { token: string; number: number };
     rememberOrder(res.token, res.number);
+    track("order", res.number);
     if (customer && form.address && !customer.addresses?.includes(form.address)) {
       supabase.from("customers").update({ addresses: [form.address, ...(customer.addresses || [])].slice(0, 5), phone: customer.phone || form.phone, name: customer.name || form.name }).eq("id", customer.id).then(() => {});
     }
@@ -374,6 +378,7 @@ export default function Menu({ source }: { source?: string }) {
   };
 
   const query = q.trim().toLowerCase();
+  useEffect(() => { if (query.length < 3) return; const t = setTimeout(() => track("search", query), 1500); return () => clearTimeout(t); }, [query]);
   const match = (it: Item) => !query || `${it.name_ro} ${it.name_hu} ${it.desc_ro}`.toLowerCase().includes(query);
   const visibleCats = cats.filter(c => items.some(i => i.category_id === c.id));
   // "Cele mai comandate": dishes tagged "top" in admin, otherwise the default picks
@@ -451,7 +456,7 @@ export default function Menu({ source }: { source?: string }) {
           {mode === "livrare" && <div><span>Livrare{zone ? ` · ${zone.name}` : ""}</span><span className="num">{!feeKnown ? "după adresă" : fee ? lei(fee) : "gratuit"}</span></div>}
           <div className="tot"><span>Total</span><span className="num">{lei(sub + pack + fee)}</span></div>
         </div>
-        <button className="cta" onClick={() => setStep("details")}>Continuă <span>→</span></button>
+        <button className="cta" onClick={() => { setStep("details"); track("checkout"); }}>Continuă <span>→</span></button>
       </>) : (<>
         {rwOn && (customer
           ? <div className="club-strip"><span className={`club-dot ${TIER_CLS[tierN - 1]}`} /><div><b>Lyra {tierLabel} · {rw.me?.points ?? customer.points} puncte</b><small>Valorează {lei(rw.me?.value ?? 0)} · câștigi +{earn} puncte la comanda asta</small></div></div>
