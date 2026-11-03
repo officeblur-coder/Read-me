@@ -44,14 +44,25 @@
     transition: transform .7s cubic-bezier(.22,.8,.2,1);
   }
 
-  /* divider handle: tactile feedback + one quiet hint after the intro */
-  .seam-handle.is-pressed { transform: translate(-50%, -50%) scale(.92) !important; box-shadow: 0 4px 14px rgba(0,0,0,.3), 0 0 0 10px rgba(244,239,228,.18); }
-  .seam-handle::after {
+  /* divider handle: tactile feedback, docking at the frame edge, one quiet hint after the intro */
+  .seam-disc { position: relative; transition: transform .5s cubic-bezier(.22,.8,.2,1), box-shadow .3s; }
+  .seam-handle.docked .seam-disc { transform: scale(.78); }
+  .seam-handle:hover .seam-disc { box-shadow: 0 10px 30px rgba(0,0,0,.28), 0 0 0 6px rgba(244,239,228,.16); }
+  .seam-handle.is-pressed .seam-disc { transform: scale(.9); box-shadow: 0 4px 14px rgba(0,0,0,.3), 0 0 0 10px rgba(244,239,228,.2); }
+  .seam-disc::after {
     content: ''; position: absolute; inset: 0; border-radius: 999px; border: 1px solid rgba(244,239,228,.8);
     opacity: 0; pointer-events: none;
   }
-  .seam-handle.hint::after { animation: seam-hint 1.8s cubic-bezier(.22,.8,.2,1) 2; }
+  .seam-handle.hint .seam-disc::after { animation: seam-hint 1.8s cubic-bezier(.22,.8,.2,1) 2; }
   @keyframes seam-hint { 0% { opacity: .9; transform: scale(1); } 100% { opacity: 0; transform: scale(1.7); } }
+
+  .sun-rays {
+    background: repeating-conic-gradient(from 0deg, rgba(255,236,196,.07) 0deg 1.6deg, transparent 1.6deg 9deg);
+    -webkit-mask-image: radial-gradient(circle, #000 0%, rgba(0,0,0,.5) 22%, transparent 62%);
+    mask-image: radial-gradient(circle, #000 0%, rgba(0,0,0,.4) 20%, transparent 55%);
+    animation: sun-turn 120s linear infinite;
+  }
+  @keyframes sun-turn { to { rotate: 360deg; } }
 
   .field { transition: background-color .3s; }
   .field:hover, .field:focus-within { background: rgba(244,239,228,.06); }

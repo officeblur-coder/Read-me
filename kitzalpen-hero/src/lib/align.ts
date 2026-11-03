@@ -5,37 +5,51 @@ export interface Placement { s: number; x: number; y: number; w: number; h: numb
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 
 /**
- * Places both photographs so the building lands on the same screen point.
- * The base photo is "cover"-scaled; the other one is scaled towards the same
- * building height but never more than `maxRelScale` (to avoid upscaling blur),
- * and never below cover. Both are clamped so they always fill the frame –
- * if perspectives differ we accept a small offset instead of distorting.
+ * Places both photographs so the same architectural point (top-left corner of
+ * the upper balcony) lands on the same screen pixel, at the same building size.
+ *
+ * 1. Scales: both must cover the frame; the building must be equally tall in
+ *    both. The larger requirement wins, capped by `maxUp` × cover so neither
+ *    photo is blown up into blur (if capped, sizes differ slightly – no warping).
+ * 2. Position: each photo can only slide so far before an edge shows. We
+ *    intersect the allowed ranges of both and put the landmark as close to the
+ *    wished anchor as that intersection allows.
  */
 export function placePhotos(
   vw: number,
   vh: number,
-  base: Photo,
-  other: Photo,
+  a: Photo,
+  b: Photo,
   anchor: { x: number; y: number },
-  overscan = 1.05,
-  maxRelScale = 1.22,
+  overscan = 1.04,
+  maxUp = 1.4,
 ): [Placement, Placement] {
-  const fit = (p: Photo, s: number, ax: number, ay: number): Placement => {
-    const w = p.w * s, h = p.h * s;
-    const x = clamp(ax - p.lx * w, vw - w, 0);
-    const y = clamp(ay - p.ly * h, vh - h, 0);
-    return { s, x, y, w, h };
-  };
   const cover = (p: Photo) => Math.max(vw / p.w, vh / p.h) * overscan;
+  // building height in source pixels
+  const ha = a.h * a.bh, hb = b.h * b.bh;
+  // equal building height on screen: sa*ha = sb*hb
+  let sa = Math.max(cover(a), cover(b) * hb / ha);
+  sa = Math.min(sa, cover(a) * maxUp);
+  const sb = Math.max(cover(b), Math.min(sa * ha / hb, cover(b) * maxUp));
 
-  const a = fit(base, cover(base), anchor.x * vw, anchor.y * vh);
-  // where the base landmark actually ended up after clamping
-  const lx = a.x + base.lx * a.w, ly = a.y + base.ly * a.h;
+  const range = (p: Photo, s: number, axis: 'x' | 'y') => {
+    const size = (axis === 'x' ? p.w : p.h) * s;
+    const view = axis === 'x' ? vw : vh;
+    const l = (axis === 'x' ? p.lx : p.ly) * size;
+    return [view - size + l, l] as const; // possible screen positions of the landmark
+  };
+  const pick = (axis: 'x' | 'y', want: number) => {
+    const [a0, a1] = range(a, sa, axis), [b0, b1] = range(b, sb, axis);
+    const lo = Math.max(a0, b0), hi = Math.min(a1, b1);
+    return lo <= hi ? clamp(want, lo, hi) : (lo + hi) / 2;
+  };
+  const X = pick('x', anchor.x * vw), Y = pick('y', anchor.y * vh);
 
-  const ideal = a.s * (base.h * base.bh) / (other.h * other.bh);
-  const s2 = Math.max(cover(other), Math.min(ideal, a.s * maxRelScale));
-  const b = fit(other, s2, lx, ly);
-  return [a, b];
+  const place = (p: Photo, s: number): Placement => {
+    const w = p.w * s, h = p.h * s;
+    return { s, w, h, x: clamp(X - p.lx * w, vw - w, 0), y: clamp(Y - p.ly * h, vh - h, 0) };
+  };
+  return [place(a, sa), place(b, sb)];
 }
 
 /** Point on a quadratic curve P0-C-P1 at parameter t. */

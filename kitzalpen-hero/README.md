@@ -31,12 +31,12 @@ public/images/             originals (jpg) + WebP/AVIF at 960 and 1600 px, trans
 ## Photos
 
 - `summer.jpg` = `/images/exterior/exterior10.jpeg` from kitzalpen.at
-- `winter.jpg` = `/images/pension/pension-winter-day.jpg` from kitzalpen.at
+- `winter.jpg` = the winter render of the same view supplied by the client; the printed logo was retouched out of the sky and the white "BOOK NOW / www" band cropped off. Architecture untouched.
 - `logo-kitzalpen.png` = `/images/logo-kitz-2024.png` (already transparent)
 
-The two photos were taken from different positions. `placePhotos()` aligns them on the centre of the balcony façade and on the building height, but caps the extra scaling of the winter photo (1.08× desktop, 1.0× mobile) so it never gets blurry. Nothing is warped. If you later get a winter photo taken from the same spot as the summer one, replace `winter.jpg`, update `lx / ly / bh` in `src/content/hero.ts`, and the overlay becomes exact.
+Both photos show the same viewpoint. `placePhotos()` aligns them on the top-left corner of the upper balcony and on the balcony block height, so the building continues seamlessly across the divider. Scaling is capped, nothing is warped.
 
-To swap photos: put the new original in `public/images/`, generate `-960` and `-1600` variants in `.webp` and `.avif` (any tool, quality ~80 / ~60), then set `w`, `h` and the landmarks in `PHOTOS`.
+To swap photos: put the new original in `public/images/`, generate two width variants (listed in `sizes`) in `.webp` and `.avif` (any tool, quality ~80 / ~60), then set `w`, `h` and the landmarks in `PHOTOS`.
 
 ## Booking bar → real booking system
 
@@ -65,7 +65,8 @@ Fonts: Cormorant Garamond and Manrope from Google Fonts (both SIL Open Font Lice
 ## Behaviour notes
 
 - Intro (about 2.5 s): charcoal fade → photos zoom out 1.06→1 → header items → headline mask reveal → divider + toggle → booking bar.
-- Divider: drag with mouse or finger (only the line and the handle capture touch, so vertical scroll still works), Sommer/Winter buttons animate it over 1.4 s, ←/→ keys move it (Shift for larger steps), Home/End go to the ends.
+- Divider: drag with mouse or finger (only the line and the handle capture touch, so vertical scroll still works). On release it glides all the way to the side you pulled towards. Sommer/Winter buttons do the same (about 1.5 s). The handle docks at the frame edge so you can pull it back. ←/→ keys go to winter/summer.
+- Atmosphere (`SeasonFx.tsx`): when winter is fully shown, snow starts falling at three depths; leaving winter fades it out. When summer is fully shown, a soft sun blooms in over the sky with warm light. Both are off with reduced motion.
 - Desktop only: mouse parallax (photos ±10 px, text in the opposite direction), magnetic buttons.
 - Scroll: the photo zooms slowly, the headline lifts and fades, the booking bar withdraws, and the header turns compact and dark green.
 - `prefers-reduced-motion`: no intro, no parallax and no scroll effects; transitions are instant.

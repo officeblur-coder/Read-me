@@ -94,12 +94,13 @@ export const COPY = {
 export type Copy = (typeof COPY)['de'];
 
 /**
- * The two original photographs and where the building sits in each.
- * lx/ly = centre of the balcony façade (fraction of image), bh = building height
- * from ridge to ground (fraction of image height). Used to line the two up.
+ * The two original photographs and one shared landmark in each:
+ * lx/ly = top-left corner of the upper balcony (fraction of image),
+ * bh = height from upper balcony rail to lower balcony beam (fraction of image height).
+ * Both are the same building from the same viewpoint, so they line up exactly.
  */
 export const PHOTOS = {
-  summer: { name: 'summer', w: 1600, h: 1031, lx: 0.68, ly: 0.43, bh: 0.57, alt: 'Die Pension im Sommer, Terrasse und Hecke vor den Bergen' },
-  winter: { name: 'winter', w: 1600, h: 1019, lx: 0.615, ly: 0.5, bh: 0.39, alt: 'Die Pension im Winter, tief verschneit' },
+  summer: { name: 'summer', w: 1600, h: 1031, sizes: [960, 1600], lx: 0.465, ly: 0.285, bh: 0.31, alt: 'Die Pension im Sommer, Terrasse und Hecke vor den Bergen' },
+  winter: { name: 'winter', w: 2000, h: 1734, sizes: [1000, 2000], lx: 0.335, ly: 0.405, bh: 0.275, alt: 'Die Pension im Winter, Balkone und Terrasse verschneit' },
 } as const;
 export type Photo = (typeof PHOTOS)[Season];

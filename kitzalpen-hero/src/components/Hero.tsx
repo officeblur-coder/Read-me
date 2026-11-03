@@ -6,6 +6,7 @@ import type { Copy, Lang, Season } from '../content/hero';
 import { useFinePointer, useIsMobile, useMagnetic, useReducedMotion, useSize } from '../lib/hooks';
 import { SeasonCompare, type SeasonCompareHandle } from './SeasonCompare';
 import { SeasonToggle } from './SeasonToggle';
+import { SeasonFx } from './SeasonFx';
 import { BookingBar, type BookingBarHandle, type BookingRequest } from './BookingBar';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
@@ -27,6 +28,7 @@ export function Hero({ lang, copy, bookingRef, onBookingSubmit }: Props) {
   const fine = useFinePointer();
   const mobile = useIsMobile();
   const [season, setSeason] = useState<Season>('summer');
+  const [fx, setFx] = useState<Season | null>(null);
   useMagnetic(ctaRef, fine && !reduced);
   const ready = w > 0 && h > 0;
 
@@ -81,8 +83,9 @@ export function Hero({ lang, copy, bookingRef, onBookingSubmit }: Props) {
   return (
     <section ref={root} id="top" aria-label="KitzAlpen" className="hero relative h-[100svh] min-h-[600px] w-full overflow-hidden bg-charcoal text-ivory">
       <div ref={stage} className="absolute inset-0">
-        <SeasonCompare ref={compare} width={w} height={h} mobile={mobile} reduced={reduced} copy={copy} onDominant={setSeason} />
+        <SeasonCompare ref={compare} width={w} height={h} mobile={mobile} reduced={reduced} copy={copy} onDominant={setSeason} onSettle={setFx} />
       </div>
+      <SeasonFx mode={fx} mobile={mobile} reduced={reduced} />
 
       {/* copy */}
       <div className="js-copy pointer-events-none absolute inset-0 z-20">
