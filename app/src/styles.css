@@ -1176,3 +1176,53 @@ h1,h2,h3,h4{margin:0;font-weight:700;text-wrap:balance}
 .login-other{justify-self:center;font-size:14px}
 .geo-found{display:block;opacity:.75;font-size:12.5px;margin-top:4px}
 .geo-zone .geo-found:first-child{margin:0 0 4px}
+/* când: cât mai curând / programează */
+.seg button:disabled{opacity:.4;cursor:not-allowed}
+.sched{display:grid;gap:10px;margin-top:10px}
+.sched-days{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
+.sched-days button{flex:none;padding:9px 16px;border-radius:999px;border:1px solid var(--line);font-weight:700;font-size:13.5px;color:var(--muted)}
+.sched-days button[aria-pressed="true"]{background:var(--text);color:var(--bg);border-color:var(--text)}
+.sched-slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(68px,1fr));gap:6px;max-height:190px;overflow:auto;padding:2px}
+.sched-slots button{padding:9px 0;border-radius:12px;border:1px solid var(--line);font-weight:700;font-size:13.5px;font-variant-numeric:tabular-nums}
+.sched-slots button[aria-pressed="true"]{background:#ff7a1a;border-color:#ff7a1a;color:#fff}
+.sched-note{margin:8px 0 0;font-size:13px;color:var(--muted)}
+.sched-note b{color:var(--text)}
+.sched-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:#3b82f622;color:#8cb8ff;font-weight:800;font-size:12px;letter-spacing:.02em}
+/* recepție: timp personalizat, precomenzi, preț editabil */
+.eta-custom{display:flex;align-items:center;gap:10px;margin-top:10px;padding:8px 12px;border-radius:14px;border:1px dashed var(--line-2);font-size:13px;color:var(--muted)}
+.eta-custom.on{border-style:solid;border-color:var(--gold);color:var(--text)}
+.eta-custom input{width:84px;padding:8px 10px;border-radius:10px;border:1px solid var(--line-2);background:var(--surface-2);color:var(--text);font:700 18px var(--f-display);text-align:center}
+.eta-custom input::-webkit-inner-spin-button{opacity:.5}
+.accept:disabled{opacity:.5}
+.sched-box{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:16px;background:#3b82f61f;border:1px solid #5aa0ff66;color:#8cb8ff}
+.sched-box small{display:block;font-size:11px;font-weight:800;letter-spacing:.12em}
+.sched-box b{display:block;font:800 24px/1.15 var(--f-display);color:var(--text);margin-top:2px}
+.sched-tk{margin:8px 0 2px;padding:6px 10px;border-radius:8px;background:#1d4ed8;color:#fff;font-weight:800;font-size:13px;letter-spacing:.04em}
+.tag.blue{background:#3b82f622;color:#8cb8ff}
+.planned{margin-bottom:14px;padding:12px;border-radius:18px;background:var(--forest-2);border:1px solid var(--line)}
+.planned-list{display:flex;gap:10px;overflow-x:auto;padding-top:10px}
+.pl{flex:none;display:grid;gap:2px;text-align:left;padding:10px 14px;border-radius:14px;border:1px solid #5aa0ff55;background:#3b82f614;min-width:170px}
+.pl b{font:800 22px/1 var(--f-display);color:#8cb8ff}
+.pl small{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.pl span{font-weight:700;font-size:13px;margin-top:4px}
+.pl em{font-style:normal;font-size:12px;color:var(--muted)}
+.price-btn{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;margin:-4px -8px;border-radius:8px;color:var(--gold-2);font-weight:700;font-size:12.5px}
+.price-btn:hover{background:var(--surface-2)}
+.price-btn svg{opacity:.6}
+.price-edit{display:grid;gap:6px;flex:1;min-width:0}
+.price-edit label{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.price-edit label span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.price-edit input{width:76px;padding:6px 8px;border-radius:8px;border:1px solid var(--gold);background:var(--surface-2);color:var(--text);font:700 14px var(--f-body);text-align:right}
+.price-edit em{font-style:normal}
+.pe-act{display:flex;gap:6px}
+.pe-act button{padding:6px 12px;border-radius:999px;background:var(--gold);color:var(--ink);font-weight:800;font-size:12px}
+.pe-act button.ghost{background:none;color:var(--muted);border:1px solid var(--line-2)}
+.pe-err{color:var(--bad,#ff6b5b)}
+.hours-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+.hours-card{display:grid;gap:14px;align-content:start;padding:18px;border-radius:20px;background:var(--surface);border:1px solid var(--line)}
+.hours-card h3{margin:0;font-size:16px}
+.hours-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
+.hours-row input{padding:11px 12px;border-radius:12px;border:1px solid var(--line-2);background:var(--surface-2);color:var(--text);font:600 15px var(--f-body);color-scheme:dark}
+.hours-days{display:flex;flex-wrap:wrap;gap:8px}
+.hours-days button{padding:8px 14px;border-radius:999px;border:1px solid var(--line-2);font-weight:700;font-size:13px;color:var(--muted)}
+.hours-days button[aria-pressed="true"]{background:var(--text);color:var(--bg);border-color:var(--text)}

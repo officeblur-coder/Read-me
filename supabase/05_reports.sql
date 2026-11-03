@@ -107,7 +107,8 @@ begin
       case when x.accepted_at >= x.created_at then extract(epoch from (x.accepted_at - x.created_at)) / 60.0 end as accept_min,
       case when x.status = 'done' and x.done_at >= x.accepted_at then extract(epoch from (x.done_at - x.accepted_at)) / 60.0 end as actual_min,
       coalesce(x.eta_first, x.eta_min) as promised_min,
-      (x.status = 'new' and x.created_at < now() - interval '10 minutes') as unanswered
+      (x.status = 'new' and x.created_at < now() - interval '10 minutes'
+        and (x.scheduled_for is null or x.scheduled_for < now() + interval '30 minutes')) as unanswered   -- o precomandă e ratată abia aproape de ora ei
     from public.orders x where x.created_at >= p_from and x.created_at < p_to
   )
   select jsonb_build_object(

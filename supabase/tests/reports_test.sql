@@ -1,5 +1,7 @@
 -- Teste rapoarte (pe o copie; se anulează). psql -v ON_ERROR_STOP=1 -f supabase/tests/reports_test.sql
 begin;
+-- testele de mai jos nu depind de ora la care rulează
+update public.settings set open_time = '00:00', close_time = '23:59:59' where id = 1;
 create function pg_temp.ok(cond boolean, msg text) returns void language plpgsql as $$
 begin if cond is distinct from true then raise exception 'TEST EȘUAT: %', msg; end if; raise notice 'ok  %', msg; end $$;
 update public.settings set accepting_orders = true, min_order = 0 where id = 1;

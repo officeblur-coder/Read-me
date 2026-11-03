@@ -7,6 +7,7 @@ import { useCustomer } from "../lib/auth";
 import { TIER_CLS, nextTierInfo, planRedeem, redeemCap, tierName, useRewards, vppOf } from "../lib/rewards";
 import { flyToCart, haptic } from "../lib/fx";
 import { LOCALITIES, geocodeAddress, useZones, zoneFor, type LatLng } from "../lib/zones";
+import { hoursLabel, isOpenNow, slotDays, whenLabel } from "../lib/schedule";
 import Icon from "../components/Icon";
 import BottomNav from "../components/BottomNav";
 import SiteFooter from "../components/SiteFooter";
@@ -56,6 +57,12 @@ export default function Menu({ source }: { source?: string }) {
   const [loaded, setLoaded] = useState(false);
   const [lang, setLang] = useState<Lang>("ro");
   const [mode, setMode] = useState<"livrare" | "ridicare">("livrare");
+  // când: „cât mai curând” (doar în program) sau o oră aleasă (precomandă)
+  const [when, setWhen] = useState<"asap" | "later">("asap");
+  const [schedDay, setSchedDay] = useState("");
+  const [schedAt, setSchedAt] = useState("");
+  const [clock, setClock] = useState(Date.now());
+  useEffect(() => { const t = setInterval(() => setClock(Date.now()), 30000); return () => clearInterval(t); }, []);
   const [q, setQ] = useState("");
   const [drawer, setDrawer] = useState(false);
   const [activeCat, setActiveCat] = useState("");
@@ -183,6 +190,14 @@ export default function Menu({ source }: { source?: string }) {
         ? validCart.filter(l => byId[l.id].category_id === code.category_id && l.promoPrice == null).reduce((s, l) => s + unitOf(l) * l.qty, 0)
         : sub) * code.percent) / 100
     : 0;
+  const openNow = !!settings && isOpenNow(settings, clock);
+  const canAsap = openNow && !!settings?.accepting_orders;
+  const days = useMemo(() => (settings ? slotDays(settings, clock) : []), [settings, clock]);
+  const canOrder = canAsap || days.length > 0;
+  const whenEff = canAsap ? when : "later";
+  const day = days.find(d => d.key === schedDay) || days[0];
+  const slot = day?.slots.find(x => x.iso === schedAt);
+  const schedOk = whenEff === "asap" || !!slot;
   // delivery: the zone drawn in admin where the pin falls; without zones, the general fee from settings
   const hasZones = zones.length > 0;
   const zone = hasZones ? zoneFor(geo, zones) : null;
@@ -291,12 +306,14 @@ export default function Menu({ source }: { source?: string }) {
       const zn = zoneFor(p, zones)!;
       if (sub < zn.min_order) { setSendErr(`Comanda minimă pentru zona ${zn.name} este ${lei(zn.min_order)}.`); return; }
     }
+    if (whenEff === "later" && !slot) { setSendErr("Alege ziua și ora la care vrei comanda."); return; }
     setSending(true);
     const { data, error } = await supabase.rpc("place_order", {
       p: {
         name: form.name, phone: form.phone, email: form.email, mode, payment: pay,
         address: form.city && !form.address.toLowerCase().includes(form.city.toLowerCase().slice(0, 5)) ? `${form.address.trim()}, ${form.city.trim()}` : form.address,
         lat: mode === "livrare" && geo ? geo.lat : null, lng: mode === "livrare" && geo ? geo.lng : null,
+        scheduled_for: whenEff === "later" && slot ? slot.iso : null,
         note: orderNote, code: code?.code || "", redeem_points: plan.points,
         voucher_id: voucherPick ? voucher!.id : null, voucher_item: voucherPick || null,
         source: source || new URLSearchParams(rloc.search).get("s") || "site",
@@ -421,6 +438,17 @@ export default function Menu({ source }: { source?: string }) {
           <button aria-pressed={mode === "livrare"} onClick={() => setMode("livrare")}><Icon name="bike" size={18} />{t.deliv}</button>
           <button aria-pressed={mode === "ridicare"} onClick={() => setMode("ridicare")}><Icon name="bag" size={18} />{t.pick}</button>
         </div>
+        <p className="cp-lbl">Când o vrei?</p>
+        <div className="seg big2">
+          <button aria-pressed={whenEff === "asap"} disabled={!canAsap} onClick={() => setWhen("asap")}><Icon name="bolt" size={18} />{canAsap ? "Cât mai curând" : "Închis acum"}</button>
+          <button aria-pressed={whenEff === "later"} disabled={!days.length} onClick={() => { setWhen("later"); if (!schedDay && days[0]) setSchedDay(days[0].key); }}><Icon name="clock" size={18} />Programează</button>
+        </div>
+        {!canAsap && settings && <p className="sched-note">{openNow ? "Restaurantul nu preia comenzi pentru acum." : `Acum suntem închiși · program ${hoursLabel(settings)}.`}{days.length ? " Poți programa comanda pentru mai târziu." : ""}</p>}
+        {whenEff === "later" && day && <div className="sched">
+          <div className="sched-days">{days.map(d => <button key={d.key} aria-pressed={d.key === day.key} onClick={() => { setSchedDay(d.key); setSchedAt(""); }}>{d.label}</button>)}</div>
+          <div className="sched-slots">{day.slots.map(x => <button key={x.iso} aria-pressed={x.iso === schedAt} onClick={() => setSchedAt(x.iso)}>{x.label}</button>)}</div>
+          <p className="sched-note">{slot ? <>Comanda ta {mode === "livrare" ? "ajunge" : "e gata de ridicat"} <b>{whenLabel(slot.iso)}</b>.</> : `Alege ora ${mode === "livrare" ? "livrării" : "ridicării"}.`}</p>
+        </div>}
         <p className="cp-lbl">Datele tale</p>
         <div className="fields">
           <label className="fl"><span>Nume</span><input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} autoComplete="name" placeholder="Ioana Pop" /></label>
@@ -488,8 +516,8 @@ export default function Menu({ source }: { source?: string }) {
             return left <= rw.cfg.near_tier_lei ? <p className="rw-near">După comanda asta mai ai doar {lei(left)} până la Lyra {tierName(rw.cfg, before.tier)}: {rw.cfg.rates[before.tier - 1]}% cashback și un desert cadou.</p> : null;
           })()}
         </div>
-        <button className="cta" onClick={placeOrder} disabled={sending || !settings?.accepting_orders}>
-          {!settings?.accepting_orders ? "Nu preluăm comenzi acum" : sending ? "Se trimite…" : <>Trimite comanda · <span className="num">{lei(total)}</span></>}
+        <button className="cta" onClick={placeOrder} disabled={sending || !canOrder || !schedOk}>
+          {!canOrder ? "Nu preluăm comenzi acum" : sending ? "Se trimite…" : whenEff === "later" ? <>{slot ? "Programează comanda" : "Alege ora"} · <span className="num">{lei(total)}</span></> : <>Trimite comanda · <span className="num">{lei(total)}</span></>}
         </button>
         {sendErr && <p className="err">{sendErr}</p>}
         <p className="fine">Plătești la livrare. Trimițând comanda ești de acord cu <Link to="/termeni">Termenii</Link> și <Link to="/confidentialitate">Politica de confidențialitate</Link>.</p>
@@ -527,7 +555,7 @@ export default function Menu({ source }: { source?: string }) {
             <button onClick={() => setLang(lang === "ro" ? "hu" : "ro")}><b className="dr-lang">{lang === "ro" ? "HU" : "RO"}</b>{lang === "ro" ? "Magyarul" : "Românește"}</button></div>
           <div className="dr-legal"><Link to="/termeni">Termeni și condiții</Link><Link to="/confidentialitate">Confidențialitate</Link></div>
         </nav></div>}
-      {settings && !settings.accepting_orders && <p className="closed">Restaurantul nu preia comenzi online în acest moment. Poți răsfoi meniul.</p>}
+      {settings && !canAsap && <p className="closed">{openNow ? "Restaurantul nu preia comenzi pentru acum." : `Acum suntem închiși · program ${hoursLabel(settings)}.`} {days.length ? "Poți face o precomandă pentru mai târziu." : "Poți răsfoi meniul."}</p>}
 
       <div className="shell">
         <main className="m-main">

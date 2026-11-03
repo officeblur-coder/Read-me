@@ -5,6 +5,7 @@ import type { Item, Order, OrderStatus, Promo, Settings } from "../lib/types";
 import { ALLERGENS, hm, imgUrl, lei, mmss } from "../lib/format";
 import Icon from "../components/Icon";
 import Wordmark from "../components/Wordmark";
+import { whenLabel } from "../lib/schedule";
 
 const ETAS = [20, 30, 40, 50, 60, 75];
 const REASONS = ["Produs epuizat", "Zonă în afara livrării", "Bucătăria e plină", "Restaurantul se închide"];
@@ -114,6 +115,7 @@ function Console({ email }: { email: string }) {
   const [sound, setSound] = useState(true);
   const [sel, setSel] = useState(0);
   const [eta, setEta] = useState<number | null>(null);
+  const [customEta, setCustomEta] = useState("");
   const [rejecting, setRejecting] = useState(false);
   const [drawer, setDrawer] = useState<string | null>(null);
   const [toast, setToast] = useState("");
@@ -179,7 +181,10 @@ function Console({ email }: { email: string }) {
   }, [loadOrders, loadMenu]);
 
   const incoming = orders.filter(o => o.status === "new");
-  const kitchen = orders.filter(o => o.status === "prep").length;
+  // precomenzi acceptate, cu ora la mai mult de o oră: stau deoparte până se apropie ora lor
+  const isLater = (o: Order) => o.status === "prep" && !!o.scheduled_for && new Date(o.scheduled_for).getTime() - now > 60 * 60000;
+  const planned = orders.filter(isLater).sort((a, b) => (a.scheduled_for || "").localeCompare(b.scheduled_for || ""));
+  const kitchen = orders.filter(o => o.status === "prep" && !isLater(o)).length;
   useEffect(() => { document.title = incoming.length ? `(${incoming.length}) Comandă nouă · Lyra` : "Recepție · Lyra"; }, [incoming.length]);
 
   async function setStatus(o: Order, status: OrderStatus, extra: Partial<Order> = {}, message?: string) {
@@ -188,6 +193,11 @@ function Console({ email }: { email: string }) {
     if (message) await supabase.from("order_messages").insert({ order_id: o.id, body: message });
     loadOrders();
   }
+  const acceptLater = (o: Order) => {
+    const m = Math.max(1, Math.round((new Date(o.scheduled_for!).getTime() - Date.now()) / 60000));
+    return setStatus(o, "prep", { eta_min: m, accepted_at: new Date().toISOString() },
+      `Precomanda a fost acceptată. ${o.mode === "livrare" ? "Livrarea" : "Ridicarea"} e programată ${whenLabel(o.scheduled_for!)}.`);
+  };
   const accept = (o: Order, m: number) =>
     setStatus(o, "prep", { eta_min: m, accepted_at: new Date().toISOString() },
       `Comanda a fost acceptată. Estimăm ${o.mode === "livrare" ? "livrarea" : "ridicarea"} în ${m} minute, la ${hm(Date.now() + m * 60000)}.`);
@@ -251,14 +261,23 @@ function Console({ email }: { email: string }) {
           {cur && (
             <section className="incoming" aria-live="assertive">
               <div className="inc-h"><Icon name="bell" size={22} /><b>Comandă nouă</b>
-                {incoming.length > 1 && <span className="q">{incoming.map((x, i) => <button key={x.id} aria-current={x.id === cur.id} onClick={() => { setSel(i); setEta(null); setRejecting(false); }}>#{x.number}</button>)}</span>}
+                {incoming.length > 1 && <span className="q">{incoming.map((x, i) => <button key={x.id} aria-current={x.id === cur.id} onClick={() => { setSel(i); setEta(null); setCustomEta(""); setRejecting(false); }}>#{x.number}</button>)}</span>}
                 <span className="age num">acum {mmss(now - new Date(cur.created_at).getTime())}</span></div>
               <Ticket o={cur} />
               <div className="decide">
                 <div className="who"><b>{cur.name}</b><small>{cur.phone} · {cur.address}</small>{cur.source && cur.source !== "site" && <small> · sursa: {cur.source}</small>}</div>
+                {cur.scheduled_for ? <>
+                  <div className="sched-box"><Icon name="clock" size={22} /><div><small>PRECOMANDĂ · {cur.mode === "livrare" ? "livrare" : "ridicare"}</small><b>{whenLabel(cur.scheduled_for, undefined, now)}</b></div></div>
+                  <button className="accept" onClick={() => { acceptLater(cur); setSel(0); }}><Icon name="check" size={20} />Acceptă precomanda · {hm(cur.scheduled_for)}</button>
+                </> : <>
                 <div><p className="muted" style={{ margin: "0 0 10px", fontSize: 12 }}>Timp estimat {cur.mode === "livrare" ? "de livrare" : "de ridicare"} · {kitchen} comenzi în bucătărie</p>
-                  <div className="etas">{ETAS.map(m => <button key={m} className="eta" aria-pressed={chosen === m} onClick={() => setEta(m)}>{m === rec && <span className="rec">recomandat</span>}{m}<small>gata la {hm(now + m * 60000)}</small></button>)}</div></div>
-                <button className="accept" onClick={() => { accept(cur, chosen); setEta(null); setSel(0); }}><Icon name="check" size={20} />Acceptă · {chosen} min</button>
+                  <div className="etas">{ETAS.map(m => <button key={m} className="eta" aria-pressed={chosen === m && !customEta} onClick={() => { setEta(m); setCustomEta(""); }}>{m === rec && <span className="rec">recomandat</span>}{m}<small>gata la {hm(now + m * 60000)}</small></button>)}</div>
+                  <label className={`eta-custom ${customEta ? "on" : ""}`}><span>Alt timp</span>
+                    <input type="number" inputMode="numeric" min={5} max={480} step={5} placeholder="ex. 90" value={customEta}
+                      onChange={e => { const v = e.target.value.replace(/\D/g, "").slice(0, 3); setCustomEta(v); setEta(v ? Math.min(480, Math.max(5, +v)) : null); }} />
+                    <span>min{customEta && +customEta >= 5 ? ` · gata la ${hm(now + Math.min(480, +customEta) * 60000)}` : ""}</span></label></div>
+                <button className="accept" disabled={!!customEta && +customEta < 5} onClick={() => { accept(cur, chosen); setEta(null); setCustomEta(""); setSel(0); }}><Icon name="check" size={20} />Acceptă · {chosen} min</button>
+                </>}
                 {rejecting
                   ? <div className="rsn">{REASONS.map(r => <button key={r} onClick={() => { setStatus(cur, "rejected", { reject_reason: r }, `Ne pare rău, nu putem prelua comanda: ${r.toLowerCase()}.`); setRejecting(false); }}>{r}</button>)}<button onClick={() => setRejecting(false)} style={{ borderColor: "var(--line)", color: "var(--muted)" }}>Anulează</button></div>
                   : <button className="reject" onClick={() => setRejecting(true)}>Refuză comanda…</button>}
@@ -266,9 +285,13 @@ function Console({ email }: { email: string }) {
             </section>
           )}
 
+          {planned.length > 0 && <div className="planned"><div className="col-h"><i style={{ background: "#5aa0ff" }} />Precomenzi programate<span>{planned.length}</span></div>
+            <div className="planned-list">{planned.map(o => <button key={o.id} className="pl" onClick={() => setDrawer(o.id)}>
+              <b className="num">{hm(o.scheduled_for!)}</b><small>{whenLabel(o.scheduled_for!, undefined, now).split(" la ")[0]}</small>
+              <span>#{o.number} · {o.name}</span><em>{o.mode}{o.zone_name ? ` · ${o.zone_name}` : ""} · {lei(Number(o.total))}</em></button>)}</div></div>}
           <div className="board">
             {([["prep", "În bucătărie", "var(--warn)", "Nicio comandă în lucru"], ["road", "Pe drum / la pass", "var(--gold)", "Nimic de predat"], ["done", "Finalizate azi", "var(--ok)", "Încă nimic finalizat"]] as const).map(([st, title, color, empty]) => {
-              const list = orders.filter(o => o.status === st).sort((a, b) => st === "done" ? (b.done_at || "").localeCompare(a.done_at || "") : a.created_at.localeCompare(b.created_at));
+              const list = orders.filter(o => o.status === st && !isLater(o)).sort((a, b) => st === "done" ? (b.done_at || "").localeCompare(a.done_at || "") : a.created_at.localeCompare(b.created_at));
               return (
                 <div key={st} className="col"><div className="col-h"><i style={{ background: color }} />{title}<span>{list.length}</span></div>
                   {list.length ? list.map(o => <OrderCard key={o.id} o={o} now={now} onOpen={() => setDrawer(o.id)} onAdvance={() => advance(o)} />) : <div className="colempty">{empty}</div>}
@@ -279,11 +302,12 @@ function Console({ email }: { email: string }) {
         </div>}
 
         {tab === "menu" && <div className="rx-body">
-          <div className="row-btw" style={{ flexWrap: "wrap" }}><p className="muted" style={{ margin: 0 }}>Un preparat marcat epuizat apare imediat gri pe site și nu mai poate fi comandat.</p><a className="rbtn" href="/admin">Editează meniul (poze, prețuri) →</a></div>
+          <div className="row-btw" style={{ flexWrap: "wrap" }}><p className="muted" style={{ margin: 0 }}>Un preparat marcat epuizat apare imediat gri pe site și nu mai poate fi comandat. Apasă pe preț ca să-l schimbi.</p><a className="rbtn" href="/admin">Editează meniul (poze, prețuri) →</a></div>
           <div className="mgrid">{items.map(it => (
             <div key={it.id} className={`mi ${it.available ? "" : "off"}`}>
               {imgUrl(it.image) ? <img src={imgUrl(it.image)!} alt="" /> : <span className="ph" />}
-              <div><b>{it.name_ro}</b><div className="row-btw" style={{ marginTop: 4, fontSize: 12, color: "var(--gold-2)" }}><span className="num">{lei(Number(it.price))}</span>
+              <div><b>{it.name_ro}</b><div className="row-btw" style={{ marginTop: 4, fontSize: 12, color: "var(--gold-2)" }}>
+                <PriceEdit it={it} onSaved={m => { loadMenu(); flash(m); }} />
                 <button className="switch" role="switch" aria-checked={it.available} aria-label={`${it.name_ro} disponibil`}
                   onClick={async () => { await supabase.from("items").update({ available: !it.available }).eq("id", it.id); loadMenu(); }} /></div></div>
             </div>))}</div>
@@ -349,11 +373,42 @@ function Console({ email }: { email: string }) {
   );
 }
 
+/** price on the reception menu: tap to edit; items with sizes get one field per size */
+function PriceEdit({ it, onSaved }: { it: Item; onSaved: (msg: string) => void }) {
+  const vs = it.variants?.length ? it.variants : null;
+  const [open, setOpen] = useState(false);
+  const [vals, setVals] = useState<string[]>([]);
+  const [err, setErr] = useState("");
+  const [busy, setBusy] = useState(false);
+  const start = () => { setVals(vs ? vs.map(v => String(v.p)) : [String(it.price)]); setErr(""); setOpen(true); };
+  async function save() {
+    const nums = vals.map(v => Number(v.replace(",", ".")));
+    if (nums.some(n => !Number.isFinite(n) || n <= 0 || n > 5000)) { setErr("Preț invalid"); return; }
+    const round = (n: number) => Math.round(n * 100) / 100;
+    setBusy(true);
+    const patch = vs ? { variants: vs.map((v, i) => ({ ...v, p: round(nums[i]) })), price: round(Math.min(...nums)) } : { price: round(nums[0]) };
+    const { error } = await supabase.from("items").update(patch).eq("id", it.id);
+    setBusy(false);
+    if (error) { setErr(error.message); return; }
+    setOpen(false); onSaved(`Preț nou: ${it.name_ro}`);
+  }
+  if (!open) return <button className="price-btn num" onClick={start} title="Schimbă prețul">{vs ? vs.map(v => lei(Number(v.p))).join(" / ") : lei(Number(it.price))}<Icon name="edit" size={13} /></button>;
+  return (
+    <form className="price-edit" onSubmit={e => { e.preventDefault(); save(); }}>
+      {vals.map((v, i) => <label key={i}>{vs && <span>{vs[i].l}</span>}
+        <input autoFocus={i === 0} inputMode="decimal" value={v} onChange={e => setVals(vals.map((x, j) => (j === i ? e.target.value : x)))} aria-label={`Preț ${it.name_ro}${vs ? " " + vs[i].l : ""}`} /><em>lei</em></label>)}
+      <div className="pe-act"><button type="submit" disabled={busy}>{busy ? "…" : "Salvează"}</button><button type="button" className="ghost" onClick={() => setOpen(false)}>Renunță</button></div>
+      {err && <small className="pe-err">{err}</small>}
+    </form>
+  );
+}
+
 function Ticket({ o }: { o: Order }) {
   const flagged = o.items.filter(l => l.allergens?.some(a => o.allergies.includes(a)));
   return (
     <div className="ticket">
       <div className="tno"><b>#{o.number}</b><span>{hm(o.created_at)} · {o.mode === "livrare" ? `LIVRARE${o.zone_name ? " · " + o.zone_name.toUpperCase() : ""}` : "RIDICARE"}</span></div>
+      {o.scheduled_for && <div className="sched-tk">PRECOMANDĂ · {whenLabel(o.scheduled_for).toUpperCase()}</div>}
       {o.allergies.length > 0 && <div className="alert">ALERGIE CLIENT: {o.allergies.map(a => ALLERGENS[a]?.[0].toUpperCase()).join(", ")}{flagged.length > 0 && ` · verifică: ${flagged.map(l => l.name).join(", ")}`}</div>}
       {o.items.map((l, i) => (
         <div key={i} className="tl"><span className="q">{l.qty}×</span>
@@ -382,6 +437,7 @@ function OrderCard({ o, now, onOpen, onAdvance }: { o: Order; now: number; onOpe
     <div className="oc" role="button" tabIndex={0} onClick={onOpen} onKeyDown={e => e.key === "Enter" && onOpen()}>
       <div className="h"><b>#{o.number}</b><span className={`tag ${o.mode === "livrare" ? "" : "green"}`}>{o.mode}</span>
         {o.allergies.length > 0 && <span className="tag red">alergie</span>}
+        {o.scheduled_for && <span className="tag blue">{hm(o.scheduled_for)}</span>}
         {active && due ? <span className={`tm ${cls} num`}>{rem < 0 ? "întârziere " + mmss(rem) : mmss(rem)}</span> : o.done_at ? <span className="tm ok num">{hm(o.done_at)}</span> : null}</div>
       <div style={{ fontWeight: 700, fontSize: 13 }}>{o.name}{o.courier_name && <span className="muted" style={{ fontWeight: 600 }}> · curier {o.courier_name}</span>}</div>
       <div className="its">{o.items.map(l => `${l.qty}× ${l.name}`).join(" · ")}</div>

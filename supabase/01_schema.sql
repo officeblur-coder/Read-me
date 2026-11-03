@@ -67,6 +67,42 @@ update public.settings set email_reply_to = 'comenzi@lyrasdelivery.ro' where ema
 update public.settings set email_from = 'Lyra''s Delivery <comenzi@lyrasdelivery.ro>' where email_from like '%onboarding@resend.dev%';
 alter table public.settings add column if not exists review_url text not null default 'https://g.page/r/Cb92kT0SuXLSEAE/review';
 
+-- program de lucru și precomenzi (ora României): comenzi „cât mai curând” doar în program,
+-- precomenzi oricând, pentru o oră aleasă între preorder_from și închidere, în următoarele preorder_days zile
+alter table public.settings add column if not exists open_time time not null default '11:00';
+alter table public.settings add column if not exists close_time time not null default '22:00';
+alter table public.settings add column if not exists open_days int[] not null default '{1,2,3,4,5,6,7}';   -- 1 = luni … 7 = duminică
+alter table public.settings add column if not exists preorder_on boolean not null default true;
+alter table public.settings add column if not exists preorder_from time not null default '12:00';
+alter table public.settings add column if not exists preorder_days int not null default 2;
+alter table public.settings add column if not exists preorder_lead_min int not null default 45;
+alter table public.settings add column if not exists tz text not null default 'Europe/Bucharest';
+
+create or replace function public.is_open_at(p_at timestamptz) returns boolean
+language sql stable set search_path = public as $$
+  select extract(isodow from (p_at at time zone s.tz))::int = any(s.open_days)
+     and (p_at at time zone s.tz)::time >= s.open_time and (p_at at time zone s.tz)::time < s.close_time
+  from public.settings s where s.id = 1;
+$$;
+-- null = ora aleasă e bună; altfel motivul, pe înțelesul clientului
+create or replace function public.preorder_error(p_at timestamptz) returns text
+language plpgsql stable set search_path = public as $$
+declare s public.settings; l timestamp; t0 time;
+begin
+  select * into s from public.settings where id = 1;
+  if not s.preorder_on then return 'Precomenzile nu sunt disponibile acum.'; end if;
+  l := p_at at time zone s.tz; t0 := greatest(s.preorder_from, s.open_time);
+  if p_at < now() + make_interval(mins => s.preorder_lead_min) then
+    return format('Alege o oră la cel puțin %s de minute de acum.', s.preorder_lead_min); end if;
+  if l::date > (now() at time zone s.tz)::date + s.preorder_days then
+    return format('Poți programa cel mult cu %s zile înainte.', s.preorder_days); end if;
+  if not (extract(isodow from l)::int = any(s.open_days)) then return 'În ziua aleasă restaurantul este închis.'; end if;
+  if l::time < t0 or l::time > s.close_time then
+    return format('Poți programa între %s și %s.', to_char(t0, 'HH24:MI'), to_char(s.close_time, 'HH24:MI')); end if;
+  return null;
+end $$;
+grant execute on function public.is_open_at(timestamptz), public.preorder_error(timestamptz) to anon, authenticated;
+
 -- ---------- Promoții și coduri ----------
 create table if not exists public.promos (
   id         uuid primary key default gen_random_uuid(),
@@ -182,6 +218,8 @@ create table if not exists public.orders (
 );
 alter table public.orders add column if not exists packaging numeric(10,2) not null default 0;
 create index if not exists orders_status_idx on public.orders(status, created_at desc);
+-- precomandă: ora la care clientul vrea comanda (null = cât mai curând)
+alter table public.orders add column if not exists scheduled_for timestamptz;
 create index if not exists orders_customer_idx on public.orders(customer_id, created_at desc);
 
 create table if not exists public.order_messages (
@@ -275,10 +313,21 @@ declare
   v_lng    numeric := nullif(p->>'lng','')::numeric;
   has_zones boolean;
   zone_nm  text;
+  v_sched  timestamptz := nullif(p->>'scheduled_for','')::timestamptz;
+  v_err    text;
 begin
   select * into s from public.settings where id = 1;
   select * into cfg from public.rewards_settings where id = 1;
-  if not s.accepting_orders then raise exception 'Restaurantul nu preia comenzi acum.' using errcode = 'P0001'; end if;
+  if v_sched is null then
+    if not public.is_open_at(now()) then
+      raise exception 'Acum suntem închiși (program %–%). Poți programa comanda pentru mai târziu.',
+        to_char(s.open_time, 'HH24:MI'), to_char(s.close_time, 'HH24:MI') using errcode = 'P0001'; end if;
+    if not s.accepting_orders then
+      raise exception 'Restaurantul nu preia comenzi acum. Poți programa comanda pentru mai târziu.' using errcode = 'P0001'; end if;
+  else
+    v_err := public.preorder_error(v_sched);
+    if v_err is not null then raise exception '%', v_err using errcode = 'P0001'; end if;
+  end if;
   if coalesce(trim(p->>'name'),'') = '' or coalesce(trim(p->>'phone'),'') = '' then
     raise exception 'Completează numele și telefonul.' using errcode = 'P0001'; end if;
   if v_mode = 'livrare' and coalesce(trim(p->>'address'),'') = '' then
@@ -397,12 +446,12 @@ begin
 
   insert into public.orders(customer_id, name, phone, email, address, mode, payment, note, items, allergies,
     subtotal, discount, discount_label, points_used, points_value, delivery_fee, packaging, total, points_earned, source,
-    reward_tier, reward_base, voucher_id, lat, lng, zone_name)
+    reward_tier, reward_base, voucher_id, lat, lng, zone_name, scheduled_for)
   values (cust.id, left(trim(p->>'name'),80), left(trim(p->>'phone'),30), coalesce(nullif(trim(p->>'email'),''), cust.email),
     case when v_mode = 'livrare' then left(trim(p->>'address'),200) else 'Ridicare din restaurant' end,
     v_mode, coalesce(p->>'payment','card'), left(p->>'note',300), lines, allg,
     sub, disc, disc_lbl, pts_used, pts_val, fee, pack, total, earn, left(p->>'source',30),
-    rtier, rbase, vo_id, case when v_mode = 'livrare' then v_lat end, case when v_mode = 'livrare' then v_lng end, zone_nm)
+    rtier, rbase, vo_id, case when v_mode = 'livrare' then v_lat end, case when v_mode = 'livrare' then v_lng end, zone_nm, v_sched)
   returning * into o;
 
   -- consumă loturile planificate (rândul clientului e blocat, deci nu se pot folosi de două ori)
@@ -438,7 +487,7 @@ language sql stable security definer set search_path = public as $$
   select to_jsonb(x) from (
     select o.number, o.status, o.mode, o.address, o.items, o.subtotal, o.discount, o.discount_label,
            o.points_value, o.delivery_fee, o.packaging, o.total, o.points_earned, o.eta_min, o.created_at,
-           o.accepted_at, o.road_at, o.done_at, o.reject_reason, o.rating,
+           o.accepted_at, o.road_at, o.done_at, o.reject_reason, o.rating, o.scheduled_for,
            coalesce((select jsonb_agg(jsonb_build_object('body', m.body, 'at', m.created_at) order by m.created_at)
                      from public.order_messages m where m.order_id = o.id), '[]') as messages
     from public.orders o where o.token = p_token

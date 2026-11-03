@@ -33,7 +33,7 @@ export type Item = {
   packaging: number;     // ambalaj, lei pe bucată
 };
 
-export type Settings = {
+export type Settings = import("./schedule").Hours & {
   accepting_orders: boolean;
   delivery_fee: number;
   free_delivery_over: number;
@@ -124,13 +124,14 @@ export type Order = {
   lat?: number | null;
   lng?: number | null;
   zone_name?: string | null;
+  scheduled_for?: string | null;   // precomandă: ora aleasă de client
 };
 
 export type PublicOrder = Pick<
   Order,
   | "number" | "status" | "mode" | "address" | "items" | "subtotal" | "discount" | "discount_label"
   | "points_value" | "delivery_fee" | "packaging" | "total" | "points_earned" | "eta_min" | "created_at"
-  | "accepted_at" | "road_at" | "done_at" | "reject_reason" | "rating"
+  | "accepted_at" | "road_at" | "done_at" | "reject_reason" | "rating" | "scheduled_for"
 > & { messages: { body: string; at: string }[] };
 
 export type CartLine = {

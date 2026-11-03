@@ -1,3 +1,4 @@
+import { whenLabel } from "../lib/schedule";
 import { useEffect, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { confetti } from "../lib/fx";
@@ -45,7 +46,15 @@ export default function Track() {
   const frac = o.eta_min ? Math.max(0, Math.min(1, rem / (o.eta_min * 60000))) : 0;
 
   let ring = null, title = "", sub: React.ReactNode = "";
-  if (o.status === "new") {
+  const sched = o.scheduled_for ? whenLabel(o.scheduled_for) : "";
+  const later = !!o.scheduled_for && new Date(o.scheduled_for).getTime() - now > 60 * 60000;
+  if (o.status === "new" && sched) {
+    ring = <div className="ring wait"><svg viewBox="0 0 184 184"><circle cx="92" cy="92" r={R} style={{ stroke: "var(--surface-3)" }} strokeWidth="10" fill="none" /></svg><div className="c"><b className="num" style={{ fontSize: 34 }}>{sched.split(" la ")[1]}</b><small>{sched.split(" la ")[0]}</small></div></div>;
+    title = "Precomandă trimisă"; sub = <>Ai programat comanda pentru <b>{sched}</b>. Restaurantul o confirmă în program și primești confirmarea aici.</>;
+  } else if ((o.status === "prep") && later) {
+    ring = <div className="ring"><svg viewBox="0 0 184 184"><circle cx="92" cy="92" r={R} style={{ stroke: "var(--ok)" }} strokeWidth="10" fill="none" /></svg><div className="c"><b className="num" style={{ fontSize: 34 }}>{sched.split(" la ")[1]}</b><small>{sched.split(" la ")[0]}</small></div></div>;
+    title = "Precomandă confirmată"; sub = <>{pick ? "Comanda e gata de ridicat" : "Comanda ajunge"} <b>{sched}</b>{!pick && o.address ? ` · ${o.address}` : ""}</>;
+  } else if (o.status === "new") {
     ring = <div className="ring wait"><svg viewBox="0 0 184 184"><circle cx="92" cy="92" r={R} style={{ stroke: "var(--surface-3)" }} strokeWidth="10" fill="none" /><circle cx="92" cy="92" r={R} style={{ stroke: "var(--brand)", transition: "stroke-dashoffset 1s linear" }} strokeWidth="10" fill="none" strokeLinecap="round" strokeDasharray={`${CIRC * 0.22} ${CIRC}`} /></svg><div className="c"><b style={{ fontSize: 32 }}>#{o.number}</b><small>trimisă</small></div></div>;
     title = "Restaurantul confirmă comanda"; sub = "De obicei durează sub un minut. Ora estimată apare aici.";
   } else if (o.status === "refunded") {

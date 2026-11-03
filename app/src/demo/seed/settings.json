@@ -1,1 +1,30 @@
-[{"id": 1, "accepting_orders": true, "delivery_fee": 10.0, "free_delivery_over": 100.0, "min_order": 0.0, "points_per_leu": 1, "stars_for_gift": 6, "gift_item_id": "tiramisu", "site_url": "https://savoro.ro", "email_from": "Savoro <demo@savoro.ro>", "review_url": null}]
+[
+ {
+  "id": 1,
+  "accepting_orders": true,
+  "delivery_fee": 10.0,
+  "free_delivery_over": 100.0,
+  "min_order": 0.0,
+  "points_per_leu": 1,
+  "stars_for_gift": 6,
+  "gift_item_id": "tiramisu",
+  "site_url": "https://savoro.ro",
+  "email_from": "Savoro <demo@savoro.ro>",
+  "review_url": null,
+  "open_time": "00:00",
+  "close_time": "23:59",
+  "open_days": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7
+  ],
+  "preorder_on": true,
+  "preorder_from": "12:00",
+  "preorder_days": 2,
+  "preorder_lead_min": 45
+ }
+]

@@ -5,6 +5,7 @@ import type { Category, Item, Variant } from "../lib/types";
 import { BannersTab, PromosTab, CodesTab, TeamTab } from "./AdminPromo";
 import { RewardsTab } from "./AdminRewards";
 import { ZonesTab } from "./AdminZones";
+import { HoursTab } from "./AdminHours";
 import { ReportsTab } from "./AdminReports";
 import { uploadImage } from "../lib/upload";
 import { ALLERGENS, MEAT, TAGS, imgUrl, lei } from "../lib/format";
@@ -46,9 +47,9 @@ export default function Admin() {
   return <AdminPanel email={session.user.email || ""} />;
 }
 
-type Tab = "menu" | "banners" | "promos" | "codes" | "rewards" | "zones" | "reports" | "team";
+type Tab = "menu" | "banners" | "promos" | "codes" | "rewards" | "zones" | "hours" | "reports" | "team";
 function AdminPanel({ email }: { email: string }) {
-  const [tab, setTab] = useState<Tab>(() => (["menu", "banners", "promos", "codes", "rewards", "zones", "reports", "team"].includes(location.hash.slice(1)) ? location.hash.slice(1) as Tab : "menu"));
+  const [tab, setTab] = useState<Tab>(() => (["menu", "banners", "promos", "codes", "rewards", "zones", "hours", "reports", "team"].includes(location.hash.slice(1)) ? location.hash.slice(1) as Tab : "menu"));
   const go = (t: Tab) => { setTab(t); history.replaceState(null, "", "#" + t); };
   const [cats, setCats] = useState<Category[]>([]);
   const [items, setItems] = useState<Item[]>([]);
@@ -101,7 +102,7 @@ function AdminPanel({ email }: { email: string }) {
         <Wordmark small />
         <div className="adm-title"><b>Administrare meniu</b><small>{email}</small></div>
         <nav className="adm-tabs" aria-label="Secțiuni">
-          {([["menu", "Meniu"], ["banners", "Bannere"], ["promos", "Promoții & popup"], ["codes", "Coduri reducere"], ["rewards", "Lyra Rewards"], ["zones", "Zone livrare"], ["reports", "Rapoarte"], ["team", "Echipa"]] as const).map(([k, l]) =>
+          {([["menu", "Meniu"], ["banners", "Bannere"], ["promos", "Promoții & popup"], ["codes", "Coduri reducere"], ["rewards", "Lyra Rewards"], ["zones", "Zone livrare"], ["hours", "Program"], ["reports", "Rapoarte"], ["team", "Echipa"]] as const).map(([k, l]) =>
             <button key={k} aria-current={tab === k} onClick={() => go(k)}>{l}</button>)}
         </nav>
         <nav>
@@ -116,6 +117,7 @@ function AdminPanel({ email }: { email: string }) {
       {tab === "codes" && <CodesTab cats={cats} flash={flash} />}
       {tab === "rewards" && <RewardsTab items={items} flash={flash} isAdmin />}
       {tab === "zones" && <ZonesTab flash={flash} />}
+      {tab === "hours" && <HoursTab flash={flash} />}
       {tab === "reports" && <ReportsTab />}
       {tab === "team" && <TeamTab flash={flash} />}
       {tab === "menu" && <div className="adm-shell">

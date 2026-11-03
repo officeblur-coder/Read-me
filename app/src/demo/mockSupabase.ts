@@ -272,7 +272,7 @@ function placeOrder(p: Row) {
     address: p.mode === "livrare" ? p.address.trim() : "Ridicare din restaurant", mode: p.mode, payment: p.payment || "card", note: p.note || null,
     items: lines, allergies: cust?.allergies || [], subtotal: sub, discount: disc, discount_label: label, points_used: ptsVal * 10, points_value: ptsVal,
     delivery_fee: fee, packaging: pack, total, points_earned: Math.floor((total - pack) * mult), source: p.source, status: "new", reject_reason: null, eta_min: null,
-    created_at: iso(), accepted_at: null, road_at: null, done_at: null, rating: null, credited: false, courier_id: null, courier_name: null, demo_auto: true,
+    created_at: iso(), accepted_at: null, road_at: null, done_at: null, rating: null, credited: false, courier_id: null, courier_name: null, demo_auto: true, scheduled_for: p.scheduled_for || null,
   };
   db.orders.push(o); save(); emit("orders", "INSERT", o);
   return { id: o.id, number, token: o.token, total };

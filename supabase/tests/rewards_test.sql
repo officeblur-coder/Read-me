@@ -2,6 +2,8 @@
 --   psql -v ON_ERROR_STOP=1 -f supabase/tests/rewards_test.sql
 -- Fiecare verificare eșuată oprește rularea cu un mesaj clar.
 begin;
+-- testele de mai jos nu depind de ora la care rulează
+update public.settings set open_time = '00:00', close_time = '23:59:59' where id = 1;
 set local client_min_messages = notice;
 
 -- ---------- utilitare ----------
