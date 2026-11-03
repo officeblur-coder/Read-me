@@ -14,6 +14,7 @@ import { ChaletSection } from './components/chalet/ChaletSection';
 import { RestaurantSection } from './components/restaurant/RestaurantSection';
 import { ActivitiesSection } from './components/activities/ActivitiesSection';
 import { ActivitiesPage } from './components/activities/ActivitiesPage';
+import { AlpineExperienceSection } from './components/experience/AlpineExperienceSection';
 import type { Season } from './content/hero';
 import type { BookingBarHandle, BookingRequest } from './components/BookingBar';
 import { useFinePointer, useReducedMotion } from './lib/hooks';
@@ -84,6 +85,7 @@ export default function App() {
         <ChaletSection lang={lang} />
         <RestaurantSection lang={lang} />
         <ActivitiesSection lang={lang} />
+        <AlpineExperienceSection lang={lang} />
         <section ref={next} aria-label="Platzhalter" className="relative bg-cream px-[max(16px,env(safe-area-inset-left))] py-24 text-forest md:px-14 md:py-36">
           <div className="js-next-mask mx-auto max-w-[1100px] rounded-[2px] bg-soft px-6 py-24 text-center md:py-36">
             <p className="text-[12px] font-semibold uppercase tracking-[.3em] text-champagne-dark">Platzhalter</p>

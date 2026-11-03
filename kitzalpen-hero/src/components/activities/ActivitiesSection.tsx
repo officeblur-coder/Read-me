@@ -72,8 +72,12 @@ export function ActivitiesSection({ lang }: { lang: Lang }) {
 
   // ------------------------------------------------ B) season change: out → swap data → in
   useEffect(() => {
-    if (season === shown) return;
     swapTl.current?.kill();
+    if (season === shown) {
+      // switched back before the swap finished: bring the current content back
+      if (entered.current && !reduced) { hideAll(); swapTl.current = reveal(0); }
+      return;
+    }
     if (reduced || !entered.current || !isVisible()) { setShown(season); return; }   // offscreen: update silently, never scroll
     swapTl.current = gsap.timeline({ defaults: { ease: 'power2.in' } })
       .to(q('.js-act-line'), { yPercent: -110, duration: 0.4, stagger: 0.05 }, 0)

@@ -279,6 +279,20 @@
   .weather-band:hover .wb-run, .weather-band:focus-within .wb-run { animation-play-state: paused; }
   @keyframes wb-run { to { transform: translate3d(-50%, 0, 0); } }
 
+  /* ------------------------------------------------ alpine experience */
+  .ax-img { object-position: var(--pos-m); }
+  @media (min-width: 768px) { .ax-img { object-position: var(--pos-d); } }
+  .ax-cta {
+    color: var(--k-deep);
+    background: linear-gradient(180deg, var(--k-gold-light), var(--k-gold));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.45), 0 14px 30px -12px rgba(0,0,0,.4);
+    transition: filter .3s ease, background-color .3s ease;
+  }
+  .ax-cta .arrow { display: inline-block; transition: transform .3s ease; }
+  .ax-cta:hover { filter: brightness(1.08); }
+  .ax-cta:hover .arrow { transform: translateX(5px); }
+  .ax-cta:focus-visible { outline: 2px solid var(--k-cream); outline-offset: 4px; }
+
   .field { transition: background-color .3s; }
   .field:hover, .field:focus-within { background: rgba(244,239,228,.06); }
   .field:focus-within { box-shadow: inset 0 -2px 0 var(--k-gold); }

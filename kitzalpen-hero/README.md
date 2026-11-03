@@ -244,3 +244,18 @@ Motion:
 - The engine's own calendar/prices are not embedded: it has no public embeddable widget or CORS API, so the site hands over with the search already filled in.
 
 **Concierge capsule** (replaces the dock and bottom bar). It is one capsule, `[WhatsApp] [Buchen ▴]`: bottom-right on desktop, bottom-centre on mobile, safe-area aware. It appears after the hero and slims while scrolling down. "Buchen" opens a small panel or sheet with two photo cards, Zimmer (Pension) and Chalet (photo follows the season), linking to their pynbooking engines, plus the WhatsApp line. Escape or an outside click closes it.
+
+---
+
+# Section 07 – The Alpine Experience
+
+`src/components/experience/AlpineExperienceSection.tsx`, photos in `public/images/experience/` (the two originals supplied by KitzAlpen: summer lake with alpine roses, winter glacier panorama).
+
+Mounted right after `<ActivitiesSection/>`. It reads the shared season from `useSeason()` (same source as Hero, Chalet, Activities) and has no selector of its own.
+
+- Fullscreen (`min-height: 100svh` desktop, `92svh` mobile). The photo is `object-fit: cover` with a focal point per season and breakpoint (`--pos-d` / `--pos-m`). A season-tinted gradient sits behind the text, text is left-aligned (max 650 px), and the CTA goes to `#activities-summer|winter` (live: `/activities/summer|winter`).
+- Both photos are loaded up front, so a season switch never waits for the network.
+- Reveal (once): photo 1.08 → 1, eyebrow, headline lines (mask), subtitle (y 20), CTA last, power3.out.
+- Season switch: text lifts out, photos crossfade (about 1 s, new one settles 1.06 → 1), new text reveals. Scroll position is untouched. Rapid toggling kills the running timeline. If the visitor switches back mid-swap, the section restores the current season (the same fix was applied to Activities).
+- Desktop parallax ±4 %. `prefers-reduced-motion`: static.
+- Note: the supplied winter photo is 1024 px wide, so on large desktop screens it is upscaled. A larger original (≥ 2000 px) would look sharper.
