@@ -291,3 +291,26 @@ Mounted right after `<ActivitiesSection/>`. It reads the shared season from `use
 - Mobile: 70svh map with pinch, pan and rotate. A bottom sheet holds swipeable cards, synced both ways with the markers. The handle expands it to full cards with photos and filters.
 - Custom controls: zoom, 2D/3D, reset view. `prefers-reduced-motion` uses jumpTo instead of flights and no staggers.
 - Photos: only those already on kitzalpen.at. Places without one get an editorial contour card.
+
+---
+
+# Section 09 – Guest Stories
+
+`src/components/stories/GuestStoriesSection.tsx`, `src/content/stories.ts`, `public/images/stories/`.
+
+Mounted after the map, `<AlpineMapSection/><GuestStoriesSection lang={lang}/>`. It replaces the old "Was unsere Gäste sagen" block (there is only one testimonials section).
+
+**Data – verified only.**
+- Reviews: the three reviews published on kitzalpen.at (Maria S. – Google, Thomas K. – Booking.com, Anna M. – Tripadvisor), copied verbatim in German with the 5 stars shown on the site. In the EN version they stay in German, labelled "Original review in German". No links to the individual reviews are published, so none are shown.
+- Trust bar:
+  - The **9.2 / 10 from 95 reviews** score shown on the pension's own booking engine (kitzbuhel.pynbooking.direct, checked 3 Nov 2026), linked there.
+  - The **Google profile** link published on kitzalpen.at (maps.app.goo.gl/5pN6vJZboPjuMqSo6 → the pension's Google Maps place).
+- No combined score and no Booking.com/Tripadvisor numbers: neither is published or verified. Nothing suggests live syncing.
+- Avatars: initials, since no author photos exist. Card photos: rooms, chalet and breakfast photos supplied by KitzAlpen (logo/booking band cropped off the breakfast image).
+- Backgrounds: two landscape photos supplied by the client (summer meadow, winter panorama), crossfaded by season (900 ms) under a cream veil.
+
+**Behaviour.**
+- ≥1024 px: three-card deck with the centre card at scale 1 / opacity 1 / stronger shadow and the side cards at 0.95 / 0.88. Arrows, mouse drag, keyboard ←/→, progress segments. Transition 600 ms power2.inOut.
+- <1024 px: one card plus a peek of the next, native swipe with scroll-snap, progress synced to the card in view. No page-level horizontal scroll, and bottom padding keeps it clear of the booking capsule.
+- Entrance (once): eyebrow, headline lines, subtitle, cards staggered, then progress and trust bar. Desktop background parallax. Hover lifts the centre card 5 px, zooms the photo and shows a gold border.
+- Season and language changes keep the carousel position. `prefers-reduced-motion`: static.
