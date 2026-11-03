@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<title>Lyra's Delivery · 50 lei cadou</title>
+<link rel="stylesheet" href="../video/assets/fonts.css">
+<style>
+/* Macheta pătrată 1080×1080 pentru Facebook / Instagram. Randare: node render.js */
+:root{--bg:#0b0806;--ink:#fff7ef;--mut:#d9c6b4;--o1:#ff9a3c;--o2:#ff7a1a;--o3:#f0600a;--gold:#f6b13b}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1080px;height:1080px;overflow:hidden;background:var(--bg)}
+body{font-family:Figtree,sans-serif;color:var(--ink);position:relative}
+.glow{position:absolute;border-radius:50%;filter:blur(80px)}
+.g1{width:900px;height:900px;left:-360px;top:-380px;background:radial-gradient(closest-side,#ff7a1a77,transparent)}
+.g2{width:900px;height:900px;right:-420px;bottom:-420px;background:radial-gradient(closest-side,#c2261a66,transparent)}
+.grain{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.035) 1px,transparent 1px);background-size:6px 6px}
+
+/* logo */
+.wm{position:absolute;left:64px;top:56px;display:inline-grid;justify-items:center;line-height:1}
+.wm b{font:800 46px/1 "Bricolage Grotesque",sans-serif;letter-spacing:.02em}
+.wm span{font:800 15px/1 Figtree;letter-spacing:.52em;margin:8px -.52em 0 0;color:var(--o2)}
+.wm svg{width:150px;height:14px;margin-top:6px;color:var(--o2)}
+.chip{position:absolute;right:64px;top:66px;padding:12px 20px;border-radius:999px;background:#ff7a1a26;border:2px solid #ff7a1a66;color:#ffc08f;font:800 19px/1 Figtree;letter-spacing:.14em}
+
+/* text */
+.kick{position:absolute;left:64px;top:184px;font:700 34px/1.1 Figtree;color:var(--mut)}
+.big{position:absolute;left:56px;top:222px;font:800 250px/.86 "Bricolage Grotesque",sans-serif;letter-spacing:-.065em;
+  background:linear-gradient(170deg,#ffd7a8 0%,var(--o1) 38%,var(--o2) 70%,var(--o3));-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 18px 40px rgba(255,122,26,.35))}
+.big small{font-size:120px;letter-spacing:-.04em;margin-left:14px}
+.line{position:absolute;left:64px;top:452px;font:800 52px/1.02 "Bricolage Grotesque",sans-serif;letter-spacing:-.035em;white-space:nowrap}
+.line em{font-style:normal;color:var(--o1)}
+.swoosh{position:absolute;left:62px;top:566px;width:330px;height:22px;color:var(--o2)}
+
+/* steps */
+.steps{position:absolute;left:64px;top:620px;display:grid;gap:12px;width:470px}
+.step{display:grid;grid-template-columns:48px 1fr;align-items:center;gap:14px;font:600 25px/1.2 Figtree}
+.step i{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;font:800 24px "Bricolage Grotesque";font-style:normal;background:#ffffff12;border:2px solid #ffffff2a;color:#fff}
+.step b{font-weight:800}
+
+/* photo */
+.photo{position:absolute;right:-150px;top:150px;width:640px;height:640px;border-radius:50%;overflow:hidden;
+  box-shadow:0 0 0 14px #ffffff10,0 0 0 2px #ff7a1a55,0 50px 120px -30px rgba(0,0,0,.9),0 0 140px -20px rgba(255,122,26,.55)}
+.photo img{width:100%;height:100%;object-fit:cover;object-position:78% 52%;transform:scale(1.3);transform-origin:70% 50%}
+.sticker{position:absolute;right:380px;top:610px;width:210px;height:210px;border-radius:50%;display:grid;place-items:center;text-align:center;transform:rotate(-12deg);
+  background:linear-gradient(140deg,var(--o1),var(--o3));box-shadow:0 26px 60px -14px rgba(240,96,10,.9),inset 0 0 0 6px #ffffff33}
+.sticker div{font:800 24px/1 Figtree;letter-spacing:.06em}
+.sticker b{display:block;font:800 66px/.9 "Bricolage Grotesque";letter-spacing:-.04em;margin:4px 0}
+.sticker small{font:700 17px/1.15 Figtree;opacity:.95}
+
+/* footer */
+.cta{position:absolute;left:64px;right:64px;bottom:96px;height:104px;border-radius:999px;display:flex;align-items:center;justify-content:space-between;padding:0 14px 0 44px;
+  background:#fff;color:#1a0f08;box-shadow:0 30px 70px -24px rgba(0,0,0,.9)}
+.cta span{font:700 27px/1 Figtree}
+.cta b{display:flex;align-items:center;gap:14px;height:78px;padding:0 34px;border-radius:999px;background:linear-gradient(135deg,var(--o1),var(--o2) 55%,var(--o3));color:#fff;font:800 34px/1 "Bricolage Grotesque";letter-spacing:-.02em}
+.cta b svg{width:30px;height:30px}
+.fine{position:absolute;left:64px;right:64px;bottom:40px;text-align:center;font:500 17px/1.3 Figtree;color:#a8978a}
+</style>
+</head>
+<body>
+<div class="glow g1"></div><div class="glow g2"></div><div class="grain"></div>
+
+<div class="wm"><b>LYRA’S</b><span>DELIVERY</span><svg viewBox="0 0 120 10"><path d="M4 6c30-5 80-5 112 0" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></div>
+<div class="chip">🎁 CADOU LA CONT NOU</div>
+
+<div class="photo"><img src="../app/public/img/double-smash.jpg" alt=""></div>
+
+<div class="kick">Primești pe loc</div>
+<div class="big">50<small>lei</small></div>
+<div class="line">reducere la<br><em>prima ta comandă</em></div>
+<svg class="swoosh" viewBox="0 0 300 16"><path d="M6 11c60-7 150-9 210-6M150 13c50-3 100-3 144-1" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg>
+
+<div class="steps">
+  <div class="step"><i>1</i><span>Îți faci <b>cont gratuit</b></span></div>
+  <div class="step"><i>2</i><span>Primești <b>50 lei</b> instant</span></div>
+  <div class="step"><i>3</i><span>Comanzi de minim <b>150 lei</b></span></div>
+</div>
+
+<div class="sticker"><div><div>BONUS</div><b>−50</b><small>lei la prima<br>comandă</small></div></div>
+
+<div class="cta"><span>Comandă online, livrăm la tine</span><b>lyrasdelivery.ro<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></b></div>
+<div class="fine">Bonusul se folosește o singură dată, integral, la o comandă cu produse de minim 150 lei. Nu se cumulează cu codurile de reducere.</div>
+</body>
+</html>
