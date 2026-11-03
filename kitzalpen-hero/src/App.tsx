@@ -7,6 +7,8 @@ import { Header } from './components/Header';
 import { MobileMenu } from './components/MobileMenu';
 import { Hero } from './components/Hero';
 import { RoomsSection } from './components/rooms/RoomsSection';
+import { AmenitiesSection } from './components/amenities/AmenitiesSection';
+import { QuickActions } from './components/QuickActions';
 import type { BookingBarHandle, BookingRequest } from './components/BookingBar';
 import { useFinePointer, useReducedMotion } from './lib/hooks';
 
@@ -59,13 +61,17 @@ export default function App() {
       <main id="main">
         <Hero lang={lang} copy={copy} bookingRef={booking} onBookingSubmit={onSubmit} />
         <RoomsSection lang={lang} />
-        <section ref={next} aria-label="Platzhalter" className="relative border-t border-pine/10 bg-cream px-[max(16px,env(safe-area-inset-left))] py-24 text-forest md:px-14 md:py-36">
+        <AmenitiesSection lang={lang} />
+        <section ref={next} aria-label="Platzhalter" className="relative bg-cream px-[max(16px,env(safe-area-inset-left))] py-24 text-forest md:px-14 md:py-36">
           <div className="js-next-mask mx-auto max-w-[1100px] rounded-[2px] bg-[#ebe4d5] px-6 py-24 text-center md:py-36">
             <p className="text-[12px] font-semibold uppercase tracking-[.3em] text-champagne-dark">Platzhalter</p>
             <p className="mt-4 font-display text-[clamp(30px,4vw,52px)] font-medium italic leading-tight">{copy.next}</p>
           </div>
         </section>
+        {/* keeps the last content clear of the mobile quick-action bar */}
+        <div aria-hidden className="h-[96px] bg-cream md:hidden" />
       </main>
+      <QuickActions lang={lang} reduced={reduced} />
     </>
   );
 }

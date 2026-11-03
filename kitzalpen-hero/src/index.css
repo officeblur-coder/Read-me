@@ -92,6 +92,67 @@
   .rooms-lightbox[open] { display: block; }
   .rooms-lightbox::backdrop { background: transparent; }
 
+
+  /* ------------------------------------------------ amenities */
+  .amenity { transition: transform .5s cubic-bezier(.22,1,.36,1); }
+  .amenity-photo { -webkit-mask-image: linear-gradient(90deg, transparent 0%, rgba(0,0,0,.55) 30%, #000 70%); mask-image: linear-gradient(90deg, transparent 0%, rgba(0,0,0,.55) 30%, #000 70%); }
+  .amenity-photo img { transition: transform 1.1s cubic-bezier(.22,1,.36,1); }
+  .amenity-shade { background: linear-gradient(90deg, rgba(16,46,35,.96) 0%, rgba(16,46,35,.72) 42%, rgba(16,46,35,.26) 100%); transition: opacity .6s; }
+  .amenity-border { border: 1px solid rgba(215,183,123,.38); transition: border-color .5s; }
+  .amenity-sheen { background: linear-gradient(90deg, transparent, rgba(236,220,180,.85), transparent); }
+  @media (hover: hover) and (pointer: fine) {
+    .amenity:hover { transform: translateY(-4px); }
+    .amenity:hover .amenity-photo img { transform: scale(1.04); }
+    .amenity:hover .amenity-shade { opacity: .82; }
+    .amenity:hover .amenity-border { border-color: rgba(215,183,123,.85); }
+  }
+  .amenity:focus-visible .amenity-border { border-color: rgba(215,183,123,.95); }
+
+  /* icon micro-animations: run once on hover / focus / tap, never loop */
+  .amenity-icon * { transform-box: fill-box; }
+  .amenity .wave { transform-origin: 50% 100%; }
+  .amenity:is(:hover,.tap,:focus-visible) .wave.w2 { animation: am-wave .9s cubic-bezier(.22,1,.36,1) 1; }
+  .amenity:is(:hover,.tap,:focus-visible) .wave.w3 { animation: am-wave .9s cubic-bezier(.22,1,.36,1) .12s 1; }
+  @keyframes am-wave { 0% { opacity: .2; transform: scale(.7); } 60% { opacity: 1; transform: scale(1.08); } 100% { opacity: 1; transform: scale(1); } }
+
+  .amenity:is(:hover,.tap,:focus-visible) .tv-beam { animation: am-beam .9s ease-in-out 1; }
+  @keyframes am-beam { 0% { opacity: 0; transform: translateX(0); } 15% { opacity: .55; } 85% { opacity: .55; } 100% { opacity: 0; transform: translateX(26px); } }
+
+  .amenity .p-letter { transition: stroke-width .35s, color .35s; }
+  .amenity:is(:hover,.tap,:focus-visible) .p-letter { stroke-width: 2.2; color: #F5F1E9; }
+
+  .amenity .cloche { transition: transform .45s cubic-bezier(.22,1,.36,1); }
+  .amenity:is(:hover,.tap,:focus-visible) .cloche { transform: translateY(-2px); }
+
+  .amenity .steam { stroke-dasharray: 1; stroke-dashoffset: 1; opacity: 0; transition: stroke-dashoffset .8s ease, opacity .4s; }
+  .amenity .steam.s2 { transition-delay: .12s; }
+  .amenity:is(:hover,.tap,:focus-visible) .steam { stroke-dashoffset: 0; opacity: .9; }
+
+  .amenity .drop { opacity: 0; }
+  .amenity:is(:hover,.tap,:focus-visible) .drop { animation: am-drop .8s ease-in 1; }
+  .amenity:is(:hover,.tap,:focus-visible) .drop.d2 { animation-delay: .22s; }
+  @keyframes am-drop { 0% { opacity: 0; transform: translateY(-2px); } 25% { opacity: 1; } 100% { opacity: 0; transform: translateY(5px); } }
+
+  .amenity:is(:hover,.tap,:focus-visible) .ridge { animation: am-ridge .9s cubic-bezier(.65,0,.35,1) 1; }
+  .amenity:is(:hover,.tap,:focus-visible) .ridge.r2 { animation-delay: .12s; }
+  @keyframes am-ridge { 0% { stroke-dashoffset: 1; } 100% { stroke-dashoffset: 0; } }
+  .amenity .ridge { stroke-dasharray: 1; }
+
+  .amenity .gcard, .amenity .gcard-bg { transform-origin: 50% 50%; transition: transform .6s cubic-bezier(.22,1,.36,1); }
+  .amenity:is(:hover,.tap,:focus-visible) .gcard { transform: rotate(-8deg); }
+  .amenity:is(:hover,.tap,:focus-visible) .gcard-bg { transform: rotate(-3deg) translateY(-3px); }
+
+  /* ------------------------------------------------ quick actions */
+  .qa { box-shadow: 0 8px 22px rgba(15,31,23,.16); transition: filter .3s, transform .2s; }
+  .qa:active { transform: scale(.97); }
+  .qa-wa { background: #2f8f4e; color: #fff; }
+  .qa-chalet { background: linear-gradient(180deg, #dcc08a, #c4a266); color: #17231b; }
+  .qa-room { background: #102E23; color: #F5F1E9; }
+  .qa:hover { filter: brightness(1.07); }
+  .qa-dock .qa { box-shadow: none; }
+  .qa-dock-label { max-width: 0; opacity: 0; padding-left: 0; transition: max-width .4s cubic-bezier(.22,1,.36,1), opacity .3s, padding .4s; }
+  .qa-dock:hover .qa-dock-label, .qa-dock:focus-within .qa-dock-label { max-width: 14rem; opacity: 1; padding: 0 12px; }
+
   .field { transition: background-color .3s; }
   .field:hover, .field:focus-within { background: rgba(244,239,228,.06); }
   .field:focus-within { box-shadow: inset 0 -2px 0 #d8bf8a; }

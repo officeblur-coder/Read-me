@@ -114,3 +114,40 @@ Each supplied photo was matched pixel-for-pixel to the first gallery image of th
 - Desktop hover: zoom 1.025, a very light overlay, and a "VIEW / Ansehen" cursor (the gallery stays fully keyboard operable: Tab focuses it, ←/→ change the photo, Enter opens the lightbox).
 - Mobile: the photo follows the finger while swiping (vertical scroll stays free), thumbnails sit in a horizontal strip, and there is no mouse parallax.
 - `prefers-reduced-motion`: no reveals; photo changes are instant.
+
+---
+
+# Section 03 – Unsere Leistungen
+
+```
+src/content/amenities.ts                     8 amenities (exactly those listed on kitzalpen.at), texts DE/EN, quick-action URLs
+src/components/amenities/AmenitiesSection.tsx  layout, scroll reveal, panorama parallax, mountain hand-over
+src/components/amenities/AmenityCard.tsx       card with real photo, line icon (drawn in), per-card micro-animation
+src/components/amenities/AlpineTransition.tsx  ridge silhouette + gold crest line at the bottom edge
+src/components/QuickActions.tsx               GLOBAL WhatsApp / Chalet buchen / Zimmer buchen (mount once in App)
+public/images/amenities/                       bathroom, restaurant, breakfast, panorama (supplied); wifi, tv (crops of room photos);
+                                               parking, mountain (crops of the summer exterior). M+ card: drawn, no photo.
+```
+
+Mount after the rooms: `<RoomsSection/><AmenitiesSection lang={lang}/>`, and `<QuickActions lang reduced/>` once, outside `<main>`.
+
+## Facts used
+- Amenities: Kostenloses WLAN, Flachbild-TV, Kostenloser Parkplatz, Restaurant & Bar, Frühstücksbuffet, Eigenes Badezimmer, Bergblick, M+ Gästekarte (all from the homepage list).
+- Details shown only where published: Frühstück 08:00–10:00, Abendessen Di–So 17–21 Uhr, bathroom with shower (room pages).
+- Copy: the brief said "Tiroler Gastfreundschaft". Hollersbach is in the Salzburger Land (Pinzgau), so the text says "Pinzgauer Gastfreundschaft". Change it in `amenities.ts` if wanted.
+
+## Quick actions (same URLs as the live site)
+- WhatsApp → `https://wa.me/40748192821?text=…`
+- Chalet buchen → `https://chalet-kitzalpen.pynbooking.direct/`
+- Zimmer buchen → `https://kitzbuhel.pynbooking.direct`
+
+Mobile: sticky bottom bar (safe-area aware). It appears after the hero, since the hero has its own booking bar, and gets compact while scrolling down. A 96 px spacer at the end of `<main>` keeps the last content uncovered. Desktop: slim dock on the left edge; labels slide out on hover or focus. If the live site already renders its own bar, keep only one of the two.
+
+Note: the hero's "Verfügbarkeit prüfen" can now be wired to `kitzbuhel.pynbooking.direct` (the real booking engine) during integration.
+
+## Motion
+- The dark sheet rises over the cream rooms section (clip-path, scrubbed), and the panorama drifts slower than the page.
+- Reveal (≈1.7 s, once): eyebrow → headline lines (mask) → sub → relief contour lines drawn → cards in diagonal waves (100 ms). Each card enters with clip and y, then its gold border fades in, a sheen line runs along the top edge, and the icon strokes draw themselves.
+- Hover (desktop): lift 4 px, photo zoom 1.04, lighter veil, stronger gold border, plus a one-shot icon animation: Wi-Fi waves, TV light sweep, bold P, cloche lifts 2 px, steam draws, two drops fall, ridge redraws, card tilts. Touch: the same animation plays once on tap, and scrolling is never blocked. Keyboard focus triggers it too.
+- Bottom: the cream ridge rises and the gold crest line traces itself into the next section.
+- `prefers-reduced-motion`: everything is static.
