@@ -291,7 +291,9 @@ function Console({ email }: { email: string }) {
               <span>#{o.number} · {o.name}</span><em>{o.mode}{o.zone_name ? ` · ${o.zone_name}` : ""} · {lei(Number(o.total))}</em></button>)}</div></div>}
           <div className="board">
             {([["prep", "În bucătărie", "var(--warn)", "Nicio comandă în lucru"], ["road", "Pe drum / la pass", "var(--gold)", "Nimic de predat"], ["done", "Finalizate azi", "var(--ok)", "Încă nimic finalizat"]] as const).map(([st, title, color, empty]) => {
-              const list = orders.filter(o => o.status === st && !isLater(o)).sort((a, b) => st === "done" ? (b.done_at || "").localeCompare(a.done_at || "") : a.created_at.localeCompare(b.created_at));
+              // la „Finalizate azi” apar și comenzile refuzate / rambursate, ca să nu dispară nimic de pe ecran
+              const list = orders.filter(o => (o.status === st || (st === "done" && (o.status === "rejected" || o.status === "refunded") && o.created_at >= startOfDay())) && !isLater(o))
+                .sort((a, b) => st === "done" ? (b.done_at || b.created_at).localeCompare(a.done_at || a.created_at) : a.created_at.localeCompare(b.created_at));
               return (
                 <div key={st} className="col"><div className="col-h"><i style={{ background: color }} />{title}<span>{list.length}</span></div>
                   {list.length ? list.map(o => <OrderCard key={o.id} o={o} now={now} onOpen={() => setDrawer(o.id)} onAdvance={() => advance(o)} />) : <div className="colempty">{empty}</div>}
@@ -437,6 +439,8 @@ function OrderCard({ o, now, onOpen, onAdvance }: { o: Order; now: number; onOpe
   return (
     <div className="oc" role="button" tabIndex={0} onClick={onOpen} onKeyDown={e => e.key === "Enter" && onOpen()}>
       <div className="h"><b>#{o.number}</b><span className={`tag ${o.mode === "livrare" ? "" : "green"}`}>{o.mode}</span>
+        {o.status === "rejected" && <span className="tag red">refuzată</span>}
+        {o.status === "refunded" && <span className="tag red">rambursată</span>}
         {o.allergies.length > 0 && <span className="tag red">alergie</span>}
         {o.scheduled_for && <span className="tag blue">{hm(o.scheduled_for)}</span>}
         {active && due ? <span className={`tm ${cls} num`}>{rem < 0 ? "întârziere " + mmss(rem) : mmss(rem)}</span> : o.done_at ? <span className="tm ok num">{hm(o.done_at)}</span> : null}</div>

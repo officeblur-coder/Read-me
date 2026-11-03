@@ -81,7 +81,7 @@ export function TrafficTab() {
         <div className="rw-stats" style={{ marginTop: 12 }}>
           <div className={`rw-stat ${r.abandoned ? "hot" : ""}`}><small>Coșuri abandonate</small><b className="num">{r.abandoned}</b><span>au pus în coș și au plecat</span></div>
           <div className="rw-stat"><small>Conturi noi</small><b className="num">{r.signups}</b><span>în perioada aleasă</span></div>
-          <div className="rw-stat"><small>Comenzi primite</small><b className="num">{r.real_orders}</b><span>din baza de comenzi</span></div>
+          <div className="rw-stat"><small>Comenzi primite</small><b className="num">{r.real_orders}</b><span>toate, inclusiv cele refuzate</span></div>
         </div>
         {drop && <p className="tr-tip">💡 {drop}</p>}
 
