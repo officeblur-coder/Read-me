@@ -38,9 +38,8 @@ img{display:block;max-width:100%}
 ::selection{background:var(--accent);color:#111}
 
 /* ---------- canvases ---------- */
-#clouds{position:fixed;inset:0;z-index:90;pointer-events:none}
 #snow{position:fixed;inset:0;z-index:91;pointer-events:none}
-#introLogo{position:fixed;inset:0;z-index:92;display:grid;place-items:center;pointer-events:none;color:#2a3b62;text-align:center}
+#introLogo{position:fixed;inset:0;z-index:92;display:grid;place-items:center;pointer-events:none;color:#33405e;text-align:center}
 #introLogo .t{font-family:var(--serif);font-size:clamp(48px,9vw,128px);font-weight:300;letter-spacing:-.02em;opacity:0;filter:blur(14px);transform:scale(1.08);transition:all 1.4s var(--ease)}
 #introLogo .s{font-size:12px;letter-spacing:.5em;text-transform:uppercase;margin-top:14px;opacity:0;transition:all 1.4s var(--ease) .3s}
 #introLogo.show .t{opacity:1;filter:blur(0);transform:scale(1)}
@@ -86,27 +85,12 @@ nav:not(.solid) .season span{--page:#1a2340}
 
 /* ---------- hero ---------- */
 .hero{position:relative;height:100vh;min-height:640px;overflow:hidden;color:#fff}
-.sky{position:absolute;inset:0;background:linear-gradient(180deg,var(--sky1) 0%,var(--sky2) 48%,var(--sky3) 82%);transition:--sky1 1s}
-.sky::after{content:"";position:absolute;inset:0;background:radial-gradient(120% 70% at 70% 90%,rgba(255,200,170,.25),transparent 60%)}
-#stars{position:absolute;inset:0;transition:opacity 1.5s}
-body[data-season="summer"] #stars{opacity:0}
-#stars circle{animation:tw 3s ease-in-out infinite alternate}
-@keyframes tw{from{opacity:.15}to{opacity:1}}
-.orb{position:absolute;top:13%;right:16%;width:110px;height:110px;border-radius:50%;background:var(--orb);box-shadow:0 0 60px 20px var(--orbGlow);transition:all 1.4s var(--ease)}
-.orb::before{content:"";position:absolute;inset:-260%;border-radius:50%;background:radial-gradient(circle,var(--orbGlow),transparent 62%);pointer-events:none}
-body[data-season="winter"] .orb{background:radial-gradient(circle at 38% 38%,#fffdf4,#e5e1d2 60%,#cfcab8);}
-body[data-season="summer"] .orb{width:150px;height:150px;top:9%;right:22%}
-.mtn{position:absolute;left:-4%;right:-4%;bottom:0;width:108%;height:100%;will-change:transform}
-.mtn svg{width:100%;height:100%;display:block}
-.mtn path,.mtn stop,.mtn rect,.mtn polygon{transition:fill 1.4s var(--ease),stop-color 1.4s var(--ease),opacity 1.4s}
-.win{fill:#ffc976;filter:url(#glow);animation:flick 4s infinite}
-body[data-season="summer"] .win{fill:#5b4630;filter:none;animation:none}
-@keyframes flick{0%,100%{opacity:1}47%{opacity:.85}50%{opacity:.6}53%{opacity:.95}}
-.smoke{fill:none;stroke:rgba(255,255,255,.35);stroke-width:5;stroke-linecap:round;stroke-dasharray:14 22;animation:smoke 3s linear infinite}
-@keyframes smoke{to{stroke-dashoffset:-72}}
-.mist{position:absolute;left:0;right:0;bottom:18%;height:28%;background:linear-gradient(180deg,transparent,rgba(255,255,255,.18),transparent);filter:blur(10px);animation:mist 18s ease-in-out infinite alternate;pointer-events:none}
-@keyframes mist{from{transform:translateX(-5%)}to{transform:translateX(5%)}}
-.hero-c{position:absolute;inset:0;z-index:5;background:linear-gradient(90deg,rgba(5,10,30,.38),transparent 60%);display:flex;flex-direction:column;justify-content:center;padding:0 clamp(16px,7vw,110px);padding-bottom:12vh}
+.heroimg{position:absolute;inset:0;background-size:cover;background-position:center;transform:scale(1.08)}
+#gl{position:absolute;inset:0;width:100%;height:100%;display:block}
+.shade{position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(6,10,22,.72) 0%,rgba(6,10,22,.38) 45%,transparent 72%),linear-gradient(0deg,rgba(6,10,22,.55),transparent 35%)}
+body.intro nav,body.intro .hero-c,body.intro .scrollhint,body.intro .hero-meta,body.intro .badge{opacity:0}
+nav,.hero-c,.scrollhint,.hero-meta,.badge{transition:opacity 1.6s var(--ease)}
+.hero-c{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;justify-content:center;padding:0 clamp(16px,7vw,110px);padding-bottom:12vh}
 .eyebrow{display:flex;align-items:center;gap:14px;font-size:11px;letter-spacing:.42em;text-transform:uppercase;opacity:.8;margin-bottom:26px}
 .eyebrow::before{content:"";width:40px;height:1px;background:currentColor}
 .h1{font-family:var(--serif);font-weight:300;font-size:clamp(46px,9.2vw,150px);line-height:.92;letter-spacing:-.035em;max-width:13ch;text-shadow:0 10px 60px rgba(0,0,0,.25)}
@@ -119,7 +103,7 @@ body[data-season="summer"] .win{fill:#5b4630;filter:none;animation:none}
 @keyframes drop{0%{transform:scaleY(0)}50%{transform:scaleY(1)}100%{transform:scaleY(1);opacity:0}}
 .hero-meta{position:absolute;right:clamp(16px,4vw,48px);bottom:34px;z-index:6;display:flex;gap:34px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;opacity:.8}
 .hero-meta b{display:block;font-family:var(--serif);font-size:30px;letter-spacing:0;text-transform:none;font-weight:300}
-@media (max-width:760px){.hero-meta{display:none}.orb,body[data-season="summer"] .orb{width:64px;height:64px;top:9%;right:8%}}
+@media (max-width:760px){.hero-meta{display:none}}
 
 /* split letters */
 .ch{display:inline-block;opacity:0;transform:translateY(.6em) rotate(6deg);filter:blur(10px);transition:all 1.1s var(--ease);transition-delay:calc(var(--i)*28ms)}
@@ -197,21 +181,15 @@ section{position:relative}
 .feat li::before{content:counter(f,decimal-leading-zero);font-family:var(--serif);font-size:13px;width:28px}
 .feat li.on{color:var(--text);padding-left:12px}
 .feat li.on::before{color:var(--accent)}
-.house{width:100%;max-height:78vh}
-.house .pt{opacity:0;transition:all 1s var(--ease)}
-.house .pt.on{opacity:1;transform:none!important}
-.house .wlit{fill:#3a2f25;transition:fill .8s}
-.house .wlit.on{fill:#ffc76e;filter:url(#glow2)}
-.house .snowroof{transition:opacity 1s}
-body[data-season="summer"] .house .snowroof{opacity:0!important}
-.house .flowers{opacity:0;transition:opacity 1s}
-body[data-season="summer"] .house .flowers.on{opacity:1}
-.chalet .photos{position:absolute;right:clamp(16px,4vw,48px);bottom:5vh;display:flex;gap:10px}
-.chalet .photos div{width:92px;height:64px;border-radius:10px;background-size:cover;background-position:center;opacity:0;transform:translateY(20px);transition:all .8s var(--ease)}
-.chalet .photos div.on{opacity:1;transform:none}
+.stack{position:relative;height:78vh;border-radius:28px;overflow:hidden;box-shadow:0 50px 100px rgba(0,0,0,.35)}
+.stack .f{position:absolute;inset:0;clip-path:inset(100% 0 0 0);transition:clip-path 1.3s var(--ease)}
+.stack .f.on{clip-path:inset(0 0 0 0)}
+.stack .f i{position:absolute;inset:-6%;background-size:cover;background-position:center;transform:scale(1.25);transition:transform 2.4s var(--ease)}
+.stack .f.on i{transform:scale(1)}
+.stack .cap{position:absolute;left:24px;bottom:22px;z-index:9;color:#fff;font-size:11px;letter-spacing:.3em;text-transform:uppercase;text-shadow:0 2px 12px rgba(0,0,0,.6)}
 .prog{height:2px;background:var(--line);margin-top:30px;max-width:420px;overflow:hidden}
 .prog i{display:block;height:100%;background:var(--accent);transform-origin:left;transform:scaleX(0)}
-@media (max-width:860px){.chalet .sticky{grid-template-columns:1fr;align-content:center;gap:10px}.house{max-height:40vh}.feat{margin-top:16px}.feat li{padding:9px 0;font-size:14px}.chalet .photos{display:none}.chalet .h2{font-size:34px}}
+@media (max-width:860px){.chalet .sticky{grid-template-columns:1fr;align-content:center;gap:10px}.stack{height:42vh}.feat{margin-top:16px}.feat li{padding:9px 0;font-size:14px}.chalet .h2{font-size:34px}}
 
 /* restaurant */
 .resto{background:#120c08;color:#f5ead9;overflow:hidden}
@@ -232,10 +210,6 @@ body[data-season="summer"] .house .flowers.on{opacity:1}
 .plates .p1{width:62%;height:68%;left:0;top:4%}
 .plates .p2{width:52%;height:52%;right:0;top:34%}
 .plates .p3{width:34%;height:34%;left:22%;bottom:0;border-radius:50%}
-.steam{position:absolute;right:20%;top:6%;width:120px;height:160px;pointer-events:none}
-.steam path{fill:none;stroke:rgba(255,240,220,.35);stroke-width:3;stroke-linecap:round;animation:steam 3.2s ease-in-out infinite}
-.steam path:nth-child(2){animation-delay:1s}.steam path:nth-child(3){animation-delay:2s}
-@keyframes steam{0%{opacity:0;transform:translateY(30px) scaleX(.8)}40%{opacity:1}100%{opacity:0;transform:translateY(-50px) scaleX(1.2)}}
 @media (max-width:860px){.resto .grid{grid-template-columns:1fr}}
 
 /* horizontal */
@@ -253,8 +227,11 @@ body[data-season="summer"] .house .flowers.on{opacity:1}
 .spot h4{text-shadow:0 2px 18px rgba(0,0,0,.6);font-family:var(--serif);font-weight:400;font-size:32px;margin-bottom:8px}
 .spot p{font-size:14px;line-height:1.55;opacity:.85;max-width:380px}
 .spot .ix{position:absolute;z-index:2;top:28px;right:28px;font-size:11px;letter-spacing:.2em}
-.spot.art .im{background:var(--g)}
-.spot.art svg{position:absolute;inset:0;width:100%;height:100%;z-index:1}
+.spot.type{background:var(--card);border:1px solid var(--line);color:var(--text)}
+.spot.type::after{display:none}
+.spot.type ul{list-style:none;position:absolute;left:28px;right:28px;top:110px;z-index:2}
+.spot.type li{display:flex;justify-content:space-between;align-items:baseline;padding:18px 0;border-bottom:1px solid var(--line);font-family:var(--serif);font-size:24px}
+.spot.type li b{font-family:var(--sans);font-size:12px;letter-spacing:.2em;color:var(--accent);font-weight:500}
 @media (max-width:760px){.hz{height:auto}.hz .sticky{position:relative;height:auto;padding:90px 0}.track{overflow-x:auto;scroll-snap-type:x mandatory;transform:none!important;padding-bottom:10px}.spot{scroll-snap-align:start}}
 
 /* reviews */
@@ -274,7 +251,8 @@ body[data-season="summer"] .house .flowers.on{opacity:1}
 
 /* booking */
 .book{position:relative;overflow:hidden;color:#fff;background:linear-gradient(180deg,var(--sky1),var(--sky2));transition:background 1.2s}
-.book .bg{position:absolute;inset:0;opacity:.35}
+.book .bg{position:absolute;inset:-5%;background-size:cover;background-position:center;filter:blur(3px) brightness(.45);transform:scale(1.05);transition:background-image 1s}
+.book{background:#0a0f1d!important}
 .book .grid{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:6vw;align-items:center}
 .book .lead{color:rgba(255,255,255,.75)}
 form{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-radius:28px;padding:clamp(22px,3vw,40px);display:grid;grid-template-columns:1fr 1fr;gap:16px}
@@ -303,9 +281,8 @@ footer{padding:80px clamp(16px,7vw,110px) 30px;border-top:1px solid var(--line)}
 @media (prefers-reduced-motion:reduce){*{transition-duration:.01s!important;animation-duration:.01s!important}}
 </style>
 </head>
-<body data-season="winter" class="locked">
+<body data-season="winter" class="locked intro">
 
-<canvas id="clouds"></canvas>
 <canvas id="snow"></canvas>
 <div id="introLogo"><div><div class="t">KitzAlpen</div><div class="s">Hollersbach · Pinzgau · Salzburger Land</div></div></div>
 <div class="cur"></div><div class="cur-dot"></div>
@@ -328,15 +305,9 @@ footer{padding:80px clamp(16px,7vw,110px) 30px;border-top:1px solid var(--line)}
 
 <!-- HERO -->
 <header class="hero" id="top">
-  <div class="sky"></div>
-  <svg id="stars" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice"></svg>
-  <div class="orb" data-px="-.02"></div>
-  <div class="mtn" data-depth="0.08" data-px="0.01"><svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice" id="L1"></svg></div>
-  <div class="mtn" data-depth="0.16" data-px="0.02"><svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice" id="L2"></svg></div>
-  <div class="mist"></div>
-  <div class="mtn" data-depth="0.26" data-px="0.035"><svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice" id="L3"></svg></div>
-  <div class="mtn" data-depth="0.38" data-px="0.05"><svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice" id="L4"></svg></div>
-  <div class="mtn" data-depth="0.52" data-px="0.075"><svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice" id="L5"></svg></div>
+  <div class="heroimg" id="heroimg"></div>
+  <canvas id="gl"></canvas>
+  <div class="shade"></div>
 
   <div class="hero-c">
     <div class="eyebrow fade" data-hero>Hollersbach im Pinzgau · 807 m</div>
@@ -403,44 +374,7 @@ footer{padding:80px clamp(16px,7vw,110px) 30px;border-top:1px solid var(--line)}
       </ul>
       <div class="prog"><i id="cprog"></i></div>
     </div>
-    <svg class="house" viewBox="0 0 600 520" id="house">
-      <defs>
-        <filter id="glow2" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-        <linearGradient id="wood" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#8a5a36"/><stop offset="1" stop-color="#5d3920"/></linearGradient>
-        <pattern id="planks" width="600" height="18" patternUnits="userSpaceOnUse"><rect width="600" height="18" fill="url(#wood)"/><rect y="16" width="600" height="2" fill="rgba(0,0,0,.25)"/></pattern>
-      </defs>
-      <ellipse cx="300" cy="478" rx="280" ry="26" fill="rgba(0,0,0,.18)"/>
-      <g class="pt" data-s="0" style="transform:translateY(40px)">
-        <rect x="90" y="410" width="420" height="66" fill="#8b8f96"/>
-        <rect x="90" y="410" width="420" height="6" fill="#a7abb2"/>
-        <rect x="110" y="250" width="380" height="162" fill="url(#planks)"/>
-      </g>
-      <g class="pt" data-s="1" style="transform:translateY(-120px)">
-        <polygon points="60,262 300,92 540,262 520,272 300,118 80,272" fill="#3b2a20"/>
-        <polygon points="100,262 300,120 500,262" fill="url(#planks)"/>
-        <path class="snowroof" d="M58 262 L300 90 L542 262 L530 266 Q470 236 420 210 Q360 170 300 128 Q240 170 180 210 Q130 236 70 266 Z" fill="#f6f9ff"/>
-      </g>
-      <g class="pt" data-s="2" style="transform:scale(.6);transform-origin:300px 300px">
-        <rect class="wlit" x="140" y="290" width="70" height="80" rx="3"/>
-        <rect class="wlit" x="390" y="290" width="70" height="80" rx="3"/>
-        <rect class="wlit" x="268" y="170" width="64" height="64" rx="3"/>
-        <path d="M140 330h70M175 290v80M390 330h70M425 290v80M268 202h64M300 170v64" stroke="#3b2a20" stroke-width="4"/>
-        <rect x="132" y="370" width="86" height="10" fill="#3b2a20"/><rect x="382" y="370" width="86" height="10" fill="#3b2a20"/>
-      </g>
-      <g class="pt" data-s="3" style="transform:translateX(-30px)">
-        <rect x="262" y="320" width="76" height="92" rx="4" fill="#3b2a20"/>
-        <circle cx="324" cy="368" r="4" fill="#d9b26b"/>
-        <rect x="200" y="244" width="200" height="8" fill="#3b2a20"/>
-        <path d="M206 244v-26M226 244v-26M246 244v-26M266 244v-26M334 244v-26M354 244v-26M374 244v-26M394 244v-26M200 218h200" stroke="#3b2a20" stroke-width="5"/>
-        <g class="flowers"><circle cx="150" cy="378" r="7" fill="#e2475b"/><circle cx="170" cy="380" r="7" fill="#f2a33a"/><circle cx="196" cy="378" r="7" fill="#e2475b"/><circle cx="404" cy="378" r="7" fill="#f2a33a"/><circle cx="426" cy="380" r="7" fill="#e2475b"/><circle cx="450" cy="378" r="7" fill="#f2a33a"/></g>
-      </g>
-      <g class="pt" data-s="4" style="transform:translateY(-30px)">
-        <rect x="410" y="120" width="34" height="80" fill="#6d6f74"/>
-        <rect x="404" y="114" width="46" height="10" fill="#4e5055"/>
-        <path class="smoke" d="M427 108 C 410 80, 450 60, 430 30 S 445 -10, 430 -30"/>
-      </g>
-    </svg>
-    <div class="photos" id="cphotos"></div>
+    <div class="stack" id="stack"></div>
   </div>
 </section>
 
@@ -462,7 +396,7 @@ footer{padding:80px clamp(16px,7vw,110px) 30px;border-top:1px solid var(--line)}
       <div class="p1" data-img="new-photo/restaurant-sala/restaurant-austria1.jpeg" data-sp=".06"></div>
       <div class="p2" data-img="new-photo/restaurant-mancare/austria-hotel1.jpeg" data-sp="-.08"></div>
       <div class="p3" data-img="new-photo/restaurant-sala/restaurant-austria3.jpeg" data-sp=".14"></div>
-      <svg class="steam" viewBox="0 0 120 160"><path d="M30 150 C 10 120, 50 100, 30 70 S 40 20, 30 0"/><path d="M60 150 C 40 120, 80 100, 60 70 S 70 20, 60 0"/><path d="M90 150 C 70 120, 110 100, 90 70 S 100 20, 90 0"/></svg>
+      
     </div>
   </div>
 </section>
@@ -489,7 +423,7 @@ footer{padding:80px clamp(16px,7vw,110px) 30px;border-top:1px solid var(--line)}
 
 <!-- BOOKING -->
 <section id="book" class="book">
-  <svg class="bg" viewBox="0 0 1600 600" preserveAspectRatio="xMidYMax slice" id="bookBg"></svg>
+  <div class="bg" id="bookBg"></div>
   <div class="wrap grid">
     <div>
       <div class="kicker" data-n="07" style="color:var(--accent)">Letzter Schritt</div>
@@ -531,73 +465,8 @@ let season = 'winter';
 const W = () => innerWidth, H = () => innerHeight;
 const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
 const ease = t => 1 - Math.pow(1 - t, 3);
-const smooth = t => { t = clamp(t,0,1); return t*t*(3-2*t); };
-
-/* ---------- seeded random + mountains ---------- */
-function rng(seed){ return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
-function ridge(seed, base, amp, rough, peaks){
-  const r = rng(seed), n = 129, pts = new Array(n).fill(0);
-  pts[0] = (r()-.5)*amp; pts[n-1] = (r()-.5)*amp;
-  let step = n-1, a = amp;
-  while(step > 1){ const h = step/2;
-    for(let i=h;i<n;i+=step) pts[i] = (pts[i-h]+pts[i+h])/2 + (r()-.5)*a;
-    a *= rough; step = h; }
-  return pts.map((v,i)=>{ const x = i/(n-1)*1600; let y = base - v;
-    for(const [px,ph,pw] of peaks) y -= ph*Math.exp(-((x-px)**2)/(2*pw*pw));
-    return [x,y]; });
-}
-const pathOf = pts => 'M0,900 L' + pts.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' L') + ' L1600,900 Z';
-const NS = 'http://www.w3.org/2000/svg';
-function layer(id, seed, base, amp, rough, peaks, c1, c2, capVar){
-  const pts = ridge(seed, base, amp, rough, peaks), minY = Math.min(...pts.map(p=>p[1]));
-  const g = `g${id}`;
-  const stops = capVar
-    ? `<stop offset="0" style="stop-color:var(${capVar})"/><stop offset=".22" style="stop-color:var(${capVar})"/><stop offset=".4" style="stop-color:var(${c1})"/><stop offset="1" style="stop-color:var(${c2})"/>`
-    : `<stop offset="0" style="stop-color:var(${c1})"/><stop offset="1" style="stop-color:var(${c2})"/>`;
-  $('#'+id).innerHTML = `<defs><linearGradient id="${g}" gradientUnits="userSpaceOnUse" x1="0" x2="0" y1="${minY}" y2="${base+120}">${stops}</linearGradient></defs><path d="${pathOf(pts)}" fill="url(#${g})"/>`;
-  return pts;
-}
-const yAt = (pts,x) => { const i = clamp(Math.floor(x/1600*128),0,127), t = (x - pts[i][0])/(pts[i+1][0]-pts[i][0]); return pts[i][1]*(1-t)+pts[i+1][1]*t; };
-function trees(pts, from, to, step, hmin, hmax, seed){
-  const r = rng(seed); let d = '';
-  for(let x=from; x<to; x+= step*(.5+r())){
-    const y = yAt(pts,x)+4, h = hmin + r()*(hmax-hmin), w = h*.36;
-    for(let k=0;k<3;k++){ const ty = y - h + k*h*.28, bw = w*(.55+k*.25);
-      d += `M${x},${ty} L${x-bw},${ty+h*.42} L${x+bw},${ty+h*.42} Z`; }
-    d += `M${x-1.5},${y-h*.1} h3 v${h*.14} h-3Z`;
-  }
-  return d;
-}
-function buildMountains(){
-  layer('L1', 11, 520, 120, .58, [[420,240,120],[980,300,140],[1350,200,110]], '--far', '--m2', '--cap');
-  layer('L2', 27, 590, 110, .55, [[200,170,110],[700,220,130],[1250,160,120]], '--m2', '--m3', '--cap');
-  const p3 = layer('L3', 45, 660, 80, .52, [[520,110,160],[1100,120,140]], '--m3', '--m4');
-  $('#L3').insertAdjacentHTML('beforeend', `<path d="${trees(p3,0,1600,26,22,40,3)}" style="fill:var(--m4)"/>`);
-  const p4 = layer('L4', 61, 740, 60, .5, [[300,60,200],[1150,70,180]], '--m4', '--front');
-  // chalet on L4
-  const cx = 1180, cy = yAt(p4,cx);
-  $('#L4').insertAdjacentHTML('beforeend', `
-    <defs><filter id="glow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
-    <path d="${trees(p4,0,1000,30,30,58,9)} ${trees(p4,1300,1600,30,30,58,19)}" style="fill:var(--front)"/>
-    <g transform="translate(${cx},${cy-2})">
-      <rect x="-40" y="-40" width="80" height="44" style="fill:var(--front)"/>
-      <polygon points="-54,-38 0,-78 54,-38" style="fill:var(--front)"/>
-      <polygon points="-56,-38 0,-80 56,-38 50,-36 0,-72 -50,-36" style="fill:var(--cap);opacity:.9"/>
-      <rect x="24" y="-80" width="9" height="20" style="fill:var(--front)"/>
-      <path class="smoke" d="M28 -84 C 18 -100, 40 -112, 28 -130 S 36 -160, 26 -176" style="stroke-width:3"/>
-      <rect class="win" x="-30" y="-30" width="13" height="13"/><rect class="win" x="-6" y="-30" width="13" height="13"/><rect class="win" x="18" y="-30" width="13" height="13"/><rect class="win" x="-6" y="-58" width="12" height="12"/>
-    </g>`);
-  const p5 = layer('L5', 77, 840, 40, .5, [[100,60,180],[1500,80,160]], '--front', '--front');
-  $('#L5').insertAdjacentHTML('beforeend', `<path d="${trees(p5,0,380,22,60,120,5)} ${trees(p5,1280,1600,22,60,130,7)}" style="fill:var(--front)"/>`);
-  // stars
-  const r = rng(99); let s = '';
-  for(let i=0;i<160;i++){ s += `<circle cx="${r()*1600}" cy="${r()*560}" r="${(r()*1.3+.3).toFixed(2)}" fill="#fff" style="animation-delay:${(r()*3).toFixed(2)}s;animation-duration:${(2+r()*3).toFixed(2)}s"/>`; }
-  $('#stars').innerHTML = s;
-  // booking bg mountains
-  const pb = ridge(5, 420, 90, .55, [[400,180,140],[1000,230,160],[1400,140,120]]);
-  $('#bookBg').innerHTML = `<path d="${pathOf(pb).replace('M0,900','M0,600').replace('L1600,900','L1600,600')}" fill="rgba(255,255,255,.18)"/>`;
-}
-buildMountains();
+const easeIO = t => t<.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2;
+const HERO = { winter: IMG+'pension/pension-winter-day.jpg', summer: IMG+'activities-curated/grossglockner.webp' };
 
 /* ---------- text split ---------- */
 function split(el, html){
@@ -622,7 +491,11 @@ function split(el, html){
 }
 $$('[data-split]').forEach(el => split(el));
 
-/* ---------- season text ---------- */
+/* ---------- images ---------- */
+$$('[data-img]').forEach(el => el.style.backgroundImage = `url(${IMG}${el.dataset.img}), linear-gradient(135deg,#34466e,#141b30)`);
+$('#heroimg').style.backgroundImage = `url(${HERO.winter})`;
+
+/* ---------- season text & content ---------- */
 function applySeasonText(animateHero){
   const k = season === 'winter' ? 'w' : 's';
   $$('[data-w]').forEach(el => { if(el.id === 'heroTitle') return; el.textContent = el.dataset[k]; });
@@ -630,13 +503,10 @@ function applySeasonText(animateHero){
   ht.classList.remove('in');
   split(ht, ht.dataset[k]);
   if(animateHero) requestAnimationFrame(()=>requestAnimationFrame(()=>ht.classList.add('in')));
-  buildSpots();
-  buildMarquee();
-  $$('[data-imgs]').forEach(el => el.style.backgroundImage = `url(${IMG}${season==='winter'?el.dataset.img:el.dataset.imgs})`);
+  buildSpots(); buildMarquee(); buildStack();
+  $('#bookBg').style.backgroundImage = `url(${IMG}${season==='winter'?'pension/pension-winter-night.jpg':'chalet-curated/exterior/exterior-01.jpg'})`;
+  $('#heroimg').style.backgroundImage = `url(${HERO[season]})`;
 }
-
-/* ---------- images ---------- */
-$$('[data-img]').forEach(el => el.style.backgroundImage = `url(${IMG}${el.dataset.img}), linear-gradient(135deg,#34466e,#141b30)`);
 
 /* ---------- marquee ---------- */
 function buildMarquee(){
@@ -663,20 +533,20 @@ $('#roomGrid').innerHTML = rooms.map((r,i)=>`
 $('#amen').innerHTML = ['Kostenloses WLAN','Flachbild-TV','Kostenloser Parkplatz','Restaurant & Bar','Frühstücksbuffet','Eigenes Badezimmer','Bergblick','M+ Gästekarte'].map((a,i)=>`<span class="fade" style="--d:${i*.05}s">${a}</span>`).join('');
 $$('.room').forEach(c => {
   c.addEventListener('pointermove', e => { const r = c.getBoundingClientRect(), x = (e.clientX-r.left)/r.width, y = (e.clientY-r.top)/r.height;
-    c.style.transform = `rotateY(${(x-.5)*14}deg) rotateX(${(.5-y)*14}deg) translateZ(10px)`; c.style.setProperty('--gx', x*100+'%'); c.style.setProperty('--gy', y*100+'%'); });
+    c.style.transform = `rotateY(${(x-.5)*12}deg) rotateX(${(.5-y)*12}deg) translateZ(10px)`; c.style.setProperty('--gx', x*100+'%'); c.style.setProperty('--gy', y*100+'%'); });
   c.addEventListener('pointerleave', () => c.style.transform = '');
 });
 
-/* ---------- chalet photos ---------- */
-const cph = ['chalet-curated/interior/interior-01.jpg','chalet-curated/interior/interior-03.jpg','chalet-curated/interior/interior-07.jpg','chalet-curated/detalii/detalii-01.jpg','chalet-curated/exterior/exterior-01.jpg'];
-$('#cphotos').innerHTML = cph.map(p=>`<div style="background-image:url(${IMG}${p})"></div>`).join('');
+/* ---------- chalet photo stack ---------- */
+function buildStack(){
+  const first = season==='winter' ? ['chalet-curated/exterior/exterior-03.jpg','Ankommen'] : ['chalet-curated/exterior/exterior-01.jpg','Ankommen'];
+  const list = [first,['chalet-curated/interior/interior-01.jpg','Schlafen'],['chalet-curated/interior/interior-03.jpg','Kochen'],['chalet-curated/interior/interior-07.jpg','Wohnen'],['chalet-curated/detalii/detalii-01.jpg','Details']];
+  $('#stack').innerHTML = list.map((p,i)=>`<div class="f${i===0?' on':''}" style="z-index:${i+1}"><i style="background-image:url(${IMG}${p[0]})"></i><span class="cap">KitzAlpen Chalet · 0${i+1} / 05</span></div>`).join('');
+}
 
-/* ---------- spots ---------- */
-function artSpot(i, title, km, txt, grad){
-  const r = rng(i*7+3), pts = ridge(i*13+1, 300, 90, .55, [[200+r()*200,150+r()*80,80+r()*60]]);
-  const d = pathOf(pts).replace('M0,900','M0,600').replace('L1600,900','L1600,600');
-  return `<article class="spot art" style="--g:${grad}"><div class="im"></div>
-    <svg viewBox="0 0 600 600" preserveAspectRatio="none"><circle cx="${430+r()*80}" cy="${90+r()*40}" r="26" fill="rgba(255,255,255,.85)"/><path d="${d}" transform="translate(0,30) scale(.375,1)" fill="rgba(255,255,255,.88)"/><path d="${d}" transform="translate(-120,140) scale(.45,1)" fill="rgba(10,16,36,.88)"/></svg>
+/* ---------- spots (real photos only) ---------- */
+function photoSpot(i, title, km, txt, img){
+  return `<article class="spot"><div class="im" style="background-image:url(${IMG}${img}),linear-gradient(160deg,#4a5a7a,#141b30)"></div>
     <div class="km">${km}<small>KM</small></div><div class="ix">0${i+1}</div><div class="sc"><h4>${title}</h4><p>${txt}</p></div></article>`;
 }
 function buildSpots(){
@@ -686,22 +556,23 @@ function buildSpots(){
     split($('#spotsH'), 'Vier Skigebiete <em>in Reichweite.</em>'); $('#spotsH').classList.add('in');
     $('#spotsL').textContent = 'Skitage im Pinzgau – warme Pension, verschneite Berge, direkt an der Panoramabahn.';
     T.innerHTML = [
-      ['Panoramabahn Kitzbüheler Alpen','≈1','Direkt ab Hollersbach hinauf zur Resterhöhe – und hinein ins Netz von KitzSki.','linear-gradient(160deg,#6d8fd0,#24365f)'],
-      ['Wildkogel-Arena','≈12','Familienfreundliche Pisten und eine der längsten beleuchteten Rodelbahnen der Welt.','linear-gradient(160deg,#9f8ad8,#2e2a5c)'],
-      ['Kitzsteinhorn · Kaprun','≈35','Gletscherskigebiet mit Schneesicherheit von Herbst bis Frühsommer.','linear-gradient(160deg,#7cc4e0,#1d3d5c)'],
-      ['Zillertal Arena','≈30','Über den Gerlospass ins größte Skigebiet des Zillertals.','linear-gradient(160deg,#e0a3b8,#3a2850)'],
-    ].map((s,i)=>artSpot(i,s[0],s[1],s[2],s[3])).join('');
+      photoSpot(0,'Ihr Basislager','≈1','Aus der Tür, zur Panoramabahn – und hinauf zur Resterhöhe.','pension/pension-winter-day.jpg'),
+      photoSpot(1,'KitzSki · Kitzbühel','≈30','Über die Panoramabahn ins Skigebiet der Hahnenkamm-Stadt.','activities-curated/kitzbuhel.webp'),
+      photoSpot(2,'Zell am See · Kaprun','≈30','Schmittenhöhe und Gletscher Kitzsteinhorn – schneesicher bis ins Frühjahr.','activities-curated/zell-am-see.webp'),
+      `<article class="spot type"><div class="km" style="color:var(--text)">+2</div><div class="ix" style="color:var(--muted)">04</div>
+        <ul><li>Wildkogel-Arena<b>≈12 KM</b></li><li>Zillertal Arena<b>≈30 KM</b></li><li>Rodeln · Langlauf<b>VOR ORT</b></li></ul>
+        <div class="sc" style="color:var(--muted)"><p>Fragen Sie uns nach Skipässen und dem besten Tag für jede Piste.</p></div></article>`
+    ].join('');
   } else {
     $('#spotsK').textContent = 'Sommer · Aktivitäten';
     split($('#spotsH'), 'Ausflüge, die <em>bleiben.</em>'); $('#spotsH').classList.add('in');
     $('#spotsL').textContent = 'Wasserfälle, Seen, Hochalpenstraßen – der Nationalpark Hohe Tauern beginnt hinter dem Haus.';
     T.innerHTML = [
-      ['Krimmler Wasserfälle','≈27','Der Sprühnebel der höchsten Wasserfälle Österreichs, mitten im Nationalpark Hohe Tauern.','krimml-waterfalls.webp'],
-      ['Zell am See','≈30','Die Stadt am Zeller See mit der romanischen Kirche St. Hippolyt.','zell-am-see.webp'],
-      ['Kitzbühel','≈30','Die Alpenstadt des Hahnenkamm-Rennens – mondän, sportlich, charmant.','kitzbuhel.webp'],
-      ['Großglockner','≈60','Hochalpenstraße zum höchsten Aussichtspunkt Österreichs.','grossglockner.webp'],
-    ].map((s,i)=>`<article class="spot"><div class="im" style="background-image:url(${IMG}activities-curated/${s[3]}),linear-gradient(160deg,#6fae7e,#1d3b26)"></div>
-      <div class="km">${s[1]}<small>KM</small></div><div class="ix">0${i+1}</div><div class="sc"><h4>${s[0]}</h4><p>${s[2]}</p></div></article>`).join('');
+      ['Krimmler Wasserfälle','≈27','Der Sprühnebel der höchsten Wasserfälle Österreichs, mitten im Nationalpark Hohe Tauern.','activities-curated/krimml-waterfalls.webp'],
+      ['Zell am See','≈30','Die Stadt am Zeller See mit der romanischen Kirche St. Hippolyt.','activities-curated/zell-am-see.webp'],
+      ['Kitzbühel','≈30','Die Alpenstadt des Hahnenkamm-Rennens – mondän, sportlich, charmant.','activities-curated/kitzbuhel.webp'],
+      ['Großglockner','≈60','Hochalpenstraße zum höchsten Aussichtspunkt Österreichs.','activities-curated/grossglockner.webp'],
+    ].map((s,i)=>photoSpot(i,s[0],s[1],s[2],s[3])).join('');
   }
   if(window.__layout) __layout();
 }
@@ -716,7 +587,7 @@ $('#quote').innerHTML = revs.map(r=>`<div class="q"><p>„${r[0]}“</p><cite>${
 $('#dots').innerHTML = revs.map(()=>'<button aria-label="Bewertung"><i></i></button>').join('');
 $$('.q p').forEach(p=>split(p));
 let qi = -1, qt;
-function showQ(i){ qi = i; $$('.q').forEach((q,k)=>{ q.classList.toggle('on',k===i); const p=q.querySelector('p'); p.classList.toggle('in', k===i); });
+function showQ(i){ qi = i; $$('.q').forEach((q,k)=>{ q.classList.toggle('on',k===i); q.querySelector('p').classList.toggle('in', k===i); });
   $$('#dots button').forEach((b,k)=>{ b.classList.remove('on'); void b.offsetWidth; b.classList.toggle('on',k===i); });
   clearTimeout(qt); qt = setTimeout(()=>showQ((qi+1)%revs.length), 6000); }
 $$('#dots button').forEach((b,k)=>b.onclick=()=>showQ(k));
@@ -739,7 +610,7 @@ status(); setInterval(status, 60000);
 /* ---------- reveal on scroll ---------- */
 const io = new IntersectionObserver(es => es.forEach(e => { if(e.isIntersecting){ e.target.classList.add('in');
   if(e.target.classList.contains('room')) e.target.querySelectorAll('.cnt').forEach(countUp);
-  if(e.target.classList.contains('rev') || e.target.closest?.('.rev')) { if(qi<0) showQ(0); }
+  if(e.target.classList.contains('rev')) { if(qi<0) showQ(0); }
   io.unobserve(e.target); } }), {threshold:.18, rootMargin:'0px 0px -6% 0px'});
 function observe(){ $$('.fade:not([data-hero]),[data-split],.panel,[data-io],.rev').forEach(el=>io.observe(el)); }
 function countUp(el){ const to = +el.dataset.to, t0 = performance.now(); const f = t => { const p = clamp((t-t0)/1200,0,1); el.textContent = Math.round(ease(p)*to); if(p<1) requestAnimationFrame(f); }; requestAnimationFrame(f); }
@@ -751,51 +622,109 @@ document.addEventListener('pointerover', e => cur.classList.toggle('big', !!e.ta
 $$('.mag').forEach(b => { b.addEventListener('pointermove', e => { const r = b.getBoundingClientRect(); b.style.transform = `translate(${(e.clientX-r.left-r.width/2)*.25}px,${(e.clientY-r.top-r.height/2)*.35}px)`; });
   b.addEventListener('pointerleave', () => { b.style.transition='transform .6s var(--ease)'; b.style.transform=''; setTimeout(()=>b.style.transition='',600); }); });
 
-/* ---------- clouds ---------- */
-const cc = $('#clouds'), cx2 = cc.getContext('2d');
+/* =====================================================================
+   WebGL hero: real photograph + volumetric-looking fbm clouds
+   ===================================================================== */
+const gl = (() => { try { return $('#gl').getContext('webgl', {premultipliedAlpha:false, antialias:false}); } catch(e){ return null; } })();
+let G = null;
+let cloud = 1, mixAB = 0, zoomIn = 0;      // cloud: 1 = fully clouded, 0 = clear
+function initGL(){
+  if(!gl) return false;
+  const vs = `attribute vec2 p;varying vec2 v;void main(){v=p*.5+.5;gl_Position=vec4(p,0.,1.);}`;
+  const fs = `precision highp float;
+  varying vec2 v;
+  uniform sampler2D A,B; uniform vec2 res,sA,sB,mouse; uniform float t,cloud,mixAB,zoom,scroll;
+  float h(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}
+  float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
+    return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}
+  float fbm(vec2 p){float s=0.,a=.5;mat2 r=mat2(.8,.6,-.6,.8);for(int i=0;i<6;i++){s+=a*n(p);p=r*p*2.02+3.1;a*=.5;}return s;}
+  vec2 cover(vec2 uv,vec2 img){float ra=res.x/res.y,ri=img.x/img.y;vec2 s=ra>ri?vec2(1.,ri/ra):vec2(ra/ri,1.);return (uv-.5)*s+.5;}
+  vec3 img(sampler2D T,vec2 sz,vec2 uv){vec2 c=(uv-.5)/zoom+.5;c+=mouse*vec2(.012,.008);c.y-=scroll*.12;
+    return texture2D(T,vec2(cover(c,sz).x,1.-cover(c,sz).y)).rgb;}
+  // one cloud layer: perspective push (camera flies forward as cloud->0)
+  vec4 layer(vec2 uv,float depth,float k,float seed){
+    vec2 q=(uv-.5)*vec2(res.x/res.y,1.);
+    float push=1.+(1.-k)*(1.6+depth*2.2);           // flying through: features grow
+    q=q/push*(1.6+depth)+vec2(seed,seed*1.7)+vec2(t*.012*(1.+depth),t*.004);
+    float d=fbm(q*.85);
+    float edge=1.05-k*1.35;                          // coverage threshold
+    float a=smoothstep(edge,edge+.28,d);
+    float lit=fbm(q*.85+vec2(-.05,.08));             // fake light from top-left
+    float sh=clamp((d-lit)*3.2+.55,0.,1.);
+    vec3 col=mix(vec3(.66,.71,.80),vec3(1.,.995,.985),sh);
+    col=mix(col,vec3(.93,.95,.98),.25);
+    return vec4(col,a);
+  }
+  void main(){
+    vec2 uv=v;
+    vec3 c=mix(img(A,sA,uv),img(B,sB,uv),mixAB);
+    // gentle grade
+    c=pow(c,vec3(.97));c*=1.03;
+    // atmospheric haze while inside clouds
+    c=mix(c,vec3(.88,.91,.96),clamp(cloud*1.1,0.,1.)*.75);
+    vec4 far=layer(uv,0.,cloud,1.3);
+    vec4 near=layer(uv,1.,clamp(cloud*1.08,0.,1.),7.7);
+    c=mix(c,far.rgb,far.a*clamp(cloud*1.6,0.,1.));
+    c=mix(c,near.rgb,near.a*clamp(cloud*1.4,0.,1.)*.95);
+    float vg=smoothstep(1.25,.35,length((uv-.5)*vec2(1.2,1.)));c*=mix(.82,1.,vg);
+    gl_FragColor=vec4(c,1.);
+  }`;
+  const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if(!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw gl.getShaderInfoLog(s); return s; };
+  try {
+    const pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(pr); gl.useProgram(pr);
+    const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
+    const lp = gl.getAttribLocation(pr,'p'); gl.enableVertexAttribArray(lp); gl.vertexAttribPointer(lp,2,gl.FLOAT,false,0,0);
+    const U = {}; ['A','B','res','sA','sB','mouse','t','cloud','mixAB','zoom','scroll'].forEach(k=>U[k]=gl.getUniformLocation(pr,k));
+    gl.uniform1i(U.A,0); gl.uniform1i(U.B,1);
+    const mk = () => { const tx = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tx);
+      gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([200,210,230,255]));
+      ['TEXTURE_WRAP_S','TEXTURE_WRAP_T'].forEach(k=>gl.texParameteri(gl.TEXTURE_2D,gl[k],gl.CLAMP_TO_EDGE));
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR); return tx; };
+    G = { U, tex:[mk(),mk()], size:[[16,10],[16,10]], cur:0 };
+    return true;
+  } catch(e){ console.warn('GL', e); G = null; return false; }
+}
+function loadTex(slot, url){ return new Promise(res => { const im = new Image(); im.crossOrigin = 'anonymous';
+  im.onload = () => { if(G){ gl.activeTexture(gl.TEXTURE0+slot); gl.bindTexture(gl.TEXTURE_2D, G.tex[slot]);
+    try { gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,im); G.size[slot] = [im.naturalWidth, im.naturalHeight]; } catch(e){ $('#gl').style.display='none'; } } res(); };
+  im.onerror = () => res(); im.src = url; }); }
+let GDPR = 1;
+function sizeGL(){ if(!G) return; GDPR = Math.min(devicePixelRatio||1, innerWidth < 800 ? 1.25 : 1.5); const c = $('#gl'); c.width = c.clientWidth*GDPR; c.height = c.clientHeight*GDPR; gl.viewport(0,0,c.width,c.height); }
+let smx = 0, smy = 0;
+function drawGL(t){
+  if(!G) return;
+  const c = $('#gl'), U = G.U;
+  smx += ((mx/W()-.5) - smx)*.04; smy += ((my/H()-.5) - smy)*.04;
+  const z = 1.0 + (1-zoomIn)*0.28 + Math.sin(t*.00006)*.015 + .03;
+  gl.uniform2f(U.res, c.width, c.height); gl.uniform2f(U.sA, ...G.size[0]); gl.uniform2f(U.sB, ...G.size[1]);
+  gl.uniform2f(U.mouse, smx, smy); gl.uniform1f(U.t, t*.001); gl.uniform1f(U.cloud, cloud); gl.uniform1f(U.mixAB, mixAB);
+  gl.uniform1f(U.zoom, z); gl.uniform1f(U.scroll, clamp(scrollY/H(),0,1.2));
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, G.tex[0]);
+  gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, G.tex[1]);
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+}
+
+/* =====================================================================
+   Snow: soft photographic flakes with depth-of-field (bokeh up close)
+   ===================================================================== */
 const sc = $('#snow'), sx = sc.getContext('2d');
 let DPR = Math.min(devicePixelRatio||1, 2);
-function resize(){ DPR = Math.min(devicePixelRatio||1, 2); [cc,sc].forEach(c=>{ c.width = W()*DPR; c.height = H()*DPR; }); }
-resize();
-function sprite(inner, outer){ const s = document.createElement('canvas'); s.width = s.height = 256; const g = s.getContext('2d');
-  const gr = g.createRadialGradient(128,118,10,128,128,128); gr.addColorStop(0,inner); gr.addColorStop(.55,inner.replace(/[\d.]+\)$/,'.75)')); gr.addColorStop(1,outer);
-  g.fillStyle = gr; g.fillRect(0,0,256,256); return s; }
-const spr = [sprite('rgba(255,255,255,1)','rgba(255,255,255,0)'), sprite('rgba(228,235,248,1)','rgba(228,235,248,0)'), sprite('rgba(206,216,236,1)','rgba(206,216,236,0)')];
-let puffs = [];
-function makePuffs(){ const r = rng(Math.random()*1e9|0); puffs = [];
-  const n = innerWidth < 700 ? 55 : 95, M = Math.max(W(),H());
-  for(let i=0;i<n;i++){ const x = r()*W()*1.2 - W()*.1, y = r()*H()*1.2 - H()*.1, dx = x - W()/2, dy = y - H()/2, l = Math.hypot(dx,dy)||1;
-    puffs.push({x,y,ux:dx/l,uy:dy/l,s:M*(.22+r()*.3),sp:.6+r()*.8,img:spr[(r()*3)|0],ph:r()*6.28,side:Math.sign(dx)||1}); }
-  puffs.sort((a,b)=>a.s-b.s); }
-makePuffs();
-let cloudP = 0; // 0 = closed, 1 = fully open
-function drawClouds(t){
-  const w = W(), h = H(); cx2.setTransform(DPR,0,0,DPR,0,0); cx2.clearRect(0,0,w,h);
-  if(cloudP >= 1) { cc.style.display='none'; return; } cc.style.display='block';
-  const p = cloudP, base = 1 - smooth(p/.32);
-  if(base > 0){ const g = cx2.createLinearGradient(0,0,0,h); g.addColorStop(0,`rgba(214,224,242,${base})`); g.addColorStop(.5,`rgba(244,247,253,${base})`); g.addColorStop(1,`rgba(205,214,234,${base})`); cx2.fillStyle = g; cx2.fillRect(0,0,w,h); }
-  for(const q of puffs){
-    const e = Math.pow(p, 1.5) * q.sp;
-    const x = q.x + q.ux*e*w*.9 + q.side*Math.pow(p,2.2)*w*.7 + Math.sin(t*.0004+q.ph)*14;
-    const y = q.y + q.uy*e*h*.5 - p*h*.08 + Math.cos(t*.0003+q.ph)*10;
-    const s = q.s*(1 + p*1.1), a = 1 - smooth((p - .25)/.7);
-    if(a <= 0) continue; cx2.globalAlpha = a; cx2.drawImage(q.img, x - s/2, y - s/2, s, s);
-  }
-  cx2.globalAlpha = 1;
-}
-function tween(from, to, dur, fn, done){ const t0 = performance.now(); const f = t => { const k = clamp((t-t0)/dur,0,1); fn(from + (to-from)*(to>from?easeIO(k):easeIO(k))); if(k<1) requestAnimationFrame(f); else done&&done(); }; requestAnimationFrame(f); }
-const easeIO = t => t<.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2;
-
-/* ---------- snow / summer particles (3D) ---------- */
+function resize(){ DPR = Math.min(devicePixelRatio||1, 2); sc.width = W()*DPR; sc.height = H()*DPR; sizeGL(); }
+function flakeSprite(soft){ const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d');
+  const gr = g.createRadialGradient(32,32,0,32,32,32);
+  if(soft){ gr.addColorStop(0,'rgba(255,255,255,.55)'); gr.addColorStop(.55,'rgba(255,255,255,.35)'); gr.addColorStop(.8,'rgba(255,255,255,.12)'); gr.addColorStop(1,'rgba(255,255,255,0)'); }
+  else { gr.addColorStop(0,'rgba(255,255,255,1)'); gr.addColorStop(.35,'rgba(255,255,255,.85)'); gr.addColorStop(1,'rgba(255,255,255,0)'); }
+  g.fillStyle = gr; g.fillRect(0,0,64,64); return c; }
+function moteSprite(){ const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d');
+  const gr = g.createRadialGradient(32,32,0,32,32,32); gr.addColorStop(0,'rgba(255,246,220,.9)'); gr.addColorStop(.4,'rgba(255,236,190,.35)'); gr.addColorStop(1,'rgba(255,230,180,0)');
+  g.fillStyle = gr; g.fillRect(0,0,64,64); return c; }
+const SHARP = flakeSprite(false), SOFT = flakeSprite(true), MOTE = moteSprite();
 const F = () => Math.max(W(),H())*.5;
 let flakes = [], flight = 0;
-function spawn(f, anywhere){
-  const z = anywhere ? .08 + Math.random()*.92 : 1, f0 = F();
-  f.z = z; f.x = (Math.random()*2-1)*(W()/2)*z/f0*1.2; f.y = (Math.random()*2-1)*(H()/2)*z/f0*1.2;
-  f.r = .6 + Math.random()*1.6; f.ph = Math.random()*6.28; f.vy = .25 + Math.random()*.5; f.tw = Math.random()*6.28;
-}
-function initFlakes(){ const n = season==='winter' ? (innerWidth<700?160:340) : (innerWidth<700?50:90); flakes = []; for(let i=0;i<n;i++){ const f={}; spawn(f,true); flakes.push(f);} }
-initFlakes();
+function spawn(f){ const f0 = F(); f.z = .08 + Math.random()*.92;
+  f.x = (Math.random()*2-1)*(W()/2)*f.z/f0*1.2; f.y = (Math.random()*2-1)*(H()/2)*f.z/f0*1.2;
+  f.r = .7 + Math.random()*1.5; f.ph = Math.random()*6.28; f.vy = .3 + Math.random()*.5; f.tw = Math.random()*6.28; }
+function initFlakes(){ const n = season==='winter' ? (innerWidth<700?150:320) : (innerWidth<700?24:46); flakes = []; for(let i=0;i<n;i++){ const f={}; spawn(f); flakes.push(f);} }
 let wind = 0, scrollFade = 1;
 function drawSnow(t, dt){
   const w = W(), h = H(), f0 = F(), hx = w/2, hy = h/2;
@@ -803,44 +732,40 @@ function drawSnow(t, dt){
   mvx += ((mx - pmx) - mvx)*.05; pmx = mx; wind += (mvx*.02 - wind)*.05;
   const winter = season === 'winter';
   for(const f of flakes){
-    // flight towards camera
-    if(flight > 0){ f.z -= flight*dt*.0009; if(f.z < .06){ spawn(f,false); } }
-    if(winter){ f.y += f.vy*dt*.00009*(1+(1-f.z)); f.x += (Math.sin(t*.001+f.ph)*.00004 + wind*.00002)*dt; }
-    else { f.y -= f.vy*dt*.00003; f.x += Math.sin(t*.0007+f.ph)*.00006*dt; }
-    let px = hx + f.x/f.z*f0, py = hy + f.y/f.z*f0;
-    // cursor repel
+    if(flight > 0 && winter){ f.z -= flight*dt*.0009; if(f.z < .05){ spawn(f); f.z = 1; } }
+    if(winter){ f.y += f.vy*dt*.00009*(1+(1-f.z)); f.x += (Math.sin(t*.0009+f.ph)*.00004 + wind*.00002 + .000012)*dt; }
+    else { f.y -= f.vy*dt*.000012; f.x += Math.sin(t*.0004+f.ph)*.00003*dt; }
+    const px = hx + f.x/f.z*f0, py = hy + f.y/f.z*f0;
     const dx = px - mx, dy = py - my, d2 = dx*dx+dy*dy;
-    if(d2 < 14400){ const d = Math.sqrt(d2)||1, k = (120-d)/120*6; f.x += dx/d*k*f.z/f0; f.y += dy/d*k*f.z/f0; }
-    const lim = 1.25;
-    if(py > h*lim || py < -h*(lim-1) - 40 || px < -w*.25 || px > w*1.25){
-      if(winter){ f.z = .1 + Math.random()*.9; f.y = -(hy/f0)*f.z - .02; f.x = (Math.random()*2-1)*(hx/f0)*f.z*1.2; }
-      else { f.z = .1 + Math.random()*.9; f.y = (hy/f0)*f.z + .02; f.x = (Math.random()*2-1)*(hx/f0)*f.z*1.2; }
-      continue;
+    if(d2 < 14400){ const d = Math.sqrt(d2)||1, k = (120-d)/120*5; f.x += dx/d*k*f.z/f0; f.y += dy/d*k*f.z/f0; }
+    if(py > h*1.25 || py < -h*.25 - 40 || px < -w*.25 || px > w*1.25){
+      f.z = .1 + Math.random()*.9; f.x = (Math.random()*2-1)*(hx/f0)*f.z*1.2;
+      f.y = winter ? -(hy/f0)*f.z - .02 : (hy/f0)*f.z + .02; continue;
     }
-    const size = f.r / f.z * (winter ? .9 : .7), near = f.z < .25;
-    let a = clamp((1 - f.z)*1.4, .15, .95) * scrollFade;
+    let a = clamp((1 - f.z)*1.5, .12, .95) * scrollFade;
     if(winter){
-      if(near){ sx.fillStyle = `rgba(255,255,255,${a*.35})`; sx.beginPath(); sx.arc(px,py,Math.min(size,26),0,6.283); sx.fill(); }
-      else { sx.fillStyle = `rgba(255,255,255,${a})`; sx.beginPath(); sx.arc(px,py,Math.min(size,8),0,6.283); sx.fill(); }
+      // depth of field: near flakes become large soft bokeh discs, mid sharp, far tiny & faint
+      const size = f.r / f.z * 2.2;
+      if(f.z < .22){ const s = Math.min(size*2.2, 70); sx.globalAlpha = a*.55; sx.drawImage(SOFT, px-s/2, py-s/2, s, s); }
+      else { const s = Math.min(size, 12); sx.globalAlpha = a; sx.drawImage(SHARP, px-s/2, py-s/2, s, s); }
     } else {
-      const fl = .5 + .5*Math.sin(t*.003 + f.tw); a *= fl;
-      const g = sx.createRadialGradient(px,py,0,px,py,size*4); g.addColorStop(0,`rgba(255,226,140,${a})`); g.addColorStop(1,'rgba(255,200,90,0)');
-      sx.fillStyle = g; sx.beginPath(); sx.arc(px,py,size*4,0,6.283); sx.fill();
+      // summer: sunlit dust drifting slowly in the light
+      const fl = .55 + .45*Math.sin(t*.0012 + f.tw), s = Math.min(f.r / f.z * 4, 22);
+      sx.globalAlpha = a*fl*.6; sx.drawImage(MOTE, px-s/2, py-s/2, s, s);
     }
   }
+  sx.globalAlpha = 1;
 }
 
 /* ---------- scroll driven ---------- */
-const layers = $$('.mtn'), orb = $('.orb'), nav = $('#nav'), alt = $('#alt');
-let sy = scrollY, lastY = 0, chalet = $('#chalet'), hz = $('#spots'), track = $('#track');
-const parts = $$('#house .pt'), feats = $$('#feat li'), photos = () => $$('#cphotos div'), plates = $$('#plates > div');
+const nav = $('#nav'), alt = $('#alt'), heroC = $('.hero-c');
+let sy = scrollY, lastY = 0; const chalet = $('#chalet'), hz = $('#spots'), track = $('#track');
+const feats = $$('#feat li'), plates = $$('#plates > div');
 let hzMax = 0;
 window.__layout = () => { hzMax = Math.max(0, track.scrollWidth - innerWidth); if(innerWidth > 760) hz.style.height = (innerHeight + hzMax*1.1) + 'px'; else hz.style.height = ''; };
 function onScroll(){
   sy = scrollY; const h = H();
-  const nx = (mx / W() - .5), ny = (my / H() - .5);
-  layers.forEach(l => { const d = +l.dataset.depth, p = +l.dataset.px; l.style.transform = `translate3d(${-nx*p*W()}px,${sy*d - ny*p*60}px,0)`; });
-  orb.style.transform = `translate3d(${nx*20}px,${sy*.05}px,0)`;
+  heroC.style.transform = `translate3d(0,${sy*.35}px,0)`; heroC.style.opacity = clamp(1 - sy/(h*.7), 0, 1);
   nav.classList.toggle('solid', sy > h*.7);
   nav.classList.toggle('hide', sy > lastY && sy > h && !body.classList.contains('locked')); lastY = sy;
   alt.classList.toggle('on', sy > h*.4);
@@ -848,64 +773,68 @@ function onScroll(){
   $('#altv').textContent = Math.round(2400 - pr*(2400-807)).toLocaleString('de-AT') + ' M ü. A.';
   $('#altdot').style.top = (pr*173) + 'px';
   scrollFade = clamp(1 - (sy - h*.6)/(h*.8), .25, 1);
-  // chalet build
+  // chalet photo stack
   const cr = chalet.getBoundingClientRect(), cp = clamp(-cr.top / (cr.height - h), 0, 1);
-  parts.forEach(p => { const k = +p.dataset.s; p.classList.toggle('on', k===0 ? cp > .01 : cp > k/5.6); });
-  feats.forEach((f,i) => f.classList.toggle('on', cp > i/5.6));
-  photos().forEach((f,i) => f.classList.toggle('on', cp > i/5.6 + .05));
-  $$('#house .wlit').forEach(w => w.classList.toggle('on', cp > 2/5.6));
-  $$('#house .flowers').forEach(w => w.classList.toggle('on', cp > 3/5.6));
+  $$('#stack .f').forEach((f,i) => f.classList.toggle('on', i===0 || cp > i/5.2));
+  feats.forEach((f,i) => f.classList.toggle('on', cp > i/5.2 - .02));
   $('#cprog').style.transform = `scaleX(${cp})`;
   // restaurant plates parallax
   const rr = $('#plates').getBoundingClientRect(), rp = (rr.top + rr.height/2 - h/2);
   plates.forEach(p => p.style.transform = `translate3d(0,${rp * +p.dataset.sp}px,0)`);
   // horizontal
   if(innerWidth > 760){ const hr = hz.getBoundingClientRect(), hp = clamp(-hr.top / (hr.height - h), 0, 1); track.style.transform = `translate3d(${-hp*hzMax}px,0,0)`;
-    $$('.spot .im', track).forEach((im,i) => { const r = im.parentElement.getBoundingClientRect(); im.style.backgroundPosition = `${50 + (r.left + r.width/2 - W()/2)/W()*-30}% 50%`; }); }
+    $$('.spot .im', track).forEach(im => { const r = im.parentElement.getBoundingClientRect(); im.style.backgroundPosition = `${50 + (r.left + r.width/2 - W()/2)/W()*-30}% 50%`; }); }
 }
 addEventListener('scroll', onScroll, {passive:true});
-addEventListener('resize', () => { resize(); makePuffs(); __layout(); onScroll(); });
+addEventListener('resize', () => { resize(); __layout(); onScroll(); });
 
 /* ---------- main loop ---------- */
 let lt = performance.now();
 function loop(t){ const dt = Math.min(50, t - lt); lt = t;
   cx += (mx-cx)*.15; cy += (my-cy)*.15; cur.style.transform = `translate(${cx}px,${cy}px)`;
-  if(cloudP < 1) drawClouds(t);
+  if(scrollY < H()*1.3) drawGL(t);
   drawSnow(t, dt);
-  if(sy < H()*1.2) onScroll();
   requestAnimationFrame(loop); }
 
-/* ---------- intro: emerge from clouds ---------- */
-function intro(){
-  applySeasonText(false); __layout(); observe(); onScroll();
+function tween(from, to, dur, fn, done){ const t0 = performance.now(); const f = t => { const k = clamp((t-t0)/dur,0,1); fn(from + (to-from)*easeIO(k), k); if(k<1) requestAnimationFrame(f); else done&&done(); }; requestAnimationFrame(f); }
+
+/* ---------- intro: emerge from the clouds into the real photo ---------- */
+async function intro(){
+  resize(); applySeasonText(false); __layout(); observe(); onScroll(); initFlakes();
+  const ok = initGL(); sizeGL();
+  if(ok){ await Promise.race([loadTex(0, HERO.winter), new Promise(r=>setTimeout(r,4000))]); loadTex(1, HERO.summer); }
+  else $('#gl').style.display = 'none';
   requestAnimationFrame(loop);
-  if(reduce){ cloudP = 1; finishIntro(); return; }
-  flight = 3.2;
+  if(reduce || !ok){ cloud = 0; zoomIn = 1; finishIntro(); return; }
+  flight = 3;
   const logo = $('#introLogo');
-  setTimeout(()=>logo.classList.add('show'), 250);
+  setTimeout(()=>logo.classList.add('show'), 200);
   setTimeout(()=>{ logo.classList.add('gone');
-    tween(0, 1, 3000, v => { cloudP = v; flight = 3.2*(1-v) + .0; }, () => { flight = 0; });
-    setTimeout(finishIntro, 1300);
-  }, 1900);
+    tween(1, 0, 3600, v => { cloud = v; flight = 3*v; }, () => { flight = 0; });
+    tween(0, 1, 4600, v => zoomIn = v);
+    setTimeout(finishIntro, 1900);
+  }, 1800);
 }
 function finishIntro(){
-  body.classList.remove('locked');
+  body.classList.remove('locked','intro');
   $('#heroTitle').classList.add('in');
   $$('[data-hero]').forEach(e=>e.classList.add('in'));
   setTimeout(()=>{ $('#introLogo').style.display='none'; }, 1500);
 }
 
-/* ---------- season switch through the clouds ---------- */
+/* ---------- season switch: clouds roll in, the landscape changes, clouds part ---------- */
 let switching = false;
-$('#season').addEventListener('click', () => {
+$('#season').addEventListener('click', async () => {
   if(switching) return; switching = true;
   const next = season === 'winter' ? 'summer' : 'winter';
-  makePuffs(); cc.style.display = 'block'; cloudP = .999;
-  tween(1, 0, 900, v => cloudP = v, () => {
-    season = next; body.dataset.season = next;
-    initFlakes(); applySeasonText(true);
-    if(next==='winter') flight = 2.2;
-    setTimeout(()=> tween(0, 1, 2200, v => { cloudP = v; if(next==='winter') flight = 2.2*(1-v); }, () => { flight = 0; switching = false; }), 250);
+  if(scrollY > 10){ scrollTo({top:0, behavior:'smooth'}); await new Promise(r=>setTimeout(r, Math.min(1200, 300 + scrollY*.15))); }
+  if(!G){ season = next; body.dataset.season = next; initFlakes(); applySeasonText(true); switching = false; return; }
+  tween(0, 1, 1100, v => cloud = v, () => {
+    season = next; body.dataset.season = next; mixAB = next === 'summer' ? 1 : 0;
+    initFlakes(); applySeasonText(true); zoomIn = 0;
+    if(next==='winter') flight = 2;
+    setTimeout(()=>{ tween(1, 0, 2800, v => { cloud = v; if(next==='winter') flight = 2*v; }, () => { flight = 0; switching = false; });
+      tween(0, 1, 3600, v => zoomIn = v); }, 300);
   });
 });
 
