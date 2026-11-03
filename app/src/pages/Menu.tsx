@@ -17,7 +17,7 @@ import { BURGER_CATS, CAT_ICON, EXTRA_IDS, MAIN_CATS, POPULAR, SEARCH_PH, UPSELL
 type Lang = "ro" | "hu";
 type ItemSheet = { id: string; qty: number; vi: number; extras: string[]; note: string };
 type CodeInfo = { code: string; percent: number; category_id: string | null; label: string };
-type Form = { name: string; phone: string; email: string; address: string; city: string };
+type Form = { name: string; phone: string; email: string; address: string; city: string ; uid?: string };
 
 const T = {
   ro: { deliv: "Livrare", pick: "Ridicare", search: SEARCH_PH.ro, add: "Adaugă", from: "de la", out: "Epuizat azi",
@@ -147,14 +147,22 @@ export default function Menu({ source }: { source?: string }) {
     document.body.style.overflow = sheet || popup || (cartOpen && !isDesktop()) ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [sheet, popup, cartOpen]);
-  // signed-in members get their details filled in
+  // datele din formular rămân în telefon (localStorage) și sunt legate de contul care le-a completat:
+  // alt cont pe același telefon pornește de la datele lui, iar la ieșirea din cont datele se șterg
   useEffect(() => {
-    if (!customer) return;
-    setForm(f => ({ ...f,
-      name: f.name || customer.name || "", phone: f.phone || customer.phone || "",
-      email: customer.email || f.email, address: f.address || customer.addresses?.[0] || "",
-    }));
-  }, [customer?.id]);
+    if (!authReady) return;
+    if (!customer) {
+      setForm(f => (f.uid ? { name: "", phone: "", email: "", address: "", city: f.city || "Târgu Mureș" } : f));
+      return;
+    }
+    setForm(f => {
+      const mine = !f.uid || f.uid === customer.id;     // completat de acest cont sau ca vizitator, înainte de cont
+      const base = mine ? f : { ...f, name: "", phone: "", address: "", email: "" };
+      return { ...base, uid: customer.id,
+        name: base.name || customer.name || "", phone: base.phone || customer.phone || "",
+        email: customer.email || base.email, address: base.address || customer.addresses?.[0] || "" };
+    });
+  }, [authReady, customer?.id]);
   // ?cart=1 opens the cart (used by "comandă din nou" and the bottom bar)
   const rloc = useLocation();
   useEffect(() => {
