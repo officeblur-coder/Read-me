@@ -3,846 +3,497 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>KitzAlpen Konzept</title>
+<title>Ein Tag in Hollersbach</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;1,9..144,300;1,9..144,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&display=swap" rel="stylesheet">
 <style>
 :root{
-  --img:https://www.kitzalpen.at/images;
-  --ease:cubic-bezier(.16,1,.3,1);
-  --serif:'Fraunces',Georgia,serif;
-  --sans:'Inter',system-ui,sans-serif;
-}
-body[data-season="winter"]{
-  --sky1:#070f24;--sky2:#22386a;--sky3:#d7a9bf;
-  --far:#9fb2d6;--cap:#f7fbff;--m2:#6c80ad;--m3:#43547f;--m4:#283556;--front:#121a31;
-  --orb:#f4f1e6;--orbGlow:rgba(230,236,255,.35);
-  --page:#0b1223;--page2:#111a31;--text:#eef2ff;--muted:#9aa6c6;--line:rgba(255,255,255,.12);
-  --accent:#ffcf8a;--accent2:#8fb8ff;--card:rgba(255,255,255,.05);
-}
-body[data-season="summer"]{
-  --sky1:#2f7fd0;--sky2:#8cc6f0;--sky3:#fff0c9;
-  --far:#a9bfd4;--cap:#dfe7ee;--m2:#79a184;--m3:#4f8259;--m4:#356341;--front:#1d3b26;
-  --orb:#fff3c4;--orbGlow:rgba(255,214,120,.55);
-  --page:#f5efe3;--page2:#ebe3d2;--text:#1d2a20;--muted:#5f6b5c;--line:rgba(0,0,0,.1);
-  --accent:#d9771f;--accent2:#2f7d4a;--card:rgba(255,255,255,.55);
+  --paper:#f2efe9; --ink:#141210; --red:#c8241d;
+  --bg:#f2efe9; --fg:#141210; --dim:rgba(20,18,16,.55); --rule:rgba(20,18,16,.18);
+  --cond:'Archivo',Arial Narrow,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:auto}
-body{background:var(--page);color:var(--text);font-family:var(--sans);font-weight:400;overflow-x:hidden;
-  transition:background-color 1.2s var(--ease),color 1.2s var(--ease);-webkit-font-smoothing:antialiased}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--cond);font-stretch:100%;font-size:17px;line-height:1.5;overflow-x:hidden;-webkit-font-smoothing:antialiased}
 body.locked{overflow:hidden}
-a{color:inherit;text-decoration:none}
-img{display:block;max-width:100%}
-::selection{background:var(--accent);color:#111}
+a{color:inherit}
+img{display:block;width:100%;height:100%;object-fit:cover}
+::selection{background:var(--red);color:#fff}
 
-/* ---------- canvases ---------- */
-#snow{position:fixed;inset:0;z-index:91;pointer-events:none}
-#introLogo{position:fixed;inset:0;z-index:92;display:grid;place-items:center;pointer-events:none;color:#33405e;text-align:center}
-#introLogo .t{font-family:var(--serif);font-size:clamp(48px,9vw,128px);font-weight:300;letter-spacing:-.02em;opacity:0;filter:blur(14px);transform:scale(1.08);transition:all 1.4s var(--ease)}
-#introLogo .s{font-size:12px;letter-spacing:.5em;text-transform:uppercase;margin-top:14px;opacity:0;transition:all 1.4s var(--ease) .3s}
-#introLogo.show .t{opacity:1;filter:blur(0);transform:scale(1)}
-#introLogo.show .s{opacity:.7}
-#introLogo.gone .t,#introLogo.gone .s{opacity:0;filter:blur(20px);transform:scale(1.3);transition-duration:1.2s}
+/* type */
+.big{font-stretch:68%;font-weight:800;text-transform:uppercase;line-height:.86;letter-spacing:-.005em}
+.lab{font-stretch:85%;font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.tab{font-variant-numeric:tabular-nums}
 
-/* ---------- cursor ---------- */
-.cur,.cur-dot{position:fixed;left:0;top:0;pointer-events:none;z-index:200;border-radius:50%;mix-blend-mode:difference}
-.cur{width:38px;height:38px;border:1px solid #fff;margin:-19px 0 0 -19px;transition:width .4s var(--ease),height .4s var(--ease),margin .4s var(--ease),background .3s}
-.cur-dot{width:5px;height:5px;background:#fff;margin:-2.5px 0 0 -2.5px}
-.cur.big{width:80px;height:80px;margin:-40px 0 0 -40px;background:rgba(255,255,255,.15)}
-@media (hover:none){.cur,.cur-dot{display:none}}
+/* trail marker (rot-weiß-rot, painted on rock) */
+.blaze{display:inline-flex;flex-direction:column;width:26px;height:18px;vertical-align:middle;filter:url(#paint)}
+.blaze i{flex:1;background:var(--red)}.blaze i:nth-child(2){background:#fff}
 
-/* ---------- nav ---------- */
-nav{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:22px clamp(16px,4vw,48px);
-  transition:background .5s,padding .5s var(--ease),transform .6s var(--ease);color:#fff}
-nav.solid{background:color-mix(in srgb,var(--page) 72%,transparent);backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px);padding-top:14px;padding-bottom:14px;color:var(--text)}
-nav.hide{transform:translateY(-110%)}
-.brand{font-family:var(--serif);font-size:24px;font-weight:500;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
-.brand svg{width:26px;height:26px}
-.brand small{font-family:var(--sans);font-size:9px;letter-spacing:.3em;text-transform:uppercase;opacity:.6;display:block;margin-top:2px}
-.links{display:flex;gap:30px;font-size:13px;letter-spacing:.04em}
-.links a{position:relative;opacity:.85}
-.links a::after{content:"";position:absolute;left:0;bottom:-4px;height:1px;width:100%;background:currentColor;transform:scaleX(0);transform-origin:right;transition:transform .5s var(--ease)}
-.links a:hover::after{transform:scaleX(1);transform-origin:left}
-.navr{display:flex;align-items:center;gap:14px}
-.season{position:relative;display:flex;border:1px solid currentColor;border-radius:99px;padding:3px;cursor:pointer;background:none;color:inherit;font:inherit}
-.season span{position:relative;z-index:1;display:flex;align-items:center;gap:6px;padding:7px 13px;font-size:12px;letter-spacing:.08em;transition:color .5s}
-.season span svg{width:14px;height:14px}
-.season i{position:absolute;top:3px;bottom:3px;left:3px;width:calc(50% - 3px);border-radius:99px;background:currentColor;transition:transform .7s var(--ease)}
-body[data-season="summer"] .season i{transform:translateX(100%)}
-body[data-season="winter"] .season span:first-of-type,body[data-season="summer"] .season span:last-of-type{color:var(--page)}
-nav:not(.solid) .season span{--page:#1a2340}
-.btn{display:inline-flex;align-items:center;gap:10px;padding:14px 26px;border-radius:99px;background:var(--accent);color:#16120b;font-size:13px;font-weight:600;letter-spacing:.06em;border:0;cursor:pointer;position:relative;overflow:hidden;font-family:var(--sans)}
-.btn::before{content:"";position:absolute;inset:0;background:#fff;transform:translateY(101%);border-radius:inherit;transition:transform .6s var(--ease)}
-.btn:hover::before{transform:translateY(0)}
-.btn>*{position:relative}
-.btn.ghost{background:transparent;color:inherit;border:1px solid currentColor}
-.btn.ghost::before{background:currentColor;opacity:.12}
-.burger{display:none}
-@media (max-width:900px){.links{display:none}}
-@media (max-width:560px){.navr .btn{display:none}.season span{padding:7px 9px}.season span b{display:none}}
+/* fixed chrome */
+#snow{position:fixed;inset:0;z-index:40;pointer-events:none}
+.top{position:fixed;left:0;right:0;top:0;z-index:50;display:flex;justify-content:space-between;align-items:center;padding:18px clamp(16px,3vw,36px);color:var(--fg);transition:opacity 1.2s,color .4s}
+.top.onph,.clock.onph{color:#fff;text-shadow:0 1px 10px rgba(0,0,0,.4)}
+.top .wm{display:flex;align-items:center;gap:12px;font-weight:700;font-stretch:80%;font-size:15px;letter-spacing:.02em;text-decoration:none;text-transform:uppercase}
+.top nav{display:flex;gap:26px}
+.top button,.top nav a{background:none;border:0;color:inherit;font:inherit;font-stretch:85%;font-weight:600;font-size:13px;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;text-decoration:none;padding:4px 0;border-bottom:1px solid transparent}
+.top button:hover,.top nav a:hover{border-color:currentColor}
+@media (max-width:700px){.top nav a:not(.keep){display:none}.top .wm span+*{display:none}}
+.clock{pointer-events:none;position:fixed;right:clamp(16px,3vw,36px);bottom:18px;z-index:50;color:var(--fg);text-align:right;transition:opacity 1.2s,color .4s}
+.clock b{display:block;font-stretch:62%;font-weight:700;font-size:clamp(34px,4.2vw,60px);line-height:.9;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.clock span{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;font-stretch:85%}
+body.intro .top,body.intro .clock{opacity:0}
 
-/* ---------- hero ---------- */
-.hero{position:relative;height:100vh;min-height:640px;overflow:hidden;color:#fff}
-.heroimg{position:absolute;inset:0;background-size:cover;background-position:center;transform:scale(1.08)}
+/* hero */
+.hero{position:relative;height:100vh;height:100svh;min-height:560px;background:#c9ced6;overflow:hidden}
+#heroimg{position:absolute;inset:0;background-size:cover;background-position:center}
 #gl{position:absolute;inset:0;width:100%;height:100%;display:block}
-.shade{position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(6,10,22,.72) 0%,rgba(6,10,22,.38) 45%,transparent 72%),linear-gradient(0deg,rgba(6,10,22,.55),transparent 35%)}
-body.intro .shade,body.intro nav,body.intro .hero-c,body.intro .scrollhint,body.intro .hero-meta,body.intro .badge{opacity:0}
-.shade,nav,.hero-c,.scrollhint,.hero-meta,.badge{transition:opacity 1.6s var(--ease)}
-.hero-c{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;justify-content:center;padding:0 clamp(16px,7vw,110px);padding-bottom:12vh}
-.eyebrow{display:flex;align-items:center;gap:14px;font-size:11px;letter-spacing:.42em;text-transform:uppercase;opacity:.8;margin-bottom:26px}
-.eyebrow::before{content:"";width:40px;height:1px;background:currentColor}
-.h1{font-family:var(--serif);font-weight:300;font-size:clamp(46px,9.2vw,150px);line-height:.92;letter-spacing:-.035em;max-width:13ch;text-shadow:0 10px 60px rgba(0,0,0,.25)}
-.h1 em{font-style:italic;font-weight:300;color:var(--accent)}
-.hero-sub{max-width:440px;margin-top:30px;font-size:16px;line-height:1.6;opacity:.85;font-weight:300}
-.hero-cta{display:flex;gap:12px;margin-top:36px;flex-wrap:wrap}
-.hero-cta .btn.ghost{color:#fff}
-.scrollhint{position:absolute;left:50%;bottom:28px;z-index:6;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:10px;font-size:10px;letter-spacing:.4em;text-transform:uppercase;opacity:.7}
-.scrollhint i{width:1px;height:50px;background:linear-gradient(#fff,transparent);animation:drop 2s var(--ease) infinite;transform-origin:top}
-@keyframes drop{0%{transform:scaleY(0)}50%{transform:scaleY(1)}100%{transform:scaleY(1);opacity:0}}
-.hero-meta{position:absolute;right:clamp(16px,4vw,48px);bottom:34px;z-index:6;display:flex;gap:34px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;opacity:.8}
-.hero-meta b{display:block;font-family:var(--serif);font-size:30px;letter-spacing:0;text-transform:none;font-weight:300}
-@media (max-width:760px){.hero-meta{display:none}}
+.hero .facts{position:absolute;left:clamp(16px,3vw,36px);bottom:22px;color:#fff;z-index:3;text-shadow:0 1px 14px rgba(0,0,0,.35);transition:opacity 1.2s .6s}
+.hero h1{font-size:clamp(48px,13.5vw,230px)}
+@media (max-width:700px){.hero .facts{bottom:96px}.clock b{font-size:40px}}
+.hero .facts p{margin-top:12px;font-stretch:85%;font-weight:600;font-size:13px;letter-spacing:.05em;text-transform:uppercase}
+body.intro .hero .facts{opacity:0}
+.sub{position:absolute;left:50%;bottom:clamp(110px,16vh,160px);transform:translateX(-50%);z-index:3;width:max-content;max-width:min(760px,90vw);text-align:center}
+.sub span{display:inline;background:rgba(10,10,10,.78);color:#fff;padding:4px 10px;line-height:1.75;font-size:clamp(16px,1.6vw,21px);box-decoration-break:clone;-webkit-box-decoration-break:clone;opacity:0;transition:opacity .5s}
+.sub.on span{opacity:1}
+.hero .sub{top:clamp(90px,14vh,140px);bottom:auto}
 
-/* split letters */
-.ch{display:inline-block;opacity:0;transform:translateY(.6em) rotate(6deg);filter:blur(10px);transition:all 1.1s var(--ease);transition-delay:calc(var(--i)*28ms)}
-.in .ch,.ch.in{opacity:1;transform:none;filter:blur(0)}
-.w{display:inline-block;white-space:nowrap}
-.fade{opacity:0;transform:translateY(40px);transition:opacity 1.2s var(--ease),transform 1.2s var(--ease);transition-delay:var(--d,0s)}
-.fade.in{opacity:1;transform:none}
+/* scenes */
+.scene{position:relative;padding:clamp(80px,12vw,160px) clamp(16px,3vw,36px)}
+.time{display:flex;align-items:center;gap:14px;margin-bottom:28px}
+.time b{font-stretch:62%;font-weight:700;font-size:22px;font-variant-numeric:tabular-nums}
+.h{font-size:clamp(48px,8.5vw,140px);max-width:12ch}
+.txt{max-width:46ch;font-size:clamp(17px,1.35vw,20px);line-height:1.55;margin-top:28px}
 
-/* ---------- altitude ---------- */
-.alt{position:fixed;right:22px;top:50%;transform:translateY(-50%);z-index:40;display:flex;align-items:center;gap:12px;font-size:10px;letter-spacing:.2em;mix-blend-mode:difference;color:#fff;opacity:0;transition:opacity 1s}
-.alt.on{opacity:1}
-.alt .bar{width:1px;height:180px;background:rgba(255,255,255,.3);position:relative}
-.alt .bar i{position:absolute;left:-3px;width:7px;height:7px;border-radius:50%;background:#fff;top:0}
-.alt .v{writing-mode:vertical-rl;transform:rotate(180deg)}
-@media (max-width:760px){.alt{display:none}}
+/* photographs come into focus like a lens */
+.ph{position:relative;overflow:hidden;background:#8a8580}
+.ph img{filter:blur(18px) saturate(.6);transform:scale(1.08);transition:filter 1.8s cubic-bezier(.2,.7,.2,1),transform 2.4s cubic-bezier(.2,.7,.2,1)}
+.ph.in img{filter:none;transform:none}
 
-/* ---------- generic section ---------- */
-section{position:relative}
-.wrap{padding:clamp(80px,13vw,180px) clamp(16px,7vw,110px)}
-.kicker{font-size:11px;letter-spacing:.4em;text-transform:uppercase;color:var(--accent);margin-bottom:22px;display:flex;gap:14px;align-items:center}
-.kicker::before{content:attr(data-n);color:var(--muted);letter-spacing:.1em}
-.h2{font-family:var(--serif);font-weight:300;font-size:clamp(38px,6vw,96px);line-height:.98;letter-spacing:-.03em;max-width:16ch}
-.h2 em{font-style:italic;color:var(--accent)}
-.lead{font-size:17px;line-height:1.7;color:var(--muted);max-width:520px;font-weight:300}
+/* breakfast */
+.bf{display:grid;grid-template-columns:5fr 7fr;gap:clamp(16px,3vw,40px);align-items:end}
+.hours{display:grid;grid-template-columns:auto 1fr;gap:6px 26px;margin-top:36px;border-top:1px solid var(--rule);padding-top:18px;max-width:420px}
+.hours dt{color:var(--dim)} .hours dd{font-weight:600;font-variant-numeric:tabular-nums}
+.live{display:inline-flex;align-items:center;gap:8px;margin-top:20px;font-weight:600;font-size:15px}
+.live i{width:9px;height:9px;border-radius:50%;background:#2f9e44;flex:none}
+.live.off i{background:var(--red)}
+@media (max-width:820px){.bf{grid-template-columns:1fr}}
 
-/* marquee */
-.marq{border-block:1px solid var(--line);overflow:hidden;padding:26px 0;white-space:nowrap}
-.marq .tr{display:inline-flex;gap:60px;animation:marq 38s linear infinite;font-family:var(--serif);font-size:clamp(28px,4vw,56px);font-weight:300;font-style:italic}
-.marq .tr span{display:inline-flex;align-items:center;gap:60px}
-.marq .tr span::after{content:"✻";font-style:normal;color:var(--accent);font-size:.6em}
-@keyframes marq{to{transform:translateX(-50%)}}
+/* departure board */
+.board{margin-top:50px;background:#111;color:#f3eee4;padding:clamp(14px,2.4vw,30px);box-shadow:0 30px 60px rgba(0,0,0,.25)}
+.board .hd,.board .row{display:grid;grid-template-columns:1fr auto auto;gap:clamp(12px,3vw,40px);align-items:center}
+.board .hd{color:#9b9488;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding-bottom:12px;border-bottom:1px solid #333}
+.board .row{padding:12px 0;border-bottom:1px solid #262626}
+.flap{display:flex;gap:2px;overflow:hidden}
+.flap s{text-decoration:none;display:inline-grid;place-items:center;width:.8em;height:1.3em;background:#1f1f1f;border-radius:2px;font-stretch:70%;font-weight:700;font-size:clamp(17px,2.2vw,30px);text-transform:uppercase;position:relative;color:#f3eee4}
+.flap s::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:#0a0a0a}
+.flap s.sp{background:#161616}
+.board .note{color:#9b9488;font-size:13px;margin-top:16px}
+@media (max-width:700px){.board .c3{display:none}.board .hd,.board .row{grid-template-columns:1fr auto}.flap s{font-size:15px}}
 
-/* stay panels */
-.stay{display:grid;grid-template-columns:1fr 1fr;gap:clamp(14px,2vw,28px);margin-top:70px}
-.panel{position:relative;height:clamp(420px,62vh,640px);border-radius:28px;overflow:hidden;color:#fff;isolation:isolate;cursor:pointer}
-.panel .im{position:absolute;inset:-8%;background-size:cover;background-position:center;transition:transform 1.6s var(--ease);will-change:transform}
-.panel:hover .im{transform:scale(1.08)}
-.panel::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 35%,rgba(5,10,25,.85));z-index:1}
-.panel .pc{position:absolute;left:32px;right:32px;bottom:30px;z-index:2}
-.panel .num{font-family:var(--serif);font-size:96px;font-weight:300;line-height:1;opacity:.9}
-.panel h3{font-family:var(--serif);font-weight:400;font-size:clamp(28px,3vw,42px);margin:6px 0 10px}
-.panel p{font-size:15px;opacity:.8;max-width:340px;line-height:1.6;font-weight:300}
-.panel .go{position:absolute;right:28px;top:28px;z-index:2;width:62px;height:62px;border-radius:50%;border:1px solid rgba(255,255,255,.5);display:grid;place-items:center;transition:all .6s var(--ease)}
-.panel:hover .go{background:var(--accent);border-color:var(--accent);color:#111;transform:rotate(-45deg)}
-.panel .reveal{position:absolute;inset:0;z-index:3;background:var(--accent);clip-path:inset(0 0 0 0);transition:clip-path 1.4s var(--ease)}
-.panel.in .reveal{clip-path:inset(0 0 100% 0)}
-@media (max-width:800px){.stay{grid-template-columns:1fr}}
+/* rooms = printed price list */
+.rooms{margin-top:56px;display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--rule);border:1px solid var(--rule)}
+.room{background:var(--bg);display:flex;flex-direction:column}
+.room .ph{aspect-ratio:4/3}
+.room h3{font-stretch:75%;font-weight:700;font-size:24px;line-height:1.05;padding:18px 16px 6px;text-transform:uppercase}
+.room p{padding:0 16px 16px;color:var(--dim);font-size:15px;min-height:4.4em}
+.room dl{display:grid;grid-template-columns:repeat(3,1fr);margin-top:auto;border-top:1px solid var(--rule)}
+.room dl div{padding:12px 16px}.room dl div+div{border-left:1px solid var(--rule)}
+.room dt{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.room dd{font-stretch:70%;font-weight:700;font-size:26px;font-variant-numeric:tabular-nums}
+.incl{margin-top:22px;color:var(--dim);font-size:15px;max-width:80ch}
+@media (max-width:1000px){.rooms{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.rooms{grid-template-columns:1fr}}
 
-/* rooms */
-.rooms-h{display:flex;justify-content:space-between;align-items:end;gap:40px;flex-wrap:wrap}
-.rooms{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:70px;perspective:1200px}
-.room{position:relative;border-radius:22px;background:var(--card);border:1px solid var(--line);overflow:hidden;transform-style:preserve-3d;transition:transform .5s var(--ease),border-color .5s;will-change:transform}
-.room:hover{border-color:var(--accent)}
-.room .ph{height:240px;background-size:cover;background-position:center;position:relative;transform:translateZ(30px)}
-.room .tag{position:absolute;top:14px;left:14px;font-size:10px;letter-spacing:.2em;text-transform:uppercase;padding:7px 11px;border-radius:99px;background:rgba(10,14,30,.6);backdrop-filter:blur(6px);color:#fff}
-.room .bd{padding:24px 22px 26px;transform:translateZ(40px)}
-.room h4{font-family:var(--serif);font-weight:400;font-size:24px;line-height:1.1;min-height:2.2em}
-.room p{font-size:14px;color:var(--muted);line-height:1.55;margin:10px 0 22px;min-height:3.1em}
-.room .st{display:flex;gap:22px;border-top:1px solid var(--line);padding-top:18px}
-.room .st div{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
-.room .st b{display:block;font-family:var(--serif);font-size:26px;font-weight:300;color:var(--text);letter-spacing:0;text-transform:none}
-.room .glare{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at var(--gx,50%) var(--gy,50%),rgba(255,255,255,.22),transparent 45%);opacity:0;transition:opacity .4s}
-.room:hover .glare{opacity:1}
-.amen{display:flex;flex-wrap:wrap;gap:10px;margin-top:40px}
-.amen span{padding:10px 18px;border:1px solid var(--line);border-radius:99px;font-size:13px;color:var(--muted);transition:all .4s var(--ease)}
-.amen span:hover{background:var(--accent);color:#111;border-color:var(--accent);transform:translateY(-3px)}
-@media (max-width:1100px){.rooms{grid-template-columns:1fr 1fr}}
-@media (max-width:600px){.rooms{grid-template-columns:1fr}}
+/* dinner: full-bleed */
+.full{position:relative;height:110vh;overflow:hidden;color:#fff}
+.full .ph{position:absolute;inset:0}
+.full .cap{position:absolute;left:clamp(16px,3vw,36px);right:clamp(16px,3vw,36px);bottom:12vh;z-index:2;text-shadow:0 2px 24px rgba(0,0,0,.5)}
 
-/* chalet build */
-.chalet{height:420vh;background:var(--page2);transition:background-color 1.2s}
-.chalet .sticky{position:sticky;top:0;height:100vh;display:grid;grid-template-columns:1fr 1.15fr;align-items:center;gap:4vw;padding:0 clamp(16px,7vw,110px);overflow:hidden}
-.feat{list-style:none;margin-top:40px;counter-reset:f}
-.feat li{display:flex;gap:18px;align-items:center;padding:16px 0;border-bottom:1px solid var(--line);font-size:16px;color:var(--muted);transition:all .6s var(--ease);counter-increment:f}
-.feat li::before{content:counter(f,decimal-leading-zero);font-family:var(--serif);font-size:13px;width:28px}
-.feat li.on{color:var(--text);padding-left:12px}
-.feat li.on::before{color:var(--accent)}
-.stack{position:relative;height:78vh;border-radius:28px;overflow:hidden;box-shadow:0 50px 100px rgba(0,0,0,.35)}
-.stack .f{position:absolute;inset:0;clip-path:inset(100% 0 0 0);transition:clip-path 1.3s var(--ease)}
-.stack .f.on{clip-path:inset(0 0 0 0)}
-.stack .f i{position:absolute;inset:-6%;background-size:cover;background-position:center;transform:scale(1.25);transition:transform 2.4s var(--ease)}
-.stack .f.on i{transform:scale(1)}
-.stack .cap{position:absolute;left:24px;bottom:22px;z-index:9;color:#fff;font-size:11px;letter-spacing:.3em;text-transform:uppercase;text-shadow:0 2px 12px rgba(0,0,0,.6)}
-.prog{height:2px;background:var(--line);margin-top:30px;max-width:420px;overflow:hidden}
-.prog i{display:block;height:100%;background:var(--accent);transform-origin:left;transform:scaleX(0)}
-@media (max-width:860px){.chalet .sticky{grid-template-columns:1fr;align-content:center;gap:10px}.stack{height:42vh}.feat{margin-top:16px}.feat li{padding:9px 0;font-size:14px}.chalet .h2{font-size:34px}}
+/* chalet sequence */
+.seq{position:relative;height:500vh}
+.seq .stick{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden;background:#0d0b0a}
+.seq .fr{position:absolute;inset:0;opacity:0;transition:opacity 1.2s ease}
+.seq .fr.on{opacity:1}
+.seq .fr img{transform:scale(1.12);transition:transform 7s linear}
+.seq .fr.on img{transform:scale(1)}
+.seq .ttl{position:absolute;left:clamp(16px,3vw,36px);top:90px;color:#fff;z-index:3;text-shadow:0 2px 24px rgba(0,0,0,.5)}
+.seq .ttl .h{font-size:clamp(44px,7vw,110px)}
+.seq .count{position:absolute;left:clamp(16px,3vw,36px);bottom:24px;z-index:3;color:#fff;font-weight:600;font-size:13px;letter-spacing:.05em}
 
-/* restaurant */
-.resto{background:#120c08;color:#f5ead9;overflow:hidden}
-.resto .grid{display:grid;grid-template-columns:1.1fr 1fr;gap:6vw;align-items:center}
-.resto .lead{color:#c6b49b}
-.resto .kicker{color:#ffb766}
-.resto .h2 em{color:#ffb766}
-.times{margin-top:50px;display:grid;gap:2px}
-.time{display:flex;justify-content:space-between;align-items:baseline;padding:24px 0;border-bottom:1px solid rgba(255,255,255,.12)}
-.time span{font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:#c6b49b}
-.time b{font-family:var(--serif);font-weight:300;font-size:clamp(28px,3.4vw,46px)}
-.status{display:inline-flex;align-items:center;gap:10px;margin-top:30px;padding:10px 18px;border:1px solid rgba(255,255,255,.18);border-radius:99px;font-size:13px}
-.status i{width:8px;height:8px;border-radius:50%;background:#7ee08a;box-shadow:0 0 0 0 #7ee08a;animation:pulse 2s infinite}
-.status.closed i{background:#ff8a6b;animation:none}
-@keyframes pulse{70%{box-shadow:0 0 0 12px transparent}}
-.plates{position:relative;height:clamp(420px,70vh,640px)}
-.plates div{position:absolute;border-radius:24px;background-size:cover;background-position:center;box-shadow:0 40px 80px rgba(0,0,0,.5);will-change:transform}
-.plates .p1{width:62%;height:68%;left:0;top:4%}
-.plates .p2{width:52%;height:52%;right:0;top:34%}
-.plates .p3{width:34%;height:34%;left:22%;bottom:0;border-radius:50%}
-@media (max-width:860px){.resto .grid{grid-template-columns:1fr}}
+/* guest book */
+.gb{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(20px,3vw,48px);margin-top:50px}
+.gb blockquote{font-size:clamp(19px,1.6vw,24px);line-height:1.4;border-top:3px solid var(--fg);padding-top:18px}
+.gb cite{display:block;margin-top:16px;font-style:normal;color:var(--dim);font-size:14px}
+@media (max-width:860px){.gb{grid-template-columns:1fr}}
 
-/* horizontal */
-.hz{height:400vh}
-.hz .sticky{position:sticky;top:0;height:100vh;overflow:hidden;display:flex;flex-direction:column;justify-content:center}
-.hz .head{padding:0 clamp(16px,7vw,110px);display:flex;justify-content:space-between;align-items:end;gap:30px;flex-wrap:wrap}
-.track{display:flex;gap:28px;padding:56px clamp(16px,7vw,110px) 0;will-change:transform}
-.spot{flex:0 0 clamp(290px,34vw,520px);height:clamp(380px,56vh,560px);border-radius:28px;position:relative;overflow:hidden;color:#fff}
-.spot .im{position:absolute;inset:0;background-size:cover;background-position:center;transform:scale(1.15);transition:transform 1.4s var(--ease)}
-.spot:hover .im{transform:scale(1.04)}
-.spot::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.75))}
-.spot .sc{position:absolute;z-index:2;left:28px;right:28px;bottom:26px}
-.spot .km{position:absolute;z-index:2;top:24px;left:28px;font-family:var(--serif);font-size:64px;font-weight:300;line-height:1}
-.spot .km small{font-size:14px;font-family:var(--sans);letter-spacing:.2em;margin-left:6px}
-.spot h4{text-shadow:0 2px 18px rgba(0,0,0,.6);font-family:var(--serif);font-weight:400;font-size:32px;margin-bottom:8px}
-.spot p{font-size:14px;line-height:1.55;opacity:.85;max-width:380px}
-.spot .ix{position:absolute;z-index:2;top:28px;right:28px;font-size:11px;letter-spacing:.2em}
-.spot.type{background:var(--card);border:1px solid var(--line);color:var(--text)}
-.spot.type::after{display:none}
-.spot.type ul{list-style:none;position:absolute;left:28px;right:28px;top:110px;z-index:2}
-.spot.type li{display:flex;justify-content:space-between;align-items:baseline;padding:18px 0;border-bottom:1px solid var(--line);font-family:var(--serif);font-size:24px}
-.spot.type li b{font-family:var(--sans);font-size:12px;letter-spacing:.2em;color:var(--accent);font-weight:500}
-@media (max-width:760px){.hz{height:auto}.hz .sticky{position:relative;height:auto;padding:90px 0}.track{overflow-x:auto;scroll-snap-type:x mandatory;transform:none!important;padding-bottom:10px}.spot{scroll-snap-align:start}}
+/* registration card */
+.card{background:var(--paper);color:var(--ink);max-width:880px;margin:20px auto 0;padding:clamp(20px,4vw,48px);box-shadow:0 1px 0 #d8d2c6,0 40px 80px rgba(0,0,0,.45);transform:rotate(-.6deg)}
+.card header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid var(--ink);padding-bottom:14px;gap:20px}
+.card header .big{font-size:clamp(30px,4vw,48px);margin-top:6px}
+.card form{display:grid;grid-template-columns:1fr 1fr;gap:0 28px;margin-top:10px}
+.card label{display:block;border-bottom:1px solid #b9b2a5;padding:16px 0 6px}
+.card label.w{grid-column:1/-1}
+.card label small{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#7d7568;font-weight:600}
+.card input,.card select,.card textarea{width:100%;border:0;background:transparent;font-size:19px;color:var(--ink);outline:none;padding:4px 0;resize:none;font-family:'Courier New',monospace}
+.card .send{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;margin-top:26px;gap:16px;flex-wrap:wrap}
+.card button{background:var(--ink);color:var(--paper);border:0;font-family:inherit;font-weight:700;font-stretch:80%;text-transform:uppercase;letter-spacing:.04em;font-size:16px;padding:16px 26px;cursor:pointer}
+.card button:hover{background:var(--red)}
+.stamp{visibility:hidden;border:3px solid var(--red);color:var(--red);padding:6px 14px;transform:rotate(-8deg);font-weight:800;font-stretch:70%;font-size:26px;text-transform:uppercase}
+.card.sent .stamp{visibility:visible;animation:stamp .35s cubic-bezier(.3,1.6,.5,1)}
+@keyframes stamp{from{transform:rotate(-8deg) scale(2.2);opacity:0}}
+@media (max-width:640px){.card form{grid-template-columns:1fr}.card{transform:none}}
 
-/* reviews */
-.rev{text-align:center;overflow:hidden}
-.stars{color:var(--accent);letter-spacing:.3em;font-size:18px}
-.quote{position:relative;min-height:clamp(260px,32vw,360px);margin:40px auto 0;max-width:1100px}
-.q{position:absolute;inset:0;opacity:0;transition:opacity 1s}
-.q.on{opacity:1}
-.q p{font-family:var(--serif);font-weight:300;font-size:clamp(24px,3.4vw,50px);line-height:1.22;letter-spacing:-.015em}
-.q .ch{transition-delay:calc(var(--i)*8ms)}
-.q cite{display:block;margin-top:34px;font-style:normal;font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--muted)}
-.dots{display:flex;gap:10px;justify-content:center;margin-top:20px}
-.dots button{width:36px;height:3px;border:0;background:var(--line);cursor:pointer;position:relative;overflow:hidden}
-.dots button i{position:absolute;inset:0;background:var(--accent);transform:scaleX(0);transform-origin:left}
-.dots button.on i{animation:fill 6s linear forwards}
-@keyframes fill{to{transform:scaleX(1)}}
+footer{padding:60px clamp(16px,3vw,36px) 120px;display:grid;grid-template-columns:2fr 1fr 1fr;gap:30px;font-size:15px;border-top:1px solid var(--rule)}
+footer .dim{color:var(--dim)}
+@media (max-width:760px){footer{grid-template-columns:1fr}}
 
-/* booking */
-.book{position:relative;overflow:hidden;color:#fff;background:linear-gradient(180deg,var(--sky1),var(--sky2));transition:background 1.2s}
-.book .bg{position:absolute;inset:-5%;background-size:cover;background-position:center;filter:blur(3px) brightness(.45);transform:scale(1.05);transition:background-image 1s}
-.book{background:#0a0f1d!important}
-.book .grid{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:6vw;align-items:center}
-.book .lead{color:rgba(255,255,255,.75)}
-form{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-radius:28px;padding:clamp(22px,3vw,40px);display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.fld{position:relative;display:flex;flex-direction:column;gap:8px}
-.fld.full{grid-column:1/-1}
-.fld label{font-size:10px;letter-spacing:.25em;text-transform:uppercase;opacity:.7}
-.fld input,.fld select,.fld textarea{background:transparent;border:0;border-bottom:1px solid rgba(255,255,255,.3);color:#fff;font:inherit;font-size:16px;padding:8px 0;outline:none;transition:border-color .4s;color-scheme:dark}
-.fld select option{color:#111}
-.fld input:focus,.fld select:focus,.fld textarea:focus{border-color:var(--accent)}
-form .btn{grid-column:1/-1;justify-content:center;margin-top:10px;padding:18px}
-form .ok{grid-column:1/-1;text-align:center;font-size:14px;opacity:0;height:0;transition:all .6s}
-form.sent .ok{opacity:1;height:20px}
-@media (max-width:860px){.book .grid{grid-template-columns:1fr}form{grid-template-columns:1fr}}
-
-/* footer */
-footer{padding:80px clamp(16px,7vw,110px) 30px;border-top:1px solid var(--line)}
-.fg{display:grid;grid-template-columns:2fr 1fr 1fr;gap:40px;font-size:14px;color:var(--muted);line-height:1.9}
-.fg h5{font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--text);margin-bottom:14px;font-weight:500}
-.fg a:hover{color:var(--accent)}
-.giant{font-family:var(--serif);font-weight:300;font-size:clamp(70px,19vw,320px);letter-spacing:-.05em;line-height:.85;margin-top:80px;color:transparent;-webkit-text-stroke:1px var(--line);background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;background-size:0% 100%;background-repeat:no-repeat;transition:background-size 1.6s var(--ease);user-select:none}
-.giant:hover,.giant.in{background-size:100% 100%}
-.legal{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:30px;font-size:12px;color:var(--muted)}
-.badge{position:fixed;left:16px;bottom:16px;z-index:60;font-size:10px;letter-spacing:.18em;text-transform:uppercase;padding:8px 12px;border-radius:99px;background:rgba(0,0,0,.45);color:#fff;backdrop-filter:blur(8px)}
-@media (max-width:760px){.fg{grid-template-columns:1fr}}
-
+.reveal{opacity:0;transform:translateY(24px);transition:opacity 1s ease,transform 1s ease}
+.reveal.in{opacity:1;transform:none}
 @media (prefers-reduced-motion:reduce){*{transition-duration:.01s!important;animation-duration:.01s!important}}
 </style>
 </head>
-<body data-season="winter" class="locked intro">
-
+<body class="locked intro" data-season="winter">
+<svg width="0" height="0" style="position:absolute"><filter id="paint"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="2.2"/></filter></svg>
 <canvas id="snow"></canvas>
-<div id="introLogo"><div><div class="t">KitzAlpen</div><div class="s">Hollersbach · Pinzgau · Salzburger Land</div></div></div>
-<div class="cur"></div><div class="cur-dot"></div>
-<div class="badge">Konzept-Demo</div>
 
-<nav id="nav">
-  <a href="#top" class="brand">
-    <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 27 L12 11 L17 18 L21 13 L30 27 Z"/><path d="M9.5 15 L12 11 L14.5 15" /></svg>
-    <span>KitzAlpen<small>Pension &amp; Chalet</small></span>
-  </a>
-  <div class="links"><a href="#stay">Aufenthalt</a><a href="#rooms">Zimmer</a><a href="#chalet">Chalet</a><a href="#resto">Restaurant</a><a href="#spots">Aktivitäten</a><a href="#book">Kontakt</a></div>
-  <div class="navr">
-    <button class="season" id="season" aria-label="Saison wechseln"><i></i>
-      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 2v20M3.3 7l17.4 10M3.3 17L20.7 7M9 4l3 2 3-2M9 20l3-2 3 2"/></svg><b>Winter</b></span>
-      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1"/></svg><b>Sommer</b></span>
-    </button>
-    <a href="#book" class="btn mag"><span>Buchen</span></a>
-  </div>
-</nav>
+<div class="top">
+  <a class="wm" href="#top"><span class="blaze"><i></i><i></i><i></i></span><span>Kitzbühel Alpen Pension</span></a>
+  <nav>
+    <a href="#zimmer">Zimmer</a><a href="#chalet">Chalet</a><a href="#essen">Restaurant</a>
+    <button id="season" class="keep">Sommer ansehen</button>
+    <a class="keep" href="#anfrage">Anfragen</a>
+  </nav>
+</div>
+<div class="clock"><b id="clk" class="tab">07:40</b><span id="clkl">Hollersbach · Winter</span></div>
 
-<!-- HERO -->
 <header class="hero" id="top">
-  <div class="heroimg" id="heroimg"></div>
+  <div id="heroimg"></div>
   <canvas id="gl"></canvas>
-  <div class="shade"></div>
-
-  <div class="hero-c">
-    <div class="eyebrow fade" data-hero>Hollersbach im Pinzgau · 807 m</div>
-    <h1 class="h1" id="heroTitle" data-w="Wo der Winter <em>zu Hause</em> ist." data-s="Wo der Sommer <em>barfuß</em> läuft."></h1>
-    <p class="hero-sub fade" data-hero style="--d:.5s" data-w="17 Zimmer, ein privates Chalet und vier Skigebiete vor der Tür. Warme Stuben, verschneite Gipfel, direkt an der Panoramabahn." data-s="17 Zimmer, ein privates Chalet und der Nationalpark Hohe Tauern vor der Tür. Almwiesen, Wasserfälle und lange goldene Abende."></p>
-    <div class="hero-cta fade" data-hero style="--d:.7s">
-      <a href="#book" class="btn mag"><span>Aufenthalt planen</span><span>→</span></a>
-      <a href="#stay" class="btn ghost mag"><span>Entdecken</span></a>
-    </div>
+  <div class="sub" id="sub0"><span data-w="Es hat die ganze Nacht geschneit. Die Panoramabahn fährt ab halb neun." data-s="Der Morgen ist klar. Bis zum Großglockner ist es gut eine Stunde."></span></div>
+  <div class="facts">
+    <h1 class="big">Hollers&shy;bach</h1>
+    <p>Pinzgau · 807 m · 17 Zimmer · 1 Chalet</p>
   </div>
-  <div class="hero-meta fade" data-hero style="--d:.9s">
-    <div><b>17</b>Zimmer</div><div><b>1</b>Chalet</div><div><b id="m3" data-w="4" data-s="∞">4</b><span data-w="Skigebiete" data-s="Wanderwege">Skigebiete</span></div>
-  </div>
-  <div class="scrollhint"><i></i>Scroll</div>
 </header>
 
-<div class="alt" id="alt"><span class="v" id="altv">2.400 M</span><div class="bar"><i id="altdot"></i></div></div>
-
-<div class="marq"><div class="tr" id="marq"></div></div>
-
-<!-- STAY -->
-<section id="stay" class="wrap">
-  <div class="kicker fade" data-n="01">Aufenthalt</div>
-  <h2 class="h2" data-split>Zwei Arten, <em>anzukommen.</em></h2>
-  <div class="stay">
-    <a class="panel" href="#rooms">
-      <div class="im" data-img="pension/pension-winter-night.jpg" data-imgs="pension/pension-winter-day.jpg"></div>
-      <div class="go">→</div>
-      <div class="pc"><div class="num">17</div><h3>Die Pension</h3><p>Zimmer im Haupthaus, Restaurant vor Ort. Ankommen, einchecken und Hollersbach direkt vor der Tür haben.</p></div>
-      <div class="reveal"></div>
-    </a>
-    <a class="panel" href="#chalet">
-      <div class="im" data-img="chalet-curated/exterior/exterior-03.jpg"></div>
-      <div class="go">→</div>
-      <div class="pc"><div class="num">04</div><h3>KitzAlpen Chalet</h3><p>Eigenständig, für bis zu 4 Gäste. Mehr Ruhe, mehr Holz, mehr eigene Auszeit.</p></div>
-      <div class="reveal" style="transition-delay:.15s"></div>
-    </a>
-  </div>
-</section>
-
-<!-- ROOMS -->
-<section id="rooms" class="wrap" style="padding-top:0">
-  <div class="rooms-h">
-    <div><div class="kicker fade" data-n="02">Zimmer im Haupthaus</div>
-    <h2 class="h2" data-split>Vier Kategorien. <em>Ein Gefühl.</em></h2></div>
-    <p class="lead fade">Vom Klassiker für zwei bis zum Familienzimmer mit Verbindungstür – für bis zu acht Gäste unter einem Dach.</p>
-  </div>
-  <div class="rooms" id="roomGrid"></div>
-  <div class="amen" id="amen"></div>
-</section>
-
-<!-- CHALET -->
-<section id="chalet" class="chalet">
-  <div class="sticky">
+<section class="scene" id="essen" data-t="08:00" data-d="0">
+  <div class="time reveal"><span class="blaze"><i></i><i></i><i></i></span><b>08:00</b></div>
+  <div class="bf">
     <div>
-      <div class="kicker" data-n="03">Privates Chalet</div>
-      <h2 class="h2">Ein Refugium, <em>Stück für Stück.</em></h2>
-      <ul class="feat" id="feat">
-        <li>Doppelschlafzimmer im Erdgeschoss</li>
-        <li>Voll ausgestattete Küche</li>
-        <li>Gemütlicher Wohnbereich</li>
-        <li>Hauptschlafzimmer mit Doppel- &amp; Etagenbett</li>
-        <li>Badezimmer mit WC – und Ruhe.</li>
-      </ul>
-      <div class="prog"><i id="cprog"></i></div>
+      <h2 class="big h reveal">Frühstück im Haus</h2>
+      <p class="txt reveal">Buffet in der Stube, bis zehn Uhr. Wer früh zur Bahn will, sagt am Vorabend Bescheid.</p>
+      <dl class="hours reveal"><dt>Frühstück</dt><dd>08:00 – 10:00</dd><dt>Abendessen</dt><dd>17:00 – 21:00</dd><dt>Geöffnet</dt><dd>Dienstag bis Sonntag</dd></dl>
+      <div class="live" id="live"><i></i><span></span></div>
     </div>
-    <div class="stack" id="stack"></div>
-  </div>
-</section>
-
-<!-- RESTAURANT -->
-<section id="resto" class="resto">
-  <div class="wrap grid">
-    <div>
-      <div class="kicker fade" data-n="04">Unser Restaurant</div>
-      <h2 class="h2" data-split>Frühstück und Abendessen <em>bleiben im Haus.</em></h2>
-      <p class="lead fade" style="margin-top:26px">Regionale Küche aus dem Pinzgau, am Kachelofen serviert – nach dem letzten Schwung auf der Piste oder dem langen Tag am Berg.</p>
-      <div class="times">
-        <div class="time fade"><span>Frühstück</span><b>08:00 – 10:00</b></div>
-        <div class="time fade" style="--d:.1s"><span>Abendessen</span><b>17:00 – 21:00</b></div>
-        <div class="time fade" style="--d:.2s"><span>Tage</span><b>Dienstag – Sonntag</b></div>
-      </div>
-      <div class="status" id="status"><i></i><span>…</span></div>
-    </div>
-    <div class="plates" id="plates">
-      <div class="p1" data-img="new-photo/restaurant-sala/restaurant-austria1.jpeg" data-sp=".06"></div>
-      <div class="p2" data-img="new-photo/restaurant-mancare/austria-hotel1.jpeg" data-sp="-.08"></div>
-      <div class="p3" data-img="new-photo/restaurant-sala/restaurant-austria3.jpeg" data-sp=".14"></div>
-      
+    <div style="display:grid;gap:clamp(12px,2vw,24px);grid-template-columns:1fr 1fr;align-items:end">
+      <figure class="ph" style="aspect-ratio:3/4"><img alt="Stube der Pension" src="https://www.kitzalpen.at/images/new-photo/restaurant-sala/restaurant-austria3.jpeg"></figure>
+      <figure class="ph" style="aspect-ratio:4/5;margin-bottom:12%"><img alt="Gericht aus der Küche" src="https://www.kitzalpen.at/images/new-photo/restaurant-mancare/austria-hotel1.jpeg"></figure>
     </div>
   </div>
 </section>
 
-<!-- HORIZONTAL -->
-<section id="spots" class="hz">
-  <div class="sticky">
-    <div class="head">
-      <div><div class="kicker" data-n="05" id="spotsK">Skigebiete</div>
-      <h2 class="h2" id="spotsH"></h2></div>
-      <p class="lead" id="spotsL"></p>
-    </div>
-    <div class="track" id="track"></div>
+<section class="scene" id="ziele" data-t="09:30" data-d="0" style="padding-top:0">
+  <div class="time reveal"><span class="blaze"><i></i><i></i><i></i></span><b>09:30</b></div>
+  <h2 class="big h reveal" id="zielH">Abfahrt</h2>
+  <p class="txt reveal" id="zielT"></p>
+  <div class="board" id="board">
+    <div class="hd"><span>Ziel</span><span>Strecke</span><span class="c3">Auto</span></div>
+    <div id="rows"></div>
+    <p class="note">Alle Angaben ungefähr, ab Pension. Skipässe und Tipps gibt es an der Rezeption.</p>
   </div>
 </section>
 
-<!-- REVIEWS -->
-<section class="wrap rev">
-  <div class="kicker fade" data-n="06" style="justify-content:center">Was unsere Gäste sagen</div>
-  <div class="stars fade">★★★★★</div>
-  <div class="quote" id="quote"></div>
-  <div class="dots" id="dots"></div>
+<section class="scene" id="zimmer" data-t="16:30" data-d="0">
+  <div class="time reveal"><span class="blaze"><i></i><i></i><i></i></span><b>16:30</b></div>
+  <h2 class="big h reveal">Zurück im Zimmer</h2>
+  <p class="txt reveal">Siebzehn Zimmer im Haupthaus, vier Arten davon. Holz, Bergblick, eigenes Bad.</p>
+  <div class="rooms" id="rooms"></div>
+  <p class="incl reveal">In jedem Zimmer: WLAN, Flachbild-TV, eigenes Badezimmer. Für alle Gäste: kostenloser Parkplatz, Restaurant &amp; Bar, Frühstücksbuffet, M+ Gästekarte.</p>
 </section>
 
-<!-- BOOKING -->
-<section id="book" class="book">
-  <div class="bg" id="bookBg"></div>
-  <div class="wrap grid">
-    <div>
-      <div class="kicker" data-n="07" style="color:var(--accent)">Letzter Schritt</div>
-      <h2 class="h2" data-split>Planen Sie heute Ihren <em>unvergesslichen</em> Aufenthalt.</h2>
-      <p class="lead fade" style="margin-top:24px">Hinterlassen Sie uns ein paar Angaben – wir melden uns innerhalb eines Arbeitstags mit einem passenden Angebot.</p>
-      <p class="fade" style="margin-top:30px;font-size:14px;line-height:2;opacity:.85">Reitlehen 42, 5731 Hollersbach im Pinzgau<br>+43 664 2376571 · kitzbuhelalpenpension@gmail.com</p>
-    </div>
-    <form id="form" class="fade">
-      <div class="fld"><label>Name</label><input required placeholder="Ihr Name"></div>
-      <div class="fld"><label>Telefon</label><input required placeholder="+43 …"></div>
-      <div class="fld full"><label>E-Mail</label><input type="email" required placeholder="name@mail.at"></div>
-      <div class="fld"><label>Anreise</label><input type="date" required></div>
-      <div class="fld"><label>Abreise</label><input type="date" required></div>
-      <div class="fld full"><label>Unterkunft</label><select><option>Zimmer in der Pension</option><option>KitzAlpen Chalet</option><option>Gruppe / mehrere Zimmer</option></select></div>
-      <div class="fld full"><label>Nachricht (optional)</label><textarea rows="2" placeholder="Wer kommt mit?"></textarea></div>
-      <button class="btn mag" type="submit"><span id="sendT">Anfrage senden</span></button>
-      <div class="ok">✓ Danke! Dies ist eine Demo – im Live-System ginge die Anfrage jetzt raus.</div>
+<section class="full" data-t="18:30" data-d=".85">
+  <figure class="ph"><img alt="Die Stube am Abend" src="https://www.kitzalpen.at/images/new-photo/restaurant-sala/restaurant-austria1.jpeg"></figure>
+  <div class="cap">
+    <div class="time"><span class="blaze"><i></i><i></i><i></i></span><b>18:30</b></div>
+    <h2 class="big h">Abendessen.<br>Unten in der Stube.</h2>
+  </div>
+</section>
+
+<section class="seq" id="chalet" data-t="21:00" data-d="1">
+  <div class="stick">
+    <div id="frames"></div>
+    <div class="ttl"><div class="time"><span class="blaze"><i></i><i></i><i></i></span><b>21:00</b></div><h2 class="big h">Oder: das Chalet.</h2></div>
+    <div class="sub on" id="seqsub"><span></span></div>
+    <div class="count tab" id="seqc">1 / 5</div>
+  </div>
+</section>
+
+<section class="scene" data-t="22:30" data-d="1">
+  <div class="time reveal"><span class="blaze"><i></i><i></i><i></i></span><b>22:30</b></div>
+  <h2 class="big h reveal">Ins Gästebuch</h2>
+  <div class="gb">
+    <blockquote class="reveal">„Die Zimmer waren makellos, das Frühstück köstlich, und das Personal hat uns das Gefühl gegeben, zu Hause zu sein.“<cite>Maria S., Google</cite></blockquote>
+    <blockquote class="reveal">„Wir haben eine Woche mit der Familie verbracht und jeden Moment genossen. Das Chalet war perfekt für uns.“<cite>Thomas K., Booking.com</cite></blockquote>
+    <blockquote class="reveal">„Saubere Zimmer, freundliche Gastgeber und eine ausgezeichnete Basis für das Salzburger Land.“<cite>Anna M., TripAdvisor</cite></blockquote>
+  </div>
+</section>
+
+<section class="scene" id="anfrage" data-t="23:10" data-d="1" style="padding-top:0">
+  <div class="card reveal" id="card">
+    <header>
+      <div><div class="lab" style="color:#7d7568">Anfrage · Antwort innerhalb eines Arbeitstags</div><div class="big">Zimmer frei?</div></div>
+      <span class="stamp">Erhalten</span>
+    </header>
+    <form id="form">
+      <label><small>Name</small><input required autocomplete="name"></label>
+      <label><small>Telefon</small><input required autocomplete="tel"></label>
+      <label class="w"><small>E-Mail</small><input type="email" required autocomplete="email"></label>
+      <label><small>Anreise</small><input type="date" required></label>
+      <label><small>Abreise</small><input type="date" required></label>
+      <label><small>Unterkunft</small><select><option>Zimmer im Haupthaus</option><option>KitzAlpen Chalet</option><option>Gruppe</option></select></label>
+      <label><small>Personen</small><input type="number" min="1" max="40" value="2"></label>
+      <label class="w"><small>Nachricht</small><textarea rows="2"></textarea></label>
+      <div class="send"><span style="color:#7d7568;font-size:14px">Reitlehen 42, 5731 Hollersbach · +43 664 2376571</span><button>Anfrage senden</button></div>
     </form>
   </div>
 </section>
 
 <footer>
-  <div class="fg">
-    <div><h5>Kitzbühel Alpen Pension</h5>Gästehaus im Salzburger Land – Unterkunft in Hollersbach im Pinzgau, Österreich.<br>Reitlehen 42, 5731 Hollersbach</div>
-    <div><h5>Schnelllinks</h5><a href="#stay">Pension</a><br><a href="#rooms">Zimmer</a><br><a href="#chalet">Chalet</a><br><a href="#resto">Restaurant</a></div>
-    <div><h5>Kontakt</h5>+43 664 2376571<br><a href="#book">Anfrage</a><br>WhatsApp</div>
-  </div>
-  <div class="giant" data-io>KitzAlpen</div>
-  <div class="legal"><span>© 2026 Kitzbühel Alpen Pension</span><span>Redesign-Konzept · Demo</span></div>
+  <div><b>Kitzbühel Alpen Pension</b><br><span class="dim">Reitlehen 42, 5731 Hollersbach im Pinzgau, Salzburg</span></div>
+  <div class="dim">+43 664 2376571<br>kitzbuhelalpenpension@gmail.com</div>
+  <div class="dim">Gestaltungsentwurf, nicht die offizielle Website.</div>
 </footer>
 
 <script>
 (() => {
 const $ = (s, r=document) => r.querySelector(s), $$ = (s, r=document) => [...r.querySelectorAll(s)];
 const IMG = 'https://www.kitzalpen.at/images/';
-const body = document.body;
-const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-let season = 'winter';
-const W = () => innerWidth, H = () => innerHeight;
-const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
-const ease = t => 1 - Math.pow(1 - t, 3);
+const body = document.body, reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const W = () => innerWidth, H = () => innerHeight, clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
 const easeIO = t => t<.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2;
+let season = 'winter', mx = W()/2, my = H()/2, pmx = mx, mvx = 0;
+addEventListener('pointermove', e => { mx = e.clientX; my = e.clientY; });
 const HERO = { winter: IMG+'pension/pension-winter-day.jpg', summer: IMG+'activities-curated/grossglockner.webp' };
-
-/* ---------- text split ---------- */
-function split(el, html){
-  if(html !== undefined) el.innerHTML = html;
-  let i = 0;
-  const walk = node => {
-    [...node.childNodes].forEach(n => {
-      if(n.nodeType === 3){
-        const frag = document.createDocumentFragment();
-        n.textContent.split(/(\s+)/).forEach(part => {
-          if(!part) return;
-          if(/^\s+$/.test(part)){ frag.append(' '); return; }
-          const w = document.createElement('span'); w.className = 'w';
-          [...part].forEach(c => { const s = document.createElement('span'); s.className='ch'; s.textContent=c; s.style.setProperty('--i', i++); w.append(s); });
-          frag.append(w);
-        });
-        n.replaceWith(frag);
-      } else if(n.nodeType === 1) walk(n);
-    });
-  };
-  walk(el);
-}
-$$('[data-split]').forEach(el => split(el));
-
-/* ---------- images ---------- */
-$$('[data-img]').forEach(el => el.style.backgroundImage = `url(${IMG}${el.dataset.img}), linear-gradient(135deg,#34466e,#141b30)`);
 $('#heroimg').style.backgroundImage = `url(${HERO.winter})`;
 
-/* ---------- season text & content ---------- */
-function applySeasonText(animateHero){
+/* ---------- season content ---------- */
+const DEST = {
+  winter: { h:'Abfahrt', t:'Die Panoramabahn startet fast vor der Haustür. Von hier aus erreichen Sie vier Skigebiete – je nachdem, wie weit Sie fahren wollen.',
+    rows:[['Panoramabahn','1 km','2 min'],['Wildkogel-Arena','12 km','15 min'],['KitzSki Kitzbühel','30 km','35 min'],['Zillertal Arena','30 km','40 min'],['Kitzsteinhorn','35 km','40 min']] },
+  summer: { h:'Ausflüge', t:'Der Nationalpark Hohe Tauern beginnt hinter dem Haus. Wasserfälle, Seen und die Hochalpenstraße liegen alle in Tagesreichweite.',
+    rows:[['Krimmler Wasserfälle','27 km','30 min'],['Zell am See','30 km','35 min'],['Kitzbühel','30 km','35 min'],['Großglockner','60 km','70 min'],['Panoramabahn','1 km','2 min']] }
+};
+const CH_TXT = ['Ein eigenes Haus, für bis zu vier Gäste.','Doppelschlafzimmer im Erdgeschoss.','Oben: Doppelbett und Etagenbett.','Küche, Wohnbereich, Bad mit WC.','Und ein Sessel am Fenster.'];
+const CH_IMG = { winter:['chalet-curated/exterior/exterior-03.jpg'], summer:['chalet-curated/exterior/exterior-01.jpg'] };
+const CH_REST = ['chalet-curated/interior/interior-01.jpg','chalet-curated/interior/interior-03.jpg','chalet-curated/interior/interior-07.jpg','chalet-curated/detalii/detalii-01.jpg'];
+
+/* split-flap board */
+const CH = 'ABCDEFGHIJKLMNOPRSTUVWZÄÖÜ0123456789';
+function cells(el, len){ if(el.children.length !== len) el.innerHTML = Array.from({length:len},()=>'<s class="sp"></s>').join(''); return [...el.children]; }
+function flap(el, text, len, delay, animate){
+  text = text.toUpperCase().padEnd(len,' ').slice(0,len);
+  cells(el, len).forEach((s,i) => {
+    const target = text[i];
+    if(!animate || reduce){ s.textContent = target; s.classList.toggle('sp', target===' '); return; }
+    let n = 5 + ((i*7) % 8);
+    const step = () => { if(n-- > 0){ s.textContent = CH[(Math.random()*CH.length)|0]; s.classList.remove('sp'); setTimeout(step, 60); }
+      else { s.textContent = target; s.classList.toggle('sp', target===' '); } };
+    setTimeout(step, delay + i*22);
+  });
+}
+let boardShown = false;
+function renderBoard(animate){
+  const d = DEST[season]; $('#zielH').textContent = d.h; $('#zielT').textContent = d.t;
+  const rows = $('#rows');
+  if(rows.children.length !== d.rows.length) rows.innerHTML = d.rows.map(()=>`<div class="row"><div class="flap"></div><div class="flap"></div><div class="flap c3"></div></div>`).join('');
+  const L = innerWidth < 700 ? 13 : 20;
+  [...rows.children].forEach((r,i) => { const f = r.querySelectorAll('.flap'), v = d.rows[i];
+    flap(f[0], v[0], L, i*180, animate); flap(f[1], v[1], 6, i*180+250, animate); flap(f[2], v[2], 6, i*180+350, animate); });
+}
+
+/* rooms */
+const ROOMS = [
+  ['Doppelzimmer','Klassisch, für zwei. Das Zimmer, das die meisten buchen.','8','15–21','2','double/double-01.jpg'],
+  ['Dreibettzimmer','Für drei – Paar mit Kind, oder drei Freunde.','3','17–24','3','triple/triple-01.jpg'],
+  ['Familienzimmer','Zwei Zimmer mit Verbindungstür, zusammen bis zu acht Gäste.','4','19–31','4','family/family-01.jpg'],
+  ['Vierbettzimmer','Ein großes, eigenständiges Zimmer für vier.','2','19–31','4','quad/quad-01.jpg'],
+];
+$('#rooms').innerHTML = ROOMS.map(r=>`<article class="room"><figure class="ph"><img loading="lazy" alt="${r[0]}" src="${IMG}rooms-curated/${r[5]}"></figure>
+  <h3>${r[0]}</h3><p>${r[1]}</p><dl><div><dt>Zimmer</dt><dd>${r[2]}</dd></div><div><dt>m²</dt><dd>${r[3]}</dd></div><div><dt>Gäste</dt><dd>${r[4]}</dd></div></dl></article>`).join('');
+
+/* chalet frames */
+let seqI = -1;
+function renderChalet(){ const imgs = CH_IMG[season].concat(CH_REST); $('#frames').innerHTML = imgs.map((c,i)=>`<figure class="fr${i?'':' on'}"><img alt="" src="${IMG}${c}"></figure>`).join(''); seqI = -1; }
+
+function applySeason(){
   const k = season === 'winter' ? 'w' : 's';
-  $$('[data-w]').forEach(el => { if(el.id === 'heroTitle') return; el.textContent = el.dataset[k]; });
-  const ht = $('#heroTitle');
-  ht.classList.remove('in');
-  split(ht, ht.dataset[k]);
-  if(animateHero) requestAnimationFrame(()=>requestAnimationFrame(()=>ht.classList.add('in')));
-  buildSpots(); buildMarquee(); buildStack();
-  $('#bookBg').style.backgroundImage = `url(${IMG}${season==='winter'?'pension/pension-winter-night.jpg':'chalet-curated/exterior/exterior-01.jpg'})`;
-  $('#heroimg').style.backgroundImage = `url(${HERO[season]})`;
+  $$('[data-w]').forEach(el => el.textContent = el.dataset[k]);
+  $('#season').textContent = season === 'winter' ? 'Sommer ansehen' : 'Winter ansehen';
+  renderBoard(boardShown); renderChalet(); onScroll();
 }
 
-/* ---------- marquee ---------- */
-function buildMarquee(){
-  const w = ['17 Zimmer','Privates Chalet','Restaurant im Haus','Panoramabahn','Vier Skigebiete','Pinzgau'];
-  const s = ['17 Zimmer','Privates Chalet','Krimmler Wasserfälle','Hohe Tauern','Zell am See','Großglockner'];
-  const items = (season==='winter'?w:s).map(t=>`<span>${t}</span>`).join('');
-  $('#marq').innerHTML = items + items;
+/* restaurant: live state in local time */
+function live(){
+  const p = new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Vienna',weekday:'short',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(new Date());
+  const g = t => p.find(x=>x.type===t).value, d = g('weekday'), m = +g('hour')*60 + +g('minute');
+  let t, on = false;
+  if(d==='Mon') t = 'Heute Ruhetag, morgen ab 8 Uhr wieder offen';
+  else if(m>=480&&m<600){ t='Gerade ist Frühstückszeit'; on=true; }
+  else if(m>=1020&&m<1260){ t='Die Küche ist gerade offen'; on=true; }
+  else t = m<480 ? 'Frühstück ab 8 Uhr' : m<1020 ? 'Küche öffnet um 17 Uhr' : 'Küche zu, Frühstück ab 8 Uhr';
+  $('#live').classList.toggle('off',!on); $('#live span').textContent = t + ' · Ortszeit Hollersbach';
 }
+live(); setInterval(live, 60000);
 
-/* ---------- rooms ---------- */
-const rooms = [
-  ['8 Zimmer · Klassiker','Doppelzimmer','Klassischer alpiner Komfort für zwei.','15–21','2','double/double-01.jpg'],
-  ['3 Zimmer · Für drei','Dreibettzimmer','Flexibler Komfort für drei Gäste.','17–24','3','triple/triple-01.jpg'],
-  ['4 Zimmer · bis 8 Gäste','Familienzimmer mit Verbindungstür','Zwei Zimmer, die sich für Familien und Gruppen verbinden lassen.','19–31','4','family/family-01.jpg'],
-  ['2 Zimmer · Eigenständig','Vierbettzimmer','Geräumiges, eigenständiges Zimmer für vier Gäste.','19–31','4','quad/quad-01.jpg'],
-];
-$('#roomGrid').innerHTML = rooms.map((r,i)=>`
-  <article class="room fade" style="--d:${i*.12}s">
-    <div class="ph" style="background-image:url(${IMG}rooms-curated/${r[5]}),linear-gradient(135deg,#3b4b72,#1a2240)"><span class="tag">${r[0]}</span></div>
-    <div class="bd"><h4>${r[1]}</h4><p>${r[2]}</p>
-      <div class="st"><div><b>${r[3]}</b>m²</div><div><b class="cnt" data-to="${r[4]}">0</b>Gäste</div></div></div>
-    <div class="glare"></div>
-  </article>`).join('');
-$('#amen').innerHTML = ['Kostenloses WLAN','Flachbild-TV','Kostenloser Parkplatz','Restaurant & Bar','Frühstücksbuffet','Eigenes Badezimmer','Bergblick','M+ Gästekarte'].map((a,i)=>`<span class="fade" style="--d:${i*.05}s">${a}</span>`).join('');
-$$('.room').forEach(c => {
-  c.addEventListener('pointermove', e => { const r = c.getBoundingClientRect(), x = (e.clientX-r.left)/r.width, y = (e.clientY-r.top)/r.height;
-    c.style.transform = `rotateY(${(x-.5)*12}deg) rotateX(${(.5-y)*12}deg) translateZ(10px)`; c.style.setProperty('--gx', x*100+'%'); c.style.setProperty('--gy', y*100+'%'); });
-  c.addEventListener('pointerleave', () => c.style.transform = '');
-});
+/* reveal + lens focus */
+const io = new IntersectionObserver(es => es.forEach(e => { if(!e.isIntersecting) return; e.target.classList.add('in');
+  if(e.target.id === 'board' && !boardShown){ boardShown = true; renderBoard(true); }
+  io.unobserve(e.target); }), {threshold:.2});
+$$('.reveal,.ph,#board').forEach(el => io.observe(el));
 
-/* ---------- chalet photo stack ---------- */
-function buildStack(){
-  const first = season==='winter' ? ['chalet-curated/exterior/exterior-03.jpg','Ankommen'] : ['chalet-curated/exterior/exterior-01.jpg','Ankommen'];
-  const list = [first,['chalet-curated/interior/interior-01.jpg','Schlafen'],['chalet-curated/interior/interior-03.jpg','Kochen'],['chalet-curated/interior/interior-07.jpg','Wohnen'],['chalet-curated/detalii/detalii-01.jpg','Details']];
-  $('#stack').innerHTML = list.map((p,i)=>`<div class="f${i===0?' on':''}" style="z-index:${i+1}"><i style="background-image:url(${IMG}${p[0]})"></i><span class="cap">KitzAlpen Chalet · 0${i+1} / 05</span></div>`).join('');
-}
-
-/* ---------- spots (real photos only) ---------- */
-function photoSpot(i, title, km, txt, img){
-  return `<article class="spot"><div class="im" style="background-image:url(${IMG}${img}),linear-gradient(160deg,#4a5a7a,#141b30)"></div>
-    <div class="km">${km}<small>KM</small></div><div class="ix">0${i+1}</div><div class="sc"><h4>${title}</h4><p>${txt}</p></div></article>`;
-}
-function buildSpots(){
-  const T = $('#track');
-  if(season === 'winter'){
-    $('#spotsK').textContent = 'Winter · Skigebiete';
-    split($('#spotsH'), 'Vier Skigebiete <em>in Reichweite.</em>'); $('#spotsH').classList.add('in');
-    $('#spotsL').textContent = 'Skitage im Pinzgau – warme Pension, verschneite Berge, direkt an der Panoramabahn.';
-    T.innerHTML = [
-      photoSpot(0,'Ihr Basislager','≈1','Aus der Tür, zur Panoramabahn – und hinauf zur Resterhöhe.','pension/pension-winter-day.jpg'),
-      photoSpot(1,'KitzSki · Kitzbühel','≈30','Über die Panoramabahn ins Skigebiet der Hahnenkamm-Stadt.','activities-curated/kitzbuhel.webp'),
-      photoSpot(2,'Zell am See · Kaprun','≈30','Schmittenhöhe und Gletscher Kitzsteinhorn – schneesicher bis ins Frühjahr.','activities-curated/zell-am-see.webp'),
-      `<article class="spot type"><div class="km" style="color:var(--text)">+2</div><div class="ix" style="color:var(--muted)">04</div>
-        <ul><li>Wildkogel-Arena<b>≈12 KM</b></li><li>Zillertal Arena<b>≈30 KM</b></li><li>Rodeln · Langlauf<b>VOR ORT</b></li></ul>
-        <div class="sc" style="color:var(--muted)"><p>Fragen Sie uns nach Skipässen und dem besten Tag für jede Piste.</p></div></article>`
-    ].join('');
-  } else {
-    $('#spotsK').textContent = 'Sommer · Aktivitäten';
-    split($('#spotsH'), 'Ausflüge, die <em>bleiben.</em>'); $('#spotsH').classList.add('in');
-    $('#spotsL').textContent = 'Wasserfälle, Seen, Hochalpenstraßen – der Nationalpark Hohe Tauern beginnt hinter dem Haus.';
-    T.innerHTML = [
-      ['Krimmler Wasserfälle','≈27','Der Sprühnebel der höchsten Wasserfälle Österreichs, mitten im Nationalpark Hohe Tauern.','activities-curated/krimml-waterfalls.webp'],
-      ['Zell am See','≈30','Die Stadt am Zeller See mit der romanischen Kirche St. Hippolyt.','activities-curated/zell-am-see.webp'],
-      ['Kitzbühel','≈30','Die Alpenstadt des Hahnenkamm-Rennens – mondän, sportlich, charmant.','activities-curated/kitzbuhel.webp'],
-      ['Großglockner','≈60','Hochalpenstraße zum höchsten Aussichtspunkt Österreichs.','activities-curated/grossglockner.webp'],
-    ].map((s,i)=>photoSpot(i,s[0],s[1],s[2],s[3])).join('');
-  }
-  if(window.__layout) __layout();
-}
-
-/* ---------- reviews ---------- */
-const revs = [
-  ['Ein wunderbarer alpiner Rückzugsort! Die Zimmer waren makellos, das Frühstück köstlich, und das Personal hat uns das Gefühl gegeben, zu Hause zu sein.','Maria S. · Google'],
-  ['Wir haben eine Woche mit der Familie verbracht und jeden Moment genossen. Das KitzAlpen Chalet war perfekt für uns.','Thomas K. · Booking.com'],
-  ['Tolles Preis-Leistungs-Verhältnis. Saubere Zimmer, freundliche Gastgeber und eine ausgezeichnete Basis für das Salzburger Land.','Anna M. · TripAdvisor'],
-];
-$('#quote').innerHTML = revs.map(r=>`<div class="q"><p>„${r[0]}“</p><cite>${r[1]}</cite></div>`).join('');
-$('#dots').innerHTML = revs.map(()=>'<button aria-label="Bewertung"><i></i></button>').join('');
-$$('.q p').forEach(p=>split(p));
-let qi = -1, qt;
-function showQ(i){ qi = i; $$('.q').forEach((q,k)=>{ q.classList.toggle('on',k===i); q.querySelector('p').classList.toggle('in', k===i); });
-  $$('#dots button').forEach((b,k)=>{ b.classList.remove('on'); void b.offsetWidth; b.classList.toggle('on',k===i); });
-  clearTimeout(qt); qt = setTimeout(()=>showQ((qi+1)%revs.length), 6000); }
-$$('#dots button').forEach((b,k)=>b.onclick=()=>showQ(k));
-
-/* ---------- restaurant status (Vienna time) ---------- */
-function status(){
-  const parts = new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Vienna',weekday:'short',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(new Date());
-  const g = t => parts.find(p=>p.type===t).value, day = g('weekday'), m = +g('hour')*60 + +g('minute');
-  const el = $('#status'); let txt, open = false;
-  if(day === 'Mon') txt = 'Montag Ruhetag – ab Dienstag wieder für Sie da';
-  else if(m>=480 && m<600){ txt = 'Jetzt geöffnet · Frühstück bis 10:00'; open = true; }
-  else if(m>=1020 && m<1260){ txt = 'Jetzt geöffnet · Abendessen bis 21:00'; open = true; }
-  else if(m<480) txt = 'Frühstück ab 08:00';
-  else if(m<1020) txt = 'Abendessen ab 17:00';
-  else txt = 'Morgen Frühstück ab 08:00';
-  el.classList.toggle('closed', !open); el.querySelector('span').textContent = txt;
-}
-status(); setInterval(status, 60000);
-
-/* ---------- reveal on scroll ---------- */
-const io = new IntersectionObserver(es => es.forEach(e => { if(e.isIntersecting){ e.target.classList.add('in');
-  if(e.target.classList.contains('room')) e.target.querySelectorAll('.cnt').forEach(countUp);
-  if(e.target.classList.contains('rev')) { if(qi<0) showQ(0); }
-  io.unobserve(e.target); } }), {threshold:.18, rootMargin:'0px 0px -6% 0px'});
-function observe(){ $$('.fade:not([data-hero]),[data-split],.panel,[data-io],.rev').forEach(el=>io.observe(el)); }
-function countUp(el){ const to = +el.dataset.to, t0 = performance.now(); const f = t => { const p = clamp((t-t0)/1200,0,1); el.textContent = Math.round(ease(p)*to); if(p<1) requestAnimationFrame(f); }; requestAnimationFrame(f); }
-
-/* ---------- cursor + magnetic ---------- */
-const cur = $('.cur'), dot = $('.cur-dot'); let mx = W()/2, my = H()/2, cx = mx, cy = my, pmx = mx, mvx = 0;
-addEventListener('pointermove', e => { mx = e.clientX; my = e.clientY; dot.style.transform = `translate(${mx}px,${my}px)`; });
-document.addEventListener('pointerover', e => cur.classList.toggle('big', !!e.target.closest('a,button,.room,.spot,input,select,textarea')));
-$$('.mag').forEach(b => { b.addEventListener('pointermove', e => { const r = b.getBoundingClientRect(); b.style.transform = `translate(${(e.clientX-r.left-r.width/2)*.25}px,${(e.clientY-r.top-r.height/2)*.35}px)`; });
-  b.addEventListener('pointerleave', () => { b.style.transition='transform .6s var(--ease)'; b.style.transform=''; setTimeout(()=>b.style.transition='',600); }); });
+$('#form').addEventListener('submit', e => { e.preventDefault(); $('#card').classList.add('sent'); e.target.querySelector('button').textContent = 'Danke'; });
 
 /* =====================================================================
-   WebGL hero: real photograph + volumetric-looking fbm clouds
+   WebGL: the real photograph behind real-looking clouds
    ===================================================================== */
-const gl = (() => { try { return $('#gl').getContext('webgl', {premultipliedAlpha:false, antialias:false}); } catch(e){ return null; } })();
-let G = null;
-let cloud = 1, mixAB = 0, zoomIn = 0;      // cloud: 1 = fully clouded, 0 = clear
+const gl = (() => { try { return $('#gl').getContext('webgl', {antialias:false}); } catch(e){ return null; } })();
+let G = null, cloud = 1, mixAB = 0, zoomIn = 0;
 function initGL(){
   if(!gl) return false;
   const vs = `attribute vec2 p;varying vec2 v;void main(){v=p*.5+.5;gl_Position=vec4(p,0.,1.);}`;
-  const fs = `precision highp float;
-  varying vec2 v;
-  uniform sampler2D A,B; uniform vec2 res,sA,sB,mouse; uniform float t,cloud,mixAB,zoom,scroll;
+  const fs = `precision highp float;varying vec2 v;
+  uniform sampler2D A,B;uniform vec2 res,sA,sB,mouse;uniform float t,cloud,mixAB,zoom,scroll;
   float h(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}
-  float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
-    return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}
+  float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}
   float fbm(vec2 p){float s=0.,a=.5;mat2 r=mat2(.8,.6,-.6,.8);for(int i=0;i<6;i++){s+=a*n(p);p=r*p*2.02+3.1;a*=.5;}return s;}
   vec2 cover(vec2 uv,vec2 img){float ra=res.x/res.y,ri=img.x/img.y;vec2 s=ra>ri?vec2(1.,ri/ra):vec2(ra/ri,1.);return (uv-.5)*s+.5;}
-  vec3 img(sampler2D T,vec2 sz,vec2 uv){vec2 c=(uv-.5)/zoom+.5;c+=mouse*vec2(.012,.008);c.y-=scroll*.12;
-    return texture2D(T,vec2(cover(c,sz).x,1.-cover(c,sz).y)).rgb;}
-  // one cloud layer: perspective push (camera flies forward as cloud->0)
+  vec3 img(sampler2D T,vec2 sz,vec2 uv){vec2 c=(uv-.5)/zoom+.5;c+=mouse*vec2(.01,.006);c.y-=scroll*.1;vec2 k=cover(c,sz);return texture2D(T,vec2(k.x,1.-k.y)).rgb;}
   vec4 layer(vec2 uv,float depth,float k,float seed){
-    vec2 q=(uv-.5)*vec2(res.x/res.y,1.);
-    float push=1.+(1.-k)*(1.6+depth*2.2);           // flying through: features grow
+    vec2 q=(uv-.5)*vec2(res.x/res.y,1.);float push=1.+(1.-k)*(1.6+depth*2.2);
     q=q/push*(1.6+depth)+vec2(seed,seed*1.7)+vec2(t*.012*(1.+depth),t*.004);
-    float d=fbm(q*.85);
-    float edge=1.05-k*1.35;                          // coverage threshold
-    float a=smoothstep(edge,edge+.28,d);
-    float lit=fbm(q*.85+vec2(-.05,.08));             // fake light from top-left
-    float sh=clamp((d-lit)*3.2+.55,0.,1.);
-    vec3 col=mix(vec3(.66,.71,.80),vec3(1.,.995,.985),sh);
-    col=mix(col,vec3(.93,.95,.98),.25);
-    return vec4(col,a);
-  }
-  void main(){
-    vec2 uv=v;
-    vec3 c=mix(img(A,sA,uv),img(B,sB,uv),mixAB);
-    // gentle grade
-    c=pow(c,vec3(.97));c*=1.03;
-    // atmospheric haze while inside clouds
+    float d=fbm(q*.85);float e=1.05-k*1.35;float a=smoothstep(e,e+.28,d);
+    float lit=fbm(q*.85+vec2(-.05,.08));float sh=clamp((d-lit)*3.2+.55,0.,1.);
+    vec3 col=mix(vec3(.68,.72,.80),vec3(1.,.995,.985),sh);return vec4(mix(col,vec3(.93,.95,.98),.25),a);}
+  void main(){vec2 uv=v;vec3 c=mix(img(A,sA,uv),img(B,sB,uv),mixAB);
     c=mix(c,vec3(.90,.93,.97),pow(clamp(cloud*1.5,0.,1.),.7)*.85);
-    vec4 far=layer(uv,0.,cloud,1.3);
-    vec4 near=layer(uv,1.,clamp(cloud*1.08,0.,1.),7.7);
-    c=mix(c,far.rgb,far.a*clamp(cloud*1.6,0.,1.));
-    c=mix(c,near.rgb,near.a*clamp(cloud*1.4,0.,1.)*.95);
-    float vg=smoothstep(1.25,.35,length((uv-.5)*vec2(1.2,1.)));c*=mix(.82,1.,vg);
-    gl_FragColor=vec4(c,1.);
-  }`;
-  const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if(!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw gl.getShaderInfoLog(s); return s; };
+    vec4 f=layer(uv,0.,cloud,1.3);vec4 nr=layer(uv,1.,clamp(cloud*1.08,0.,1.),7.7);
+    c=mix(c,f.rgb,f.a*clamp(cloud*1.6,0.,1.));c=mix(c,nr.rgb,nr.a*clamp(cloud*1.4,0.,1.)*.95);
+    gl_FragColor=vec4(c,1.);}`;
+  const sh = (ty, src) => { const s = gl.createShader(ty); gl.shaderSource(s, src); gl.compileShader(s); if(!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw gl.getShaderInfoLog(s); return s; };
   try {
     const pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(pr); gl.useProgram(pr);
-    const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer()); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
     const lp = gl.getAttribLocation(pr,'p'); gl.enableVertexAttribArray(lp); gl.vertexAttribPointer(lp,2,gl.FLOAT,false,0,0);
     const U = {}; ['A','B','res','sA','sB','mouse','t','cloud','mixAB','zoom','scroll'].forEach(k=>U[k]=gl.getUniformLocation(pr,k));
     gl.uniform1i(U.A,0); gl.uniform1i(U.B,1);
     const mk = () => { const tx = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tx);
-      gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([200,210,230,255]));
+      gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([210,215,225,255]));
       ['TEXTURE_WRAP_S','TEXTURE_WRAP_T'].forEach(k=>gl.texParameteri(gl.TEXTURE_2D,gl[k],gl.CLAMP_TO_EDGE));
       gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR); return tx; };
-    G = { U, tex:[mk(),mk()], size:[[16,10],[16,10]], cur:0 };
-    return true;
-  } catch(e){ console.warn('GL', e); G = null; return false; }
+    G = { U, tex:[mk(),mk()], size:[[16,10],[16,10]] }; return true;
+  } catch(e){ console.warn(e); return false; }
 }
 function loadTex(slot, url){ return new Promise(res => { const im = new Image(); im.crossOrigin = 'anonymous';
   im.onload = () => { if(G){ gl.activeTexture(gl.TEXTURE0+slot); gl.bindTexture(gl.TEXTURE_2D, G.tex[slot]);
     try { gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,im); G.size[slot] = [im.naturalWidth, im.naturalHeight]; } catch(e){ $('#gl').style.display='none'; } } res(); };
   im.onerror = () => res(); im.src = url; }); }
-let GDPR = 1;
-function sizeGL(){ if(!G) return; GDPR = Math.min(devicePixelRatio||1, innerWidth < 800 ? 1.25 : 1.5); const c = $('#gl'); c.width = c.clientWidth*GDPR; c.height = c.clientHeight*GDPR; gl.viewport(0,0,c.width,c.height); }
+function sizeGL(){ if(!G) return; const r = Math.min(devicePixelRatio||1, innerWidth < 800 ? 1.25 : 1.5), c = $('#gl'); c.width = c.clientWidth*r; c.height = c.clientHeight*r; gl.viewport(0,0,c.width,c.height); }
 let smx = 0, smy = 0;
-function drawGL(t){
-  if(!G) return;
-  const c = $('#gl'), U = G.U;
-  smx += ((mx/W()-.5) - smx)*.04; smy += ((my/H()-.5) - smy)*.04;
-  const z = 1.0 + (1-zoomIn)*0.28 + Math.sin(t*.00006)*.015 + .03;
-  gl.uniform2f(U.res, c.width, c.height); gl.uniform2f(U.sA, ...G.size[0]); gl.uniform2f(U.sB, ...G.size[1]);
-  gl.uniform2f(U.mouse, smx, smy); gl.uniform1f(U.t, t*.001); gl.uniform1f(U.cloud, cloud); gl.uniform1f(U.mixAB, mixAB);
-  gl.uniform1f(U.zoom, z); gl.uniform1f(U.scroll, clamp(scrollY/H(),0,1.2));
-  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, G.tex[0]);
-  gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, G.tex[1]);
-  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-}
+function drawGL(t){ if(!G) return; const c = $('#gl'), U = G.U;
+  smx += ((mx/W()-.5)-smx)*.04; smy += ((my/H()-.5)-smy)*.04;
+  gl.uniform2f(U.res,c.width,c.height); gl.uniform2f(U.sA,...G.size[0]); gl.uniform2f(U.sB,...G.size[1]); gl.uniform2f(U.mouse,smx,smy);
+  gl.uniform1f(U.t,t*.001); gl.uniform1f(U.cloud,cloud); gl.uniform1f(U.mixAB,mixAB);
+  gl.uniform1f(U.zoom, 1.03 + (1-zoomIn)*.28); gl.uniform1f(U.scroll, clamp(scrollY/H(),0,1.2));
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,G.tex[0]); gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D,G.tex[1]);
+  gl.drawArrays(gl.TRIANGLE_STRIP,0,4); }
 
 /* =====================================================================
-   Snow: soft photographic flakes with depth-of-field (bokeh up close)
+   Snow with depth of field
    ===================================================================== */
-const sc = $('#snow'), sx = sc.getContext('2d');
-let DPR = Math.min(devicePixelRatio||1, 2);
+const sc = $('#snow'), sx = sc.getContext('2d'); let DPR = 1;
 function resize(){ DPR = Math.min(devicePixelRatio||1, 2); sc.width = W()*DPR; sc.height = H()*DPR; sizeGL(); }
-function flakeSprite(soft){ const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d');
-  const gr = g.createRadialGradient(32,32,0,32,32,32);
-  if(soft){ gr.addColorStop(0,'rgba(255,255,255,.55)'); gr.addColorStop(.55,'rgba(255,255,255,.35)'); gr.addColorStop(.8,'rgba(255,255,255,.12)'); gr.addColorStop(1,'rgba(255,255,255,0)'); }
-  else { gr.addColorStop(0,'rgba(255,255,255,1)'); gr.addColorStop(.35,'rgba(255,255,255,.85)'); gr.addColorStop(1,'rgba(255,255,255,0)'); }
-  g.fillStyle = gr; g.fillRect(0,0,64,64); return c; }
-function moteSprite(){ const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d');
-  const gr = g.createRadialGradient(32,32,0,32,32,32); gr.addColorStop(0,'rgba(255,246,220,.9)'); gr.addColorStop(.4,'rgba(255,236,190,.35)'); gr.addColorStop(1,'rgba(255,230,180,0)');
-  g.fillStyle = gr; g.fillRect(0,0,64,64); return c; }
-const SHARP = flakeSprite(false), SOFT = flakeSprite(true), MOTE = moteSprite();
+function sprite(stops){ const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'), gr = g.createRadialGradient(32,32,0,32,32,32); stops.forEach(s=>gr.addColorStop(...s)); g.fillStyle = gr; g.fillRect(0,0,64,64); return c; }
+const SHARP = sprite([[0,'rgba(255,255,255,1)'],[.35,'rgba(255,255,255,.85)'],[1,'rgba(255,255,255,0)']]);
+const SOFT = sprite([[0,'rgba(255,255,255,.5)'],[.6,'rgba(255,255,255,.3)'],[.85,'rgba(255,255,255,.1)'],[1,'rgba(255,255,255,0)']]);
 const F = () => Math.max(W(),H())*.5;
-let flakes = [], flight = 0;
-function spawn(f){ const f0 = F(); f.z = .08 + Math.random()*.92;
-  f.x = (Math.random()*2-1)*(W()/2)*f.z/f0*1.2; f.y = (Math.random()*2-1)*(H()/2)*f.z/f0*1.2;
-  f.r = .7 + Math.random()*1.5; f.ph = Math.random()*6.28; f.vy = .3 + Math.random()*.5; f.tw = Math.random()*6.28; }
-function initFlakes(){ const n = season==='winter' ? (innerWidth<700?150:320) : (innerWidth<700?24:46); flakes = []; for(let i=0;i<n;i++){ const f={}; spawn(f); flakes.push(f);} }
-let wind = 0, scrollFade = 1;
+let flakes = [], flight = 0, wind = 0, snowAmt = 1;
+function spawn(f){ const f0 = F(); f.z = .08 + Math.random()*.92; f.x = (Math.random()*2-1)*(W()/2)*f.z/f0*1.2; f.y = (Math.random()*2-1)*(H()/2)*f.z/f0*1.2; f.r = .7 + Math.random()*1.5; f.ph = Math.random()*6.28; f.vy = .3 + Math.random()*.5; }
+function initFlakes(){ flakes = []; if(season !== 'winter') return; const n = innerWidth < 700 ? 140 : 300; for(let i=0;i<n;i++){ const f = {}; spawn(f); flakes.push(f); } }
 function drawSnow(t, dt){
   const w = W(), h = H(), f0 = F(), hx = w/2, hy = h/2;
   sx.setTransform(DPR,0,0,DPR,0,0); sx.clearRect(0,0,w,h);
-  mvx += ((mx - pmx) - mvx)*.05; pmx = mx; wind += (mvx*.02 - wind)*.05;
-  const winter = season === 'winter';
+  mvx += ((mx-pmx)-mvx)*.05; pmx = mx; wind += (mvx*.02-wind)*.05;
   for(const f of flakes){
-    if(flight > 0 && winter){ f.z -= flight*dt*.0009; if(f.z < .05){ spawn(f); f.z = 1; } }
-    if(winter){ f.y += f.vy*dt*.00009*(1+(1-f.z)); f.x += (Math.sin(t*.0009+f.ph)*.00004 + wind*.00002 + .000012)*dt; }
-    else { f.y -= f.vy*dt*.000012; f.x += Math.sin(t*.0004+f.ph)*.00003*dt; }
+    if(flight > 0){ f.z -= flight*dt*.0009; if(f.z < .05){ spawn(f); f.z = 1; } }
+    f.y += f.vy*dt*.00009*(1+(1-f.z)); f.x += (Math.sin(t*.0009+f.ph)*.00004 + wind*.00002 + .000012)*dt;
     const px = hx + f.x/f.z*f0, py = hy + f.y/f.z*f0;
-    const dx = px - mx, dy = py - my, d2 = dx*dx+dy*dy;
-    if(d2 < 14400){ const d = Math.sqrt(d2)||1, k = (120-d)/120*5; f.x += dx/d*k*f.z/f0; f.y += dy/d*k*f.z/f0; }
-    if(py > h*1.25 || py < -h*.25 - 40 || px < -w*.25 || px > w*1.25){
-      f.z = .1 + Math.random()*.9; f.x = (Math.random()*2-1)*(hx/f0)*f.z*1.2;
-      f.y = winter ? -(hy/f0)*f.z - .02 : (hy/f0)*f.z + .02; continue;
-    }
-    let a = clamp((1 - f.z)*1.5, .12, .95) * scrollFade;
-    if(winter){
-      // depth of field: near flakes become large soft bokeh discs, mid sharp, far tiny & faint
-      const size = f.r / f.z * 2.2;
-      if(f.z < .22){ const s = Math.min(size*2.2, 70); sx.globalAlpha = a*.55; sx.drawImage(SOFT, px-s/2, py-s/2, s, s); }
-      else { const s = Math.min(size, 12); sx.globalAlpha = a; sx.drawImage(SHARP, px-s/2, py-s/2, s, s); }
-    } else {
-      // summer: sunlit dust drifting slowly in the light
-      const fl = .55 + .45*Math.sin(t*.0012 + f.tw), s = Math.min(f.r / f.z * 4, 22);
-      sx.globalAlpha = a*fl*.6; sx.drawImage(MOTE, px-s/2, py-s/2, s, s);
-    }
+    if(py > h*1.25 || px < -w*.25 || px > w*1.25){ f.z = .1 + Math.random()*.9; f.x = (Math.random()*2-1)*(hx/f0)*f.z*1.2; f.y = -(hy/f0)*f.z - .02; continue; }
+    const a = clamp((1-f.z)*1.5,.12,.95)*snowAmt, size = f.r/f.z*2.2;
+    if(f.z < .22){ const s = Math.min(size*2.2,70); sx.globalAlpha = a*.5; sx.drawImage(SOFT,px-s/2,py-s/2,s,s); }
+    else { const s = Math.min(size,12); sx.globalAlpha = a; sx.drawImage(SHARP,px-s/2,py-s/2,s,s); }
   }
   sx.globalAlpha = 1;
 }
 
-/* ---------- scroll driven ---------- */
-const nav = $('#nav'), alt = $('#alt'), heroC = $('.hero-c');
-let sy = scrollY, lastY = 0; const chalet = $('#chalet'), hz = $('#spots'), track = $('#track');
-const feats = $$('#feat li'), plates = $$('#plates > div');
-let hzMax = 0;
-window.__layout = () => { hzMax = Math.max(0, track.scrollWidth - innerWidth); if(innerWidth > 760) hz.style.height = (innerHeight + hzMax*1.1) + 'px'; else hz.style.height = ''; };
+/* =====================================================================
+   The day: scrolling moves the clock; the page's light follows it
+   ===================================================================== */
+const scenes = $$('[data-t]');
+const toMin = s => { const [a,b] = s.split(':'); return +a*60 + +b; };
+const fmt = m => String(Math.floor(m/60)).padStart(2,'0') + ':' + String(Math.floor(m%60)).padStart(2,'0');
+const mix = (a,b,k) => a.map((v,i)=>Math.round(v+(b[i]-v)*k));
+const DAY = [242,239,233], NIGHT = [20,17,15];
 function onScroll(){
-  sy = scrollY; const h = H();
-  heroC.style.transform = `translate3d(0,${sy*.35}px,0)`; heroC.style.opacity = clamp(1 - sy/(h*.7), 0, 1);
-  nav.classList.toggle('solid', sy > h*.7);
-  nav.classList.toggle('hide', sy > lastY && sy > h && !body.classList.contains('locked')); lastY = sy;
-  alt.classList.toggle('on', sy > h*.4);
-  const doc = document.documentElement.scrollHeight - h, pr = clamp(sy/doc,0,1);
-  $('#altv').textContent = Math.round(2400 - pr*(2400-807)).toLocaleString('de-AT') + ' M ü. A.';
-  $('#altdot').style.top = (pr*173) + 'px';
-  scrollFade = clamp(1 - (sy - h*.6)/(h*.8), .25, 1);
-  // chalet photo stack
-  const cr = chalet.getBoundingClientRect(), cp = clamp(-cr.top / (cr.height - h), 0, 1);
-  $$('#stack .f').forEach((f,i) => f.classList.toggle('on', i===0 || cp > i/5.2));
-  feats.forEach((f,i) => f.classList.toggle('on', cp > i/5.2 - .02));
-  $('#cprog').style.transform = `scaleX(${cp})`;
-  // restaurant plates parallax
-  const rr = $('#plates').getBoundingClientRect(), rp = (rr.top + rr.height/2 - h/2);
-  plates.forEach(p => p.style.transform = `translate3d(0,${rp * +p.dataset.sp}px,0)`);
-  // horizontal
-  if(innerWidth > 760){ const hr = hz.getBoundingClientRect(), hp = clamp(-hr.top / (hr.height - h), 0, 1); track.style.transform = `translate3d(${-hp*hzMax}px,0,0)`;
-    $$('.spot .im', track).forEach(im => { const r = im.parentElement.getBoundingClientRect(); im.style.backgroundPosition = `${50 + (r.left + r.width/2 - W()/2)/W()*-30}% 50%`; }); }
+  const y = scrollY, h = H(), mid = y + h*.5;
+  const pts = [{y:0, t:toMin('07:40'), d:0}].concat(scenes.map(s => ({ y: s.offsetTop, t: toMin(s.dataset.t), d: +s.dataset.d })));
+  let k = pts.length-1; for(let i=0;i<pts.length-1;i++){ if(mid < pts[i+1].y){ k = i; break; } }
+  const a = pts[k], b = pts[Math.min(k+1,pts.length-1)], p = b===a ? 0 : clamp((mid-a.y)/(b.y-a.y),0,1);
+  $('#clk').textContent = fmt(a.t + (b.t-a.t)*p);
+  const d = a.d + (b.d-a.d)*p, bg = mix(DAY, NIGHT, d), fg = d > .5 ? [242,239,233] : [20,17,15];
+  body.style.setProperty('--bg', `rgb(${bg})`); body.style.setProperty('--fg', `rgb(${fg})`);
+  body.style.setProperty('--dim', `rgba(${fg},.6)`); body.style.setProperty('--rule', `rgba(${fg},.18)`);
+  const onPh = yy => $$('.hero,.full,.seq').some(e => { const q = e.getBoundingClientRect(); return q.top <= yy && q.bottom >= yy; });
+  $('.top').classList.toggle('onph', onPh(30)); $('.clock').classList.toggle('onph', onPh(h-40));
+  snowAmt = clamp(1 - (y - h*.5)/(h*1.2), .3, 1);
+  const sq = $('#chalet'), r = sq.getBoundingClientRect(), sp = clamp(-r.top/(r.height-h),0,.999);
+  const n = CH_TXT.length, i = Math.floor(sp*n);
+  if(i !== seqI){ seqI = i; $$('#frames .fr').forEach((f,j)=>f.classList.toggle('on', j===i)); $('#seqsub span').textContent = CH_TXT[i]; $('#seqc').textContent = `${i+1} / ${n}`; }
 }
 addEventListener('scroll', onScroll, {passive:true});
-addEventListener('resize', () => { resize(); __layout(); onScroll(); });
+addEventListener('resize', () => { resize(); onScroll(); });
 
-/* ---------- main loop ---------- */
 let lt = performance.now();
-function loop(t){ const dt = Math.min(50, t - lt); lt = t;
-  cx += (mx-cx)*.15; cy += (my-cy)*.15; cur.style.transform = `translate(${cx}px,${cy}px)`;
-  if(scrollY < H()*1.3) drawGL(t);
-  drawSnow(t, dt);
-  requestAnimationFrame(loop); }
+function loop(t){ const dt = Math.min(50, t-lt); lt = t; if(scrollY < H()*1.2) drawGL(t); drawSnow(t, dt); requestAnimationFrame(loop); }
+function tween(a, b, dur, fn, done){ const t0 = performance.now(); const f = t => { const k = clamp((t-t0)/dur,0,1); fn(a+(b-a)*easeIO(k)); if(k<1) requestAnimationFrame(f); else done&&done(); }; requestAnimationFrame(f); }
 
-function tween(from, to, dur, fn, done){ const t0 = performance.now(); const f = t => { const k = clamp((t-t0)/dur,0,1); fn(from + (to-from)*easeIO(k), k); if(k<1) requestAnimationFrame(f); else done&&done(); }; requestAnimationFrame(f); }
-
-/* ---------- intro: emerge from the clouds into the real photo ---------- */
-async function intro(){
-  resize(); applySeasonText(false); __layout(); observe(); onScroll(); initFlakes();
+/* ---------- arrival: out of the clouds ---------- */
+async function arrive(){
+  resize(); renderChalet(); applySeason(); initFlakes();
   const ok = initGL(); sizeGL();
-  if(ok){ await Promise.race([loadTex(0, HERO.winter), new Promise(r=>setTimeout(r,4000))]); loadTex(1, HERO.summer); }
-  else $('#gl').style.display = 'none';
+  if(ok){ await Promise.race([loadTex(0,HERO.winter), new Promise(r=>setTimeout(r,4000))]); loadTex(1,HERO.summer); } else $('#gl').style.display='none';
   requestAnimationFrame(loop);
-  if(reduce || !ok){ cloud = 0; zoomIn = 1; finishIntro(); return; }
+  if(reduce || !ok){ cloud = 0; zoomIn = 1; done(); return; }
   flight = 3;
-  const logo = $('#introLogo');
-  setTimeout(()=>logo.classList.add('show'), 200);
-  setTimeout(()=>{ logo.classList.add('gone');
-    tween(1, 0, 3600, v => { cloud = v; flight = 3*v; }, () => { flight = 0; });
-    tween(0, 1, 4600, v => zoomIn = v);
-    setTimeout(finishIntro, 1900);
-  }, 1800);
+  setTimeout(() => { tween(1,0,3800,v=>{ cloud = v; flight = 3*v; },()=>flight=0); tween(0,1,5000,v=>zoomIn=v); setTimeout(done, 2400); }, 900);
 }
-function finishIntro(){
-  body.classList.remove('locked','intro');
-  $('#heroTitle').classList.add('in');
-  $$('[data-hero]').forEach(e=>e.classList.add('in'));
-  setTimeout(()=>{ $('#introLogo').style.display='none'; }, 1500);
-}
+function done(){ body.classList.remove('locked','intro'); setTimeout(()=>$('#sub0').classList.add('on'), 700); }
 
-/* ---------- season switch: clouds roll in, the landscape changes, clouds part ---------- */
-let switching = false;
+/* ---------- season: clouds come down the valley, then lift ---------- */
+let busy = false;
 $('#season').addEventListener('click', async () => {
-  if(switching) return; switching = true;
+  if(busy) return; busy = true;
   const next = season === 'winter' ? 'summer' : 'winter';
-  if(scrollY > 10){ scrollTo({top:0, behavior:'smooth'}); await new Promise(r=>setTimeout(r, Math.min(1200, 300 + scrollY*.15))); }
-  if(!G){ season = next; body.dataset.season = next; initFlakes(); applySeasonText(true); switching = false; return; }
-  tween(0, 1, 1100, v => cloud = v, () => {
-    season = next; body.dataset.season = next; mixAB = next === 'summer' ? 1 : 0;
-    initFlakes(); applySeasonText(true); zoomIn = 0;
-    if(next==='winter') flight = 2;
-    setTimeout(()=>{ tween(1, 0, 2800, v => { cloud = v; if(next==='winter') flight = 2*v; }, () => { flight = 0; switching = false; });
-      tween(0, 1, 3600, v => zoomIn = v); }, 300);
-  });
+  if(scrollY > 10){ scrollTo({top:0,behavior:'smooth'}); await new Promise(r=>setTimeout(r, Math.min(1400, 300+scrollY*.12))); }
+  $('#sub0').classList.remove('on');
+  const swap = () => { season = next; body.dataset.season = next; mixAB = next==='summer'?1:0; $('#clkl').textContent = 'Hollersbach · ' + (next==='winter'?'Winter':'Sommer'); initFlakes(); applySeason(); };
+  if(!G){ swap(); busy = false; $('#sub0').classList.add('on'); return; }
+  tween(0,1,1200,v=>cloud=v,()=>{ swap(); zoomIn = 0; if(next==='winter') flight = 2;
+    setTimeout(()=>{ tween(1,0,3000,v=>{ cloud=v; if(next==='winter') flight = 2*v; },()=>{ flight=0; busy=false; $('#sub0').classList.add('on'); }); tween(0,1,4000,v=>zoomIn=v); }, 300); });
 });
 
-/* ---------- form ---------- */
-$('#form').addEventListener('submit', e => { e.preventDefault(); e.target.classList.add('sent'); $('#sendT').textContent = 'Gesendet ✓'; });
-
 scrollTo(0,0);
-if(document.fonts && document.fonts.ready) document.fonts.ready.then(intro); else intro();
+(document.fonts ? document.fonts.ready : Promise.resolve()).then(arrive);
 })();
 </script>
 </body>
