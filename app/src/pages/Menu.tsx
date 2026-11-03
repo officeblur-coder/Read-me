@@ -44,9 +44,10 @@ export default function Menu({ source }: { source?: string }) {
   const { customer, ready: authReady } = useCustomer();
   const rw = useRewards(customer?.id);
   const { zones } = useZones();
-  const [geo, setGeo] = useState<LatLng | null>(() => { try { return JSON.parse(localStorage.getItem("lyra-geo") || "null")?.p ?? null; } catch { return null; } });
-  const [geoFor, setGeoFor] = useState<string>(() => { try { return JSON.parse(localStorage.getItem("lyra-geo") || "null")?.a ?? ""; } catch { return ""; } });
+  const [geo, setGeo] = useState<LatLng | null>(() => { try { return JSON.parse(localStorage.getItem("lyra-geo2") || "null")?.p ?? null; } catch { return null; } });
+  const [geoFor, setGeoFor] = useState<string>(() => { try { return JSON.parse(localStorage.getItem("lyra-geo2") || "null")?.a ?? ""; } catch { return ""; } });
   const [geoBusy, setGeoBusy] = useState(false);
+  const [geoLabel, setGeoLabel] = useState("");
   const [cats, setCats] = useState<Category[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [settings, setSettings] = useState<Settings | null>(null);
@@ -259,15 +260,15 @@ export default function Menu({ source }: { source?: string }) {
   const addrKey = `${form.address.trim()}|${(form.city || "Târgu Mureș").trim()}`;
   function setPin(p: LatLng, key: string) {
     setGeo(p); setGeoFor(key);
-    try { localStorage.setItem("lyra-geo", JSON.stringify({ p, a: key })); } catch { /* ignore */ }
+    try { localStorage.setItem("lyra-geo2", JSON.stringify({ p, a: key })); } catch { /* ignore */ }
   }
   async function locate(key = addrKey) {
     const [street, city] = key.split("|");
     setGeoBusy(true);
     const r = await geocodeAddress(street, city);
     setGeoBusy(false);
-    if (r) setPin({ lat: r.lat, lng: r.lng }, key);
-    else { setGeo(null); setGeoFor(key); }
+    if (r) { setPin({ lat: r.lat, lng: r.lng }, key); setGeoLabel(r.label.split(",").slice(0, 3).map(x => x.trim()).join(", ")); }
+    else { setGeo(null); setGeoFor(key); setGeoLabel(""); }
     return r;
   }
   useEffect(() => {
@@ -285,7 +286,7 @@ export default function Menu({ source }: { source?: string }) {
     if (mode === "livrare" && hasZones) {
       let p = addrKey === geoFor ? geo : null;
       if (!p) { const r = await locate(); p = r ? { lat: r.lat, lng: r.lng } : null; }
-      if (!p) { setSendErr("Nu am putut verifica adresa. Verifică strada și localitatea."); return; }
+      if (!p) { setSendErr("Nu găsim adresa pe hartă. Verifică numele străzii și localitatea."); return; }
       if (!zoneFor(p, zones)) { setSendErr("Ne pare rău, adresa nu este în zona noastră de livrare. Poți alege ridicarea din restaurant."); return; }
       const zn = zoneFor(p, zones)!;
       if (sub < zn.min_order) { setSendErr(`Comanda minimă pentru zona ${zn.name} este ${lei(zn.min_order)}.`); return; }
@@ -436,8 +437,9 @@ export default function Menu({ source }: { source?: string }) {
           </label>}
           {mode === "livrare" && hasZones && form.address.trim().length >= 4 && <div className={`geo-zone wide ${geoBusy || addrKey !== geoFor ? "" : zone ? "ok" : "out"}`}>
             {geoBusy || addrKey !== geoFor ? "Verificăm adresa…"
-              : zone ? <><b>Livrăm la tine</b> · {zone.free_over != null && sub >= zone.free_over ? "livrare gratuită" : zone.fee ? `livrare ${lei(zone.fee)}` : "livrare gratuită"}{zone.free_over != null && sub < zone.free_over ? ` · gratuit peste ${lei(zone.free_over)}` : ""}{zone.min_order ? ` · minim ${lei(zone.min_order)}` : ""}</>
-              : <>Ne pare rău, adresa nu este în zona noastră de livrare. Poți alege <button type="button" className="linkbtn" onClick={() => setMode("ridicare")}>ridicarea din restaurant</button>.</>}
+              : !geo ? <>Nu găsim adresa pe hartă. Scrie strada și numărul (ex.: Strada Gheorghe Doja 10) și alege localitatea corectă.</>
+              : zone ? <><b>Livrăm la tine</b> · {zone.free_over != null && sub >= zone.free_over ? "livrare gratuită" : zone.fee ? `livrare ${lei(zone.fee)}` : "livrare gratuită"}{zone.free_over != null && sub < zone.free_over ? ` · gratuit peste ${lei(zone.free_over)}` : ""}{zone.min_order ? ` · minim ${lei(zone.min_order)}` : ""}{geoLabel && <small className="geo-found">Adresa găsită: {geoLabel}</small>}</>
+              : <>{geoLabel && <small className="geo-found">Adresa găsită: {geoLabel}</small>}Ne pare rău, adresa nu este în zona noastră de livrare. Poți alege <button type="button" className="linkbtn" onClick={() => setMode("ridicare")}>ridicarea din restaurant</button>.</>}
           </div>}
           {!customer && <label className="fl wide"><span>Email <i>opțional · strângi puncte Lyra Rewards pe email</i></span><input value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} inputMode="email" autoComplete="email" placeholder="nume@email.com" /></label>}
           <label className="fl wide"><span>Mențiuni <i>opțional</i></span><textarea rows={2} value={orderNote} onChange={e => setOrderNote(e.target.value)} placeholder="Interfon, etaj, fără tacâmuri…" /></label>

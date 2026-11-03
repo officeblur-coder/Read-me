@@ -1174,3 +1174,5 @@ h1,h2,h3,h4{margin:0;font-weight:700;text-wrap:balance}
 .login-users button.on{border-color:#ff7a1a;background:rgba(255,122,26,.12)}
 .login-users .av{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:var(--orange);color:#fff;font-size:22px;font-weight:800}
 .login-other{justify-self:center;font-size:14px}
+.geo-found{display:block;opacity:.75;font-size:12.5px;margin-top:4px}
+.geo-zone .geo-found:first-child{margin:0 0 4px}

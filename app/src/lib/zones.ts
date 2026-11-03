@@ -52,8 +52,10 @@ export const LOCALITIES = ["Târgu Mureș", "Sâncraiu de Mureș", "Sângeorgiu 
   "Ernei", "Acățari", "Gornești", "Ungheni", "Mureșeni", "Remetea", "Mădăraș", "Band", "Miercurea Nirajului", "Ceuașu de Câmpie", "Pănet"];
 
 const UA_HEADERS = { Accept: "application/json" };
+// only results inside this box (Mureș around Târgu Mureș) count; without "bounded" the box is just a hint
+const VIEWBOX = "24.2,46.75,25.0,46.3";
 async function nominatim(params: Record<string, string>) {
-  const qs = new URLSearchParams({ format: "json", limit: "1", countrycodes: "ro", "accept-language": "ro", viewbox: "24.2,46.75,25.0,46.3", ...params });
+  const qs = new URLSearchParams({ format: "json", limit: "1", countrycodes: "ro", "accept-language": "ro", viewbox: VIEWBOX, bounded: "1", ...params });
   try {
     const r = await fetch("https://nominatim.openstreetmap.org/search?" + qs, { headers: UA_HEADERS });
     const d = (await r.json()) as { lat: string; lon: string; display_name: string }[];
@@ -61,38 +63,59 @@ async function nominatim(params: Record<string, string>) {
   } catch { return null; }
 }
 const pause = () => new Promise(r => setTimeout(r, 1100));   // OpenStreetMap allows ~1 search per second
+/** lower case, no diacritics: "Târgu Mureș" → "targu mures" */
+export const fold = (x: string) => x.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+const isTgm = (c: string) => /^(tg\.?|targu)[\s-]*mures$/.test(fold(c));
 
-/** Street as people write it → what the map search understands: no "Str." before "Aleea", no block/apartment. */
+/** Street as people write it → what the map search understands: no "Str." before "Aleea", no block/apartment.
+ *  A locality written in the street ("Ernei 4b") is taken out and returned, so the search happens in that locality. */
 export function cleanStreet(street: string, city: string) {
   let s = " " + street.replace(/\s+/g, " ") + " ";
-  for (const c of [city, ...LOCALITIES]) if (c) s = s.replace(new RegExp("[,\\s]+" + c.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "[,\\s]*", "i"), " ");
+  let locality = "";
+  for (const c of [...LOCALITIES].sort((x, y) => y.length - x.length)) {
+    const re = new RegExp("(^|[,\\s])" + fold(c).replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "(?=[,\\s]|$)", "i");
+    const f = fold(s);
+    const m = f.match(re);
+    if (m && m.index != null) {
+      const at = m.index + m[1].length;
+      if (/(str(ada)?\.?|aleea|bd\.?|b-dul|bulevardul|calea|pia[tț]a|intrarea|pasajul)\s*$/i.test(s.slice(0, at))) continue; // "Strada Livezeni" is a street
+
+      s = s.slice(0, at) + " " + s.slice(at + fold(c).length);
+      if (!isTgm(c) && fold(c) !== fold(city)) locality = locality || c;
+    }
+  }
   s = s.replace(/[,\s]*\b(tg\.?|t[aâ]rgu)[\s-]*mure[sș]\b[,\s]*/gi, " ");
   s = s.replace(/[,\s]+(bl(oc)?|sc(ara)?|et(aj)?|ap(artament)?|ap\.|int(erfon)?)\b\.?\s*[\w-]*/gi, " ");
   s = s.replace(/\b(bd\.?|b-dul|blvd\.?)\s+/i, "Bulevardul ").replace(/\bstr\.\s*/i, "Strada ");
-  s = s.replace(/(\d+)\s*\/\s*\w+/, "$1");                                   // 11/4 → 11
+  s = s.replace(/(\d+[a-zA-Z]?)\s*\/\s*\w+/, "$1");                          // 11/4 → 11, 4b/1 → 4b
   s = s.replace(/\b(str(ada)?\.?)\s+(?=(aleea|bulevardul|bd\.?|b-dul|calea|pia[țt]a|pasajul|intrarea)\b)/i, ""); // "Str. Aleea X" → "Aleea X"
   s = s.replace(/\bnr\.?\s*/gi, "").replace(/\s*,\s*/g, ", ").replace(/\s+/g, " ").trim().replace(/^,|,$/g, "").trim();
-  const m = s.match(/^(.*?)[,\s]+(\d+[a-zA-Z]?)$/);
-  return { street: m ? m[1].trim() : s, number: m ? m[2] : "" };
+  const m = s.match(/^(.*?)[,\s]*(\d+[a-zA-Z]?)$/);
+  const st = (m ? m[1] : s).replace(/[,\s]+$/, "").trim();
+  return { street: /[a-zA-ZăâîșțĂÂÎȘȚ]{3,}/.test(st) ? st : "", number: m ? m[2] : "", locality };
 }
 
-/** Address → coordinates (OpenStreetMap). Tries the exact number, then the street, then the locality itself,
- *  so a typo in the number never blocks an order; only the zone check decides. */
-export async function geocodeAddress(street: string, city: string): Promise<(LatLng & { label: string; precision: "exact" | "street" | "city" }) | null> {
-  const loc = city.trim() || "Târgu Mureș";
-  const { street: st, number } = cleanStreet(street, loc);
+export type Geo = LatLng & { label: string; precision: "exact" | "street" | "village"; locality: string };
+/** Address → coordinates (OpenStreetMap), strict: the street must be found in that locality.
+ *  Only villages (outside Târgu Mureș), where houses often have just a number, fall back to the village itself.
+ *  Returns null when the address can't be placed; then the order can't be sent for delivery. */
+export async function geocodeAddress(street: string, city: string): Promise<Geo | null> {
+  const { street: st, number, locality } = cleanStreet(street, city.trim() || "Târgu Mureș");
+  const loc = locality || city.trim() || "Târgu Mureș";
+  const inLoc = (label: string) => fold(label).includes(fold(loc)) || (isTgm(loc) && fold(label).includes("targu mures"));
   if (st) {
     if (number) {
       const a = await nominatim({ street: `${number} ${st}`, city: loc, county: "Mureș" });
-      if (a) return { ...a, precision: "exact" };
+      if (a && inLoc(a.label)) return { ...a, precision: "exact", locality: loc };
       await pause();
     }
-    const b = await nominatim({ q: `${st}, ${loc}, Mureș` });
-    if (b) return { ...b, precision: "street" };
+    const b = await nominatim({ street: st, city: loc, county: "Mureș" });
+    if (b && inLoc(b.label)) return { ...b, precision: "street", locality: loc };
+    if (isTgm(loc)) return null;                  // a street in Târgu Mureș that the map doesn't know: no guessing
     await pause();
-  }
+  } else if (isTgm(loc)) return null;            // no street at all for the city
   const c = await nominatim({ q: `${loc}, Mureș` });
-  return c ? { ...c, precision: "city" } : null;
+  return c && inLoc(c.label) ? { ...c, precision: "village", locality: loc } : null;
 }
 
 /** Address → coordinates (OpenStreetMap / Nominatim), biased to Mureș county. */
