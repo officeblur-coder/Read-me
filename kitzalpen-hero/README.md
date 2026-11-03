@@ -314,3 +314,19 @@ Mounted after the map, `<AlpineMapSection/><GuestStoriesSection lang={lang}/>`. 
 - <1024 px: one card plus a peek of the next, native swipe with scroll-snap, progress synced to the card in view. No page-level horizontal scroll, and bottom padding keeps it clear of the booking capsule.
 - Entrance (once): eyebrow, headline lines, subtitle, cards staggered, then progress and trust bar. Desktop background parallax. Hover lifts the centre card 5 px, zooms the photo and shows a gold border.
 - Season and language changes keep the carousel position. `prefers-reduced-motion`: static.
+
+---
+
+# Section 10 – Your Alpine Retreat (final booking CTA) + footer
+
+`src/components/retreat/FinalBookingCTA.tsx`, `public/images/retreat/` (original attic-bedroom photo of the chalet; `cabin-mobile.*` is an uncropped-content portrait crop keeping bed + bunk beds, served ≤640 px).
+
+Order: … `<GuestStoriesSection/>` → `<FinalBookingCTA/>` → footer. The old placeholder section was removed.
+
+- Buttons reuse the existing booking links from `QUICK_ACTIONS` (same as the live site): **Zimmer buchen / Book a room → https://kitzbuhel.pynbooking.direct**, **Chalet buchen / Book chalet → https://chalet-kitzalpen.pynbooking.direct/**. They open in a new tab, and no new URLs were added.
+- Same photo in summer and winter. Only the theme accents follow the season: button green/blue, gold tone, and the bottom fade colour.
+- Motion (once, at `top 65%`): photo 1.08 → 1 and veil fade-in (1.9 s, power2.out), eyebrow, headline lines (stagger 0.12, power3.out), then "KitzAlpen" warms to champagne. Subtitle (y 20), features (stagger 0.12) with separators drawn vertically, buttons last (y 25). Hover: room button lifts 2 px and brightens; chalet button gets a translucent fill and a gold border. Desktop parallax ±5 %. Reduced motion: static.
+- Bottom of the photo fades into `var(--k-deep)`, the footer's background, so there is no separator.
+- Features: "Gemütliche Zimmer & Chalet / Einzigartige Alpenlage / Familiengeführte Gastfreundschaft". "Family-run" is from the brief; kitzalpen.at itself only mentions "freundliche Gastgeber", so confirm before going live.
+
+`src/components/SiteFooter.tsx` is a minimal preview footer with the contact data from kitzalpen.at. On the live site keep the existing footer and just give it `background: var(--k-deep)`.

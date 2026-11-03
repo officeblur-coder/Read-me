@@ -17,6 +17,8 @@ import { ActivitiesPage } from './components/activities/ActivitiesPage';
 import { AlpineExperienceSection } from './components/experience/AlpineExperienceSection';
 import { AlpineMapSection } from './components/map/AlpineMapSection';
 import { GuestStoriesSection } from './components/stories/GuestStoriesSection';
+import { FinalBookingCTA } from './components/retreat/FinalBookingCTA';
+import { SiteFooter } from './components/SiteFooter';
 import type { Season } from './content/hero';
 import type { BookingBarHandle, BookingRequest } from './components/BookingBar';
 import { useFinePointer, useReducedMotion } from './lib/hooks';
@@ -28,7 +30,6 @@ export default function App() {
   const [compact, setCompact] = useState(false);
   const [menu, setMenu] = useState(false);
   const booking = useRef<BookingBarHandle>(null);
-  const next = useRef<HTMLElement>(null);
   const fine = useFinePointer();
   const reduced = useReducedMotion();
   const copy = COPY[lang];
@@ -52,14 +53,6 @@ export default function App() {
     return () => window.removeEventListener('scroll', on);
   }, []);
 
-  // next section enters with an editorial mask reveal (placeholder only)
-  useGSAP(() => {
-    if (reduced) return;
-    gsap.fromTo('.js-next-mask', { clipPath: 'inset(18% 8% 18% 8%)' }, {
-      clipPath: 'inset(0% 0% 0% 0%)', ease: 'none',
-      scrollTrigger: { trigger: next.current, start: 'top bottom', end: 'top 30%', scrub: 0.6 },
-    });
-  }, { scope: next, dependencies: [reduced] });
 
   const onBook = useCallback(() => {
     window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
@@ -78,7 +71,7 @@ export default function App() {
       <Header lang={lang} copy={copy} compact={compact} fine={fine && !reduced} menuOpen={menu} onLang={setLang} onMenu={() => setMenu(true)} />
       <MobileMenu open={menu} lang={lang} copy={copy} reduced={reduced} onClose={() => setMenu(false)} onLang={setLang} onBook={onBook} />
       {page ? (
-        <main id="main"><ActivitiesPage season={page} lang={lang} /><div aria-hidden className="h-[96px] bg-cream lg:hidden" /></main>
+        <main id="main"><ActivitiesPage season={page} lang={lang} /></main>
       ) : (
       <main id="main">
         <Hero lang={lang} copy={copy} bookingRef={booking} onBookingSubmit={onSubmit} />
@@ -90,16 +83,10 @@ export default function App() {
         <AlpineExperienceSection lang={lang} />
         <AlpineMapSection lang={lang} />
         <GuestStoriesSection lang={lang} />
-        <section ref={next} aria-label="Platzhalter" className="relative bg-cream px-[max(16px,env(safe-area-inset-left))] py-24 text-forest md:px-14 md:py-36">
-          <div className="js-next-mask mx-auto max-w-[1100px] rounded-[2px] bg-soft px-6 py-24 text-center md:py-36">
-            <p className="text-[12px] font-semibold uppercase tracking-[.3em] text-champagne-dark">Platzhalter</p>
-            <p className="mt-4 font-display text-[clamp(30px,4vw,52px)] font-medium italic leading-tight">{copy.next}</p>
-          </div>
-        </section>
-        {/* keeps the last content clear of the mobile quick-action bar */}
-        <div aria-hidden className="h-[96px] bg-cream lg:hidden" />
+        <FinalBookingCTA lang={lang} />
       </main>
       )}
+      <SiteFooter lang={lang} />
       <QuickActions lang={lang} reduced={reduced} />
     </>
   );
