@@ -88,8 +88,8 @@ nav:not(.solid) .season span{--page:#1a2340}
 .heroimg{position:absolute;inset:0;background-size:cover;background-position:center;transform:scale(1.08)}
 #gl{position:absolute;inset:0;width:100%;height:100%;display:block}
 .shade{position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(6,10,22,.72) 0%,rgba(6,10,22,.38) 45%,transparent 72%),linear-gradient(0deg,rgba(6,10,22,.55),transparent 35%)}
-body.intro nav,body.intro .hero-c,body.intro .scrollhint,body.intro .hero-meta,body.intro .badge{opacity:0}
-nav,.hero-c,.scrollhint,.hero-meta,.badge{transition:opacity 1.6s var(--ease)}
+body.intro .shade,body.intro nav,body.intro .hero-c,body.intro .scrollhint,body.intro .hero-meta,body.intro .badge{opacity:0}
+.shade,nav,.hero-c,.scrollhint,.hero-meta,.badge{transition:opacity 1.6s var(--ease)}
 .hero-c{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;justify-content:center;padding:0 clamp(16px,7vw,110px);padding-bottom:12vh}
 .eyebrow{display:flex;align-items:center;gap:14px;font-size:11px;letter-spacing:.42em;text-transform:uppercase;opacity:.8;margin-bottom:26px}
 .eyebrow::before{content:"";width:40px;height:1px;background:currentColor}
@@ -661,7 +661,7 @@ function initGL(){
     // gentle grade
     c=pow(c,vec3(.97));c*=1.03;
     // atmospheric haze while inside clouds
-    c=mix(c,vec3(.88,.91,.96),clamp(cloud*1.1,0.,1.)*.75);
+    c=mix(c,vec3(.90,.93,.97),pow(clamp(cloud*1.5,0.,1.),.7)*.85);
     vec4 far=layer(uv,0.,cloud,1.3);
     vec4 near=layer(uv,1.,clamp(cloud*1.08,0.,1.),7.7);
     c=mix(c,far.rgb,far.a*clamp(cloud*1.6,0.,1.));
