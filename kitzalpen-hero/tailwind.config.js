@@ -8,6 +8,10 @@ export default {
         ivory: '#f4efe4',
         champagne: { DEFAULT: '#d8bf8a', light: '#ecdcb4', dark: '#b8975c' },
         charcoal: '#151614',
+        cream: '#F5F1E9',
+        pine: { DEFAULT: '#102E23', light: '#1b4434' },
+        gold: '#D7B77B',
+        ink: '#202521',
       },
       fontFamily: {
         display: ['"Cormorant Garamond"', 'Cormorant', 'Georgia', 'serif'],

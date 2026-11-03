@@ -71,3 +71,37 @@ Fonts: Cormorant Garamond and Manrope from Google Fonts (both SIL Open Font Lice
 - Scroll: the photo zooms slowly, the headline lifts and fades, the booking bar withdraws, and the header turns compact and dark green.
 - `prefers-reduced-motion`: no intro, no parallax and no scroll effects; transitions are instant.
 - Touch targets ≥ 44 × 44 px. Body has `overflow-x: hidden`, and nothing is wider than the viewport.
+
+---
+
+# Section 02 – Unsere Zimmer
+
+```
+src/content/rooms.ts                 texts DE/EN, the four room photos (alt text describes only what is visible), features
+src/components/rooms/RoomsSection.tsx   section layout + scroll animations (GSAP ScrollTrigger)
+src/components/rooms/RoomsGallery.tsx   gallery: arrows, thumbnails, swipe, keyboard, lightbox (native <dialog>), 01 / 04 counter
+src/components/rooms/RoomFeatures.tsx   four line-icon features
+public/images/rooms/                 originals + WebP/AVIF (800 px and original width)
+```
+
+Mount it directly after the hero: `<Hero … /><RoomsSection lang={lang} />` (see `App.tsx`). It uses the global header; it does not render its own.
+
+## Content checks (kitzalpen.at, homepage + /rooms/)
+
+| Feature | Status |
+|---|---|
+| Komfortable Zimmer: eigenes Bad, Flachbild-TV, Bergblick | listed on the site |
+| Alpenstil & Wohlfühlambiente | visible in the photos |
+| Kostenloses WLAN | listed on the site |
+| Frühstück **inklusive** | site lists a *Frühstücksbuffet 08:00–10:00*, but not that it is included in the rate, so the feature carries a "zu bestätigen" marker. Remove `verify` in `rooms.ts` once confirmed. |
+
+Photos are not assigned to room categories (Doppel-, Dreibett- …) until the client confirms which photo shows which room. To add captions later, add a `title` to each entry in `ROOM_PHOTOS`.
+
+## Motion
+
+- Hand-over from the hero: the cream sheet rises from the dark hero with rounded top corners and opens to full width while scrolling (scrubbed, no scroll lock, no white gap).
+- Reveal plays once at `top 62%`: eyebrow, headline lines (mask), sub-text, photo from a rectangular mask with a 1.1→1 zoom-out, features (100 ms stagger), thumbnails (y 20 → 0), button.
+- Photo change: the current photo slides 48 px away and fades out; the next one fades in with scale 1.04 → 1. Duration 750 ms, `cubic-bezier(0.22, 1, 0.36, 1)` via GSAP CustomEase.
+- Desktop hover: zoom 1.025, a very light overlay, and a "VIEW / Ansehen" cursor (the gallery stays fully keyboard operable: Tab focuses it, ←/→ change the photo, Enter opens the lightbox).
+- Mobile: the photo follows the finger while swiping (vertical scroll stays free), thumbnails sit in a horizontal strip, and there is no mouse parallax.
+- `prefers-reduced-motion`: no reveals; photo changes are instant.
