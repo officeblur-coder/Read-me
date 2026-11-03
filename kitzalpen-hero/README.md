@@ -77,9 +77,9 @@ Fonts: Cormorant Garamond and Manrope from Google Fonts (both SIL Open Font Lice
 # Section 02 – Unsere Zimmer
 
 ```
-src/content/rooms.ts                 texts DE/EN, the four room photos (alt text describes only what is visible), features
+src/content/rooms.ts                 texts DE/EN, the four room categories with their real figures, features
 src/components/rooms/RoomsSection.tsx   section layout + scroll animations (GSAP ScrollTrigger)
-src/components/rooms/RoomsGallery.tsx   gallery: arrows, thumbnails, swipe, keyboard, lightbox (native <dialog>), 01 / 04 counter
+src/components/rooms/RoomsGallery.tsx   gallery: one slide per category with caption (name, ideal for, rooms · m² · guests · beds), arrows, the other three rooms as thumbnails, swipe, keyboard, lightbox (native <dialog>), 1 / 4 counter
 src/components/rooms/RoomFeatures.tsx   four line-icon features
 public/images/rooms/                 originals + WebP/AVIF (800 px and original width)
 ```
@@ -95,7 +95,16 @@ Mount it directly after the hero: `<Hero … /><RoomsSection lang={lang} />` (se
 | Kostenloses WLAN | listed on the site |
 | Frühstück **inklusive** | site lists a *Frühstücksbuffet 08:00–10:00*, but not that it is included in the rate, so the feature carries a "zu bestätigen" marker. Remove `verify` in `rooms.ts` once confirmed. |
 
-Photos are not assigned to room categories (Doppel-, Dreibett- …) until the client confirms which photo shows which room. To add captions later, add a `title` to each entry in `ROOM_PHOTOS`.
+Room categories and numbers come from kitzalpen.at/rooms/ (Nov 2026):
+
+| Category | Rooms | m² | Guests | Beds | Photo |
+|---|---|---|---|---|---|
+| Doppelzimmer | 8 | 15–21 | 2 | Doppelbett | room-1 = site `double-01` |
+| Dreibettzimmer | 3 | 17–24 | 3 | Doppelbett + Einzelbett | room-2 = site `triple-01` |
+| Familienzimmer mit Verbindungstür | 4 | 19–31 | 4 (two connected: 8) | flexibel | room-3 = site `family-01` |
+| Vierbettzimmer | 2 | 19–31 | 4 | flexibel | room-4 = site `quad-01` |
+
+Each supplied photo was matched pixel-for-pixel to the first gallery image of that category on the live site, so the labels are confirmed. Every room includes TV, WLAN, a private bathroom and a shower.
 
 ## Motion
 

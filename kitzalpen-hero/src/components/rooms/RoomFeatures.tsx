@@ -1,20 +1,20 @@
 import type { FeatureIcon, RoomFeature } from '../../content/rooms';
 
-/** Line icons: 24px grid, 1.5 stroke, same weight for all four. */
+/** Line icons on a 24px grid, 1.5 stroke – one weight for all four. */
 const ICONS: Record<FeatureIcon, JSX.Element> = {
   bed: (
     <>
-      <path d="M3 18.5v-9M21 18.5V13a2 2 0 0 0-2-2H3" />
+      <path d="M3 18.5v-11" />
+      <path d="M21 18.5v-5.5a2 2 0 0 0-2-2H3" />
       <path d="M3 15.5h18" />
-      <rect x="5" y="8" width="5" height="3" rx="1.2" />
+      <rect x="5" y="7.5" width="5.2" height="3.5" rx="1.3" />
     </>
   ),
   alpine: (
     <>
-      <path d="M2.5 19.5 9 8l3.6 6.2" />
-      <path d="M10.6 19.5 15.5 11l6 8.5" />
-      <path d="M7.1 11.4 9 12.5l1.6-1.4" />
-      <path d="M2.5 19.5h19" />
+      <path d="M2 19 8.8 7.5l4 6.8" />
+      <path d="M10.4 19l5.4-8.8L22 19" />
+      <path d="M6.6 11.3 8.8 12.6l1.7-1.5" />
     </>
   ),
   wifi: (
@@ -27,41 +27,52 @@ const ICONS: Record<FeatureIcon, JSX.Element> = {
   ),
   breakfast: (
     <>
-      <path d="M4 10h12v4.5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V10Z" />
-      <path d="M16 11.2h1.6a2.4 2.4 0 0 1 0 4.8H15.6" />
-      <path d="M8 3.8c-.8.9.8 1.8 0 2.8M12 3.8c-.8.9.8 1.8 0 2.8" />
+      <path d="M7 3v6a2 2 0 0 1-2 2v10M5 11a2 2 0 0 1-2-2V3M5 3v5" />
+      <path d="M17 21V3c-2 1.5-3 4-3 7 0 2 1 3 3 3" />
     </>
   ),
 };
 
-export function FeatureIconSvg({ name }: { name: FeatureIcon }) {
+export function FeatureIconSvg({ name, size = 28 }: { name: FeatureIcon; size?: number }) {
   return (
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       {ICONS[name]}
     </svg>
   );
 }
 
-export function RoomFeatures({ features, className = '' }: { features: RoomFeature[]; className?: string }) {
+function Verify({ text }: { text: string }) {
   return (
-    <ul className={`grid grid-cols-2 gap-x-5 gap-y-7 lg:grid-cols-1 lg:gap-0 ${className}`}>
-      {features.map((f) => (
-        <li key={f.title} className="js-rf flex flex-col gap-3 lg:flex-row lg:items-start lg:gap-5 lg:border-b lg:border-pine/10 lg:py-6 lg:first:pt-0">
-          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-pine/15 text-pine">
-            <FeatureIconSvg name={f.icon} />
-          </span>
-          <div className="min-w-0">
-            <h3 className="text-[15px] font-semibold leading-snug text-ink md:text-[16px]">{f.title}</h3>
-            <p className="mt-1 text-[14px] leading-relaxed text-ink/70 md:text-[15px]">{f.text}</p>
-            {f.verify && (
-              <span className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-dashed border-gold px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[.08em] text-[#8a6a2f]" title="Auf kitzalpen.at noch nicht bestätigt">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><circle cx="12" cy="12" r="9" /><path d="M12 8v5M12 16.5v.5" strokeLinecap="round" /></svg>
-                {f.verify}
-              </span>
-            )}
-          </div>
-        </li>
-      ))}
-    </ul>
+    <span className="mt-1.5 inline-flex items-center gap-1 rounded-full border border-dashed border-gold px-2 py-[1px] text-[10px] font-semibold uppercase tracking-[.08em] text-[#8a6a2f]" title="Auf kitzalpen.at noch nicht bestätigt">
+      {text}
+    </span>
+  );
+}
+
+/** Desktop: vertical list (icon + title). Mobile: one row of four. */
+export function RoomFeatures({ features }: { features: RoomFeature[] }) {
+  return (
+    <>
+      <ul className="hidden flex-col lg:flex">
+        {features.map((f) => (
+          <li key={f.title} className="js-rf flex items-center gap-6 border-b border-pine/10 py-6 first:pt-0">
+            <span className="w-9 shrink-0 text-pine"><FeatureIconSvg name={f.icon} size={34} /></span>
+            <div className="min-w-0">
+              <h3 className="max-w-[16ch] text-[17px] font-medium leading-snug text-ink">{f.title}</h3>
+              {f.verify && <Verify text={f.verify} />}
+            </div>
+          </li>
+        ))}
+      </ul>
+      <ul className="grid grid-cols-4 gap-2 lg:hidden">
+        {features.map((f) => (
+          <li key={f.title} className="js-rf flex flex-col items-center gap-2 text-center">
+            <span className="text-pine"><FeatureIconSvg name={f.icon} size={30} /></span>
+            <span className="text-[12px] font-medium leading-tight text-ink sm:text-[13px]">{f.short}</span>
+            {f.verify && <Verify text={f.verify} />}
+          </li>
+        ))}
+      </ul>
+    </>
   );
 }

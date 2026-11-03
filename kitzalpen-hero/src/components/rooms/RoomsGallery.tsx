@@ -2,76 +2,89 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { CustomEase } from 'gsap/CustomEase';
 import type { Lang } from '../../content/hero';
-import type { RoomPhoto, RoomsCopy } from '../../content/rooms';
+import type { Room, RoomsCopy } from '../../content/rooms';
+import { FeatureIconSvg } from './RoomFeatures';
 
 gsap.registerPlugin(CustomEase);
 const EASE = CustomEase.create('kzRooms', '0.22,1,0.36,1');
 const BASE = `${import.meta.env.BASE_URL}images/rooms/`;
-const pad = (n: number) => String(n).padStart(2, '0');
 
-function Pic({ p, lang, sizes, eager, className = '' }: { p: RoomPhoto; lang: Lang; sizes: string; eager?: boolean; className?: string }) {
-  const set = (ext: string) => p.sizes.map((s) => `${BASE}${p.id}-${s}.${ext} ${s}w`).join(', ');
+function Pic({ r, lang, sizes, eager, className = '' }: { r: Room; lang: Lang; sizes: string; eager?: boolean; className?: string }) {
+  const set = (ext: string) => r.sizes.map((s) => `${BASE}${r.id}-${s}.${ext} ${s}w`).join(', ');
   return (
     <picture>
       <source type="image/avif" srcSet={set('avif')} sizes={sizes} />
       <source type="image/webp" srcSet={set('webp')} sizes={sizes} />
-      <img src={`${BASE}${p.id}.jpg`} alt={p.alt[lang]} width={p.w} height={p.h} loading={eager ? 'eager' : 'lazy'} decoding="async" draggable={false} className={`h-full w-full select-none object-cover ${className}`} />
+      <img src={`${BASE}${r.id}.jpg`} alt={r.alt[lang]} width={r.w} height={r.h} loading={eager ? 'eager' : 'lazy'} decoding="async" draggable={false} className={`h-full w-full select-none object-cover ${className}`} />
     </picture>
   );
 }
 
-const Arrow = ({ dir }: { dir: 1 | -1 }) => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden className={dir < 0 ? 'rotate-180' : ''}>
-    <path d="M5 12h14M13 6l6 6-6 6" />
+const Chevron = ({ dir }: { dir: 1 | -1 }) => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <path d={dir > 0 ? 'M9 5l7 7-7 7' : 'M15 5l-7 7 7 7'} />
   </svg>
 );
 
-interface Props { photos: RoomPhoto[]; copy: RoomsCopy; lang: Lang; fine: boolean; reduced: boolean }
+function Facts({ r, copy, lang, className = '' }: { r: Room; copy: RoomsCopy; lang: Lang; className?: string }) {
+  const items = [copy.rooms(r.count), `${r.m2} m²`, copy.guests(r.guests), r.beds[lang]];
+  if (r.maxCombined) items.push(copy.combined(r.maxCombined));
+  return (
+    <ul className={`flex flex-wrap gap-x-3 gap-y-1 text-[12.5px] text-cream/85 md:text-[13.5px] ${className}`}>
+      {items.map((t, i) => (
+        <li key={t} className="flex items-center gap-3 tabular-nums">{i > 0 && <span aria-hidden className="h-1 w-1 rounded-full bg-gold" />}{t}</li>
+      ))}
+    </ul>
+  );
+}
 
-export function RoomsGallery({ photos, copy, lang, fine, reduced }: Props) {
-  const n = photos.length;
+interface Props { rooms: Room[]; copy: RoomsCopy; lang: Lang; fine: boolean; reduced: boolean }
+
+export function RoomsGallery({ rooms, copy, lang, fine, reduced }: Props) {
+  const n = rooms.length;
   const [index, setIndex] = useState(0);
   const [box, setBox] = useState(false);
   const cur = useRef(0);
   const busy = useRef(false);
   const frame = useRef<HTMLDivElement>(null);
+  const caption = useRef<HTMLDivElement>(null);
+  const thumbs = useRef<HTMLDivElement>(null);
   const slides = useRef<(HTMLDivElement | null)[]>([]);
   const viewCursor = useRef<HTMLDivElement>(null);
   const dur = reduced ? 0 : 0.75;
 
-  // initial state: only the first slide visible
   useEffect(() => {
     slides.current.forEach((s, i) => s && gsap.set(s, { autoAlpha: i === 0 ? 1 : 0, x: 0, scale: 1 }));
   }, []);
 
   const go = useCallback((to: number, dirHint?: 1 | -1) => {
-    const from = cur.current;
-    const target = (to + n) % n;
+    const from = cur.current, target = (to + n) % n;
     if (target === from || busy.current) return;
     const dir = dirHint ?? (target > from ? 1 : -1);
     const a = slides.current[from], b = slides.current[target];
     if (!a || !b) return;
-    busy.current = true;
+    busy.current = !reduced;
     cur.current = target;
-    setIndex(target);
     gsap.killTweensOf([a, b]);
+    // current photo drifts away to the side and fades …
     gsap.to(a, { x: -dir * 48, autoAlpha: 0, duration: dur, ease: EASE });
-    gsap.fromTo(b, { x: dir * 18, autoAlpha: 0, scale: 1.04 }, {
-      x: 0, autoAlpha: 1, scale: 1, duration: dur, ease: EASE, delay: reduced ? 0 : 0.06,
-      onComplete: () => { busy.current = false; },
-    });
-    if (reduced) busy.current = false;
+    // … the next one settles in: fade + scale 1.04 → 1
+    gsap.fromTo(b, { x: dir * 18, autoAlpha: 0, scale: 1.04 }, { x: 0, autoAlpha: 1, scale: 1, duration: dur, ease: EASE, delay: reduced ? 0 : 0.06, onComplete: () => { busy.current = false; } });
+    // caption and thumbnails: out, swap, in
+    const out = [caption.current, thumbs.current].filter(Boolean);
+    gsap.to(out, { autoAlpha: 0, y: 8, duration: reduced ? 0 : 0.22, ease: 'power2.in', onComplete: () => {
+      setIndex(target);
+      requestAnimationFrame(() => gsap.fromTo(out, { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: reduced ? 0 : 0.55, ease: EASE, stagger: 0.06 }));
+    } });
   }, [n, dur, reduced]);
 
   const next = useCallback(() => go(cur.current + 1, 1), [go]);
   const prev = useCallback(() => go(cur.current - 1, -1), [go]);
 
-  // ---------------------------------------------------- swipe (touch / pen)
+  // swipe with visual feedback (touch / pen); vertical scroll stays free
   const swipe = useRef<{ x0: number; y0: number; id: number; dx: number; locked: boolean | null } | null>(null);
-  const onDown = (e: React.PointerEvent) => {
-    if (e.pointerType === 'mouse') return;
-    swipe.current = { x0: e.clientX, y0: e.clientY, id: e.pointerId, dx: 0, locked: null };
-  };
+  const suppressClick = useRef(false);
+  const onDown = (e: React.PointerEvent) => { if (e.pointerType !== 'mouse') swipe.current = { x0: e.clientX, y0: e.clientY, id: e.pointerId, dx: 0, locked: null }; };
   const onMove = (e: React.PointerEvent) => {
     const s = swipe.current;
     if (!s || s.id !== e.pointerId) return;
@@ -80,111 +93,131 @@ export function RoomsGallery({ photos, copy, lang, fine, reduced }: Props) {
     if (!s.locked) return;
     s.dx = dx;
     const el = slides.current[cur.current];
-    if (el) gsap.set(el, { x: dx * 0.45, scale: 1 - Math.min(Math.abs(dx), 200) / 4000 });  // the photo follows the finger
+    if (el) gsap.set(el, { x: dx * 0.45, scale: 1 - Math.min(Math.abs(dx), 200) / 4000 });
   };
   const onUp = (e: React.PointerEvent) => {
     const s = swipe.current;
     if (!s || s.id !== e.pointerId) return;
     swipe.current = null;
-    const el = slides.current[cur.current];
-    if (s.locked && Math.abs(s.dx) > 50) { s.dx < 0 ? next() : prev(); }
-    else if (el) gsap.to(el, { x: 0, scale: 1, duration: 0.45, ease: EASE });
     if (s.locked) suppressClick.current = true;
+    if (s.locked && Math.abs(s.dx) > 50) (s.dx < 0 ? next() : prev());
+    else { const el = slides.current[cur.current]; if (el) gsap.to(el, { x: 0, scale: 1, duration: 0.45, ease: EASE }); }
   };
-  const suppressClick = useRef(false);
 
-  // ---------------------------------------------------- "VIEW" cursor (desktop)
+  // "VIEW" cursor (desktop only)
   useEffect(() => {
     const f = frame.current, c = viewCursor.current;
     if (!f || !c || !fine) return;
     const xTo = gsap.quickTo(c, 'x', { duration: 0.35, ease: 'power3.out' });
     const yTo = gsap.quickTo(c, 'y', { duration: 0.35, ease: 'power3.out' });
-    const move = (e: PointerEvent) => { const r = f.getBoundingClientRect(); xTo(e.clientX - r.left); yTo(e.clientY - r.top); };
-    const enter = (e: PointerEvent) => { const r = f.getBoundingClientRect(); gsap.set(c, { x: e.clientX - r.left, y: e.clientY - r.top }); gsap.to(c, { scale: 1, autoAlpha: 1, duration: 0.3 }); };
-    const leave = () => gsap.to(c, { scale: 0.6, autoAlpha: 0, duration: 0.25 });
+    const pos = (e: PointerEvent) => { const r = f.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+    const move = (e: PointerEvent) => { const onControl = (e.target as Element).closest('a,button'); gsap.to(c, { autoAlpha: onControl ? 0 : 1, scale: onControl ? 0.6 : 1, duration: 0.25, overwrite: 'auto' }); const [x, y] = pos(e); xTo(x); yTo(y); };
+    const enter = (e: PointerEvent) => { const [x, y] = pos(e); gsap.set(c, { x, y }); };
+    const leave = () => gsap.to(c, { scale: 0.6, autoAlpha: 0, duration: 0.25, overwrite: 'auto' });
     f.addEventListener('pointermove', move); f.addEventListener('pointerenter', enter); f.addEventListener('pointerleave', leave);
     return () => { f.removeEventListener('pointermove', move); f.removeEventListener('pointerenter', enter); f.removeEventListener('pointerleave', leave); };
   }, [fine]);
 
   const onFrameKey = (e: React.KeyboardEvent) => {
+    if (e.target !== e.currentTarget) return;
     if (e.key === 'ArrowRight') { e.preventDefault(); next(); }
     else if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
     else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setBox(true); }
   };
 
+  const r = rooms[index];
+  const others = [1, 2, 3].map((k) => (index + k) % n);
+  const label = copy.photo(index + 1, n, r.name[lang]);
+
   return (
-    <div className="rooms-gallery" role="region" aria-roledescription="carousel" aria-label={copy.gallery}>
-      {/* main photo */}
-      <div className="js-rg-mask relative -mx-5 overflow-hidden sm:-mx-6 md:mx-0 md:rounded-[14px]">
+    <div role="region" aria-roledescription="carousel" aria-label={copy.gallery}>
+      <div className="js-rg-mask relative overflow-hidden rounded-[14px] shadow-[0_24px_60px_-28px_rgba(16,46,35,.45)]">
         <div
           ref={frame}
           tabIndex={0}
           role="group"
           aria-roledescription="slide"
-          aria-label={`${copy.photo(index + 1, n)} – ${copy.open}`}
+          aria-label={`${label}. ${copy.open}`}
           onKeyDown={onFrameKey}
           onPointerDown={onDown}
           onPointerMove={onMove}
           onPointerUp={onUp}
           onPointerCancel={onUp}
-          onClick={() => { if (suppressClick.current) { suppressClick.current = false; return; } setBox(true); }}
-          className={`js-rg-zoom group relative aspect-[3/2] w-full overflow-hidden bg-pine/10 outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-cream ${fine ? 'cursor-none' : 'cursor-pointer'}`}
+          onClick={(e) => {
+            if ((e.target as Element).closest('a,button')) return;
+            if (suppressClick.current) { suppressClick.current = false; return; }
+            setBox(true);
+          }}
+          className={`js-rg-zoom group relative aspect-[4/3] w-full overflow-hidden bg-pine/10 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-gold sm:aspect-[3/2] ${fine ? 'cursor-none' : 'cursor-pointer'}`}
           style={{ touchAction: 'pan-y' }}
         >
-          {photos.map((p, i) => (
-            <div key={p.id} ref={(el) => (slides.current[i] = el)} className="absolute inset-0 will-change-transform" aria-hidden={i !== index}>
+          {rooms.map((room, i) => (
+            <div key={room.id} ref={(el) => (slides.current[i] = el)} className="absolute inset-0 will-change-transform" aria-hidden={i !== index}>
               <div className="h-full w-full transition-transform duration-[1200ms] ease-[cubic-bezier(.22,1,.36,1)] group-hover:scale-[1.025]">
-                <Pic p={p} lang={lang} sizes="(min-width: 1024px) 60vw, 100vw" eager={i === 0} />
+                <Pic r={room} lang={lang} sizes="(min-width: 1024px) 62vw, 100vw" eager={i === 0} />
               </div>
             </div>
           ))}
-          {/* very subtle overlay on hover + bottom legibility */}
-          <div aria-hidden className="pointer-events-none absolute inset-0 bg-pine/0 transition-colors duration-500 group-hover:bg-pine/[.06]" />
-          <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[rgba(16,46,35,.55)] to-transparent" />
+          <div aria-hidden className="pointer-events-none absolute inset-0 bg-pine/0 transition-colors duration-500 group-hover:bg-pine/[.05]" />
+          <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-[55%] bg-gradient-to-t from-[rgba(10,26,20,.78)] via-[rgba(10,26,20,.3)] to-transparent" />
+
+          {/* caption */}
+          <div ref={caption} className="absolute inset-x-0 bottom-0 z-10 flex items-end justify-between gap-4 p-4 text-cream sm:p-5 md:p-7">
+            <div className="min-w-0">
+              <div className="flex items-center gap-3">
+                <span className="hidden text-cream sm:block"><FeatureIconSvg name="bed" size={30} /></span>
+                <h3 className="font-display text-[24px] font-medium leading-[1.05] sm:text-[28px] md:text-[34px]">{r.name[lang]}</h3>
+              </div>
+              <p className="mt-1 text-[13px] text-cream/85 sm:pl-[42px] md:text-[15px]">{copy.ideal} {r.idealFor[lang]}</p>
+              <Facts r={r} copy={copy} lang={lang} className="mt-2.5 hidden sm:flex sm:pl-[42px]" />
+              <a href={copy.roomHref(r.slug)} className="mt-3 hidden items-center gap-2 text-[13px] font-semibold text-cream underline decoration-gold decoration-1 underline-offset-[5px] transition-colors hover:text-gold sm:inline-flex sm:ml-[42px]">{copy.details} <span aria-hidden>→</span></a>
+            </div>
+            <div className="flex shrink-0 items-center gap-3">
+              <span className="text-[13px] font-medium tabular-nums text-cream/90 md:text-[14px]" aria-hidden>{index + 1} / {n}</span>
+              <button type="button" onClick={prev} aria-label={copy.prev} className="rg-arrow hidden md:grid"><Chevron dir={-1} /></button>
+              <button type="button" onClick={next} aria-label={copy.next} className="rg-arrow hidden md:grid"><Chevron dir={1} /></button>
+            </div>
+          </div>
+
+          {/* mobile arrows: on the sides, like the simulation */}
+          <button type="button" onClick={prev} aria-label={copy.prev} className="rg-arrow-solid absolute left-3 top-[42%] z-10 -translate-y-1/2 md:hidden"><Chevron dir={-1} /></button>
+          <button type="button" onClick={next} aria-label={copy.next} className="rg-arrow-solid absolute right-3 top-[42%] z-10 -translate-y-1/2 md:hidden"><Chevron dir={1} /></button>
+
           {fine && (
-            <div ref={viewCursor} aria-hidden className="pointer-events-none invisible absolute left-0 top-0 z-10 -ml-11 -mt-11 grid h-[88px] w-[88px] scale-75 place-items-center rounded-full bg-cream/95 text-[11px] font-semibold uppercase tracking-[.22em] text-pine opacity-0">
+            <div ref={viewCursor} aria-hidden className="pointer-events-none invisible absolute left-0 top-0 z-20 -ml-11 -mt-11 grid h-[88px] w-[88px] scale-75 place-items-center rounded-full bg-cream/95 text-[11px] font-semibold uppercase tracking-[.22em] text-pine opacity-0">
               {copy.view}
             </div>
           )}
         </div>
-
-        {/* counter + arrows, over the photo */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex items-end justify-between px-5 pb-4 text-cream md:px-6 md:pb-5">
-          <p className="font-display text-[22px] font-medium tabular-nums leading-none md:text-[26px]" aria-hidden>
-            {pad(index + 1)} <span className="mx-1 text-cream/60">/</span> <span className="text-cream/70">{pad(n)}</span>
-          </p>
-          <div className="pointer-events-auto flex gap-2">
-            <button type="button" onClick={prev} aria-label={copy.prev} className="rg-arrow"><Arrow dir={-1} /></button>
-            <button type="button" onClick={next} aria-label={copy.next} className="rg-arrow"><Arrow dir={1} /></button>
-          </div>
-        </div>
       </div>
-      <p className="sr-only" aria-live="polite">{copy.photo(index + 1, n)}</p>
+      <p className="sr-only" aria-live="polite">{label}</p>
 
-      {/* thumbnails */}
-      <div role="group" aria-label={copy.thumbs} className="-mx-5 mt-3 flex gap-2 overflow-x-auto px-5 py-1 sm:-mx-6 sm:px-6 md:mx-0 md:mt-4 md:grid md:grid-cols-4 md:gap-3 md:overflow-visible md:px-0">
-        {photos.map((p, i) => (
-          <button
-            key={p.id}
-            type="button"
-            onClick={() => go(i)}
-            aria-label={copy.photo(i + 1, n)}
-            aria-current={i === index}
-            className={`js-rg-thumb rg-thumb relative aspect-[3/2] w-[30%] min-w-[96px] shrink-0 overflow-hidden rounded-[8px] md:w-auto ${i === index ? 'is-active' : ''}`}
-          >
-            <Pic p={p} lang={lang} sizes="200px" />
+      {/* facts on small phones (no room for them on the photo) */}
+      <div className="mt-3 flex items-center justify-between gap-3 sm:hidden">
+        <p className="text-[12.5px] leading-snug text-ink/75">{copy.rooms(r.count)} · {r.m2} m² · {copy.guests(r.guests)}{r.maxCombined ? ` · ${copy.combined(r.maxCombined)}` : ''}</p>
+        <a href={copy.roomHref(r.slug)} className="shrink-0 text-[12.5px] font-semibold text-pine underline decoration-gold underline-offset-4">{copy.details}</a>
+      </div>
+
+      {/* the other three rooms */}
+      <div ref={thumbs} className="mt-4 hidden grid-cols-3 gap-3 sm:grid md:mt-5 md:gap-4" role="group" aria-label={copy.thumbs}>
+        {others.map((i) => (
+          <button key={rooms[i].id} type="button" onClick={() => go(i, 1)} aria-label={rooms[i].name[lang]} className="js-rg-thumb rg-thumb group/t relative aspect-[3/2] overflow-hidden rounded-[10px]">
+            <Pic r={rooms[i]} lang={lang} sizes="(min-width: 1024px) 18vw, 30vw" className="transition-transform duration-700 ease-[cubic-bezier(.22,1,.36,1)] group-hover/t:scale-[1.04]" />
+            <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[rgba(10,26,20,.7)] to-transparent px-3 pb-2 pt-6 text-left text-[12px] font-medium text-cream opacity-0 transition-opacity duration-300 group-hover/t:opacity-100 group-focus-visible/t:opacity-100">
+              {rooms[i].name[lang]}
+            </span>
           </button>
         ))}
       </div>
 
-      <Lightbox open={box} onClose={() => { setBox(false); frame.current?.focus({ preventScroll: true }); }} photos={photos} index={index} onPrev={prev} onNext={next} copy={copy} lang={lang} reduced={reduced} />
+      <Lightbox open={box} onClose={() => { setBox(false); frame.current?.focus({ preventScroll: true }); }} rooms={rooms} index={index} onPrev={prev} onNext={next} copy={copy} lang={lang} reduced={reduced} />
     </div>
   );
 }
 
 // ------------------------------------------------------------------ lightbox
-function Lightbox({ open, onClose, photos, index, onPrev, onNext, copy, lang, reduced }: {
-  open: boolean; onClose: () => void; photos: RoomPhoto[]; index: number; onPrev: () => void; onNext: () => void; copy: RoomsCopy; lang: Lang; reduced: boolean;
+function Lightbox({ open, onClose, rooms, index, onPrev, onNext, copy, lang, reduced }: {
+  open: boolean; onClose: () => void; rooms: Room[]; index: number; onPrev: () => void; onNext: () => void; copy: RoomsCopy; lang: Lang; reduced: boolean;
 }) {
   const dlg = useRef<HTMLDialogElement>(null);
   const img = useRef<HTMLDivElement>(null);
@@ -203,12 +236,11 @@ function Lightbox({ open, onClose, photos, index, onPrev, onNext, copy, lang, re
   }, [open, reduced]);
 
   useEffect(() => {
-    if (!open || !img.current) return;
-    gsap.fromTo(img.current, { opacity: 0.4, scale: 1.02 }, { opacity: 1, scale: 1, duration: reduced ? 0 : 0.5, ease: EASE });
+    if (open && img.current) gsap.fromTo(img.current, { opacity: 0.4, scale: 1.02 }, { opacity: 1, scale: 1, duration: reduced ? 0 : 0.5, ease: EASE });
   }, [index, open, reduced]);
 
-  const p = photos[index];
-  const set = (ext: string) => p.sizes.map((s) => `${BASE}${p.id}-${s}.${ext} ${s}w`).join(', ');
+  const r = rooms[index];
+  const set = (ext: string) => r.sizes.map((s) => `${BASE}${r.id}-${s}.${ext} ${s}w`).join(', ');
   return (
     <dialog
       ref={dlg}
@@ -216,12 +248,15 @@ function Lightbox({ open, onClose, photos, index, onPrev, onNext, copy, lang, re
       onCancel={(e) => { e.preventDefault(); onClose(); }}
       onKeyDown={(e) => { if (e.key === 'ArrowRight') onNext(); if (e.key === 'ArrowLeft') onPrev(); }}
       onClick={(e) => { if (e.target === dlg.current) onClose(); }}
-      className="rooms-lightbox m-0 h-[100dvh] max-h-none w-screen max-w-none bg-[#0b1712]/95 p-0 text-cream backdrop:bg-transparent"
+      className="rooms-lightbox m-0 h-[100dvh] max-h-none w-screen max-w-none bg-[#0b1712]/95 p-0 text-cream"
     >
       <div className="flex h-full flex-col">
-        <div className="flex items-center justify-between px-5 py-4 md:px-8">
-          <p className="font-display text-[24px] tabular-nums">{pad(index + 1)} <span className="text-cream/50">/ {pad(photos.length)}</span></p>
-          <button type="button" onClick={onClose} aria-label={copy.close} autoFocus className="grid h-11 w-11 place-items-center rounded-full border border-cream/25 transition-colors hover:border-gold focus-visible:outline focus-visible:outline-2 focus-visible:outline-gold">
+        <div className="flex items-center justify-between gap-4 px-5 py-4 md:px-8">
+          <div className="min-w-0">
+            <p className="truncate font-display text-[24px] md:text-[28px]">{r.name[lang]}</p>
+            <p className="text-[13px] text-cream/65 tabular-nums">{index + 1} / {rooms.length} · {r.m2} m² · {copy.guests(r.guests)}</p>
+          </div>
+          <button type="button" onClick={onClose} aria-label={copy.close} autoFocus className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-cream/25 transition-colors hover:border-gold focus-visible:outline focus-visible:outline-2 focus-visible:outline-gold">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden><path d="M6 6l12 12M18 6 6 18" /></svg>
           </button>
         </div>
@@ -235,18 +270,17 @@ function Lightbox({ open, onClose, photos, index, onPrev, onNext, copy, lang, re
             <picture>
               <source type="image/avif" srcSet={set('avif')} sizes="100vw" />
               <source type="image/webp" srcSet={set('webp')} sizes="100vw" />
-              <img src={`${BASE}${p.id}.jpg`} alt={p.alt[lang]} width={p.w} height={p.h} className="max-h-[calc(100dvh-160px)] w-auto max-w-full rounded-[6px] object-contain" />
+              <img src={`${BASE}${r.id}.jpg`} alt={r.alt[lang]} width={r.w} height={r.h} className="max-h-[calc(100dvh-170px)] w-auto max-w-full rounded-[6px] object-contain" />
             </picture>
           </div>
-          <button type="button" onClick={onPrev} aria-label={copy.prev} className="rg-arrow absolute left-3 top-1/2 hidden -translate-y-1/2 md:grid md:left-8"><Arrow dir={-1} /></button>
-          <button type="button" onClick={onNext} aria-label={copy.next} className="rg-arrow absolute right-3 top-1/2 hidden -translate-y-1/2 md:grid md:right-8"><Arrow dir={1} /></button>
+          <button type="button" onClick={onPrev} aria-label={copy.prev} className="rg-arrow absolute left-8 top-1/2 hidden -translate-y-1/2 md:grid"><Chevron dir={-1} /></button>
+          <button type="button" onClick={onNext} aria-label={copy.next} className="rg-arrow absolute right-8 top-1/2 hidden -translate-y-1/2 md:grid"><Chevron dir={1} /></button>
         </div>
         <div className="flex items-center justify-center gap-3 py-5 md:hidden">
-          <button type="button" onClick={onPrev} aria-label={copy.prev} className="rg-arrow"><Arrow dir={-1} /></button>
+          <button type="button" onClick={onPrev} aria-label={copy.prev} className="rg-arrow"><Chevron dir={-1} /></button>
           <span className="text-[12px] uppercase tracking-[.2em] text-cream/60">{copy.swipe}</span>
-          <button type="button" onClick={onNext} aria-label={copy.next} className="rg-arrow"><Arrow dir={1} /></button>
+          <button type="button" onClick={onNext} aria-label={copy.next} className="rg-arrow"><Chevron dir={1} /></button>
         </div>
-        <p className="sr-only" aria-live="polite">{copy.photo(index + 1, photos.length)}</p>
       </div>
     </dialog>
   );

@@ -78,7 +78,14 @@
   }
   .rg-arrow:hover { background: #F5F1E9; color: #102E23; border-color: #F5F1E9; }
   .rg-arrow:focus-visible { outline: 2px solid #D7B77B; outline-offset: 2px; }
-  .rg-thumb { opacity: .62; outline: 1px solid transparent; outline-offset: 2px; transition: opacity .35s, outline-color .35s, filter .35s; }
+  .rg-arrow-solid {
+    display: grid; place-items: center; width: 44px; height: 44px; border-radius: 999px;
+    background: rgba(245,241,233,.94); color: #102E23; box-shadow: 0 6px 18px rgba(0,0,0,.18);
+    transition: transform .2s, background-color .3s;
+  }
+  .rg-arrow-solid:active { transform: translateY(-50%) scale(.92); }
+  .rg-arrow-solid:focus-visible { outline: 2px solid #D7B77B; outline-offset: 2px; }
+  .rg-thumb { opacity: .9; outline: 1px solid transparent; outline-offset: 2px; transition: opacity .35s, outline-color .35s, filter .35s; }
   .rg-thumb:hover { opacity: 1; filter: brightness(1.08); outline-color: #D7B77B; }
   .rg-thumb.is-active { opacity: 1; outline: 2px solid #D7B77B; }
   .rg-thumb:focus-visible { outline: 2px solid #102E23; }
