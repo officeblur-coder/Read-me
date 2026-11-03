@@ -20,8 +20,8 @@ export function RestaurantHighlights({ items }: { items: { icon: RestIcon; label
   return (
     <ul className="grid grid-cols-2 gap-2.5 md:grid-cols-4 md:gap-0">
       {items.map((h) => (
-        <li key={h.icon} className="js-rh cf-item flex flex-col items-center justify-center gap-2.5 rounded-[12px] border border-pine/10 bg-[#FAF8F3] px-3 py-4 text-center md:rounded-none md:border-0 md:border-l md:border-pine/15 md:bg-transparent md:py-2 md:first:border-l-0">
-          <span className="text-[#8a6a2f]"><RestIconSvg name={h.icon} /></span>
+        <li key={h.icon} className="js-rh cf-item flex flex-col items-center justify-center gap-2.5 rounded-[12px] border border-pine/10 bg-soft px-3 py-4 text-center md:rounded-none md:border-0 md:border-l md:border-pine/15 md:bg-transparent md:py-2 md:first:border-l-0">
+          <span className="text-goldink"><RestIconSvg name={h.icon} /></span>
           <span className="max-w-[14ch] text-[14px] font-medium leading-snug text-ink md:text-[16px]">{h.label}</span>
         </li>
       ))}

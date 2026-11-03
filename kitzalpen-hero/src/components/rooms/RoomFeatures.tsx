@@ -43,7 +43,7 @@ export function FeatureIconSvg({ name, size = 28 }: { name: FeatureIcon; size?: 
 
 function Verify({ text }: { text: string }) {
   return (
-    <span className="mt-1.5 inline-flex items-center gap-1 rounded-full border border-dashed border-gold px-2 py-[1px] text-[10px] font-semibold uppercase tracking-[.08em] text-[#8a6a2f]" title="Auf kitzalpen.at noch nicht bestätigt">
+    <span className="mt-1.5 inline-flex items-center gap-1 rounded-full border border-dashed border-gold px-2 py-[1px] text-[10px] font-semibold uppercase tracking-[.08em] text-goldink" title="Auf kitzalpen.at noch nicht bestätigt">
       {text}
     </span>
   );

@@ -29,7 +29,7 @@ function Item({ icon, label, wide }: { icon: ChaletIcon; label: string; wide?: b
     <li
       ref={ref}
       onPointerDown={tap}
-      className={`cf-item js-cf flex flex-col items-center justify-center gap-2 rounded-[12px] border border-pine/10 bg-[#FAF8F3] px-3 py-4 text-center lg:flex-row lg:justify-start lg:gap-5 lg:rounded-none lg:border-0 lg:bg-transparent lg:px-0 lg:py-3 lg:text-left ${wide ? 'col-span-2 lg:col-span-1' : ''}`}
+      className={`cf-item js-cf flex flex-col items-center justify-center gap-2 rounded-[12px] border border-pine/10 bg-soft px-3 py-4 text-center lg:flex-row lg:justify-start lg:gap-5 lg:rounded-none lg:border-0 lg:bg-transparent lg:px-0 lg:py-3 lg:text-left ${wide ? 'col-span-2 lg:col-span-1' : ''}`}
     >
       <span className="text-pine"><ChaletIconSvg name={icon} /></span>
       <span className="text-[14px] font-medium leading-snug text-ink sm:text-[15px] lg:text-[17px]">{label}</span>

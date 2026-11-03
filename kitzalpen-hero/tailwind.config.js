@@ -1,17 +1,24 @@
+const c = (name) => `color-mix(in srgb, var(--k-${name}) calc(<alpha-value> * 100%), transparent)`;
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
+      // Seasonal palette: every brand colour is a CSS variable (see index.css),
+      // so the Summer / Winter choice re-colours the whole site.
       colors: {
-        forest: { DEFAULT: '#18291f', deep: '#0f1b14', soft: '#24392b' },
+        forest: { DEFAULT: c('forest'), deep: c('deep'), soft: c('pine-light') },
         ivory: '#f4efe4',
-        champagne: { DEFAULT: '#d8bf8a', light: '#ecdcb4', dark: '#b8975c' },
+        champagne: { DEFAULT: c('gold'), light: c('gold-light'), dark: c('gold-dark') },
         charcoal: '#151614',
-        cream: '#F5F1E9',
-        pine: { DEFAULT: '#102E23', light: '#1b4434' },
-        gold: '#D7B77B',
-        ink: '#202521',
+        cream: c('cream'),
+        soft: c('soft'),
+        pine: { DEFAULT: c('pine'), light: c('pine-light') },
+        deep: c('deep'),
+        gold: { DEFAULT: c('gold'), light: c('gold-light'), dark: c('gold-dark') },
+        goldink: c('goldink'),
+        ink: c('ink'),
       },
       fontFamily: {
         display: ['"Cormorant Garamond"', 'Cormorant', 'Georgia', 'serif'],

@@ -14,9 +14,9 @@ gsap.registerPlugin(ScrollTrigger, useGSAP);
 function ContourEdge() {
   return (
     <svg aria-hidden viewBox="0 0 1440 90" preserveAspectRatio="none" className="pointer-events-none absolute inset-x-0 bottom-0 h-[60px] w-full md:h-[90px]">
-      <path className="js-ch-contour" pathLength={1} vectorEffect="non-scaling-stroke" fill="none" stroke="#D7B77B" strokeWidth="1.2"
+      <path className="js-ch-contour" pathLength={1} vectorEffect="non-scaling-stroke" fill="none" style={{ stroke: 'var(--k-gold)' }} strokeWidth="1.2"
         d="M0 70 C 120 66, 210 58, 300 46 S 450 18, 520 22 S 610 50, 690 44 S 800 8, 870 12 S 990 52, 1080 50 S 1230 30, 1300 40 S 1400 60, 1440 58" />
-      <path className="js-ch-contour" pathLength={1} vectorEffect="non-scaling-stroke" fill="none" stroke="#102E23" strokeOpacity=".18" strokeWidth="1"
+      <path className="js-ch-contour" pathLength={1} vectorEffect="non-scaling-stroke" fill="none" style={{ stroke: 'var(--k-pine)' }} strokeOpacity=".18" strokeWidth="1"
         d="M0 84 C 140 80, 240 74, 330 64 S 470 40, 540 42 S 630 64, 700 60 S 810 30, 880 32 S 1000 66, 1090 64 S 1240 48, 1310 56 S 1400 72, 1440 70" />
     </svg>
   );

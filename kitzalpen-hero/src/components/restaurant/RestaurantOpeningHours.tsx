@@ -24,9 +24,9 @@ const Clock = () => (
 export function RestaurantOpeningHours({ copy, lang }: { copy: RestCopy; lang: 'de' | 'en' }) {
   const live = useLiveState(lang);
   return (
-    <div className="js-rhours rounded-[16px] border border-pine/15 bg-[#FAF8F3] px-5 py-5 lg:rounded-full lg:px-8 lg:py-4">
+    <div className="js-rhours rounded-[16px] border border-pine/15 bg-soft px-5 py-5 lg:rounded-full lg:px-8 lg:py-4">
       <div className="flex flex-col items-center gap-3 text-center lg:flex-row lg:justify-between lg:gap-6 lg:text-left">
-        <p className="flex items-center gap-2.5 text-[12px] font-semibold uppercase tracking-[.22em] text-[#8a6a2f]"><Clock />{copy.hoursTitle}</p>
+        <p className="flex items-center gap-2.5 text-[12px] font-semibold uppercase tracking-[.22em] text-goldink"><Clock />{copy.hoursTitle}</p>
         {copy.hours.map(([k, v]) => (
           <p key={k} className="flex items-baseline gap-3 text-[15px] text-ink lg:border-l lg:border-pine/15 lg:pl-6">
             <span className="text-ink/70">{k}</span><span className="font-semibold tabular-nums">{v}</span>

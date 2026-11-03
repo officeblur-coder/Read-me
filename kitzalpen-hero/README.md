@@ -191,3 +191,34 @@ Mount after the chalet: `<ChaletSection/><RestaurantSection lang={lang}/>`.
 Facts from kitzalpen.at/restaurant/: Frühstück 08:00–10:00, Abendessen 17:00–21:00, Dienstag–Sonntag, Montags geschlossen. "Speisekarte entdecken" opens the real menu, `https://www.kitzalpen.at/menu/kitzalpen-menu.pdf`, in a new tab. As in section 03, "Tiroler" was changed to "Pinzgauer Gastfreundschaft" (Hollersbach is in the Salzburger Land).
 
 Quick actions: the left dock is now desktop-only (≥1024 px). Tablets use the bottom bar, so the dock never covers content at 768 px.
+
+---
+
+# Global season + Section 06 – Activities
+
+## Shared season (Hero → whole site)
+- `src/lib/season.tsx`: `SeasonProvider` / `useSeason()` holds one `season`. It is stored in `localStorage` (`kitzalpen-season`) and mirrored to `<html data-season>`. `index.html` sets the attribute before first paint, so there is no flash of the wrong palette.
+- The Hero's Sommer / Winter selector and the divider settling at either end call `setSeason`. Nothing else has its own selector. A returning visitor's hero glides to the stored season after the intro.
+- Palette: every brand colour is now a CSS variable (`--k-pine`, `--k-deep`, `--k-cream`, `--k-soft`, `--k-gold(-light|-dark)`, `--k-goldink`, `--k-ink`, `--k-forest`), registered with `@property` so the whole site cross-fades in about 1.1 s. Tailwind colours (`pine`, `cream`, `gold`, …) point at them, and hard-coded hex values in existing components were replaced 1:1. Summer keeps the approved forest / ivory / champagne values. Winter uses midnight blue `#102B46`, glacier white `#F5F9FC`, ice blue and steel blue `#759CB7`. Photos are never tinted.
+
+## Activities
+```
+src/content/activities.ts                     summer activities + winter ski areas, DE/EN, links, page copy
+src/components/activities/ActivitiesSection.tsx  section (id="activities"): entrance, season swap, parallax, mobile strip
+src/components/activities/ActivityCard.tsx       card: image-mask reveal, hover (zoom, arrow, underline)
+src/components/activities/ActivitiesPage.tsx     dedicated page per season
+public/images/activities/                         photos from kitzalpen.at/activities + the two supplied feature photos
+```
+Routes: here `#activities-summer` / `#activities-winter` (hash routing, as the preview cannot use paths). On the live site, map them to `/activities/summer` and `/activities/winter` and render `<ActivitiesPage season=… />`. Opening a page also sets the global season.
+
+Facts come only from kitzalpen.at (/activities/, /ski/): Smaragdweg 7 km, Tauernradweg 310 km, Wildkogel 800 km MTB, KitzSki via Panoramabahn 2 km, Kitzsteinhorn glacier to 3,029 m, Schmittenhöhe 30+ three-thousanders, and the official links.
+Not verified, so marked or omitted:
+- Zillertal Arena: card shown with "Angaben werden geprüft", no photo, no distance.
+- SkiWelt Wilder Kaiser – Brixental: mentioned on the winter page as "to be added after verification".
+- Distances and drive times for the other resorts are not published on the site, so none are shown.
+
+Motion:
+- Entrance (once, at `top 80%`): eyebrow, headline lines (mask), subtitle, then the feature photo is revealed from the bottom, the cards appear with a 0.1 s stagger and image-mask reveals, and the CTA comes last.
+- Season change: if the section is visible, it plays out (headline lifts out, feature mask closes, cards fade), swaps the data, then plays in. If it is offscreen, it updates silently without scrolling. Rapid toggling kills the running timeline, so no mixed content.
+- Ambient: faint topographic lines drift slowly; restrained parallax on the feature photo (fine pointer only).
+- `prefers-reduced-motion`: static.

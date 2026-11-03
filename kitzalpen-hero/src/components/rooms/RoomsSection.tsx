@@ -82,7 +82,7 @@ export function RoomsSection({ lang }: { lang: Lang }) {
               <span className="js-r-line block [text-wrap:balance]">{copy.headline}</span>
             </h2>
             <p className="js-r-sub mx-auto mt-4 max-w-[52ch] text-[15.5px] leading-[1.65] text-ink/75 md:mt-5 md:text-[18px]">{copy.sub}</p>
-            <p className="js-r-sub mt-3 text-[12px] font-semibold uppercase tracking-[.18em] text-[#8a6a2f] md:text-[13px]">{copy.total}</p>
+            <p className="js-r-sub mt-3 text-[12px] font-semibold uppercase tracking-[.18em] text-goldink md:text-[13px]">{copy.total}</p>
           </header>
 
           {/* features left · gallery right (mobile: gallery, then features) */}

@@ -88,7 +88,7 @@ export function AmenitiesSection({ lang }: { lang: Lang }) {
 
   return (
     <section ref={root} id="leistungen" aria-labelledby="amenities-title" className="relative bg-cream">
-      <div ref={sheet} className="relative overflow-hidden bg-[#071C16] text-cream">
+      <div ref={sheet} className="relative overflow-hidden bg-deep text-cream">
         {/* real panorama of the region, held back behind a deep green veil */}
         <div aria-hidden className="absolute inset-x-0 top-0 h-[78%] overflow-hidden lg:h-full">
           <picture>
@@ -96,8 +96,8 @@ export function AmenitiesSection({ lang }: { lang: Lang }) {
             <source type="image/webp" srcSet={`${BASE}panorama.webp`} />
             <img src={`${BASE}panorama.jpg`} alt="" loading="lazy" decoding="async" className="js-am-pano h-full w-full object-cover opacity-70 lg:opacity-60" style={{ objectPosition: '50% 40%' }} />
           </picture>
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,28,22,.55)_0%,rgba(7,28,22,.72)_40%,#071C16_100%)] lg:bg-[linear-gradient(90deg,rgba(7,28,22,.78)_0%,rgba(7,28,22,.86)_45%,rgba(7,28,22,.95)_100%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(70%_50%_at_15%_10%,rgba(215,183,123,.18),transparent_70%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--k-deep)_55%,transparent)_0%,color-mix(in_srgb,var(--k-deep)_72%,transparent)_40%,var(--k-deep)_100%)] lg:bg-[linear-gradient(90deg,color-mix(in_srgb,var(--k-deep)_78%,transparent)_0%,color-mix(in_srgb,var(--k-deep)_86%,transparent)_45%,color-mix(in_srgb,var(--k-deep)_95%,transparent)_100%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(70%_50%_at_15%_10%,color-mix(in_srgb,var(--k-gold)_18%,transparent),transparent_70%)]" />
         </div>
 
         <div className="relative mx-auto grid max-w-[1360px] gap-10 px-5 pb-[130px] pt-16 sm:px-6 sm:pb-[170px] md:px-10 md:pt-24 lg:grid-cols-12 lg:gap-14 lg:px-14 lg:pb-[230px] lg:pt-32">

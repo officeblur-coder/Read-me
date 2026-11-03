@@ -87,7 +87,7 @@ export function RestaurantGallery({ photos, copy, lang, fine, reduced }: Props) 
 
   return (
     <div role="region" aria-roledescription="carousel" aria-label={copy.gallery}>
-      <div className="js-rgal-mask relative overflow-hidden rounded-[18px] shadow-[0_30px_70px_-34px_rgba(7,28,22,.55)]">
+      <div className="js-rgal-mask relative overflow-hidden rounded-[18px] shadow-[0_30px_70px_-34px_color-mix(in_srgb,var(--k-deep)_55%,transparent)]">
         <div
           ref={frame} tabIndex={0} role="group" aria-roledescription="slide"
           aria-label={`${copy.photo(index + 1, n, p.label[lang])}. ${copy.open}`}
@@ -109,7 +109,7 @@ export function RestaurantGallery({ photos, copy, lang, fine, reduced }: Props) 
               </div>
             </div>
           ))}
-          <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[rgba(7,28,22,.6)] to-transparent" />
+          <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[color-mix(in_srgb,var(--k-deep)_60%,transparent)] to-transparent" />
 
           {/* mobile: side arrows + dots */}
           <button type="button" onClick={prev} aria-label={copy.prev} className="cg-arrow left-3 md:hidden"><Arrow dir={-1} /></button>
@@ -165,7 +165,7 @@ function Lightbox({ open, onClose, photos, index, onPrev, onNext, copy, lang, re
       onCancel={(e) => { e.preventDefault(); onClose(); }}
       onKeyDown={(e) => { if (e.key === 'ArrowRight') onNext(); if (e.key === 'ArrowLeft') onPrev(); }}
       onClick={(e) => { if (e.target === dlg.current) onClose(); }}
-      className="rooms-lightbox m-0 h-[100dvh] max-h-none w-screen max-w-none bg-[#071C16]/95 p-0 text-cream">
+      className="rooms-lightbox m-0 h-[100dvh] max-h-none w-screen max-w-none bg-deep/95 p-0 text-cream">
       <div className="flex h-full flex-col">
         <div className="flex items-center justify-between px-5 py-4 md:px-8">
           <p className="font-display text-[24px] tabular-nums">{pad(index + 1)} <span className="text-cream/50">/ {pad(photos.length)}</span> <span className="ml-3 font-sans text-[13px] uppercase tracking-[.2em] text-gold">{p.label[lang]}</span></p>

@@ -131,7 +131,7 @@ export function RoomsGallery({ rooms, copy, lang, fine, reduced }: Props) {
 
   return (
     <div role="region" aria-roledescription="carousel" aria-label={copy.gallery}>
-      <div className="js-rg-mask relative overflow-hidden rounded-[14px] shadow-[0_24px_60px_-28px_rgba(16,46,35,.45)]">
+      <div className="js-rg-mask relative overflow-hidden rounded-[14px] shadow-[0_24px_60px_-28px_color-mix(in_srgb,var(--k-pine)_45%,transparent)]">
         <div
           ref={frame}
           tabIndex={0}
@@ -159,7 +159,7 @@ export function RoomsGallery({ rooms, copy, lang, fine, reduced }: Props) {
             </div>
           ))}
           <div aria-hidden className="pointer-events-none absolute inset-0 bg-pine/0 transition-colors duration-500 group-hover:bg-pine/[.05]" />
-          <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-[55%] bg-gradient-to-t from-[rgba(10,26,20,.78)] via-[rgba(10,26,20,.3)] to-transparent" />
+          <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-[55%] bg-gradient-to-t from-[color-mix(in_srgb,var(--k-deep)_78%,transparent)] via-[color-mix(in_srgb,var(--k-deep)_30%,transparent)] to-transparent" />
 
           {/* caption */}
           <div ref={caption} className="absolute inset-x-0 bottom-0 z-10 flex items-end justify-between gap-4 p-4 text-cream sm:p-5 md:p-7">
@@ -203,7 +203,7 @@ export function RoomsGallery({ rooms, copy, lang, fine, reduced }: Props) {
         {others.map((i) => (
           <button key={rooms[i].id} type="button" onClick={() => go(i, 1)} aria-label={rooms[i].name[lang]} className="js-rg-thumb rg-thumb group/t relative aspect-[3/2] overflow-hidden rounded-[10px]">
             <Pic r={rooms[i]} lang={lang} sizes="(min-width: 1024px) 18vw, 30vw" className="transition-transform duration-700 ease-[cubic-bezier(.22,1,.36,1)] group-hover/t:scale-[1.04]" />
-            <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[rgba(10,26,20,.7)] to-transparent px-3 pb-2 pt-6 text-left text-[12px] font-medium text-cream opacity-0 transition-opacity duration-300 group-hover/t:opacity-100 group-focus-visible/t:opacity-100">
+            <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[color-mix(in_srgb,var(--k-deep)_70%,transparent)] to-transparent px-3 pb-2 pt-6 text-left text-[12px] font-medium text-cream opacity-0 transition-opacity duration-300 group-hover/t:opacity-100 group-focus-visible/t:opacity-100">
               {rooms[i].name[lang]}
             </span>
           </button>
@@ -248,7 +248,7 @@ function Lightbox({ open, onClose, rooms, index, onPrev, onNext, copy, lang, red
       onCancel={(e) => { e.preventDefault(); onClose(); }}
       onKeyDown={(e) => { if (e.key === 'ArrowRight') onNext(); if (e.key === 'ArrowLeft') onPrev(); }}
       onClick={(e) => { if (e.target === dlg.current) onClose(); }}
-      className="rooms-lightbox m-0 h-[100dvh] max-h-none w-screen max-w-none bg-[#0b1712]/95 p-0 text-cream"
+      className="rooms-lightbox m-0 h-[100dvh] max-h-none w-screen max-w-none bg-deep/95 p-0 text-cream"
     >
       <div className="flex h-full flex-col">
         <div className="flex items-center justify-between gap-4 px-5 py-4 md:px-8">

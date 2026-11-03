@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
@@ -7,6 +7,7 @@ import { useFinePointer, useIsMobile, useMagnetic, useReducedMotion, useSize } f
 import { SeasonCompare, type SeasonCompareHandle } from './SeasonCompare';
 import { SeasonToggle } from './SeasonToggle';
 import { SeasonFx } from './SeasonFx';
+import { useSeason } from '../lib/season';
 import { BookingBar, type BookingBarHandle, type BookingRequest } from './BookingBar';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
@@ -29,10 +30,23 @@ export function Hero({ lang, copy, bookingRef, onBookingSubmit }: Props) {
   const mobile = useIsMobile();
   const [season, setSeason] = useState<Season>('summer');
   const [fx, setFx] = useState<Season | null>(null);
+  const { stored, season: globalSeason, setSeason: setGlobalSeason } = useSeason();
+  // season to glide to after the intro: the stored choice, or the one active when returning from a sub-page
+  const resumeTo = useRef<Season | null>(stored || globalSeason !== 'summer' ? globalSeason : null);
   useMagnetic(ctaRef, fine && !reduced);
   const ready = w > 0 && h > 0;
 
-  const select = useCallback((s: Season) => { setSeason(s); compare.current?.goTo(s); }, []);
+  // the Hero selector drives the global season (palette + Activities)
+  const select = useCallback((s: Season) => { setSeason(s); setGlobalSeason(s); compare.current?.goTo(s); }, [setGlobalSeason]);
+  const onSettle = useCallback((s: Season | null) => { setFx(s); if (s) setGlobalSeason(s); }, [setGlobalSeason]);
+
+  // returning visitor: after the 50/50 intro, glide to the season chosen last time
+  useEffect(() => {
+    const to = resumeTo.current;
+    if (!ready || !to) return;
+    const t = window.setTimeout(() => { setSeason(to); compare.current?.goTo(to); }, reduced ? 0 : 2600);
+    return () => window.clearTimeout(t);
+  }, [ready, reduced]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ---------------------------------------------------------------- intro
   useGSAP(() => {
@@ -83,7 +97,7 @@ export function Hero({ lang, copy, bookingRef, onBookingSubmit }: Props) {
   return (
     <section ref={root} id="top" aria-label="KitzAlpen" className="hero relative h-[100svh] min-h-[600px] w-full overflow-hidden bg-charcoal text-ivory">
       <div ref={stage} className="absolute inset-0">
-        <SeasonCompare ref={compare} width={w} height={h} mobile={mobile} reduced={reduced} copy={copy} onDominant={setSeason} onSettle={setFx} />
+        <SeasonCompare ref={compare} width={w} height={h} mobile={mobile} reduced={reduced} copy={copy} onDominant={setSeason} onSettle={onSettle} />
       </div>
       <SeasonFx mode={fx} mobile={mobile} reduced={reduced} />
 

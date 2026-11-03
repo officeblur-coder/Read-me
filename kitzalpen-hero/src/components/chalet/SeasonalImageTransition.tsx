@@ -68,7 +68,7 @@ export function SeasonalImageTransition({ summer, winter, lang, labels, reduced 
       <div className="js-sit-winter sit-winter absolute inset-0 overflow-hidden"><ChaletPic p={winter} lang={lang} sizes="(min-width:1024px) 58vw, 100vw" eager /></div>
       {/* season label + progress hairline */}
       <div className="pointer-events-none absolute left-4 top-4 z-10 md:left-6 md:top-6" aria-hidden>
-        <div className="relative h-7 overflow-hidden rounded-full bg-[#071C16]/55 px-3.5 backdrop-blur-sm">
+        <div className="relative h-7 overflow-hidden rounded-full bg-deep/55 px-3.5 backdrop-blur-sm">
           <span className="js-sit-l-summer absolute inset-0 grid place-items-center text-[11px] font-semibold uppercase tracking-[.24em] text-cream">{labels.summer}</span>
           <span className="js-sit-l-winter invisible grid h-full place-items-center text-[11px] font-semibold uppercase tracking-[.24em] text-cream">{labels.winter}</span>
         </div>

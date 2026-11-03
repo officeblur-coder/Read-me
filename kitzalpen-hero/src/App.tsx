@@ -11,6 +11,9 @@ import { AmenitiesSection } from './components/amenities/AmenitiesSection';
 import { QuickActions } from './components/QuickActions';
 import { ChaletSection } from './components/chalet/ChaletSection';
 import { RestaurantSection } from './components/restaurant/RestaurantSection';
+import { ActivitiesSection } from './components/activities/ActivitiesSection';
+import { ActivitiesPage } from './components/activities/ActivitiesPage';
+import type { Season } from './content/hero';
 import type { BookingBarHandle, BookingRequest } from './components/BookingBar';
 import { useFinePointer, useReducedMotion } from './lib/hooks';
 
@@ -25,6 +28,15 @@ export default function App() {
   const fine = useFinePointer();
   const reduced = useReducedMotion();
   const copy = COPY[lang];
+
+  // dedicated pages: #activities-summer / #activities-winter (live site: /activities/summer|winter)
+  const routeOf = (): Season | null => { const h = window.location.hash; return h === '#activities-summer' ? 'summer' : h === '#activities-winter' ? 'winter' : null; };
+  const [page, setPage] = useState<Season | null>(routeOf);
+  useEffect(() => {
+    const on = () => { const r = routeOf(); setPage((prev) => { if (prev && !r) window.setTimeout(() => window.scrollTo(0, 0), 0); return r; }); };
+    window.addEventListener('hashchange', on);
+    return () => window.removeEventListener('hashchange', on);
+  }, []);
 
   useEffect(() => { document.documentElement.lang = lang; }, [lang]);
 
@@ -60,14 +72,18 @@ export default function App() {
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-ivory focus:px-4 focus:py-2 focus:text-forest">{copy.skip}</a>
       <Header lang={lang} copy={copy} compact={compact} fine={fine && !reduced} menuOpen={menu} onLang={setLang} onBook={onBook} onMenu={() => setMenu(true)} />
       <MobileMenu open={menu} lang={lang} copy={copy} reduced={reduced} onClose={() => setMenu(false)} onLang={setLang} onBook={onBook} />
+      {page ? (
+        <main id="main"><ActivitiesPage season={page} lang={lang} /><div aria-hidden className="h-[96px] bg-cream lg:hidden" /></main>
+      ) : (
       <main id="main">
         <Hero lang={lang} copy={copy} bookingRef={booking} onBookingSubmit={onSubmit} />
         <RoomsSection lang={lang} />
         <AmenitiesSection lang={lang} />
         <ChaletSection lang={lang} />
         <RestaurantSection lang={lang} />
+        <ActivitiesSection lang={lang} />
         <section ref={next} aria-label="Platzhalter" className="relative bg-cream px-[max(16px,env(safe-area-inset-left))] py-24 text-forest md:px-14 md:py-36">
-          <div className="js-next-mask mx-auto max-w-[1100px] rounded-[2px] bg-[#ebe4d5] px-6 py-24 text-center md:py-36">
+          <div className="js-next-mask mx-auto max-w-[1100px] rounded-[2px] bg-soft px-6 py-24 text-center md:py-36">
             <p className="text-[12px] font-semibold uppercase tracking-[.3em] text-champagne-dark">Platzhalter</p>
             <p className="mt-4 font-display text-[clamp(30px,4vw,52px)] font-medium italic leading-tight">{copy.next}</p>
           </div>
@@ -75,6 +91,7 @@ export default function App() {
         {/* keeps the last content clear of the mobile quick-action bar */}
         <div aria-hidden className="h-[96px] bg-cream lg:hidden" />
       </main>
+      )}
       <QuickActions lang={lang} reduced={reduced} />
     </>
   );

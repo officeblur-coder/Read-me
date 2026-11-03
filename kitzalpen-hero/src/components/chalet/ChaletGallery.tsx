@@ -102,7 +102,7 @@ export function ChaletGallery({ photos, copy, lang, fine, reduced }: Props) {
 
   return (
     <div role="region" aria-roledescription="carousel" aria-label={copy.gallery}>
-      <div className="js-cg-mask relative overflow-hidden rounded-[18px] shadow-[0_30px_70px_-34px_rgba(7,28,22,.55)]">
+      <div className="js-cg-mask relative overflow-hidden rounded-[18px] shadow-[0_30px_70px_-34px_color-mix(in_srgb,var(--k-deep)_55%,transparent)]">
         <div
           ref={frame}
           tabIndex={0}
@@ -131,14 +131,14 @@ export function ChaletGallery({ photos, copy, lang, fine, reduced }: Props) {
               </div>
             </div>
           ))}
-          <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 z-[4] h-24 bg-gradient-to-t from-[rgba(7,28,22,.5)] to-transparent" />
+          <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 z-[4] h-24 bg-gradient-to-t from-[color-mix(in_srgb,var(--k-deep)_50%,transparent)] to-transparent" />
 
           <button type="button" onClick={prev} aria-label={copy.prev} className="cg-arrow left-3 md:left-5"><Chevron dir={-1} /></button>
           <button type="button" onClick={next} aria-label={copy.next} className="cg-arrow right-3 md:right-5"><Chevron dir={1} /></button>
 
           {/* dots + counter */}
           <div className="absolute inset-x-0 bottom-3 z-[5] flex items-center justify-center md:bottom-5">
-            <div className="flex items-center gap-2 rounded-full bg-[#071C16]/45 px-3 py-2 backdrop-blur-sm">
+            <div className="flex items-center gap-2 rounded-full bg-deep/45 px-3 py-2 backdrop-blur-sm">
               {photos.map((ph, i) => (
                 <button key={ph.id} type="button" onClick={() => go(i)} aria-label={copy.photo(i + 1, n, ph.label[lang])} aria-current={i === index}
                   className={`cg-dot ${i === index ? 'is-on' : ''}`} />
@@ -164,7 +164,7 @@ export function ChaletGallery({ photos, copy, lang, fine, reduced }: Props) {
           <button key={photos[i].id} type="button" onClick={() => go(i, i > index ? 1 : -1)} aria-label={copy.photo(i + 1, n, photos[i].label[lang])}
             className="js-cg-thumb cg-thumb group/t relative aspect-[16/9] overflow-hidden rounded-[14px]">
             <ChaletPic p={photos[i]} lang={lang} sizes="(min-width:1024px) 28vw, 45vw" className="transition-transform duration-700 ease-[cubic-bezier(.22,1,.36,1)] group-hover/t:scale-[1.04]" />
-            <span className="absolute left-3 top-3 rounded-full bg-[#071C16]/55 px-2.5 py-1 text-[10.5px] font-semibold uppercase tracking-[.2em] text-cream backdrop-blur-sm">{photos[i].label[lang]}</span>
+            <span className="absolute left-3 top-3 rounded-full bg-deep/55 px-2.5 py-1 text-[10.5px] font-semibold uppercase tracking-[.2em] text-cream backdrop-blur-sm">{photos[i].label[lang]}</span>
           </button>
         ))}
       </div>
@@ -193,7 +193,7 @@ function ChaletLightbox({ open, onClose, photos, index, onPrev, onNext, copy, la
       onCancel={(e) => { e.preventDefault(); onClose(); }}
       onKeyDown={(e) => { if (e.key === 'ArrowRight') onNext(); if (e.key === 'ArrowLeft') onPrev(); }}
       onClick={(e) => { if (e.target === dlg.current) onClose(); }}
-      className="rooms-lightbox m-0 h-[100dvh] max-h-none w-screen max-w-none bg-[#071C16]/95 p-0 text-cream">
+      className="rooms-lightbox m-0 h-[100dvh] max-h-none w-screen max-w-none bg-deep/95 p-0 text-cream">
       <div className="flex h-full flex-col">
         <div className="flex items-center justify-between px-5 py-4 md:px-8">
           <p className="font-display text-[24px] tabular-nums">{pad(index + 1)} <span className="text-cream/50">/ {pad(photos.length)}</span> <span className="ml-3 text-[14px] font-sans uppercase tracking-[.2em] text-gold">{p.label[lang]}</span></p>
