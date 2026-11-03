@@ -172,3 +172,22 @@ Facts: "bis zu 4 Gäste" is stated on kitzalpen.at/chalet/ (and the homepage). F
 Summer → winter: the photos come from different viewpoints, so nothing is overlaid or warped. Winter descends over summer through a feathered mask while summer slowly pushes in (1 → 1.07) and winter settles (1.08 → 1). It is scrubbed from `top 78%` to `bottom 30%` of the photo, fully reversible, and a label switches Sommer → Winter. With reduced motion, the winter photo is shown statically.
 
 Gallery change: a cinematic wipe from the side you travel to, 800 ms, `cubic-bezier(0.22,1,0.36,1)`, with the new photo settling from 1.06 and the old one drifting 4 %.
+
+---
+
+# Section 05 – Restaurant & Bar
+
+```
+src/content/restaurant.ts                              texts DE/EN, 4 photos, highlights, hours, menu PDF URL
+src/components/restaurant/RestaurantSection.tsx         layout + two reveal timelines (top block, then highlights + hours)
+src/components/restaurant/RestaurantGallery.tsx         crossfade gallery (700 ms, scale 1.05→1), arrows, dots, thumbnails, swipe, keyboard, lightbox
+src/components/restaurant/RestaurantHighlights.tsx      4 line icons (drawn in on reveal, redrawn on hover/tap)
+src/components/restaurant/RestaurantOpeningHours.tsx    hours bar + live "open now" (Europe/Vienna time)
+public/images/restaurant/                               hall, bar, corner, lounge (supplied photos)
+```
+
+Mount after the chalet: `<ChaletSection/><RestaurantSection lang={lang}/>`.
+
+Facts from kitzalpen.at/restaurant/: Frühstück 08:00–10:00, Abendessen 17:00–21:00, Dienstag–Sonntag, Montags geschlossen. "Speisekarte entdecken" opens the real menu, `https://www.kitzalpen.at/menu/kitzalpen-menu.pdf`, in a new tab. As in section 03, "Tiroler" was changed to "Pinzgauer Gastfreundschaft" (Hollersbach is in the Salzburger Land).
+
+Quick actions: the left dock is now desktop-only (≥1024 px). Tablets use the bottom bar, so the dock never covers content at 768 px.

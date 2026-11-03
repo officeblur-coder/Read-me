@@ -54,7 +54,7 @@ export function QuickActions({ lang, reduced }: { lang: Lang; reduced: boolean }
   return (
     <>
       {/* mobile */}
-      <nav ref={bar} aria-label={t.nav} className="invisible fixed inset-x-0 bottom-0 z-40 bg-gradient-to-t from-cream via-cream/90 to-cream/0 px-[max(14px,env(safe-area-inset-left))] pt-4 md:hidden" style={{ paddingBottom: 'calc(10px + env(safe-area-inset-bottom, 0px))' }}>
+      <nav ref={bar} aria-label={t.nav} className="invisible fixed inset-x-0 bottom-0 z-40 bg-gradient-to-t from-cream via-cream/90 to-cream/0 px-[max(14px,env(safe-area-inset-left))] pt-4 lg:hidden" style={{ paddingBottom: 'calc(10px + env(safe-area-inset-bottom, 0px))' }}>
         <div className="mx-auto grid max-w-[560px] grid-cols-3 gap-2.5">
           {items.map((it) => (
             <a key={it.cls} href={it.href} target="_blank" rel="noopener noreferrer" className={`qa ${it.cls} flex flex-col items-center justify-center gap-1 rounded-[16px] px-1.5 text-[11.5px] font-semibold leading-none min-[380px]:text-[13px] transition-[min-height,padding] duration-300 ${compact ? 'min-h-[46px] flex-row gap-2' : 'min-h-[60px]'}`}>
@@ -66,7 +66,7 @@ export function QuickActions({ lang, reduced }: { lang: Lang; reduced: boolean }
       </nav>
 
       {/* desktop dock */}
-      <nav ref={dock} aria-label={t.nav} className="qa-dock invisible fixed left-3 top-1/2 z-40 hidden -translate-y-1/2 md:block">
+      <nav ref={dock} aria-label={t.nav} className="qa-dock invisible fixed left-3 top-1/2 z-40 hidden -translate-y-1/2 lg:block">
         <div className="flex flex-col gap-1.5 rounded-[20px] border border-gold/30 bg-[#071C16]/85 p-1.5 shadow-[0_20px_50px_rgba(0,0,0,.28)] backdrop-blur-xl">
           {items.map((it) => (
             <a key={it.cls} href={it.href} target="_blank" rel="noopener noreferrer" title={it.label} className="qa-dock-item group/q flex items-center rounded-[16px] p-1 text-cream transition-colors hover:bg-cream/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-gold">
