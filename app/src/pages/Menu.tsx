@@ -8,6 +8,7 @@ import { TIER_CLS, nextTierInfo, planRedeem, redeemCap, tierName, useRewards, vp
 import { flyToCart, haptic } from "../lib/fx";
 import { LOCALITIES, geocodeAddress, useZones, zoneFor, type LatLng } from "../lib/zones";
 import { hoursLabel, isOpenNow, slotDays, whenLabel } from "../lib/schedule";
+import { cut, useDiscounts } from "../lib/discounts";
 import Icon from "../components/Icon";
 import BottomNav from "../components/BottomNav";
 import SiteFooter from "../components/SiteFooter";
@@ -172,23 +173,28 @@ export default function Menu({ source }: { source?: string }) {
   }, [shownBanners.length]);
 
   const byId = useMemo(() => Object.fromEntries(items.map(x => [x.id, x])), [items]);
+  const dsc = useDiscounts();
   const nm = (it: Item) => (L && it.name_hu) || it.name_ro;
   const ds = (it: Item) => (L && it.desc_hu) || it.desc_ro || "";
   const catName = (c: Category) => (L && c.name_hu) || c.name_ro;
 
   // ---- pricing (mirrors place_order in the database; the database has the final word) ----
-  const baseOf = (it: Item, vi?: number) => (it.variants?.length ? it.variants[vi ?? 0].p : it.price);
+  const fullOf = (it: Item, vi?: number) => (it.variants?.length ? it.variants[vi ?? 0].p : it.price);
+  const pctOf = (id: string) => dsc.pct[id] || 0;
+  // reducerea din admin se aplică doar prețului produsului (nu și extra), exact ca în baza de date
+  const baseOf = (it: Item, vi?: number) => cut(fullOf(it, vi), pctOf(it.id));
   const unitOf = (l: CartLine) => {
     const it = byId[l.id]; if (!it) return 0;
     if (l.promoPrice != null) return l.promoPrice;
     return baseOf(it, l.vi) + l.extras.reduce((s, k) => s + (byId[k]?.price || 0), 0);
   };
+  const lineOff = (l: CartLine) => l.promoPrice == null && pctOf(l.id) > 0;
   const validCart = cart.filter(l => byId[l.id]);
   const sub = validCart.reduce((s, l) => s + unitOf(l) * l.qty, 0);
   const disc = code
     ? Math.round((code.category_id
-        ? validCart.filter(l => byId[l.id].category_id === code.category_id && l.promoPrice == null).reduce((s, l) => s + unitOf(l) * l.qty, 0)
-        : sub) * code.percent) / 100
+        ? validCart.filter(l => byId[l.id].category_id === code.category_id && l.promoPrice == null && !lineOff(l)).reduce((s, l) => s + unitOf(l) * l.qty, 0)
+        : validCart.filter(l => !lineOff(l)).reduce((s, l) => s + unitOf(l) * l.qty, 0)) * code.percent) / 100
     : 0;
   const openNow = !!settings && isOpenNow(settings, clock);
   const canAsap = openNow && !!settings?.accepting_orders;
@@ -364,10 +370,11 @@ export default function Menu({ source }: { source?: string }) {
   // ---------- price + add button, shared by cards and rails ----------
   const buyRow = (it: Item) => {
     const qn = qtyOf(it.id), out = !it.available;
-    const price = it.variants?.length ? Math.min(...it.variants.map(v => v.p)) : it.price;
+    const full = it.variants?.length ? Math.min(...it.variants.map(v => v.p)) : it.price;
+    const pc = pctOf(it.id), price = cut(full, pc);
     return (
       <div className="pc-foot">
-        <span className="price num">{it.variants?.length ? <small>{t.from} </small> : null}{lei(price)}</span>
+        <span className={`price num${pc ? " off" : ""}`}>{it.variants?.length ? <small>{t.from} </small> : null}{lei(price)}{pc > 0 && <s>{lei(full)}</s>}</span>
         {out ? <button className="addbtn" disabled>{t.out}</button>
           : qn && !it.variants?.length
             ? <span className="qty lg"><button onClick={() => dec(it.id)} aria-label="Mai puțin">−</button><b className="num">{qn}</b><button onClick={e => quickAdd(it, e)} aria-label="Mai mult">+</button></span>
@@ -402,7 +409,7 @@ export default function Menu({ source }: { source?: string }) {
             return (
               <div key={l.key} className="cl">
                 {img ? <img src={img} alt="" /> : <span className="cl-ph"><Icon name="dish" size={22} /></span>}
-                <div className="cl-txt"><b>{nm(it)}</b>{info && <small>{info}</small>}<span className="num">{lei(unitOf(l) * l.qty)}</span></div>
+                <div className="cl-txt"><b>{nm(it)}</b>{info && <small>{info}</small>}<span className={`num${lineOff(l) ? " off" : ""}`}>{lei(unitOf(l) * l.qty)}{lineOff(l) && <s>{lei((fullOf(it, l.vi) + l.extras.reduce((a, k) => a + (byId[k]?.price || 0), 0)) * l.qty)}</s>}{lineOff(l) && <em className="cl-off">−{pctOf(l.id)}%</em>}</span></div>
                 <span className="qty">
                   <button onClick={() => setCart(c => c.flatMap(x => x.key !== l.key ? [x] : x.qty > 1 ? [{ ...x, qty: x.qty - 1 }] : []))} aria-label="Mai puțin">{l.qty === 1 ? "×" : "−"}</button>
                   <b className="num">{l.qty}</b>
@@ -419,7 +426,7 @@ export default function Menu({ source }: { source?: string }) {
           const ups = UPSELL.filter(id => byId[id] && byId[id].available && !validCart.some(l => l.id === id)).slice(0, 6);
           return ups.length > 0 && <div className="ups-wrap"><p className="cp-lbl">Merge perfect alături</p><div className="ups">{ups.map(id => {
             const it = byId[id], img = imgUrl(it.image);
-            return <button key={id} className="up" onClick={() => addLine({ id: it.id, qty: 1, extras: [], note: "" })}>{img ? <img src={img} alt="" /> : <span className="up-ph">{nm(it).slice(0, 1)}</span>}<span className="up-n">{nm(it)}</span><em className="num">+{lei(it.price)}</em></button>;
+            return <button key={id} className="up" onClick={() => addLine({ id: it.id, qty: 1, extras: [], note: "" })}>{img ? <img src={img} alt="" /> : <span className="up-ph">{nm(it).slice(0, 1)}</span>}<span className="up-n">{nm(it)}</span><em className="num">+{lei(baseOf(it))}</em></button>;
           })}</div></div>;
         })()}
         <div className="cp-sum">
@@ -600,7 +607,7 @@ export default function Menu({ source }: { source?: string }) {
               <div className="top-rail">
                 {popular.map(it => (
                   <article key={it.id} className="top-card" data-card>
-                    <button className="tc-img" onClick={() => openItem(it)} aria-label={nm(it)}><img src={imgUrl(it.image)!} alt="" loading="lazy" /></button>
+                    <button className="tc-img" onClick={() => openItem(it)} aria-label={nm(it)}><img src={imgUrl(it.image)!} alt="" loading="lazy" />{pctOf(it.id) > 0 && <span className="b b-off tc-off"><Icon name="tag" size={12} />−{pctOf(it.id)}%</span>}</button>
                     <div className="tc-body">
                       <button className="tc-name" onClick={() => openItem(it)}><h3>{nm(it)}</h3></button>
                       {catOf(it.category_id) && <small>{catName(catOf(it.category_id)!)}</small>}
@@ -634,6 +641,7 @@ export default function Menu({ source }: { source?: string }) {
                         {img && <button className="pc-img" onClick={() => openItem(it)} aria-label={nm(it)}>
                           <img src={img} alt="" loading="lazy" />
                           <span className="pc-badges">
+                            {pctOf(it.id) > 0 && <span className="b b-off"><Icon name="tag" size={12} />−{pctOf(it.id)}%</span>}
                             {it.tags.includes("new") && <span className="b b-new">{L ? "Új" : "Nou"}</span>}
                             {it.hot && <span className="b b-hot"><Icon name="flame" size={12} fill />{t.hot}</span>}
                             {it.tags.includes("veg") && <span className="b b-veg">Veg</span>}
@@ -678,6 +686,8 @@ export default function Menu({ source }: { source?: string }) {
             <div className="md-grid">
               {img && <div className="md-img" style={{ ["--img" as string]: `url(${img})` }}><img src={img} alt="" /></div>}
               <div className="md-body">
+                {pctOf(it.id) > 0 && <div className="md-off"><span className="b b-off"><Icon name="tag" size={13} />Reducere −{pctOf(it.id)}%</span>
+                  <span className="num"><b>{lei(baseOf(it, sheet.vi))}</b> <s>{lei(fullOf(it, sheet.vi))}</s></span></div>}
                 <h2 className="md-name">{nm(it)}</h2>
                 <p className="md-sub">{L ? it.name_ro : it.name_hu}</p>
                 {ds(it) && <p className="md-desc">{ds(it)}</p>}
@@ -690,7 +700,7 @@ export default function Menu({ source }: { source?: string }) {
                 {it.allergens.length > 0 && <div className="facts">{it.allergens.map(a => <span key={a} className="fact al-f"><Icon name={a} size={13} />{ALLERGENS[a]?.[L]}</span>)}</div>}
                 {it.wine && <div className="wine"><Icon name="wine" size={22} /><div>{t.wine} <b>{it.wine}</b></div></div>}
                 {it.variants?.length ? <><p className="cp-lbl">{t.portion}</p><div className="paygrid">
-                  {it.variants.map((v, i) => <button key={i} aria-pressed={sheet.vi === i} onClick={() => setSheet({ ...sheet, vi: i })}><b>{(L && v.lh) || v.l}</b><small className="num">{lei(v.p)} · {v.g}</small></button>)}
+                  {it.variants.map((v, i) => <button key={i} aria-pressed={sheet.vi === i} onClick={() => setSheet({ ...sheet, vi: i })}><b>{(L && v.lh) || v.l}</b><small className="num">{pctOf(it.id) > 0 ? <><s>{lei(v.p)}</s> {lei(cut(v.p, pctOf(it.id)))}</> : lei(v.p)} · {v.g}</small></button>)}
                 </div></> : null}
                 {exs.length > 0 && <><p className="cp-lbl">{t.extras}</p>{exs.map(e => (
                   <label key={e.id} className="opt"><input type="checkbox" checked={sheet.extras.includes(e.id)}

@@ -315,6 +315,8 @@ declare
   zone_nm  text;
   v_sched  timestamptz := nullif(p->>'scheduled_for','')::timestamptz;
   v_err    text;
+  dpct     numeric := 0;
+  old_unit numeric;
 begin
   select * into s from public.settings where id = 1;
   select * into cfg from public.rewards_settings where id = 1;
@@ -353,7 +355,7 @@ begin
       grams  := it.variants->vi->>'g';
     end if;
     ex_arr := '[]';
-    is_promo := false;
+    is_promo := false; dpct := 0; old_unit := null;
     if coalesce(line->>'promo','') <> '' then
       select * into pr from public.promos
         where id::text = line->>'promo' and active and item_id = it.id and price is not null
@@ -367,6 +369,9 @@ begin
         if found then ex_arr := ex_arr || jsonb_build_object('id', ex.id, 'name', ex.name_ro, 'price', 0); lpack := lpack + ex.packaging; end if;
       end loop;
     else
+      -- reducere procentuală din admin (07_discounts.sql): doar pe prețul produsului, nu pe extra
+      dpct := public.item_discount_pct(it.id);
+      if dpct > 0 then old_unit := unit; unit := round(unit * (100 - dpct) / 100.0, 2); end if;
       for ex_id in select jsonb_array_elements_text(coalesce(line->'extras','[]')) loop
         select * into ex from public.items where id = ex_id and active and available;
         if found then
@@ -381,7 +386,8 @@ begin
       'id', it.id, 'name', it.name_ro, 'qty', qty, 'unit', unit, 'variant', vlabel, 'vi', vi,
       'grams', grams, 'hot', it.hot, 'allergens', to_jsonb(it.allergens), 'category', it.category_id,
       'extras', ex_arr, 'note', left(coalesce(line->>'note',''), 200), 'pack', lpack,
-      'promo', case when is_promo then pr.title end);
+      'promo', case when is_promo then pr.title end,
+      'disc_pct', case when dpct > 0 then dpct end, 'old_unit', old_unit);
   end loop;
 
   if sub < s.min_order then raise exception 'Comanda minimă este % lei.', s.min_order using errcode = 'P0001'; end if;
@@ -390,10 +396,13 @@ begin
   if coalesce(p->>'code','') <> '' then
     select * into pc from public.promo_codes where code = upper(p->>'code') and active;
     if found then
-      if pc.category_id is null then disc := round(sub * pc.percent / 100.0, 2);
+      -- codul nu se cumulează cu reducerile pe produse: se aplică doar produselor fără reducere
+      if pc.category_id is null then
+        select round(coalesce(sum((l->>'unit')::numeric * (l->>'qty')::int), 0) * pc.percent / 100.0, 2) into disc
+          from jsonb_array_elements(lines) l where l->>'disc_pct' is null;
       else
         select round(coalesce(sum((l->>'unit')::numeric * (l->>'qty')::int), 0) * pc.percent / 100.0, 2) into disc
-          from jsonb_array_elements(lines) l where l->>'category' = pc.category_id and l->>'promo' is null;
+          from jsonb_array_elements(lines) l where l->>'category' = pc.category_id and l->>'promo' is null and l->>'disc_pct' is null;
       end if;
       disc_lbl := pc.label;
     end if;

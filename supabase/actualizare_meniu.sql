@@ -317,6 +317,8 @@ declare
   zone_nm  text;
   v_sched  timestamptz := nullif(p->>'scheduled_for','')::timestamptz;
   v_err    text;
+  dpct     numeric := 0;
+  old_unit numeric;
 begin
   select * into s from public.settings where id = 1;
   select * into cfg from public.rewards_settings where id = 1;
@@ -355,7 +357,7 @@ begin
       grams  := it.variants->vi->>'g';
     end if;
     ex_arr := '[]';
-    is_promo := false;
+    is_promo := false; dpct := 0; old_unit := null;
     if coalesce(line->>'promo','') <> '' then
       select * into pr from public.promos
         where id::text = line->>'promo' and active and item_id = it.id and price is not null
@@ -369,6 +371,9 @@ begin
         if found then ex_arr := ex_arr || jsonb_build_object('id', ex.id, 'name', ex.name_ro, 'price', 0); lpack := lpack + ex.packaging; end if;
       end loop;
     else
+      -- reducere procentuală din admin (07_discounts.sql): doar pe prețul produsului, nu pe extra
+      dpct := public.item_discount_pct(it.id);
+      if dpct > 0 then old_unit := unit; unit := round(unit * (100 - dpct) / 100.0, 2); end if;
       for ex_id in select jsonb_array_elements_text(coalesce(line->'extras','[]')) loop
         select * into ex from public.items where id = ex_id and active and available;
         if found then
@@ -383,7 +388,8 @@ begin
       'id', it.id, 'name', it.name_ro, 'qty', qty, 'unit', unit, 'variant', vlabel, 'vi', vi,
       'grams', grams, 'hot', it.hot, 'allergens', to_jsonb(it.allergens), 'category', it.category_id,
       'extras', ex_arr, 'note', left(coalesce(line->>'note',''), 200), 'pack', lpack,
-      'promo', case when is_promo then pr.title end);
+      'promo', case when is_promo then pr.title end,
+      'disc_pct', case when dpct > 0 then dpct end, 'old_unit', old_unit);
   end loop;
 
   if sub < s.min_order then raise exception 'Comanda minimă este % lei.', s.min_order using errcode = 'P0001'; end if;
@@ -392,10 +398,13 @@ begin
   if coalesce(p->>'code','') <> '' then
     select * into pc from public.promo_codes where code = upper(p->>'code') and active;
     if found then
-      if pc.category_id is null then disc := round(sub * pc.percent / 100.0, 2);
+      -- codul nu se cumulează cu reducerile pe produse: se aplică doar produselor fără reducere
+      if pc.category_id is null then
+        select round(coalesce(sum((l->>'unit')::numeric * (l->>'qty')::int), 0) * pc.percent / 100.0, 2) into disc
+          from jsonb_array_elements(lines) l where l->>'disc_pct' is null;
       else
         select round(coalesce(sum((l->>'unit')::numeric * (l->>'qty')::int), 0) * pc.percent / 100.0, 2) into disc
-          from jsonb_array_elements(lines) l where l->>'category' = pc.category_id and l->>'promo' is null;
+          from jsonb_array_elements(lines) l where l->>'category' = pc.category_id and l->>'promo' is null and l->>'disc_pct' is null;
       end if;
       disc_lbl := pc.label;
     end if;
@@ -1697,6 +1706,50 @@ begin
     from public.customers c where c.marketing_ok and coalesce(c.email, '') <> ''), '[]');
 end $$;
 grant execute on function public.admin_marketing_list() to authenticated;
+
+
+-- =====================================================================
+-- Reduceri procentuale pe produse (din admin): ex. -20% la burgeri, cu perioadă opțională.
+-- Pe site apar prețul vechi tăiat, prețul nou și eticheta de reducere; comanda se calculează cu prețul redus.
+-- Când un produs e în mai multe reduceri active, se aplică cea mai mare.
+-- =====================================================================
+create table if not exists public.item_discounts (
+  id         uuid primary key default gen_random_uuid(),
+  name       text not null default 'Reducere',
+  percent    numeric(5,2) not null check (percent > 0 and percent <= 90),
+  item_ids   text[] not null default '{}',
+  active     boolean not null default true,
+  starts_at  timestamptz,
+  ends_at    timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+alter table public.item_discounts enable row level security;
+do $$ begin
+  drop policy if exists "discounts public read" on public.item_discounts;
+  drop policy if exists "discounts admin write" on public.item_discounts;
+end $$;
+create policy "discounts public read" on public.item_discounts for select using (true);
+create policy "discounts admin write" on public.item_discounts for all using (public.is_admin()) with check (public.is_admin());
+grant select on public.item_discounts to anon, authenticated;
+grant insert, update, delete on public.item_discounts to authenticated;
+
+-- reducerea activă acum pentru un produs (0 = fără reducere)
+create or replace function public.item_discount_pct(p_item text) returns numeric
+language sql stable set search_path = public as $$
+  select coalesce(max(percent), 0) from public.item_discounts
+  where active and p_item = any(item_ids)
+    and (starts_at is null or starts_at <= now()) and (ends_at is null or ends_at > now());
+$$;
+grant execute on function public.item_discount_pct(text) to anon, authenticated;
+
+-- realtime: site-ul se actualizează când admin pornește sau oprește o reducere
+do $$ begin
+  if exists (select 1 from pg_publication where pubname = 'supabase_realtime')
+     and not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and tablename = 'item_discounts') then
+    alter publication supabase_realtime add table public.item_discounts;
+  end if;
+end $$;
 
 
 -- Actualizare meniu (generat din lyra/data/menu.js). ATENȚIE: suprascrie prețurile, textele și pozele din admin.

@@ -15,6 +15,7 @@ const P: Record<string, string> = {
   clock: "M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18zM12 7v5l3 2",
   bolt: "M13 2 4 14h7l-1 8 9-12h-7l1-8z",
   edit: "M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4",
+  tag: "M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9-9-9zM7.5 7.5h.01",
   bell: "M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0",
   alert: "M12 3 2.5 20h19zM12 10v4M12 17.2v.3",
   wine: "M8 2h8l-.5 6a3.5 3.5 0 0 1-7 0zM12 11.5V20M8.5 21h7",
