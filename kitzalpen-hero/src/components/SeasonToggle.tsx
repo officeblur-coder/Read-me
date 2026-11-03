@@ -11,7 +11,7 @@ const Flake = () => (
   </svg>
 );
 
-export function SeasonToggle({ active, copy, onSelect, className = '' }: { active: Season; copy: Copy; onSelect: (s: Season) => void; className?: string }) {
+export function SeasonToggle({ active, copy, onSelect, className = '', labelClass = '' }: { active: Season; copy: Copy; onSelect: (s: Season) => void; className?: string; labelClass?: string }) {
   return (
     <div role="group" aria-label={`${copy.summer} / ${copy.winter}`} className={`season-toggle relative grid grid-cols-2 rounded-full border border-ivory/25 bg-forest-deep/55 p-1 backdrop-blur-md ${className}`}>
       <span aria-hidden className="season-knob absolute bottom-1 left-1 top-1 w-[calc(50%-4px)] rounded-full" style={{ transform: active === 'winter' ? 'translateX(100%)' : 'translateX(0)' }} />
@@ -21,12 +21,12 @@ export function SeasonToggle({ active, copy, onSelect, className = '' }: { activ
           type="button"
           aria-pressed={active === s}
           onClick={() => onSelect(s)}
-          className={`relative z-[1] flex min-h-11 items-center justify-center gap-2 rounded-full px-5 text-[15px] font-semibold transition-colors duration-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-champagne md:px-6 ${
+          className={`relative z-[1] flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-full px-5 text-[15px] font-semibold transition-colors duration-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-champagne md:px-6 ${
             active === s ? 'text-forest-deep' : 'text-ivory/90 hover:text-ivory'
           }`}
         >
           {s === 'summer' ? <Sun /> : <Flake />}
-          {s === 'summer' ? copy.summer : copy.winter}
+          <span className={labelClass}>{s === 'summer' ? copy.summer : copy.winter}</span>
         </button>
       ))}
     </div>

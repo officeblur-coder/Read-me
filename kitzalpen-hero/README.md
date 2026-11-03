@@ -330,3 +330,17 @@ Order: … `<GuestStoriesSection/>` → `<FinalBookingCTA/>` → footer. The old
 - Features: "Gemütliche Zimmer & Chalet / Einzigartige Alpenlage / Familiengeführte Gastfreundschaft". "Family-run" is from the brief; kitzalpen.at itself only mentions "freundliche Gastgeber", so confirm before going live.
 
 `src/components/SiteFooter.tsx` is a minimal preview footer with the contact data from kitzalpen.at. On the live site keep the existing footer and just give it `background: var(--k-deep)`.
+
+---
+
+# Pension page · Section 01 – Hero
+
+`src/components/pension/PensionHero.tsx`, photos in `public/images/pension/` (originals supplied by KitzAlpen: snowy daytime view for winter; garden, terrace and mountains for summer; the night photo is not used here).
+
+- Preview route `#pension` (header "Pension" link). On the live site it renders at `/pension/`, so set the NAV href back to `${SITE}/pension/` in `src/content/hero.ts`.
+- Season: the shared `useSeason()`. Subpages have no hero selector, so the header shows the same Sommer/Winter toggle there (`showSeason`). It hangs under the header's right edge on desktop and is icons only on phones. The homepage is unchanged, and the season carries over between pages.
+- CTAs use the live page's destinations: "Zimmer entdecken" → `/rooms/`, "Kontakt aufnehmen" → `/contact/` (EN: `/en/…`).
+- Facts (confirmed on /pension/): 17 Zimmer · Restaurant im Haus · 2 km zur Panoramabahn.
+- Motion: on load, photo fade with 1.06 → 1, eyebrow, headline lines, rule, facts staggered, then CTAs (≈1.8 s). On a season change, the new photo is decoded first, then the headline lifts out, the photos crossfade (1 s, 1.05 → 1) and the new headline reveals. Rapid toggling is safe. Desktop parallax. Reduced motion: static.
+- Focal points per photo and breakpoint keep the building in frame. Gradient on the left (desktop) or bottom (mobile) only.
+- Small global fix: on subpages the header items are revealed by App (the homepage hero intro normally does this).

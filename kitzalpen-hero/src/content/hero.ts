@@ -6,7 +6,7 @@ const SITE = 'https://www.kitzalpen.at';
 
 export const NAV: Record<Lang, { label: string; href: string }[]> = {
   de: [
-    { label: 'Pension', href: `${SITE}/pension/` },
+    { label: 'Pension', href: '#pension' }, // preview route – live: `${SITE}/pension/`
     { label: 'Chalet', href: `${SITE}/chalet/` },
     { label: 'Zimmer', href: `${SITE}/rooms/` },
     { label: 'Restaurant', href: `${SITE}/restaurant/` },
@@ -15,7 +15,7 @@ export const NAV: Record<Lang, { label: string; href: string }[]> = {
     { label: 'Kontakt', href: `${SITE}/contact/` },
   ],
   en: [
-    { label: 'Guesthouse', href: `${SITE}/en/pension/` },
+    { label: 'Guesthouse', href: '#pension' }, // preview route – live: `${SITE}/en/pension/`
     { label: 'Chalet', href: `${SITE}/en/chalet/` },
     { label: 'Rooms', href: `${SITE}/en/rooms/` },
     { label: 'Restaurant', href: `${SITE}/en/restaurant/` },

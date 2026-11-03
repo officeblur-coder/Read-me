@@ -3,6 +3,8 @@ import { BOOKING_ENGINE } from './BookingBar';
 import { NAV, type Copy, type Lang } from '../content/hero';
 import { useMagnetic } from '../lib/hooks';
 import { Logo } from './Logo';
+import { SeasonToggle } from './SeasonToggle';
+import { useSeason } from '../lib/season';
 
 interface Props {
   lang: Lang;
@@ -10,6 +12,8 @@ interface Props {
   compact: boolean;
   fine: boolean;
   menuOpen: boolean;
+  /** subpages have no hero selector, so the shared Sommer/Winter toggle sits in the header */
+  showSeason?: boolean;
   onLang: (l: Lang) => void;
   onBook?: () => void;
   onMenu: () => void;
@@ -35,7 +39,8 @@ export function LangSwitch({ lang, onLang, label, className = '' }: { lang: Lang
   );
 }
 
-export function Header({ lang, copy, compact, fine, menuOpen, onLang, onMenu }: Props) {
+export function Header({ lang, copy, compact, fine, menuOpen, onLang, onMenu, showSeason }: Props) {
+  const { season, setSeason } = useSeason();
   const bookRef = useRef<HTMLAnchorElement>(null);
   useMagnetic(bookRef, fine);
 
@@ -47,7 +52,7 @@ export function Header({ lang, copy, compact, fine, menuOpen, onLang, onMenu }: 
       }`}
     >
       <div className="mx-auto flex max-w-[1680px] items-center justify-between gap-6 px-[max(16px,env(safe-area-inset-left))] md:px-10 lg:px-14">
-        <a href="https://www.kitzalpen.at/" className="js-head shrink-0 rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-champagne">
+        <a href="#top" aria-label="KitzAlpen – Startseite" className="js-head shrink-0 rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-champagne">
           <Logo className={`transition-[width] duration-[450ms] ease-premium ${compact ? 'w-[118px] md:w-[136px]' : 'w-[148px] md:w-[178px]'}`} />
         </a>
 
@@ -64,13 +69,14 @@ export function Header({ lang, copy, compact, fine, menuOpen, onLang, onMenu }: 
         </nav>
 
         <div className="flex items-center gap-2 md:gap-5">
+          {showSeason && <SeasonToggle active={season} copy={copy} onSelect={setSeason} className="header-season js-head shrink-0" labelClass="max-sm:sr-only" />}
           <LangSwitch lang={lang} onLang={onLang} label={copy.lang} className="js-head" />
           <a
             ref={bookRef}
             href={BOOKING_ENGINE}
             target="_blank"
             rel="noopener noreferrer"
-            className="js-head btn-outline hidden min-h-11 items-center gap-2.5 rounded-full border border-champagne/70 px-6 text-[15px] font-semibold lg:inline-flex"
+            className="whitespace-nowrap js-head btn-outline hidden min-h-11 items-center gap-2.5 rounded-full border border-champagne/70 px-6 text-[15px] font-semibold lg:inline-flex"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden><rect x="3.5" y="5" width="17" height="15" rx="2" /><path d="M3.5 10h17M8 3v4M16 3v4" /></svg>
             {copy.book}
