@@ -34,6 +34,7 @@ export type Item = {
 };
 
 export type Settings = import("./schedule").Hours & {
+  welcome_on?: boolean; welcome_lei?: number; welcome_min?: number;   // bonus de bun venit la cont nou
   accepting_orders: boolean;
   delivery_fee: number;
   free_delivery_over: number;
@@ -125,13 +126,14 @@ export type Order = {
   lng?: number | null;
   zone_name?: string | null;
   scheduled_for?: string | null;   // precomandă: ora aleasă de client
+  welcome_value?: number;          // bonus de bun venit folosit (lei)
 };
 
 export type PublicOrder = Pick<
   Order,
   | "number" | "status" | "mode" | "address" | "items" | "subtotal" | "discount" | "discount_label"
   | "points_value" | "delivery_fee" | "packaging" | "total" | "points_earned" | "eta_min" | "created_at"
-  | "accepted_at" | "road_at" | "done_at" | "reject_reason" | "rating" | "scheduled_for"
+  | "accepted_at" | "road_at" | "done_at" | "reject_reason" | "rating" | "scheduled_for" | "welcome_value"
 > & { messages: { body: string; at: string }[] };
 
 export type CartLine = {

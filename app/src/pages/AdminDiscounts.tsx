@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { imgUrl, lei } from "../lib/format";
 import type { Category, Item } from "../lib/types";
@@ -19,6 +19,41 @@ function status(d: Discount) {
   if (d.starts_at && new Date(d.starts_at).getTime() > now) return ["Programată", "soon"];
   if (d.ends_at && new Date(d.ends_at).getTime() <= now) return ["Expirată", "off"];
   return ["Activă acum", "on"];
+}
+
+/** Welcome bonus for new accounts (settings row): on/off, value, minimum order. */
+function WelcomeCard({ flash }: { flash: (m: string) => void }) {
+  const [w, setW] = useState<{ on: boolean; lei: string; min: string } | null>(null);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    supabase.from("settings").select("welcome_on,welcome_lei,welcome_min").eq("id", 1).maybeSingle()
+      .then(({ data }) => data && setW({ on: !!data.welcome_on, lei: String(Number(data.welcome_lei)), min: String(Number(data.welcome_min)) }));
+  }, []);
+  if (!w) return null;
+  async function save() {
+    if (!w) return;
+    const l = Number(w.lei.replace(",", ".")), m = Number(w.min.replace(",", "."));
+    if (!(l >= 0 && l <= 1000) || !(m >= 0 && m <= 5000)) { flash("Valori invalide."); return; }
+    setBusy(true);
+    const { error } = await supabase.from("settings").update({ welcome_on: w.on, welcome_lei: l, welcome_min: m }).eq("id", 1);
+    setBusy(false);
+    flash(error ? "Nu s-a salvat: " + error.message : "Bonusul de bun venit a fost salvat.");
+  }
+  return (
+    <section className="wl-admin">
+      <div className="wl-gift">🎁</div>
+      <div className="wl-admin-body">
+        <b>Bonus de bun venit la cont nou</b>
+        <small>Fiecare cont nou primește suma pe loc. Se folosește tot odată, o singură dată, la o comandă cu produse de minim valoarea aleasă; nu se cumulează cu codurile de reducere și nu intră în Lyra Rewards (nu urcă nivelul). Un bonus pe număr de telefon.</small>
+        <div className="wl-admin-row">
+          <label className="adm-sw"><button className="switch" role="switch" aria-checked={w.on} onClick={() => setW({ ...w, on: !w.on })} /><span>{w.on ? "Pornit" : "Oprit"}</span></label>
+          <label>Valoare <input inputMode="decimal" value={w.lei} onChange={e => setW({ ...w, lei: e.target.value })} /> lei</label>
+          <label>Comandă minimă <input inputMode="decimal" value={w.min} onChange={e => setW({ ...w, min: e.target.value })} /> lei</label>
+          <button className="mini" onClick={save} disabled={busy}>{busy ? "…" : "Salvează"}</button>
+        </div>
+      </div>
+    </section>
+  );
 }
 
 /** Percentage discounts on chosen products: shown on the site with the old price struck through. */
@@ -76,6 +111,7 @@ export function DiscountsTab({ items, cats, flash }: { items: Item[]; cats: Cate
   if (!d) return (
     <div className="adm-page">
       <div className="adm-bar"><h1>Reduceri pe produse</h1><button className="addbtn" onClick={startNew}><span>+</span>Reducere nouă</button></div>
+      <WelcomeCard flash={flash} />
       <p className="muted adm-help">Alegi procentul (5%, 10%, 25%, cât vrei) și produsele. Pe site apar prețul vechi tăiat, prețul nou și eticheta roșie de reducere, iar comanda se calculează cu prețul redus. Dacă un produs e în mai multe reduceri active, se aplică cea mai mare. Codurile de reducere nu se adaugă peste produsele deja reduse.</p>
       {!list.length && <div className="dsc-empty"><Icon name="tag" size={28} /><b>Nicio reducere încă</b><span>Apasă „Reducere nouă” ca să alegi produsele și procentul.</span></div>}
       <div className="dsc-list">{list.map(x => {

@@ -81,6 +81,7 @@ function Member({ c, refresh }: { c: Customer; refresh: () => void }) {
   const [profile, setProfile] = useState({ name: c.name || "", phone: c.phone || "", address: c.addresses?.[0] || "", allergies: c.allergies || [], marketing_ok: c.marketing_ok });
   const [saved, setSaved] = useState("");
   const { cfg, me, reload } = useRewards(c.id);
+  const welcomeMin = useWelcomeCfg()?.min ?? 150;
   useEffect(() => {
     let want: string | null = null;
     try { want = localStorage.getItem("lyra-optin"); localStorage.removeItem("lyra-optin"); } catch { /* ignore */ }
@@ -110,6 +111,9 @@ function Member({ c, refresh }: { c: Customer; refresh: () => void }) {
   return (
     <main className="acc-main">
       <h1 className="acc-hello">Salut{c.name ? `, ${c.name.split(" ")[0]}` : ""}!</h1>
+      {Number(c.welcome_credit || 0) > 0 && !c.welcome_used_at && <div className="acc-welcome"><span className="wl-gift">🎁</span><div>
+        <b>Ai {Number(c.welcome_credit)} lei bonus de bun venit</b>
+        <small>Se scad automat din prima comandă de minim {welcomeMin} lei (produse). Se folosesc tot odată și nu se cumulează cu codurile de reducere.</small></div></div>}
       {me ? <Rewards cfg={cfg} me={me} name={c.name || c.email || ""} since={c.created_at} onSeen={async () => { await supabase.rpc("rewards_mark_read"); reload(); }} />
         : <p className="muted">Se încarcă Lyra Rewards…</p>}
 
@@ -150,11 +154,24 @@ function Member({ c, refresh }: { c: Customer; refresh: () => void }) {
 
 const fmtDate = (d: string) => new Date(d).toLocaleDateString("ro-RO", { day: "numeric", month: "short", year: "numeric" });
 
+/** welcome bonus settings (on/off, lei, minimum order) */
+function useWelcomeCfg() {
+  const [w, setW] = useState<{ on: boolean; lei: number; min: number } | null>(null);
+  useEffect(() => {
+    supabase.from("settings").select("welcome_on,welcome_lei,welcome_min").eq("id", 1).maybeSingle()
+      .then(({ data }) => data && setW({ on: !!data.welcome_on, lei: Number(data.welcome_lei), min: Number(data.welcome_min) }));
+  }, []);
+  return w;
+}
+
 /** Signed-out pitch: the three levels with their real numbers from the admin settings. */
 function JoinCard() {
   const { cfg } = useRewards(null);
+  const w = useWelcomeCfg();
   return (
     <div className="join-card rw-join">
+      {w?.on && w.lei > 0 && <div className="acc-welcome"><span className="wl-gift">🎁</span><div><b>{w.lei} lei cadou la cont nou</b>
+        <small>Îi primești pe loc și îi folosești la prima comandă de minim {w.min} lei.</small></div></div>}
       <span className="rw-kicker">{cfg.program_name.toUpperCase()}</span>
       <h1>Fiecare comandă îți dă înapoi.</h1>
       <p>1 leu = 1 punct. Cu cât comanzi mai des, cu atât punctele valorează mai mult. Fără card, fără parolă.</p>

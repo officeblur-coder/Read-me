@@ -220,6 +220,8 @@ alter table public.orders add column if not exists packaging numeric(10,2) not n
 create index if not exists orders_status_idx on public.orders(status, created_at desc);
 -- precomandă: ora la care clientul vrea comanda (null = cât mai curând)
 alter table public.orders add column if not exists scheduled_for timestamptz;
+-- bonusul de bun venit folosit la comandă (lei)
+alter table public.orders add column if not exists welcome_value numeric(8,2) not null default 0;
 create index if not exists orders_customer_idx on public.orders(customer_id, created_at desc);
 
 create table if not exists public.order_messages (
@@ -245,14 +247,24 @@ language sql immutable as $$
 $$;
 
 -- Clientul se creează automat la prima logare (email).
+-- Bonus de bun venit: la crearea contului clientul primește welcome_lei, folosiți dintr-o dată la prima comandă
+-- cu produse de minim welcome_min lei. Nu sunt puncte Lyra Rewards: nu urcă nivelul și nu expiră odată cu punctele.
+alter table public.settings add column if not exists welcome_on boolean not null default true;
+alter table public.settings add column if not exists welcome_lei numeric(8,2) not null default 50 check (welcome_lei >= 0);
+alter table public.settings add column if not exists welcome_min numeric(8,2) not null default 150 check (welcome_min >= 0);
+alter table public.customers add column if not exists welcome_credit numeric(8,2) not null default 0;
+alter table public.customers add column if not exists welcome_used_at timestamptz;
+alter table public.customers add column if not exists welcome_order_id uuid;
+
 create or replace function public.handle_new_user() returns trigger
 language plpgsql security definer set search_path = public as $$
 begin
   -- acordul pentru oferte bifat la înregistrare vine în metadatele contului
-  insert into public.customers(id, email, last_activity_at, marketing_ok, marketing_source)
+  insert into public.customers(id, email, last_activity_at, marketing_ok, marketing_source, welcome_credit)
   values (new.id, new.email, now(),
     coalesce((to_jsonb(new)->'raw_user_meta_data'->>'marketing_ok')::boolean, false),
-    case when (to_jsonb(new)->'raw_user_meta_data'->>'marketing_ok')::boolean then 'inregistrare' end)
+    case when (to_jsonb(new)->'raw_user_meta_data'->>'marketing_ok')::boolean then 'inregistrare' end,
+    coalesce((select welcome_lei from public.settings where id = 1 and welcome_on), 0))
   on conflict (id) do nothing;
   -- Lyra Rewards: preia punctele și progresul strânse fără cont (după email)
   perform public.rewards_attach_guest(new.id, new.email);
@@ -317,6 +329,7 @@ declare
   v_err    text;
   dpct     numeric := 0;
   old_unit numeric;
+  welc     numeric := 0;
 begin
   select * into s from public.settings where id = 1;
   select * into cfg from public.rewards_settings where id = 1;
@@ -448,20 +461,38 @@ begin
       pts_used := plan.points; pts_val := plan.value; alloc := plan.alloc;
     end if;
   end if;
-  rbase := greatest(sub - disc - pts_val, 0);   -- doar produsele plătite cu bani aduc puncte
+  -- bonus de bun venit: tot odată, o singură dată, doar la produse de minim welcome_min lei, fără cod de reducere
+  if coalesce((p->>'use_welcome')::boolean, false) then
+    if cust.id is null then raise exception 'Intră în cont ca să folosești bonusul de bun venit.' using errcode = 'P0001'; end if;
+    if coalesce(cust.welcome_credit, 0) <= 0 or cust.welcome_used_at is not null then
+      raise exception 'Bonusul de bun venit a fost deja folosit.' using errcode = 'P0001'; end if;
+    if disc > 0 then raise exception 'Bonusul de bun venit nu se cumulează cu un cod de reducere.' using errcode = 'P0001'; end if;
+    if sub < s.welcome_min then
+      raise exception 'Bonusul de % lei se folosește la o comandă de minim % lei (produse). Mai adaugă % lei.',
+        trim(to_char(cust.welcome_credit, 'FM999990.00')), trim(to_char(s.welcome_min, 'FM999990.00')), trim(to_char(s.welcome_min - sub, 'FM999990.00')) using errcode = 'P0001'; end if;
+    -- un bonus pe număr de telefon, ca să nu se ia de mai multe ori cu emailuri diferite
+    if exists (select 1 from public.orders x where x.welcome_value > 0 and x.status not in ('rejected', 'refunded')
+               and right(regexp_replace(x.phone, '\D', '', 'g'), 9) = right(regexp_replace(p->>'phone', '\D', '', 'g'), 9)) then
+      raise exception 'Bonusul de bun venit a fost deja folosit pentru acest număr de telefon.' using errcode = 'P0001'; end if;
+    welc := least(cust.welcome_credit, greatest(sub - disc - pts_val, 0));
+  end if;
+  rbase := greatest(sub - disc - pts_val - welc, 0);   -- doar produsele plătite cu bani aduc puncte (bonusul nu)
   earn  := case when coalesce(cfg.enabled, false) then floor(rbase)::int else 0 end;
 
-  total := greatest(sub - disc - pts_val + fee, 0) + pack;
+  total := greatest(sub - disc - pts_val - welc + fee, 0) + pack;
 
   insert into public.orders(customer_id, name, phone, email, address, mode, payment, note, items, allergies,
     subtotal, discount, discount_label, points_used, points_value, delivery_fee, packaging, total, points_earned, source,
-    reward_tier, reward_base, voucher_id, lat, lng, zone_name, scheduled_for)
+    reward_tier, reward_base, voucher_id, lat, lng, zone_name, scheduled_for, welcome_value)
   values (cust.id, left(trim(p->>'name'),80), left(trim(p->>'phone'),30), coalesce(nullif(trim(p->>'email'),''), cust.email),
     case when v_mode = 'livrare' then left(trim(p->>'address'),200) else 'Ridicare din restaurant' end,
     v_mode, coalesce(p->>'payment','card'), left(p->>'note',300), lines, allg,
     sub, disc, disc_lbl, pts_used, pts_val, fee, pack, total, earn, left(p->>'source',30),
-    rtier, rbase, vo_id, case when v_mode = 'livrare' then v_lat end, case when v_mode = 'livrare' then v_lng end, zone_nm, v_sched)
+    rtier, rbase, vo_id, case when v_mode = 'livrare' then v_lat end, case when v_mode = 'livrare' then v_lng end, zone_nm, v_sched, welc)
   returning * into o;
+  if welc > 0 then
+    update public.customers set welcome_used_at = now(), welcome_order_id = o.id where id = cust.id;
+  end if;
 
   -- consumă loturile planificate (rândul clientului e blocat, deci nu se pot folosi de două ori)
   for a in select * from jsonb_array_elements(alloc) loop
@@ -496,7 +527,7 @@ language sql stable security definer set search_path = public as $$
   select to_jsonb(x) from (
     select o.number, o.status, o.mode, o.address, o.items, o.subtotal, o.discount, o.discount_label,
            o.points_value, o.delivery_fee, o.packaging, o.total, o.points_earned, o.eta_min, o.created_at,
-           o.accepted_at, o.road_at, o.done_at, o.reject_reason, o.rating, o.scheduled_for,
+           o.accepted_at, o.road_at, o.done_at, o.reject_reason, o.rating, o.scheduled_for, o.welcome_value,
            coalesce((select jsonb_agg(jsonb_build_object('body', m.body, 'at', m.created_at) order by m.created_at)
                      from public.order_messages m where m.order_id = o.id), '[]') as messages
     from public.orders o where o.token = p_token
@@ -519,6 +550,10 @@ begin
   if new.status = old.status then return new; end if;
   if old.status in ('rejected','refunded') then
     raise exception 'Comanda #% este închisă (%).', old.number, old.status using errcode = 'P0001';
+  end if;
+  -- comanda anulată: bonusul de bun venit revine clientului
+  if new.status in ('rejected', 'refunded') and coalesce(old.welcome_value, 0) > 0 then
+    update public.customers set welcome_used_at = null, welcome_order_id = null where welcome_order_id = old.id;
   end if;
   if new.status = 'rejected' or (new.status = 'refunded' and old.status <> 'done') then
     perform public.rewards_release(old);

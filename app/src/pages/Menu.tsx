@@ -43,7 +43,8 @@ const isDesktop = () => window.matchMedia("(min-width: 1100px)").matches;
 
 export default function Menu({ source }: { source?: string }) {
   const nav = useNavigate();
-  const { customer, ready: authReady } = useCustomer();
+  const { customer, ready: authReady, refresh: refreshCustomer } = useCustomer();
+  const [useWelcome, setUseWelcome] = useState(true);
   const rw = useRewards(customer?.id);
   const { zones } = useZones();
   const [geo, setGeo] = useState<LatLng | null>(() => { try { return JSON.parse(localStorage.getItem("lyra-geo2") || "null")?.p ?? null; } catch { return null; } });
@@ -226,8 +227,14 @@ export default function Menu({ source }: { source?: string }) {
   // delivery packaging, per piece (dish + each extra); no discounts or points on it
   const pk = (it?: Item) => (it ? Number(it.packaging ?? 2) : 0);
   const pack = validCart.reduce((s, l) => s + (pk(byId[l.id]) + l.extras.reduce((t, k) => t + pk(byId[k]), 0)) * l.qty, 0);
-  const total = Math.max(0, sub - disc - ptsVal + fee) + pack;
-  const earn = rwOn ? Math.floor(Math.max(0, sub - disc - ptsVal)) : 0;
+  // bonus de bun venit: tot odată, la produse de minim welcome_min lei, fără cod de reducere (ca în place_order)
+  const wMin = Number(settings?.welcome_min ?? 150);
+  const wCredit = Number(customer?.welcome_credit || 0);
+  const wHas = !!customer && wCredit > 0 && !customer.welcome_used_at;
+  const wOk = wHas && sub >= wMin && disc === 0;
+  const welc = wOk && useWelcome ? Math.min(wCredit, Math.max(0, sub - disc - ptsVal)) : 0;
+  const total = Math.max(0, sub - disc - ptsVal - welc + fee) + pack;
+  const earn = rwOn ? Math.floor(Math.max(0, sub - disc - ptsVal - welc)) : 0;
   const count = validCart.reduce((s, l) => s + l.qty, 0);
   const qtyOf = (id: string) => validCart.filter(l => l.id === id && !l.promo).reduce((s, l) => s + l.qty, 0);
 
@@ -269,12 +276,12 @@ export default function Menu({ source }: { source?: string }) {
 
   // Lyra Rewards invitation: once every 14 days, only to visitors without an account, after they had a look
   useEffect(() => {
-    if (!authReady || customer || !rw.cfg.enabled) return;
+    if (!authReady || customer || !(rw.cfg.enabled || settings?.welcome_on)) return;
     let last = 0; try { last = Number(localStorage.getItem("lyra-join-pop") || 0); } catch { /* ignore */ }
     if (Date.now() - last < 14 * 864e5) return;
-    const t = setTimeout(() => setJoinPop(true), 9000);
+    const t = setTimeout(() => setJoinPop(true), 6000);
     return () => clearTimeout(t);
-  }, [authReady, customer?.id, rw.cfg.enabled]);
+  }, [authReady, customer?.id, rw.cfg.enabled, settings?.welcome_on]);
   function closeJoin() { setJoinPop(false); try { localStorage.setItem("lyra-join-pop", String(Date.now())); } catch { /* ignore */ } }
 
   // address → coordinates in the background (OpenStreetMap); the customer only types the address, no map
@@ -320,6 +327,7 @@ export default function Menu({ source }: { source?: string }) {
         address: form.city && !form.address.toLowerCase().includes(form.city.toLowerCase().slice(0, 5)) ? `${form.address.trim()}, ${form.city.trim()}` : form.address,
         lat: mode === "livrare" && geo ? geo.lat : null, lng: mode === "livrare" && geo ? geo.lng : null,
         scheduled_for: whenEff === "later" && slot ? slot.iso : null,
+        use_welcome: welc > 0,
         note: orderNote, code: code?.code || "", redeem_points: plan.points,
         voucher_id: voucherPick ? voucher!.id : null, voucher_item: voucherPick || null,
         source: source || new URLSearchParams(rloc.search).get("s") || "site",
@@ -333,7 +341,7 @@ export default function Menu({ source }: { source?: string }) {
     if (customer && form.address && !customer.addresses?.includes(form.address)) {
       supabase.from("customers").update({ addresses: [form.address, ...(customer.addresses || [])].slice(0, 5), phone: customer.phone || form.phone, name: customer.name || form.name }).eq("id", customer.id).then(() => {});
     }
-    setCart([]); setCartOpen(false); setStep("cart"); setOrderNote(""); setCode(null); setCodeInput(""); setCodeMsg(""); setRedeemWant(0); setVoucherItem(""); rw.reload();
+    setCart([]); setCartOpen(false); setStep("cart"); setOrderNote(""); setCode(null); setCodeInput(""); setCodeMsg(""); setRedeemWant(0); setVoucherItem(""); rw.reload(); if (welc > 0) refreshCustomer();
     nav("/comanda/" + res.token, { state: { fresh: true } });
   }
 
@@ -479,6 +487,15 @@ export default function Menu({ source }: { source?: string }) {
           {!customer && <label className="fl wide"><span>Email <i>opțional · strângi puncte Lyra Rewards pe email</i></span><input value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} inputMode="email" autoComplete="email" placeholder="nume@email.com" /></label>}
           <label className="fl wide"><span>Mențiuni <i>opțional</i></span><textarea rows={2} value={orderNote} onChange={e => setOrderNote(e.target.value)} placeholder="Interfon, etaj, fără tacâmuri…" /></label>
         </div>
+        {wHas && <div className={`wl-box ${wOk ? "" : "dis"}`}>
+          <div className="wl-gift">🎁</div>
+          <div className="wl-txt"><b>Bonus de bun venit · {lei(wCredit)}</b>
+            <small>{disc > 0 ? `Nu se cumulează cu codul ${code?.code}. Scoate codul ca să folosești bonusul.`
+              : sub < wMin ? `Se folosește tot odată, la o comandă de minim ${lei(wMin)}. Mai adaugă ${lei(wMin - sub)} în coș.`
+              : useWelcome ? `Se scad ${lei(welc)} din comanda asta.` : "Îl poți folosi la comanda asta."}</small>
+            {sub < wMin && disc === 0 && <div className="prog"><i style={{ width: `${Math.min(100, (sub / wMin) * 100)}%` }} /></div>}</div>
+          {wOk && <button className="switch" role="switch" aria-checked={useWelcome} aria-label="Folosește bonusul de bun venit" onClick={() => setUseWelcome(!useWelcome)} />}
+        </div>}
         {rwOn && customer && <div className={`rw-box ${maxPlan.points ? "" : "dis"}`}>
           <div className="rw-head"><div><b>Folosește puncte</b>
             <small>{maxPlan.points ? `Poți folosi până la ${maxPlan.points} puncte (${lei(maxPlan.value)}, maxim ${rw.cfg.max_redeem_pct}% din produse)` : (rw.me?.points ? `Poți folosi punctele când produsele depășesc ${lei(Math.ceil(100 / rw.cfg.max_redeem_pct))}.` : "Punctele câștigate azi le folosești de la comanda următoare.")}</small></div>
@@ -510,6 +527,7 @@ export default function Menu({ source }: { source?: string }) {
           <div><span>Produse ({count})</span><span className="num">{lei(sub)}</span></div>
           {disc > 0 && <div className="neg"><span>{code?.label}</span><span className="num">−{lei(disc)}</span></div>}
           {ptsVal > 0 && <div className="neg"><span>Puncte Lyra Rewards ({plan.points})</span><span className="num">−{lei(ptsVal)}</span></div>}
+          {welc > 0 && <div className="neg"><span>Bonus de bun venit</span><span className="num">−{lei(welc)}</span></div>}
           {voucherPick && <div className="neg"><span>Desert cadou: {nm(byId[voucherPick])}</span><span className="num">gratuit</span></div>}
           {pack > 0 && <div><span>Ambalaj</span><span className="num">{lei(pack)}</span></div>}
           {mode === "livrare" && <div><span>Livrare{zone ? ` · ${zone.name}` : ""}</span><span className="num">{!feeKnown ? "după adresă" : fee ? lei(fee) : "gratuit"}</span></div>}
@@ -725,14 +743,22 @@ export default function Menu({ source }: { source?: string }) {
       {joinPop && !popup && !customer && !cartOpen && !sheet && <div className="pop" role="dialog" aria-modal="true" aria-label="Lyra Rewards" onClick={e => e.target === e.currentTarget && closeJoin()}>
         <div className="pop-card join-pop">
           <button className="x-btn" onClick={closeJoin} aria-label="Închide">×</button>
-          <div className="jp-top"><span className="rw-kicker">LYRA REWARDS</span><h2>Fă-ți cont și primești înapoi la fiecare comandă</h2></div>
-          <ul className="jp-perks">
-            <li><b>{rw.cfg.rates[0]}% înapoi în puncte</b><span>de la prima comandă, folosite la următoarele</span></li>
-            <li><b>Până la {rw.cfg.rates[2]}% la nivelul {rw.cfg.tier_names[2]}</b><span>cu cât comanzi mai des, cu atât valorează mai mult</span></li>
-            <li><b>Desert cadou 🍰</b><span>la fiecare nivel nou: {rw.cfg.tier_names[1]} și {rw.cfg.tier_names[2]}</span></li>
-            <li><b>Comandă din nou cu un click</b><span>adrese salvate, istoric, fără parolă</span></li>
-          </ul>
-          <Link to="/cont" className="cta" onClick={closeJoin}>Creează cont gratuit</Link>
+          {settings?.welcome_on && Number(settings.welcome_lei) > 0
+            ? <div className="jp-top jp-gift"><span className="jp-badge">🎁 CADOU LA CONT NOU</span>
+                <h2><em className="num">{Number(settings.welcome_lei)} lei</em> reducere la prima comandă</h2>
+                <p>Îți faci cont gratuit și primești pe loc {Number(settings.welcome_lei)} de lei, pe care îi folosești la prima comandă de minim {Number(settings.welcome_min)} de lei.</p></div>
+            : <div className="jp-top"><span className="rw-kicker">LYRA REWARDS</span><h2>Fă-ți cont și primești înapoi la fiecare comandă</h2></div>}
+          {settings?.welcome_on && Number(settings.welcome_lei) > 0
+            ? rw.cfg.enabled && <ul className="jp-perks">
+                <li><b>Plus Lyra Rewards: {rw.cfg.rates[0]}–{rw.cfg.rates[2]}% înapoi în puncte</b><span>la fiecare comandă, și desert cadou la fiecare nivel nou 🍰</span></li>
+              </ul>
+            : <ul className="jp-perks">
+                <li><b>{rw.cfg.rates[0]}% înapoi în puncte</b><span>de la prima comandă, folosite la următoarele</span></li>
+                <li><b>Până la {rw.cfg.rates[2]}% la nivelul {rw.cfg.tier_names[2]}</b><span>cu cât comanzi mai des, cu atât valorează mai mult</span></li>
+                <li><b>Desert cadou 🍰</b><span>la fiecare nivel nou: {rw.cfg.tier_names[1]} și {rw.cfg.tier_names[2]}</span></li>
+                <li><b>Comandă din nou cu un click</b><span>adrese salvate, istoric, fără parolă</span></li>
+              </ul>}
+          <Link to="/cont" className="cta" onClick={closeJoin}>{settings?.welcome_on && Number(settings.welcome_lei) > 0 ? `Creează cont și ia ${Number(settings.welcome_lei)} lei` : "Creează cont gratuit"}</Link>
           <button className="later" onClick={closeJoin}>Mai târziu</button>
         </div>
       </div>}

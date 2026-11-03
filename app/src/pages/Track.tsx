@@ -100,6 +100,7 @@ export default function Track() {
           <div><span>Produse</span><span className="num">{lei(o.subtotal)}</span></div>
           {o.discount > 0 && <div className="neg"><span>{o.discount_label}</span><span className="num">−{lei(o.discount)}</span></div>}
           {o.points_value > 0 && <div className="neg"><span>Puncte Lyra Rewards</span><span className="num">−{lei(o.points_value)}</span></div>}
+          {Number(o.welcome_value) > 0 && <div className="neg"><span>Bonus de bun venit</span><span className="num">−{lei(Number(o.welcome_value))}</span></div>}
           {Number(o.packaging) > 0 && <div><span>Ambalaj</span><span className="num">{lei(Number(o.packaging))}</span></div>}
           {!pick && <div><span>Livrare</span><span className="num">{o.delivery_fee ? lei(o.delivery_fee) : "gratuit"}</span></div>}
           <div className="tot"><span>Total</span><span className="num">{lei(o.total)}</span></div>

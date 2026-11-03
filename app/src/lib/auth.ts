@@ -7,6 +7,7 @@ export type Customer = {
   addresses: string[]; allergies: string[]; points: number; orders_count: number; spent: number;
   marketing_ok: boolean; created_at: string;
   tier: number; reward_spent: number; last_activity_at: string | null;   // Lyra Rewards
+  welcome_credit?: number; welcome_used_at?: string | null;               // bonus de bun venit
 };
 
 /** Current login session + the matching Lyra Club profile (null when signed out). */

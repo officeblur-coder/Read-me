@@ -207,7 +207,7 @@ function ensureDemoCustomer(email: string) {
   if (db.customers.some(c => c.id === DEMO_USER)) return;
   // a returning Silver member, so the Lyra Club screens have something to show
   db.customers.push({ id: DEMO_USER, email, name: "", phone: "", addresses: [], allergies: [], points: 340, lifetime: 620, stars: 4,
-    free_gift: false, orders_count: 4, spent: 620, marketing_ok: false, created_at: iso(Date.now() - 40 * 864e5) });
+    free_gift: false, orders_count: 4, spent: 620, marketing_ok: false, created_at: iso(Date.now() - 40 * 864e5), welcome_credit: 50, welcome_used_at: null });
   const past = seedOrders().filter(o => o.status === "done");
   past.forEach((o, i) => { o.customer_id = DEMO_USER; o.number = 980 + i; o.created_at = iso(Date.now() - (6 + i * 9) * 864e5); o.credited = true; });
   db.orders.push(...past); save();
@@ -264,7 +264,13 @@ function placeOrder(p: Row) {
   const fee = p.mode === "livrare" && sub < s.free_delivery_over && !(cust && cust.lifetime >= 1500) ? s.delivery_fee : 0;
   let ptsVal = 0;
   if (cust && p.use_points) { ptsVal = Math.min(Math.floor(cust.points / 100) * 10, Math.floor((sub - disc) * 0.5 / 10) * 10); if (ptsVal > 0) cust.points -= ptsVal * 10; }
-  const total = Math.max(sub - disc - ptsVal + fee, 0) + pack;
+  let welc = 0;
+  if (p.use_welcome && cust && cust.welcome_credit > 0 && !cust.welcome_used_at) {
+    if (disc > 0) throw new Error("Bonusul de bun venit nu se cumulează cu un cod de reducere.");
+    if (sub < (s.welcome_min ?? 150)) throw new Error(`Bonusul se folosește la o comandă de minim ${s.welcome_min ?? 150} lei.`);
+    welc = Math.min(cust.welcome_credit, Math.max(0, sub - disc - ptsVal)); cust.welcome_used_at = iso();
+  }
+  const total = Math.max(sub - disc - ptsVal - welc + fee, 0) + pack;
   const mult = !cust ? 1 : cust.lifetime >= 1500 ? 1.1 : cust.lifetime >= 500 ? 1.05 : 1;
   const number = Math.max(1036, ...db.orders.map(o => o.number)) + 1;
   const o: Row = {
@@ -272,7 +278,7 @@ function placeOrder(p: Row) {
     address: p.mode === "livrare" ? p.address.trim() : "Ridicare din restaurant", mode: p.mode, payment: p.payment || "card", note: p.note || null,
     items: lines, allergies: cust?.allergies || [], subtotal: sub, discount: disc, discount_label: label, points_used: ptsVal * 10, points_value: ptsVal,
     delivery_fee: fee, packaging: pack, total, points_earned: Math.floor((total - pack) * mult), source: p.source, status: "new", reject_reason: null, eta_min: null,
-    created_at: iso(), accepted_at: null, road_at: null, done_at: null, rating: null, credited: false, courier_id: null, courier_name: null, demo_auto: true, scheduled_for: p.scheduled_for || null,
+    created_at: iso(), accepted_at: null, road_at: null, done_at: null, rating: null, credited: false, courier_id: null, courier_name: null, demo_auto: true, scheduled_for: p.scheduled_for || null, welcome_value: welc,
   };
   db.orders.push(o); save(); emit("orders", "INSERT", o);
   return { id: o.id, number, token: o.token, total };

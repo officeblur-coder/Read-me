@@ -25,6 +25,9 @@
   "preorder_on": true,
   "preorder_from": "12:00",
   "preorder_days": 2,
-  "preorder_lead_min": 45
+  "preorder_lead_min": 45,
+  "welcome_on": true,
+  "welcome_lei": 50,
+  "welcome_min": 150
  }
 ]

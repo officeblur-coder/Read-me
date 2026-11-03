@@ -423,6 +423,7 @@ function Ticket({ o }: { o: Order }) {
       <div className="tot"><span>TOTAL · {o.payment === "cash" ? "numerar" : o.payment === "online" ? "plătit online" : "card la livrare"}</span><b>{lei(Number(o.total))}</b></div>
       {Number(o.discount) > 0 && <small>{o.discount_label}: −{lei(Number(o.discount))}</small>}
       {Number(o.points_value) > 0 && <small>Puncte Lyra Rewards ({o.points_used}): −{lei(Number(o.points_value))}</small>}
+      {Number(o.welcome_value) > 0 && <small>Bonus de bun venit (cont nou): −{lei(Number(o.welcome_value))}</small>}
     </div>
   );
 }
