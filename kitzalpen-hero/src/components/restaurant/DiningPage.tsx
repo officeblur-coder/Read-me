@@ -40,14 +40,13 @@ export function DiningPage({ lang }: { lang: Lang }) {
     const q = gsap.utils.selector(root);
     q('.js-d-step').forEach((el, i) => ScrollTrigger.create({ trigger: el, start: 'top 55%', end: 'bottom 55%', onToggle: (s) => s.isActive && setStep(i) }));
     if (reduced) return;
-    const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
-      .fromTo(q('.js-d-light'), { autoAlpha: 0, xPercent: -20 }, { autoAlpha: 1, xPercent: 0, duration: 2.2, ease: 'power2.out' }, 0)
-      .fromTo(q('.js-d-line'), { yPercent: 115 }, { yPercent: 0, duration: 1.1, stagger: 0.1, ease: 'power4.out' }, 0.2)
-      .fromTo(q('.js-d-in'), { autoAlpha: 0, y: 18 }, { autoAlpha: 1, y: 0, duration: 0.8, stagger: 0.08 }, 0.6);
-    // plates are dealt from a stack into a fan
-    const cards = q('.js-d-card');
-    tl.fromTo(cards, { y: 160, rotate: 0, autoAlpha: 0, scale: 0.9 }, { y: 0, autoAlpha: 1, scale: 1, duration: 1, stagger: 0.12, ease: 'power3.out' }, 0.35)
-      .to(cards, { rotate: (i) => [-9, 0, 9][i], x: (i) => [-1, 0, 1][i] * (window.innerWidth < 768 ? 70 : 150), duration: 1.1, ease: 'expo.out' }, 1.15);
+    gsap.timeline({ defaults: { ease: 'power3.out' } })
+      .fromTo(q('.js-d-hero'), { filter: 'brightness(.15) saturate(.5)', scale: 1.12 }, { filter: 'brightness(1) saturate(1)', scale: 1, duration: 2.6, ease: 'power2.inOut', clearProps: 'filter' }, 0)
+      .fromTo(q('.js-d-glow'), { opacity: 0 }, { opacity: 1, duration: 1.2 }, 0.8)
+      .fromTo(q('.js-d-light'), { autoAlpha: 0 }, { autoAlpha: 1, duration: 2 }, 1)
+      .fromTo(q('.js-d-line'), { yPercent: 115 }, { yPercent: 0, duration: 1.1, stagger: 0.1, ease: 'power4.out' }, 1.1)
+      .fromTo(q('.js-d-in'), { autoAlpha: 0, y: 18 }, { autoAlpha: 1, y: 0, duration: 0.8, stagger: 0.08 }, 1.5);
+    gsap.to(q('.js-d-par-hero'), { yPercent: 10, ease: 'none', scrollTrigger: { trigger: q('#top')[0], start: 'top top', end: 'bottom top', scrub: 0.6 } });
     q('.js-d-rev').forEach((el) => gsap.fromTo(el, { autoAlpha: 0, y: 34 }, { autoAlpha: 1, y: 0, duration: 1, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 90%', once: true } }));
     q('.js-d-mask').forEach((el) => {
       gsap.fromTo(el, { clipPath: 'inset(100% 0% 0% 0% round 20px)' }, { clipPath: 'inset(0% 0% 0% 0% round 20px)', duration: 1.3, ease: 'expo.out', clearProps: 'clipPath', scrollTrigger: { trigger: el, start: 'top 88%', once: true } });
@@ -56,52 +55,47 @@ export function DiningPage({ lang }: { lang: Lang }) {
     if (fine) q('.js-d-par').forEach((el, i) => gsap.fromTo(el, { y: [40, -30, 70, -10, 50][i % 5] }, { y: [-40, 30, -70, 10, -50][i % 5], ease: 'none', scrollTrigger: { trigger: q('.js-d-kitchen')[0], start: 'top bottom', end: 'bottom top', scrub: 0.6 } }));
   }, { scope: root, dependencies: [reduced, fine, lang] });
 
-  // pointer: the fanned plates lean towards the cursor (desktop)
-  const onMove = (e: React.PointerEvent) => {
-    if (!fine || reduced) return;
-    const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    const dx = (e.clientX - r.left) / r.width - 0.5, dy = (e.clientY - r.top) / r.height - 0.5;
-    gsap.to(root.current!.querySelectorAll('.js-d-fan'), { rotateY: dx * 10, rotateX: -dy * 8, duration: 0.8, ease: 'power3.out' });
-  };
-
   const SKY = ['#f3e6cf', '#3a2414', '#140d09'];
-  const hero = [DISHES[1], DISHES[0], DISHES[4]];
   const steps = [
-    { main: dimg('breakfast-team'), inset: dimg('breakfast-cold'), alt: t.moments[0].title },
-    { main: rimg('hall'), inset: dimg('dish-steak'), alt: t.moments[1].title },
-    { main: rimg('bar'), inset: dimg('bartender'), alt: t.moments[2].title },
+    { main: `${import.meta.env.BASE_URL}images/amenities/breakfast.webp`, inset: dimg('breakfast-cold'), alt: t.moments[0].title },
+    { main: dimg('hall-clean'), inset: dimg('dish-steak'), alt: t.moments[1].title },
+    { main: rimg('bar'), inset: rimg('lounge', 800), alt: t.moments[2].title },
   ];
 
   return (
     <div ref={root} className="bg-[#1a120c] text-cream">
-      {/* hero */}
-      <section id="top" aria-labelledby="d-title" className="relative isolate overflow-hidden" onPointerMove={onMove}>
-        <div aria-hidden className="absolute inset-0 -z-10 bg-[radial-gradient(80%_70%_at_75%_40%,#3b2414,#1a120c_75%)]" />
-        <div aria-hidden className="js-d-light d-light absolute inset-0 -z-10" />
-        <div className="mx-auto grid max-w-[1440px] items-center gap-10 px-5 pb-20 pt-[136px] sm:px-6 md:px-10 md:pb-28 md:pt-[180px] lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:px-14 lg:pt-[220px]">
+      {/* hero: the dining room, lights coming on */}
+      <section id="top" aria-labelledby="d-title" className="relative isolate flex min-h-[100svh] items-end overflow-hidden">
+        <div className="absolute inset-0 -z-10">
+          <div className="js-d-par-hero absolute -inset-y-[5%] inset-x-0">
+            <img src={dimg('hall-clean')} alt={t.heroAlt} className="js-d-hero h-full w-full object-cover object-[45%_55%]" />
+          </div>
+          <div aria-hidden className="js-d-glow absolute inset-0 mix-blend-screen" style={{ background: 'radial-gradient(45% 35% at 32% 8%, rgba(255,190,110,.38), transparent 70%), radial-gradient(30% 25% at 74% 14%, rgba(255,190,110,.28), transparent 70%)' }} />
+          <div aria-hidden className="js-d-light d-light absolute inset-0" />
+          <div aria-hidden className="absolute inset-0 bg-[linear-gradient(0deg,rgba(26,18,12,.95)_0%,rgba(26,18,12,.7)_30%,rgba(26,18,12,.15)_60%,transparent_75%)] md:bg-[linear-gradient(20deg,rgba(26,18,12,.92)_0%,rgba(26,18,12,.6)_35%,transparent_65%)]" />
+          <div aria-hidden className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-black/50 to-transparent" />
+        </div>
+        <div className="mx-auto grid w-full max-w-[1440px] items-end gap-8 px-5 pb-[calc(100px+env(safe-area-inset-bottom,0px))] pt-40 sm:px-6 md:px-10 md:pb-16 lg:grid-cols-[minmax(0,1fr)_auto] lg:px-14">
           <div className="min-w-0">
             <p className="js-d-in flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[.32em] text-gold-light md:text-[12.5px]"><span aria-hidden className="h-px w-8 bg-gold-light" />{t.eyebrow}</p>
-            <h1 id="d-title" className="mt-5 font-display font-normal leading-[.96] tracking-[-0.02em]" style={{ fontSize: 'clamp(46px, 7vw, 116px)' }}>
+            <h1 id="d-title" className="mt-5 font-display font-normal leading-[.96] tracking-[-0.02em] [text-shadow:0_2px_30px_rgba(0,0,0,.35)]" style={{ fontSize: 'clamp(46px, 7.4vw, 124px)' }}>
               {t.title.map((l, i) => <span key={i} className="block overflow-hidden pb-[0.07em]"><span className={`js-d-line block ${i === 2 ? 'italic text-gold-light' : ''}`}>{l}</span></span>)}
             </h1>
-            <p className="js-d-in mt-6 max-w-[500px] text-[16px] leading-relaxed text-cream/78 md:text-[18px]">{t.sub}</p>
+            <p className="js-d-in mt-6 max-w-[520px] text-[16px] leading-relaxed text-cream/85 md:text-[18px]">{t.sub}</p>
             <div className="js-d-in mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
               <a href={MENU_PDF} target="_blank" rel="noopener noreferrer" className="pf-primary inline-flex min-h-[56px] items-center justify-center gap-3 rounded-full px-8 text-[15.5px] font-semibold"><Icon d={DOC} size={18} w={1.6} />{t.menu}</a>
-              <span className="inline-flex min-h-[56px] items-center justify-center gap-2.5 rounded-full border border-cream/25 px-6 text-[14px] font-semibold text-cream/90">
+              <span className="inline-flex min-h-[56px] items-center justify-center gap-2.5 rounded-full border border-cream/30 bg-black/20 px-6 text-[14px] font-semibold text-cream/90 backdrop-blur-sm">
                 <span className={`h-2 w-2 rounded-full ${st.open ? 'bg-[#7fd18b] shadow-[0_0_10px_#7fd18b]' : st.mon ? 'bg-[#e07a5f]' : 'bg-gold-light'}`} />{st.label}
               </span>
             </div>
           </div>
-          <div className="relative min-w-0 [perspective:1200px]">
-            <div className="js-d-fan relative mx-auto h-[400px] max-w-[560px] [transform-style:preserve-3d] md:h-[560px]">
-              {hero.map((d, i) => (
-                <figure key={d.id} className={`js-d-card d-card absolute left-1/2 top-1/2 m-0 w-[210px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[18px] md:w-[300px] ${i === 1 ? 'z-[2]' : 'z-[1]'}`}>
-                  <img src={dimg(d.id)} alt={d.note[lang]} className="aspect-[1000/1414] w-full object-cover" />
-                  <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-4 pb-3 pt-10 text-[12px] font-semibold uppercase tracking-[.2em] text-white/90">{d.title[lang]}</figcaption>
-                </figure>
-              ))}
-            </div>
-          </div>
+          {/* hours at a glance */}
+          <dl className="js-d-in hidden w-[280px] border-t border-cream/30 lg:block">
+            {t.hours.map(([k, v]) => (
+              <div key={k} className="flex items-baseline justify-between border-b border-cream/20 py-4"><dt className="text-[11.5px] font-semibold uppercase tracking-[.22em] text-cream/75">{k}</dt><dd className="lnum font-display text-[26px] leading-none">{v}</dd></div>
+            ))}
+            <p className="pt-3 text-[12.5px] text-cream/65">{t.days} · {t.closed}</p>
+          </dl>
         </div>
       </section>
 
@@ -160,11 +154,11 @@ export function DiningPage({ lang }: { lang: Lang }) {
           <p className="js-d-rev text-[11.5px] font-semibold uppercase tracking-[.34em] text-goldink">{t.roomsEyebrow}</p>
           <h2 id="d-rooms" className="js-d-rev mt-3 font-display font-normal leading-[1.02] tracking-[-0.015em]" style={{ fontSize: 'clamp(36px, 4.6vw, 70px)' }}>{t.roomsTitle}</h2>
           <div className="mt-10 grid gap-4 md:mt-14 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] md:grid-rows-2 md:gap-5">
-            {['hall', 'corner', 'lounge'].map((id, i) => {
+            {['hall', 'corner', 'bar'].map((id, i) => {
               const p = REST_PHOTOS.find((x) => x.id === id)!;
               return (
                 <figure key={id} className={`js-d-mask relative m-0 overflow-hidden rounded-[22px] ${i === 0 ? 'aspect-[4/3] md:row-span-2 md:aspect-auto md:min-h-[600px]' : 'aspect-[4/3] md:aspect-auto'}`}>
-                  <img src={rimg(id, i === 0 ? 1600 : 800)} alt={p.alt[lang]} loading="lazy" className="h-full w-full object-cover" />
+                  <img src={id === 'hall' ? dimg('hall-clean') : rimg(id, 800)} alt={p.alt[lang]} loading="lazy" className="h-full w-full object-cover" />
                   <figcaption className="absolute bottom-3 left-4 rounded-full bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-[.16em]">{p.label[lang]}</figcaption>
                 </figure>
               );

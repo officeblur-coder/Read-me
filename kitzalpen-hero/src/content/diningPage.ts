@@ -26,6 +26,7 @@ export const DINING = {
   de: {
     eyebrow: 'Restaurant & Bar · Hollersbach',
     title: ['Am Tisch.', 'Mitten in', 'den Bergen.'],
+    heroAlt: 'Die Gaststube mit karierten Tischdecken, Holzstühlen, türkisen Sitzbänken und Korblampen',
     sub: 'Vom reichhaltigen Frühstücksbuffet bis zum Abendessen in der warmen Gaststube – und danach auf ein Glas an die Bar.',
     menu: 'Speisekarte (PDF)',
     today: 'Heute',
@@ -50,6 +51,7 @@ export const DINING = {
   en: {
     eyebrow: 'Restaurant & bar · Hollersbach',
     title: ['At the table.', 'In the middle', 'of the mountains.'],
+    heroAlt: 'The dining room with checked tablecloths, wooden chairs, teal benches and wicker lamps',
     sub: 'From a generous breakfast buffet to dinner in the warm dining room – and a glass at the bar afterwards.',
     menu: 'Menu (PDF)',
     today: 'Today',
