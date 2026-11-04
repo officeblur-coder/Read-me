@@ -34,6 +34,21 @@ export function ActivitiesSection({ lang }: { lang: Lang }) {
   const copy = ACT_COPY[lang];
   const sc = copy[shown];
   const items = ACTIVITIES[shown];
+  const strip = useRef<HTMLUListElement>(null);
+  const [pos, setPos] = useState(0);
+  useEffect(() => {
+    const s = strip.current; if (!s) return;
+    s.scrollLeft = 0; setPos(0);
+    const on = () => {
+      const kids = Array.from(s.children) as HTMLElement[]; if (!kids.length) return;
+      const end = s.scrollLeft + s.clientWidth >= s.scrollWidth - 6;
+      let best = 0, d = Infinity;
+      kids.forEach((k, i) => { const dd = Math.abs(k.offsetLeft - s.offsetLeft - s.scrollLeft - 20); if (dd < d) { d = dd; best = i; } });
+      setPos(end ? kids.length - 1 : best);
+    };
+    s.addEventListener('scroll', on, { passive: true });
+    return () => s.removeEventListener('scroll', on);
+  }, [shown]);
 
   const q = (s: string) => (root.current ? Array.from(root.current.querySelectorAll<HTMLElement>(s)) : []);
   const isVisible = () => { const r = root.current?.getBoundingClientRect(); return !!r && r.top < window.innerHeight && r.bottom > 0; };
@@ -50,7 +65,7 @@ export function ActivitiesSection({ lang }: { lang: Lang }) {
   function hideAll() {
     gsap.set(q('.js-act-eyebrow, .js-act-sub, .js-act-cta'), { autoAlpha: 0, y: 14 });
     gsap.set(q('.js-act-line'), { yPercent: 110 });
-    gsap.set(q('.js-act-feature'), { clipPath: 'inset(100% 0% 0% 0% round 18px)' });
+    gsap.set(q('.js-act-feature'), { clipPath: 'inset(100% 0% 0% 0%)' });
     gsap.set(q('.js-act-card'), { autoAlpha: 0, y: 30 });
     gsap.set(q('.js-act-mask'), { clipPath: 'inset(0% 0% 100% 0%)' });
     gsap.set(q('.js-act-img'), { scale: 1.12 });
@@ -62,7 +77,7 @@ export function ActivitiesSection({ lang }: { lang: Lang }) {
     tl.to(q('.js-act-eyebrow'), { autoAlpha: 1, y: 0, duration: 0.6 }, 0)
       .to(q('.js-act-line'), { yPercent: 0, duration: 0.9, stagger: 0.12, ease: 'power4.out' }, 0.08)
       .to(q('.js-act-sub'), { autoAlpha: 1, y: 0, duration: 0.7 }, 0.35)
-      .to(q('.js-act-feature'), { clipPath: 'inset(0% 0% 0% 0% round 18px)', duration: 1.1, ease: 'power3.inOut' }, 0.2)
+      .to(q('.js-act-feature'), { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.1, ease: 'power3.inOut', clearProps: 'clipPath' }, 0.2)
       .to(q('.js-act-card'), { autoAlpha: 1, y: 0, duration: 0.8, stagger: 0.1 }, 0.4)
       .to(q('.js-act-mask'), { clipPath: 'inset(0% 0% 0% 0%)', duration: 0.9, stagger: 0.1, ease: 'power3.inOut' }, 0.45)
       .to(q('.js-act-img'), { scale: 1, duration: 1.3, stagger: 0.1 }, 0.45)
@@ -82,7 +97,7 @@ export function ActivitiesSection({ lang }: { lang: Lang }) {
     swapTl.current = gsap.timeline({ defaults: { ease: 'power2.in' } })
       .to(q('.js-act-line'), { yPercent: -110, duration: 0.4, stagger: 0.05 }, 0)
       .to(q('.js-act-sub, .js-act-cta, .js-act-eyebrow'), { autoAlpha: 0, y: -10, duration: 0.35 }, 0)
-      .to(q('.js-act-feature'), { clipPath: 'inset(0% 0% 100% 0% round 18px)', duration: 0.5, ease: 'power3.in' }, 0)
+      .to(q('.js-act-feature'), { clipPath: 'inset(0% 0% 100% 0%)', duration: 0.5, ease: 'power3.in' }, 0)
       .to(q('.js-act-card'), { autoAlpha: 0, y: -16, duration: 0.35, stagger: 0.04 }, 0.05)
       .add(() => setShown(season));
   }, [season]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -106,7 +121,24 @@ export function ActivitiesSection({ lang }: { lang: Lang }) {
       </svg>
 
       <div className="relative mx-auto max-w-[1360px] px-5 pb-16 pt-16 sm:px-6 md:px-10 md:pb-24 md:pt-24 lg:px-14 lg:pb-32 lg:pt-28">
-        <div className="grid gap-8 lg:grid-cols-12 lg:items-end lg:gap-14">
+        {/* mobile / tablet: full-bleed seasonal photo with the headline on it */}
+        <div className="js-act-feature relative -mx-5 -mt-16 overflow-hidden sm:-mx-6 md:-mx-10 md:-mt-24 lg:hidden">
+          <div className="relative aspect-[4/5] w-full sm:aspect-[16/11]">
+            <ActPic stem={sc.featureMobile} alt={sc.featureMobileAlt || sc.featureAlt} sizes="100vw" style={{ objectPosition: sc.mobileFocus }} />
+            <div aria-hidden className="absolute inset-0 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--k-deep)_35%,transparent)_0%,transparent_28%,color-mix(in_srgb,var(--k-deep)_55%,transparent)_58%,color-mix(in_srgb,var(--k-deep)_92%,transparent)_100%)]" />
+            <div className="absolute inset-x-0 bottom-0 px-5 pb-7 text-cream sm:px-6 md:px-10">
+              <p className="js-act-eyebrow flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[.32em] text-cream/85"><span aria-hidden className="h-px w-8 bg-gold-light" />{copy.eyebrow}</p>
+              <p className="mt-3 font-display font-medium leading-[0.98] tracking-[-0.01em]" style={{ fontSize: 'clamp(40px, 11vw, 64px)' }}>
+                <span className="block overflow-hidden pb-[0.04em]"><span className="js-act-line block">{sc.head[0]}</span></span>
+                <span className="block overflow-hidden pb-[0.12em] pr-[0.06em]"><span className="js-act-line block italic text-gold-light">{sc.head[1]}</span></span>
+              </p>
+              <p className="js-act-sub mt-3 max-w-[40ch] text-[15px] leading-[1.6] text-cream/85">{sc.sub}</p>
+            </div>
+            <span className="absolute right-4 top-4 rounded-full bg-deep/55 px-3 py-1 text-[10.5px] font-semibold uppercase tracking-[.22em] text-cream backdrop-blur-sm">{sc.caption}</span>
+          </div>
+        </div>
+
+        <div className="hidden gap-8 lg:grid lg:grid-cols-12 lg:items-end lg:gap-14">
           <header className="lg:col-span-7">
             <p className="js-act-eyebrow flex items-center gap-4 text-[12px] font-semibold uppercase tracking-[.36em] text-ink/80 md:text-[13px]">
               <span aria-hidden className="h-px w-10 bg-gold" />{copy.eyebrow}
@@ -131,15 +163,21 @@ export function ActivitiesSection({ lang }: { lang: Lang }) {
         </div>
 
         {/* five cards: grid on desktop, swipeable strip on mobile */}
-        <ul className="act-strip -mx-5 mt-10 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-2 sm:-mx-6 sm:px-6 md:mt-14 lg:mx-0 lg:grid lg:grid-cols-5 lg:gap-5 lg:overflow-visible lg:px-0 lg:pb-0">
+        <ul ref={strip} className="act-strip -mx-5 mt-7 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-5 px-5 pb-2 sm:-mx-6 sm:px-6 md:mt-10 lg:mx-0 lg:mt-14 lg:grid lg:grid-cols-5 lg:gap-5 lg:overflow-visible lg:px-0 lg:pb-0">
           {items.map((a) => (
-            <li key={a.id} className="w-[78%] max-w-[320px] shrink-0 snap-start sm:w-[44%] lg:w-auto lg:max-w-none">
+            <li key={a.id} className="w-[72%] max-w-[300px] shrink-0 snap-start sm:w-[40%] lg:w-auto lg:max-w-none">
               <ActivityCard a={a} lang={lang} visit={copy.visit} />
             </li>
           ))}
         </ul>
 
-        <a href={ACT_ROUTE[shown]} className="js-act-cta btn-pine mt-8 flex min-h-[54px] items-center justify-center gap-3 rounded-full px-6 text-center text-[15px] font-semibold lg:hidden">
+        {/* swipe progress (mobile) */}
+        <div className="mt-4 flex items-center gap-3 lg:hidden" aria-hidden>
+          <span className="tabular-nums text-[12px] font-semibold text-ink/60">{String(pos + 1).padStart(2, '0')} / {String(items.length).padStart(2, '0')}</span>
+          <span className="relative h-[2px] flex-1 overflow-hidden rounded-full bg-pine/15"><span className="absolute inset-y-0 left-0 rounded-full bg-gold-dark transition-[width] duration-300" style={{ width: `${((pos + 1) / items.length) * 100}%` }} /></span>
+        </div>
+
+        <a href={ACT_ROUTE[shown]} className="js-act-cta btn-pine mt-6 flex min-h-[54px] items-center justify-center gap-3 rounded-full px-6 text-center text-[15px] font-semibold lg:hidden">
           {sc.cta} <span aria-hidden>↗</span>
         </a>
       </div>

@@ -363,3 +363,10 @@ Also fixed:
 - Tapping a card on mobile could select the neighbouring card. Selection now follows the card's snap position, and programmatic scrolls are ignored.
 - Markers behind a ridge stay visible (`opacityWhenCovered`).
 - Selection pitch is 50° on mobile.
+
+### Update – hero opening & activities on mobile
+- Hero: opens directly on the active season (calendar rule 1 Nov–15 Apr = winter, or the visitor's choice in this tab). There is no 50/50 start and no glide. `SeasonCompare` takes `initial` and starts with the divider at that edge.
+- Activities on phones/tablets:
+  - The section opens with a full-bleed seasonal photo with the eyebrow, headline and subtitle on it. Winter uses the higher-resolution Wildkogel photo from kitzalpen.at, since the supplied skier photo is only 372 px wide; summer uses the hiker photo.
+  - Compact cards (16:11 image, 2-line text) in a swipe strip with a "01 / 05" counter and progress line.
+  - Desktop is unchanged.

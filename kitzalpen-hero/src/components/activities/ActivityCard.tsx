@@ -54,7 +54,7 @@ export function ActivityCard({ a, lang, visit }: { a: Activity; lang: Lang; visi
       {...(a.href ? { href: a.href, target: '_blank', rel: 'noopener noreferrer' } : {})}
       className="act-card js-act-card group flex h-full flex-col overflow-hidden rounded-[16px] border border-pine/10 bg-soft outline-none focus-visible:ring-2 focus-visible:ring-gold"
     >
-      <div className="js-act-mask relative aspect-[4/3] overflow-hidden bg-pine/10">
+      <div className="js-act-mask relative aspect-[16/11] overflow-hidden bg-pine/10 lg:aspect-[4/3]">
         {a.photo ? (
           <div className="act-img js-act-img absolute inset-0">
             <ActPic stem={a.photo} alt={a.title[lang]} sizes="(min-width:1024px) 20vw, 80vw" style={{ objectPosition: a.focus }} />
@@ -67,13 +67,13 @@ export function ActivityCard({ a, lang, visit }: { a: Activity; lang: Lang; visi
           <span className="absolute bottom-3 left-3 rounded-full border border-dashed border-gold/70 px-2.5 py-1 text-[11px] font-semibold text-gold-light">{a.verify[lang]}</span>
         )}
       </div>
-      <div className="flex flex-1 flex-col gap-2 p-4 md:p-5">
+      <div className="flex flex-1 flex-col gap-1.5 p-3.5 lg:gap-2 lg:p-5">
         <div className="flex items-center gap-2.5 text-pine">
           <ActIcon name={a.icon} />
           <h3 className="act-title text-[16px] font-semibold leading-tight text-ink md:text-[17px]">{a.title[lang]}</h3>
         </div>
-        <p className="text-[14px] leading-relaxed text-ink/70">{a.text[lang]}</p>
-        <div className="mt-auto flex items-center justify-between pt-3">
+        <p className="line-clamp-2 text-[13.5px] leading-snug text-ink/70 lg:line-clamp-none lg:text-[14px] lg:leading-relaxed">{a.text[lang]}</p>
+        <div className="mt-auto flex items-center justify-between pt-2 lg:pt-3">
           <span className="act-line relative text-[12px] font-semibold uppercase tracking-[.14em] text-goldink">{a.href ? visit : ' '}</span>
           <span className="act-arrow grid h-9 w-9 place-items-center rounded-full border border-pine/20 text-pine" aria-hidden>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7M9 7h8v8" /></svg>

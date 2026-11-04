@@ -99,8 +99,8 @@ export const ACTIVITIES: Record<Season, Activity[]> = { summer: SUMMER, winter: 
 export const ACT_COPY = {
   de: {
     eyebrow: 'Die Region entdecken',
-    summer: { head: ['Sommer.', 'Abseits des Gewöhnlichen.'], sub: 'Bergabenteuer, atemberaubende Landschaften und unvergessliche Momente rund um Hollersbach.', cta: 'Alle Sommer-Aktivitäten entdecken', feature: 'hike-feature', featureAlt: 'Wanderin auf einer Almwiese mit Blick auf Bergsee und Gletschergipfel', caption: 'Hohe Tauern' },
-    winter: { head: ['Winter.', 'Finden Sie Ihre Höhe.'], sub: 'Unvergessliche Skitage, verschneite Berge und besondere Wintererlebnisse rund um KitzAlpen.', cta: 'Alle Winter-Aktivitäten entdecken', feature: 'ski-feature', featureAlt: 'Skifahrer im Gegenlicht auf einer frisch präparierten Piste', caption: 'Pinzgau' },
+    summer: { head: ['Sommer.', 'Abseits des Gewöhnlichen.'], sub: 'Bergabenteuer, atemberaubende Landschaften und unvergessliche Momente rund um Hollersbach.', cta: 'Alle Sommer-Aktivitäten entdecken', feature: 'hike-feature', featureMobile: 'hike-feature', mobileFocus: '30% 50%', featureMobileAlt: '', featureAlt: 'Wanderin auf einer Almwiese mit Blick auf Bergsee und Gletschergipfel', caption: 'Hohe Tauern' },
+    winter: { head: ['Winter.', 'Finden Sie Ihre Höhe.'], sub: 'Unvergessliche Skitage, verschneite Berge und besondere Wintererlebnisse rund um KitzAlpen.', cta: 'Alle Winter-Aktivitäten entdecken', feature: 'ski-feature', featureMobile: 'wildkogel-arena', mobileFocus: '60% 50%', featureMobileAlt: 'Skifahrer auf einer Piste der Wildkogel-Arena vor verschneitem Bergpanorama', featureAlt: 'Skifahrer im Gegenlicht auf einer frisch präparierten Piste', caption: 'Pinzgau' },
     swipe: 'Wischen',
     visit: 'Website besuchen',
     page: { back: 'Zurück zur Startseite', practical: 'Gut zu wissen', more: 'Mehr Informationen', book: 'Aufenthalt anfragen' },
@@ -110,8 +110,8 @@ export const ACT_COPY = {
   },
   en: {
     eyebrow: 'Discover the region',
-    summer: { head: ['Summer.', 'Beyond the ordinary.'], sub: 'Discover mountain adventures, breathtaking landscapes and unforgettable moments around Hollersbach.', cta: 'Explore all summer activities', feature: 'hike-feature', featureAlt: 'Hiker on an alpine meadow looking over a mountain lake and glaciated peaks', caption: 'Hohe Tauern' },
-    winter: { head: ['Winter.', 'Find your altitude.'], sub: 'Discover unforgettable ski experiences, snow-covered mountains and exceptional winter adventures near KitzAlpen.', cta: 'Explore all winter activities', feature: 'ski-feature', featureAlt: 'Skier against the sun on a freshly groomed slope', caption: 'Pinzgau' },
+    summer: { head: ['Summer.', 'Beyond the ordinary.'], sub: 'Discover mountain adventures, breathtaking landscapes and unforgettable moments around Hollersbach.', cta: 'Explore all summer activities', feature: 'hike-feature', featureMobile: 'hike-feature', mobileFocus: '30% 50%', featureMobileAlt: '', featureAlt: 'Hiker on an alpine meadow looking over a mountain lake and glaciated peaks', caption: 'Hohe Tauern' },
+    winter: { head: ['Winter.', 'Find your altitude.'], sub: 'Discover unforgettable ski experiences, snow-covered mountains and exceptional winter adventures near KitzAlpen.', cta: 'Explore all winter activities', feature: 'ski-feature', featureMobile: 'wildkogel-arena', mobileFocus: '60% 50%', featureMobileAlt: 'Skiers on a Wildkogel Arena slope in front of a snowy mountain panorama', featureAlt: 'Skier against the sun on a freshly groomed slope', caption: 'Pinzgau' },
     swipe: 'Swipe',
     visit: 'Visit website',
     page: { back: 'Back to home', practical: 'Good to know', more: 'More information', book: 'Plan your stay' },

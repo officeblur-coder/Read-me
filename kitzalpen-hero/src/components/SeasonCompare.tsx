@@ -8,6 +8,8 @@ export interface SeasonCompareHandle {
 }
 
 interface Props {
+  /** season shown when the hero opens (divider fully on that side) */
+  initial?: Season;
   width: number;
   height: number;
   mobile: boolean;
@@ -59,7 +61,7 @@ function PhotoLayer({ photo, place, priority }: { photo: Photo; place: Placement
 }
 
 export const SeasonCompare = forwardRef<SeasonCompareHandle, Props>(function SeasonCompare(
-  { width: W, height: H, mobile, reduced, copy, onDominant, onSettle },
+  { width: W, height: H, mobile, reduced, copy, onDominant, onSettle, initial = 'summer' },
   ref,
 ) {
   const winterRef = useRef<HTMLDivElement>(null);
@@ -67,8 +69,8 @@ export const SeasonCompare = forwardRef<SeasonCompareHandle, Props>(function Sea
   const glowRef = useRef<SVGPathElement>(null);
   const hitRef = useRef<SVGPathElement>(null);
   const handleRef = useRef<HTMLButtonElement>(null);
-  const state = useRef({ p: 0.5 });           // 1 = all summer, 0 = all winter
-  const dominant = useRef<Season>('summer');
+  const state = useRef({ p: initial === 'winter' ? 0 : 1 });           // 1 = all summer, 0 = all winter
+  const dominant = useRef<Season>(initial);
   const settled = useRef<Season | null>(null);
   const geo = mobile ? CURVE.mobile : CURVE.desktop;
 

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
@@ -28,11 +28,11 @@ export function Hero({ lang, copy, bookingRef, onBookingSubmit }: Props) {
   const reduced = useReducedMotion();
   const fine = useFinePointer();
   const mobile = useIsMobile();
-  const [season, setSeason] = useState<Season>('summer');
-  const [fx, setFx] = useState<Season | null>(null);
   const { season: globalSeason, setSeason: setGlobalSeason } = useSeason();
-  // after the 50/50 intro the divider glides to the active season (calendar default or the visitor's choice)
-  const resumeTo = useRef<Season | null>(globalSeason);
+  // opens directly on the active season (calendar: 1 Nov–15 Apr winter, or the visitor's choice) – no 50/50 glide
+  const [initialSeason] = useState<Season>(globalSeason);
+  const [season, setSeason] = useState<Season>(globalSeason);
+  const [fx, setFx] = useState<Season | null>(null);
   useMagnetic(ctaRef, fine && !reduced);
   const ready = w > 0 && h > 0;
 
@@ -40,13 +40,6 @@ export function Hero({ lang, copy, bookingRef, onBookingSubmit }: Props) {
   const select = useCallback((s: Season) => { setSeason(s); setGlobalSeason(s); compare.current?.goTo(s); }, [setGlobalSeason]);
   const onSettle = useCallback((s: Season | null) => { setFx(s); if (s) setGlobalSeason(s); }, [setGlobalSeason]);
 
-  // returning visitor: after the 50/50 intro, glide to the season chosen last time
-  useEffect(() => {
-    const to = resumeTo.current;
-    if (!ready || !to) return;
-    const t = window.setTimeout(() => { setSeason(to); compare.current?.goTo(to); }, reduced ? 0 : 2600);
-    return () => window.clearTimeout(t);
-  }, [ready, reduced]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ---------------------------------------------------------------- intro
   useGSAP(() => {
@@ -97,7 +90,7 @@ export function Hero({ lang, copy, bookingRef, onBookingSubmit }: Props) {
   return (
     <section ref={root} id="top" aria-label="KitzAlpen" className="hero relative h-[100svh] min-h-[600px] w-full overflow-hidden bg-charcoal text-ivory">
       <div ref={stage} className="absolute inset-0">
-        <SeasonCompare ref={compare} width={w} height={h} mobile={mobile} reduced={reduced} copy={copy} onDominant={setSeason} onSettle={onSettle} />
+        <SeasonCompare ref={compare} width={w} height={h} mobile={mobile} reduced={reduced} copy={copy} onDominant={setSeason} onSettle={onSettle} initial={initialSeason} />
       </div>
       <SeasonFx mode={fx} mobile={mobile} reduced={reduced} />
 
