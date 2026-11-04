@@ -19,18 +19,38 @@ export function VirtualTour({ lang }: { lang: Lang }) {
   const t = TOUR_COPY[lang];
   const reduced = useReducedMotion();
   const [open, setOpen] = useState(false);
+  const [warm, setWarm] = useState(false);   // iframe mounted (pre-loads hidden)
   const [loaded, setLoaded] = useState(false);
   const [slow, setSlow] = useState(false);
+  const loadedRef = useRef(false);
   const panel = useRef<HTMLDivElement>(null);
   const closeBtn = useRef<HTMLButtonElement>(null);
   const origin = useRef({ x: 50, y: 50 });
   const opener = useRef<Element | null>(null);
+
+  // warm-up: the tour loads invisibly in the background, so the button shows it at once.
+  // Desktop / good connection: a few seconds after the page settles. Everywhere: as soon as a finger or
+  // the pointer reaches the 360° button. Never with "save data" on.
+  useEffect(() => {
+    if (!TOUR_URL) return;
+    const nav = navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } };
+    const lite = nav.connection?.saveData || /2g/.test(nav.connection?.effectiveType ?? '');
+    const go = () => setWarm(true);
+    window.addEventListener('kitzalpen:tour-warm', go);
+    let id = 0;
+    if (!lite && window.matchMedia('(min-width: 1024px)').matches) {
+      const start = () => { id = window.setTimeout(go, 2500); };
+      if (document.readyState === 'complete') start(); else window.addEventListener('load', start, { once: true });
+    }
+    return () => { window.clearTimeout(id); window.removeEventListener('kitzalpen:tour-warm', go); };
+  }, []);
 
   useEffect(() => {
     const on = (e: Event) => {
       const d = (e as CustomEvent<{ x?: number; y?: number }>).detail || {};
       origin.current = { x: d.x != null ? (d.x / window.innerWidth) * 100 : 50, y: d.y != null ? (d.y / window.innerHeight) * 100 : 50 };
       opener.current = document.activeElement;
+      setWarm(true);
       setOpen(true);
     };
     window.addEventListener('kitzalpen:tour', on);
@@ -40,7 +60,7 @@ export function VirtualTour({ lang }: { lang: Lang }) {
   useEffect(() => {
     if (!open) return;
     setSlow(false);
-    const slowId = window.setTimeout(() => setSlow(true), 10000);
+    const slowId = window.setTimeout(() => setSlow(true), loadedRef.current ? 1e9 : 10000);
     const html = document.documentElement, prev = html.style.overflow;
     html.style.overflow = 'hidden';
     closeBtn.current?.focus({ preventScroll: true });
@@ -52,15 +72,18 @@ export function VirtualTour({ lang }: { lang: Lang }) {
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const close = () => {
-    const done = () => { setOpen(false); (opener.current as HTMLElement | null)?.focus?.({ preventScroll: true }); };
+    const done = () => { gsap.set(panel.current, { clearProps: 'clipPath' }); setOpen(false); (opener.current as HTMLElement | null)?.focus?.({ preventScroll: true }); };
     if (reduced || !panel.current) return done();
     const { x, y } = origin.current;
     gsap.to(panel.current, { clipPath: `circle(0% at ${x}% ${y}%)`, duration: 0.6, ease: 'expo.in', onComplete: done });
   };
 
-  if (!open) return null;
+  if (!open && !warm) return null;
   return (
-    <div ref={panel} role="dialog" aria-modal="true" aria-label={t.title} className="fixed inset-0 z-[95] bg-deep text-cream">
+    <div ref={panel} role="dialog" aria-modal={open} aria-label={t.title} aria-hidden={!open}
+      {...(!open ? { inert: '' as unknown as boolean } : {})}
+      className="fixed inset-0 z-[95] bg-deep text-cream"
+      style={open ? undefined : { visibility: 'hidden', pointerEvents: 'none', clipPath: 'circle(0% at 50% 50%)' }}>
       {TOUR_URL ? (
         <>
           {!loaded && (
@@ -68,7 +91,7 @@ export function VirtualTour({ lang }: { lang: Lang }) {
               <div className="flex flex-col items-center gap-4 text-cream/80"><span className="vt-spin text-gold-light"><Icon360 size={44} /></span><span className="text-[14px] font-semibold tracking-[.08em]">{t.loading}</span></div>
             </div>
           )}
-          <iframe src={TOUR_URL} title={t.title} onLoad={() => setLoaded(true)} allow="fullscreen; xr-spatial-tracking; gyroscope; accelerometer; magnetometer" allowFullScreen
+          <iframe src={TOUR_URL} title={t.title} onLoad={() => { loadedRef.current = true; setLoaded(true); }} allow="fullscreen; xr-spatial-tracking; gyroscope; accelerometer; magnetometer" allowFullScreen
             className={`absolute inset-0 h-full w-full border-0 transition-opacity duration-700 ${loaded ? 'opacity-100' : 'opacity-0'}`} />
         </>
       ) : (
@@ -80,7 +103,7 @@ export function VirtualTour({ lang }: { lang: Lang }) {
           </div>
         </div>
       )}
-      {TOUR_URL && slow && (
+      {TOUR_URL && open && slow && !loaded && (
         <a href={TOUR_URL} target="_blank" rel="noopener noreferrer" className="absolute right-[calc(max(16px,env(safe-area-inset-right))+60px)] top-[max(16px,env(safe-area-inset-top))] z-10 inline-flex min-h-12 items-center gap-2 rounded-full bg-cream/90 px-4 text-[12.5px] font-semibold text-deep shadow-[0_10px_30px_-10px_rgba(0,0,0,.6)] backdrop-blur-sm">
           {t.direct} ↗
         </a>

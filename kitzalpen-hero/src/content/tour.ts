@@ -15,3 +15,4 @@ export const TOUR_COPY = {
     soon: 'The 360° tour is being set up.', soonText: 'Soon you can explore the rooms, restaurant and house right here.' },
 };
 export const openTour = (x?: number, y?: number) => window.dispatchEvent(new CustomEvent('kitzalpen:tour', { detail: { x, y } }));
+export const warmTour = () => window.dispatchEvent(new Event('kitzalpen:tour-warm'));
