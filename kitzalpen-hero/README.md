@@ -356,7 +356,7 @@ Order: … `<GuestStoriesSection/>` → `<FinalBookingCTA/>` → footer. The old
 ### Map – satellite as tiles (update)
 The satellite layer was one 4096 px image draped on the terrain. Some devices (seen on iPhone) did not render it when zoomed in (e.g. at Kitzsteinhorn), leaving only grey relief. It is now a regular XYZ tile pyramid (EOxCloudless 2016, z9–13, overzoomed beyond) for the whole region:
 - `scripts/build-sat-tiles.py` downloads the tiles into `public/map/sat/` (git-ignored).
-- `scripts/pack-sat-tiles.py` packs them into `public/map/sat.pack` + `sat-index.json`, served to MapLibre through the custom protocol `kzsat://`. That means one download instead of 369 requests.
+- `scripts/pack-sat-tiles.py` packs them into `public/map/sat-pack.jpg` (the tile JPEGs back to back) + `sat-index.json`, served to MapLibre through the custom protocol `kzsat://`. That means one download instead of 369 requests.
 - On the live site you can instead serve `public/map/sat/{z}/{x}/{y}.jpg` directly and set `tiles: ['/map/sat/{z}/{x}/{y}.jpg']`.
 
 Also fixed:

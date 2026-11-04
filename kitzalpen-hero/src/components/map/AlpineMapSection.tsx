@@ -155,10 +155,10 @@ export function AlpineMapSection({ lang }: { lang: Lang }) {
       try {
         const ml = await loadMapLibre();
         const meta = await (await fetch(`${BASE}map/meta.json`)).json();
-        // satellite tiles come from one packed file (sat.pack + index) via a custom protocol
+        // satellite tiles come from one packed file (sat-pack.jpg + index) via a custom protocol
         if (!satProtocol) {
           satProtocol = (async () => {
-            const [idx, buf] = await Promise.all([fetch(`${BASE}map/sat-index.json`).then((r) => r.json()), fetch(`${BASE}map/sat.pack`).then((r) => r.arrayBuffer())]);
+            const [idx, buf] = await Promise.all([fetch(`${BASE}map/sat-index.json`).then((r) => r.json()), fetch(`${BASE}map/sat-pack.jpg`).then((r) => r.arrayBuffer())]);
             ml.addProtocol('kzsat', async (params: { url: string }) => {
               const key = params.url.replace('kzsat://', '');
               const e = (idx as Record<string, [number, number]>)[key];
