@@ -114,25 +114,31 @@ export function ChaletPage({ lang }: { lang: Lang }) {
 
     // reveals
     q('.js-ch-rev').forEach((el) => gsap.fromTo(el, { autoAlpha: 0, y: 36 }, { autoAlpha: 1, y: 0, duration: 1, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 88%', once: true } }));
-    q('.js-ch-mask').forEach((el) => {
+    q('.js-ch-mask').filter((el) => !(window.innerWidth >= 1024 && el.closest('.js-ch-panel'))).forEach((el) => {
       gsap.fromTo(el, { clipPath: 'inset(100% 0% 0% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.3, ease: 'expo.out', scrollTrigger: { trigger: el, start: 'top 88%', once: true } });
       const img = el.querySelector('img'); if (img) gsap.fromTo(img, { scale: 1.18 }, { scale: 1, duration: 1.7, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 88%', once: true } });
     });
     // the intro sentence lights up word by word while scrolling
     gsap.fromTo(q('.js-ch-word'), { opacity: 0.16 }, { opacity: 1, stagger: 0.08, ease: 'none', scrollTrigger: { trigger: q('.js-ch-statement')[0], start: 'top 80%', end: 'bottom 45%', scrub: 0.5 } });
 
-    // room by room: horizontal on large screens, pinned
+    // room by room: horizontal on large screens. A tall section with a sticky stage (no fixed-position pin),
+    // so it keeps working inside embedded / transformed containers too.
     const mm = gsap.matchMedia();
     mm.add('(min-width: 1024px)', () => {
       const tr = track.current, sec = pin.current;
       if (!tr || !sec) return;
-      const dist = () => tr.scrollWidth - window.innerWidth;
-      const tween = gsap.to(tr, { x: () => -dist(), ease: 'none', scrollTrigger: { trigger: sec, start: 'top top', end: () => `+=${dist()}`, pin: true, scrub: 0.8, invalidateOnRefresh: true,
-        onUpdate: (s) => { gsap.set(q('.js-ch-progress'), { scaleX: s.progress }); } } });
+      const dist = () => Math.max(0, tr.scrollWidth - window.innerWidth);
+      const size = () => { sec.style.height = `${window.innerHeight + dist()}px`; };
+      size();
+      ScrollTrigger.addEventListener('refreshInit', size);
+      const tween = gsap.to(tr, { x: () => -dist(), ease: 'none', scrollTrigger: { trigger: sec, start: 'top top', end: 'bottom bottom', scrub: 0.8, invalidateOnRefresh: true,
+        onUpdate: (st) => { gsap.set(q('.js-ch-progress'), { scaleX: st.progress }); } } });
       q('.js-ch-panel').forEach((p) => {
         const img = p.querySelector('.js-ch-panimg');
         if (img) gsap.fromTo(img, { xPercent: -8 }, { xPercent: 8, ease: 'none', scrollTrigger: { trigger: p, containerAnimation: tween, start: 'left right', end: 'right left', scrub: true } });
       });
+      ScrollTrigger.refresh();
+      return () => { ScrollTrigger.removeEventListener('refreshInit', size); sec.style.height = ''; };
     });
     return () => mm.revert();
   }, { scope: root, dependencies: [reduced, lang] });
@@ -217,7 +223,8 @@ export function ChaletPage({ lang }: { lang: Lang }) {
       </section>
 
       {/* room by room */}
-      <section ref={pin} aria-labelledby="ch-rooms" className="relative overflow-hidden bg-[#0f1411] text-cream lg:h-[100svh]">
+      <section ref={pin} aria-labelledby="ch-rooms" className="relative bg-[#0f1411] text-cream max-lg:overflow-hidden">
+        <div className={`relative lg:sticky lg:top-0 lg:h-[100svh] ${reduced ? 'lg:overflow-x-auto' : 'lg:overflow-hidden'}`}>
         <div className="mx-auto max-w-[1440px] px-5 pt-20 sm:px-6 md:px-10 lg:absolute lg:inset-x-0 lg:top-0 lg:z-10 lg:pt-[118px] lg:px-14">
           <div className="flex items-end justify-between gap-6">
             <div>
@@ -250,6 +257,7 @@ export function ChaletPage({ lang }: { lang: Lang }) {
               </article>
             );
           })}
+        </div>
         </div>
       </section>
 
