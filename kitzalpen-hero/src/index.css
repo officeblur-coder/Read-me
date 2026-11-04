@@ -418,6 +418,13 @@
   .sm-all { color: #fff; background: var(--k-pine); transition: background-color .3s ease; }
   .sm-all:hover { background: var(--k-deep); }
   @media (prefers-reduced-motion: reduce) { .stay-menu, .stay-menu .sm-item { transition: none !important; transform: translate(-50%, 0); } .stay-menu .sm-item { transform: none; } }
+  /* restaurant page */
+  .d-light { background: repeating-linear-gradient(115deg, transparent 0 90px, rgba(255,190,110,.10) 90px 150px, transparent 150px 240px); mask-image: linear-gradient(90deg, transparent, #000 40%, #000 80%, transparent); -webkit-mask-image: linear-gradient(90deg, transparent, #000 40%, #000 80%, transparent);
+    animation: d-light 18s ease-in-out infinite alternate; }
+  @keyframes d-light { to { transform: translateX(6%); } }
+  .d-card { box-shadow: 0 40px 70px -30px rgba(0,0,0,.75); transition: box-shadow .4s ease; will-change: transform; }
+  .d-card:hover { box-shadow: 0 50px 90px -30px rgba(0,0,0,.85), 0 0 0 1px rgba(255,210,150,.35); }
+  @media (prefers-reduced-motion: reduce) { .d-light { animation: none; } }
   /* winter activities */
   .w-chip { display: inline-flex; align-items: center; gap: 7px; min-height: 34px; padding: 0 14px; border-radius: 999px; font-size: 13px; font-weight: 600; color: #f4efe4; border: 1px solid rgba(232,203,150,.45); background: rgba(232,203,150,.08); }
   .w-chip-soft { border-color: rgba(207,227,255,.22); background: rgba(207,227,255,.06); color: rgba(244,239,228,.85); font-weight: 500; }

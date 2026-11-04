@@ -9,14 +9,14 @@ export interface NavItem { label: string; href: string; mega?: boolean }
 export const NAV: Record<Lang, NavItem[]> = {
   de: [
     { label: 'Unterkunft', href: '#pension', mega: true }, // preview route – live: `${SITE}/pension/`
-    { label: 'Restaurant', href: `${SITE}/restaurant/` },
+    { label: 'Restaurant', href: '#restaurant' }, // preview – live: /restaurant/
     { label: 'Aktivitäten', href: '#activities-winter' }, // preview – live: /activities/
     { label: 'Gruppen', href: `${SITE}/group-activities/` },
     { label: 'Kontakt', href: `${SITE}/contact/` },
   ],
   en: [
     { label: 'Accommodation', href: '#pension', mega: true }, // preview route – live: `${SITE}/en/pension/`
-    { label: 'Restaurant', href: `${SITE}/en/restaurant/` },
+    { label: 'Restaurant', href: '#restaurant' }, // preview – live: /en/restaurant/
     { label: 'Activities', href: '#activities-winter' }, // preview – live: /en/activities/
     { label: 'Groups', href: `${SITE}/en/group-activities/` },
     { label: 'Contact', href: `${SITE}/en/contact/` },
@@ -27,12 +27,12 @@ export const NAV: Record<Lang, NavItem[]> = {
 export const FOOTER_NAV: Record<Lang, NavItem[]> = {
   de: [
     { label: 'Pension', href: '#pension' }, { label: 'Chalet', href: '#chalet' }, { label: 'Zimmer', href: '#all-rooms' },
-    { label: 'Restaurant', href: `${SITE}/restaurant/` }, { label: 'Aktivitäten', href: '#activities-winter' }, // preview – live: /activities/
+    { label: 'Restaurant', href: '#restaurant' }, { label: 'Aktivitäten', href: '#activities-winter' }, // preview – live: /activities/
     { label: 'Gruppen', href: `${SITE}/group-activities/` }, { label: 'Kontakt', href: `${SITE}/contact/` },
   ],
   en: [
     { label: 'Guesthouse', href: '#pension' }, { label: 'Chalet', href: '#chalet' }, { label: 'Rooms', href: '#all-rooms' },
-    { label: 'Restaurant', href: `${SITE}/en/restaurant/` }, { label: 'Activities', href: '#activities-winter' }, // preview – live: /en/activities/
+    { label: 'Restaurant', href: '#restaurant' }, { label: 'Activities', href: '#activities-winter' }, // preview – live: /en/activities/
     { label: 'Groups', href: `${SITE}/en/group-activities/` }, { label: 'Contact', href: `${SITE}/en/contact/` },
   ],
 };
