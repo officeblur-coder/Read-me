@@ -1,0 +1,495 @@
+<title>Bufnița Bubu și literele</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&display=swap">
+<style>
+/* Layout: one screen at a time (who plays → which game → play → celebrate); owl guide on the left, toy-block letters as the answers. Single bright "morning sky" look, chosen on purpose. */
+:root{
+  color-scheme: light;
+  --sky:#d9efff; --sky-top:#bfe3ff; --paper:#ffffff; --ink:#22305a; --ink-soft:#56628a;
+  --sun:#ffc23d; --leaf:#2fa865; --berry:#e5486a; --plum:#7a59c9; --ocean:#2b8be0; --orange:#ff8a2a;
+  --wood:#8a5a32; --line:#b9d6f0;
+  --display:"Baloo 2", "Comic Sans MS", "Segoe UI", system-ui, sans-serif;
+  --body:"Nunito", "Segoe UI", system-ui, sans-serif;
+}
+html,body{height:100%}
+body{background:linear-gradient(var(--sky-top),var(--sky) 60%,#e9f7e9);color:var(--ink);font-family:var(--body);font-size:18px;overflow-x:hidden}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible{outline:4px solid var(--ocean);outline-offset:4px}
+.app{height:100%;display:flex;flex-direction:column;max-width:1100px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px;gap:12px;box-sizing:border-box}
+.screen{flex:1;display:flex;flex-direction:column;gap:16px;min-height:0}
+h1,h2{font-family:var(--display);margin:0;text-wrap:balance;line-height:1.05}
+h1{font-size:clamp(34px,5vw,56px)}
+h2{font-size:clamp(26px,3.6vw,40px)}
+
+/* top bar */
+.bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.bar .grow{flex:1}
+.pill{display:inline-flex;align-items:center;gap:8px;background:var(--paper);border-radius:999px;padding:8px 16px;font-weight:800;box-shadow:0 3px 0 var(--line)}
+.round{width:56px;height:56px;border-radius:50%;background:var(--paper);display:grid;place-items:center;font-size:28px;box-shadow:0 4px 0 var(--line)}
+.round:active{transform:translateY(3px);box-shadow:0 1px 0 var(--line)}
+.dots{display:flex;gap:6px;flex-wrap:wrap}
+.dots i{width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid var(--line)}
+.dots i.ok{background:var(--sun);border-color:#e0a21c}
+.dots i.miss{background:#c9d6e6;border-color:#c9d6e6}
+.dots i.now{border-color:var(--ocean);transform:scale(1.25)}
+
+/* owl + bubble */
+.guide{display:flex;align-items:center;gap:14px}
+.owl{width:clamp(84px,11vw,124px);flex:none}
+.owl svg{width:100%;height:auto;display:block}
+.owl.talk svg{animation:bob .45s ease-in-out infinite alternate}
+.owl.talk .beak{animation:beak .22s infinite alternate}
+@keyframes bob{to{transform:translateY(-6px) rotate(-2deg)}}
+@keyframes beak{to{transform:scaleY(.6)}}
+.beak{transform-origin:60px 62px}
+.bubble{position:relative;background:var(--paper);border-radius:24px;padding:14px 20px;font-family:var(--display);font-weight:800;font-size:clamp(22px,2.8vw,32px);line-height:1.15;box-shadow:0 4px 0 var(--line);min-width:0;flex:1}
+.bubble:before{content:"";position:absolute;left:-12px;top:50%;margin-top:-12px;border:12px solid transparent;border-right-color:var(--paper);border-left:0}
+
+/* home */
+.kids{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}
+.kid{background:var(--paper);border-radius:28px;padding:22px;display:flex;flex-direction:column;align-items:center;gap:8px;box-shadow:0 8px 0 var(--line);transition:transform .15s}
+.kid:hover{transform:translateY(-4px)}
+.kid:active{transform:translateY(4px);box-shadow:0 3px 0 var(--line)}
+.kid .face{font-size:84px;line-height:1}
+.kid .nm{font-family:var(--display);font-size:46px;font-weight:800;line-height:1}
+.kid .meta{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;color:var(--ink-soft);font-weight:800}
+.kid .meta span{background:var(--sky);border-radius:999px;padding:4px 12px}
+.kid.liza .nm{color:var(--berry)} .kid.mate .nm{color:var(--ocean)}
+
+.warn{background:#fff4d6;border:3px solid var(--sun);border-radius:20px;padding:14px 18px;font-size:17px;line-height:1.45}
+.warn b{display:block;font-family:var(--display);font-size:22px}
+.warn ol{margin:6px 0 0;padding-left:22px}
+
+/* menu */
+.games{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px}
+.game{border-radius:26px;padding:20px;color:#fff;text-align:left;display:flex;flex-direction:column;gap:6px;box-shadow:0 8px 0 rgba(0,0,0,.18);min-height:150px}
+.game:active{transform:translateY(5px);box-shadow:0 3px 0 rgba(0,0,0,.18)}
+.game .ic{font-size:52px;line-height:1}
+.game .t{font-family:var(--display);font-size:30px;font-weight:800;line-height:1}
+.game .d{font-weight:700;opacity:.95}
+.g1{background:var(--ocean)} .g2{background:var(--berry)} .g3{background:var(--plum)} .g4{background:var(--leaf)}
+
+/* play */
+.play{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(16px,3vh,32px);min-height:0}
+.pic{font-size:clamp(90px,16vh,160px);line-height:1;filter:drop-shadow(0 6px 0 rgba(0,0,0,.08));cursor:pointer;user-select:none}
+.choices{display:flex;gap:clamp(12px,2.4vw,28px);flex-wrap:wrap;justify-content:center}
+.tile{--c:var(--ocean);width:clamp(92px,15vw,150px);aspect-ratio:1;max-width:100%;border-radius:24px;background:var(--c);color:#fff;font-family:var(--display);font-weight:800;font-size:clamp(56px,9vw,100px);line-height:1;display:grid;place-items:center;box-shadow:0 9px 0 rgba(0,0,0,.2), inset 0 -6px 0 rgba(0,0,0,.08);transition:transform .12s;padding-top:.08em}
+.tile:hover{transform:translateY(-4px) rotate(-2deg)}
+.tile:active{transform:translateY(6px);box-shadow:0 3px 0 rgba(0,0,0,.2)}
+.c0{--c:var(--ocean)} .c1{--c:var(--berry)} .c2{--c:var(--leaf)} .c3{--c:var(--orange)} .c4{--c:var(--plum)} .c5{--c:#1aa6a6}
+.tile.wrong{animation:shake .4s;opacity:.35;pointer-events:none}
+.tile.right{animation:pop .5s;outline:6px solid var(--sun);outline-offset:4px}
+.tile.hint{animation:glow 1s infinite alternate;outline:6px dashed var(--sun);outline-offset:4px}
+.tile.used{visibility:hidden}
+@keyframes shake{20%,60%{transform:translateX(-12px)}40%,80%{transform:translateX(12px)}}
+@keyframes pop{50%{transform:scale(1.18) rotate(4deg)}}
+@keyframes glow{to{transform:scale(1.08)}}
+.word{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.slot{width:clamp(56px,8vw,86px);aspect-ratio:1;border-radius:16px;background:var(--paper);border:4px solid var(--line);font-family:var(--display);font-weight:800;font-size:clamp(36px,5.4vw,60px);display:grid;place-items:center;line-height:1;padding-top:.06em;box-sizing:border-box}
+.slot.blank{border-style:dashed;border-color:var(--ocean);color:var(--ocean)}
+.slot.fill{animation:pop .45s;background:#fff8dc;border-color:var(--sun)}
+.choices.small .tile{width:clamp(72px,10vw,104px);font-size:clamp(42px,6vw,68px);border-radius:18px}
+
+/* finish */
+.finish{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center}
+.bigstars{font-size:clamp(40px,6vw,64px);letter-spacing:4px}
+.actions{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.btn{font-family:var(--display);font-weight:800;font-size:26px;padding:14px 26px;border-radius:20px;background:var(--sun);color:var(--ink);box-shadow:0 6px 0 #d99a14}
+.btn.alt{background:var(--paper);box-shadow:0 6px 0 var(--line)}
+.btn:active{transform:translateY(4px);box-shadow:0 2px 0 #d99a14}
+
+/* parents panel */
+.panel{position:fixed;inset:0;background:rgba(34,48,90,.45);display:grid;place-items:center;padding:16px;z-index:20}
+.card{background:var(--paper);border-radius:24px;padding:22px;width:min(560px,100%);max-height:90vh;overflow:auto;display:flex;flex-direction:column;gap:16px;box-sizing:border-box}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.row label{font-weight:800;min-width:70px}
+.seg{display:inline-flex;background:var(--sky);border-radius:14px;padding:4px}
+.seg button{padding:8px 14px;border-radius:10px;font-weight:800}
+.seg button[aria-pressed="true"]{background:var(--ocean);color:#fff}
+select,input[type=range]{font:inherit;max-width:100%}
+select{padding:8px;border-radius:10px;border:2px solid var(--line);min-width:0;flex:1}
+.small{font-size:15px;color:var(--ink-soft);line-height:1.4}
+.confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:10}
+.confetti span{position:absolute;top:-30px;font-size:28px;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(540deg)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (max-width:560px){.bubble:before{display:none}.guide{flex-direction:column}.owl{width:80px}}
+</style>
+
+<div class="app" id="app"></div>
+<div class="confetti" id="confetti" aria-hidden="true"></div>
+
+<template id="owlTpl">
+<svg viewBox="0 0 120 130" aria-hidden="true">
+  <ellipse cx="60" cy="122" rx="34" ry="6" fill="#000" opacity=".08"/>
+  <path d="M22 40 L30 14 L46 30 Z" fill="#8a5a32"/><path d="M98 40 L90 14 L74 30 Z" fill="#8a5a32"/>
+  <ellipse cx="60" cy="72" rx="44" ry="48" fill="#a4703f"/>
+  <ellipse cx="60" cy="88" rx="28" ry="30" fill="#f3d9a8"/>
+  <path d="M44 84 q4 4 8 0 M56 92 q4 4 8 0 M68 84 q4 4 8 0 M50 102 q4 4 8 0 M62 102 q4 4 8 0" stroke="#d8b47a" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <circle cx="40" cy="50" r="19" fill="#fff"/><circle cx="80" cy="50" r="19" fill="#fff"/>
+  <circle cx="42" cy="52" r="9" fill="#22305a"/><circle cx="78" cy="52" r="9" fill="#22305a"/>
+  <circle cx="45" cy="49" r="3" fill="#fff"/><circle cx="81" cy="49" r="3" fill="#fff"/>
+  <path class="beak" d="M53 60 L67 60 L60 72 Z" fill="#ffb02e"/>
+  <path d="M16 74 q-6 22 10 34" stroke="#8a5a32" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <path d="M104 74 q6 22 -10 34" stroke="#8a5a32" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <path d="M30 22 L90 22 L82 10 L38 10 Z" fill="#2b8be0"/><rect x="28" y="20" width="64" height="6" rx="3" fill="#22305a"/>
+  <circle cx="92" cy="18" r="5" fill="#ffc23d"/>
+</svg>
+</template>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- conținut ---------- */
+const NAMES={A:'a','Ă':'ă','Â':'î',B:'be',C:'ce',D:'de',E:'e',F:'fe',G:'ghe',H:'ha',I:'i','Î':'î',J:'je',K:'ka',L:'le',M:'me',N:'ne',O:'o',P:'pe',R:'re',S:'se','Ș':'șe',T:'te','Ț':'țe',U:'u',V:'ve',X:'ics',Z:'ze'};
+const MIC=['A','B','C','D','E','F','G','I','L','M','N','O','P','R','S','Ș','T','U','V','Z'];
+const MARE=MIC.concat(['Ă','H','Î','J','Ț']);
+const WORDS=[
+ ['albină','🐝'],['avion','✈️'],['ananas','🍍'],
+ ['banană','🍌'],['balon','🎈'],['broască','🐸'],['barcă','⛵'],
+ ['casă','🏠'],['cal','🐴'],['cireșe','🍒'],['ceas','⌚'],['câine','🐕'],['cămilă','🐫'],
+ ['delfin','🐬'],['dinozaur','🦖'],['dovleac','🎃'],
+ ['elefant','🐘'],
+ ['floare','🌸'],['fluture','🦋'],['foc','🔥'],['fragă','🍓'],
+ ['găină','🐔'],['gorilă','🦍'],
+ ['hipopotam','🦛'],['hamster','🐹'],
+ ['iepure','🐰'],['inimă','❤️'],
+ ['înghețată','🍦'],
+ ['jaguar','🐆'],
+ ['lămâie','🍋'],['leu','🦁'],['lună','🌙'],['lapte','🥛'],['lingură','🥄'],
+ ['măr','🍎'],['mașină','🚗'],['maimuță','🐒'],['morcov','🥕'],['minge','⚽'],
+ ['nor','☁️'],['nas','👃'],
+ ['ou','🥚'],['oaie','🐑'],['ochelari','👓'],
+ ['pisică','🐱'],['pește','🐟'],['pom','🌳'],['pinguin','🐧'],['pară','🍐'],['porc','🐷'],
+ ['rață','🦆'],['rachetă','🚀'],['roșie','🍅'],['rac','🦀'],
+ ['soare','☀️'],['stea','⭐'],['sanie','🛷'],['struguri','🍇'],
+ ['șarpe','🐍'],['șoarece','🐭'],['șosete','🧦'],
+ ['tren','🚂'],['tort','🎂'],['telefon','📱'],['tobă','🥁'],['tigru','🐯'],
+ ['țestoasă','🐢'],
+ ['urs','🐻'],['umbrelă','☂️'],['ureche','👂'],
+ ['vacă','🐄'],['vulpe','🦊'],['vapor','🚢'],['vioară','🎻'],
+ ['zebră','🦓'],['zar','🎲']
+].map(([w,e])=>({w,e,first:w[0].toLocaleUpperCase('ro')}));
+
+const GAMES=[
+ {id:'gaseste',ic:'🔍',t:'Găsește litera',d:'Ascultă și atinge litera'},
+ {id:'prima',ic:'🍎',t:'Prima literă',d:'Cu ce literă începe?'},
+ {id:'lipsa',ic:'🧩',t:'Litera lipsă',d:'Completează cuvântul'},
+ {id:'scrie',ic:'🧱',t:'Scrie cuvântul',d:'Pune literele în ordine'}
+];
+const ROUND=8;
+
+/* ---------- salvare ---------- */
+const KEY='bubu-litere-v1';
+const defaults={kids:{liza:{name:'Liza',fem:true,level:'mic',stars:0},mate:{name:'Mate',fem:false,level:'mic',stars:0}},voice:'',rate:0.9};
+let save=JSON.parse(JSON.stringify(defaults));
+try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s&&s.kids){save=Object.assign(save,s);}}catch(e){}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(save));}catch(e){}}
+
+/* ---------- voce ---------- */
+const synth=window.speechSynthesis||null;
+let voices=[],voice=null,voicesChecked=false,speechId=0;
+function loadVoices(){
+  if(!synth)return;
+  voices=synth.getVoices().filter(v=>/^ro/i.test(v.lang));
+  voices.sort((a,b)=>score(b)-score(a));
+  voice=voices.find(v=>v.voiceURI===save.voice)||voices[0]||null;
+}
+function score(v){let s=0;if(/natural|online|neural/i.test(v.name))s+=10;if(/alina/i.test(v.name))s+=2;if(/google/i.test(v.name))s+=5;return s;}
+if(synth){loadVoices();synth.onvoiceschanged=()=>{loadVoices();if(current==='home')render();};}
+setTimeout(()=>{voicesChecked=true;loadVoices();if(current==='home')render();},1600);
+
+let owlEl=null;
+function speak(text,done){
+  const id=++speechId;
+  const fin=()=>{if(id!==speechId)return;speechId++;owlEl&&owlEl.classList.remove('talk');done&&done();};
+  if(!synth){setTimeout(fin,500+text.length*40);return;}
+  synth.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang='ro-RO';if(voice)u.voice=voice;u.rate=save.rate;u.pitch=1.1;
+  u.onend=fin;u.onerror=fin;
+  owlEl&&owlEl.classList.add('talk');
+  setTimeout(()=>{if(id===speechId){synth.speak(u);}},60);
+  setTimeout(fin,2500+text.length*130);
+}
+function silence(){speechId++;synth&&synth.cancel();owlEl&&owlEl.classList.remove('talk');}
+
+/* ---------- utilitare ---------- */
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const el=(tag,cls,html)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e;};
+const app=document.getElementById('app');
+const lname=L=>NAMES[L]||L.toLowerCase();
+function starsWord(n){return n===1?'o steluță':n<20?n+' steluțe':n+' de steluțe';}
+function praise(k){return rnd(['Bravo, '+k.name+'!','Super!','Corect!','Foarte bine!','Ești '+(k.fem?'grozavă':'grozav')+'!','Excelent!']);}
+function oops(){return rnd(['Mai încearcă!','Aproape! Încă o dată.','Hmm, nu e aceasta. Mai caută!']);}
+function exampleFor(L){const w=WORDS.filter(x=>x.first===L);return w.length?rnd(w).w:null;}
+function distractors(ans,pool,n){return shuffle(pool.filter(x=>x!==ans)).slice(0,n);}
+function owlNode(){const d=el('div','owl');d.appendChild(document.getElementById('owlTpl').content.cloneNode(true));owlEl=d;return d;}
+
+/* ---------- stare ---------- */
+let current='home',kidId=null,game=null;
+const kid=()=>save.kids[kidId];
+
+function render(){
+  silence();app.innerHTML='';
+  if(current==='home')home();else if(current==='menu')menu();else if(current==='play')play();
+}
+
+/* ---------- ecran: cine se joacă ---------- */
+function home(){
+  const s=el('div','screen');
+  const bar=el('div','bar');
+  bar.appendChild(el('h1','grow','Bufnița Bubu și literele'));
+  const gear=el('button','round','⚙️');gear.title='Pentru părinți';gear.setAttribute('aria-label','Setări pentru părinți');gear.onclick=parents;
+  bar.appendChild(gear);s.appendChild(bar);
+  const g=el('div','guide');g.appendChild(owlNode());g.appendChild(el('div','bubble','Cine se joacă azi cu mine?'));s.appendChild(g);
+  if(!synth||(voicesChecked&&!voices.length)){
+    s.appendChild(el('div','warn',
+      '<b>Nu găsesc o voce în limba română 🔇</b>Jocul merge și fără, dar Bubu nu poate vorbi. Cel mai simplu:'+
+      '<ol><li>Deschide jocul în <b style="display:inline;font-size:inherit">Microsoft Edge</b> (vine cu Windows). Are voci românești gata instalate: Alina și Emil.</li>'+
+      '<li>Sau în Windows: <i>Setări → Oră și limbă → Vorbire → Adăugare voci → Română</i>, apoi repornește browserul.</li></ol>'));
+  }
+  const kids=el('div','kids');
+  [['liza','👧'],['mate','👦']].forEach(([id,face])=>{
+    const k=save.kids[id];
+    const b=el('button','kid '+id,'<div class="face">'+face+'</div><div class="nm">'+k.name+'</div><div class="meta"><span>⭐ '+k.stars+'</span><span>'+(k.level==='mic'?'5–6 ani':'7–8 ani')+'</span></div>');
+    b.onclick=()=>{kidId=id;current='menu';render();speak('Bună, '+k.name+'! Alege un joc.');};
+    kids.appendChild(b);
+  });
+  s.appendChild(kids);
+  app.appendChild(s);
+}
+
+/* ---------- ecran: alege jocul ---------- */
+function menu(){
+  const k=kid();const s=el('div','screen');
+  const bar=el('div','bar');
+  const back=el('button','round','🏠');back.setAttribute('aria-label','Înapoi la început');back.onclick=()=>{current='home';render();};
+  bar.appendChild(back);bar.appendChild(el('h2','grow','Salut, '+k.name+'!'));bar.appendChild(el('span','pill','⭐ '+k.stars));
+  s.appendChild(bar);
+  const g=el('div','guide');g.appendChild(owlNode());g.appendChild(el('div','bubble','Alege un joc!'));s.appendChild(g);
+  const gs=el('div','games');
+  GAMES.forEach((gm,i)=>{
+    const b=el('button','game g'+(i+1),'<span class="ic">'+gm.ic+'</span><span class="t">'+gm.t+'</span><span class="d">'+gm.d+'</span>');
+    b.onclick=()=>startGame(gm.id);
+    gs.appendChild(b);
+  });
+  s.appendChild(gs);app.appendChild(s);
+}
+
+/* ---------- joc ---------- */
+function startGame(id){
+  game={id,q:0,results:[],stars:0,attempts:0,locked:false,last:null};
+  current='play';render();
+}
+
+function play(){
+  const k=kid();const s=el('div','screen');
+  const bar=el('div','bar');
+  const back=el('button','round','⬅️');back.setAttribute('aria-label','Înapoi la jocuri');back.onclick=()=>{current='menu';game=null;render();};
+  bar.appendChild(back);
+  const dots=el('div','dots grow');dots.id='dots';bar.appendChild(dots);
+  const st=el('span','pill','⭐ <span id="st">'+game.stars+'</span>');bar.appendChild(st);
+  const rep=el('button','round','🔊');rep.setAttribute('aria-label','Ascultă din nou');rep.onclick=()=>game&&game.say&&speak(game.say);
+  bar.appendChild(rep);
+  s.appendChild(bar);
+  const g=el('div','guide');g.appendChild(owlNode());const bub=el('div','bubble','');bub.id='bubble';g.appendChild(bub);s.appendChild(g);
+  const area=el('div','play');area.id='area';s.appendChild(area);
+  app.appendChild(s);
+  owlEl.onclick=rep.onclick;
+  nextQuestion();
+}
+
+function drawDots(){
+  const d=document.getElementById('dots');if(!d)return;d.innerHTML='';
+  for(let i=0;i<ROUND;i++){const r=game.results[i];d.appendChild(el('i',r===true?'ok':r===false?'miss':i===game.q?'now':''));}
+}
+
+function nextQuestion(){
+  if(!game)return;
+  if(game.q>=ROUND){finish();return;}
+  game.attempts=0;game.locked=false;
+  drawDots();
+  const area=document.getElementById('area');area.innerHTML='';
+  const lvl=kid().level;
+  ({gaseste:qFind,prima:qFirst,lipsa:qMissing,scrie:qBuild})[game.id](area,lvl);
+}
+
+function setPrompt(text,say){document.getElementById('bubble').textContent=text;game.say=say||text;speak(game.say);}
+const show=(L,lvl)=>lvl==='mic'?L:L.toLocaleLowerCase('ro');
+
+function choiceTiles(area,letters,answer,lvl,onRight,cls){
+  const box=el('div','choices'+(cls?' '+cls:''));
+  shuffle(letters).forEach((L,i)=>{
+    const t=el('button','tile c'+((i+game.q)%6),show(L,lvl));t.setAttribute('aria-label','litera '+lname(L));t.dataset.l=L;
+    t.onclick=()=>pick(t,L,answer,box,onRight);
+    box.appendChild(t);
+  });
+  area.appendChild(box);
+}
+
+function pick(t,L,answer,box,onRight){
+  if(!game||game.locked)return;
+  const g=game;
+  if(L===answer){
+    g.locked=true;t.classList.add('right');
+    const first=g.attempts===0;
+    mark(first);onRight&&onRight();
+    speak(praise(kid()),()=>{if(game===g)setTimeout(advance,350);});
+  }else{
+    g.attempts++;t.classList.add('wrong');
+    if(g.attempts>=2){
+      g.locked=true;
+      const c=box.querySelector('[data-l="'+answer+'"]');c&&c.classList.add('hint');
+      speak('Uite, este litera '+lname(answer)+'.',()=>{if(game===g){onRight&&onRight();mark(false);setTimeout(advance,700);}});
+    }else speak(oops());
+  }
+}
+function mark(ok){game.results[game.q]=ok;if(ok){game.stars++;const s=document.getElementById('st');if(s)s.textContent=game.stars;}drawDots();}
+function advance(){if(!game)return;game.q++;nextQuestion();}
+
+function pickNew(list,key){let x,tries=0;do{x=rnd(list);tries++;}while(game.last===key(x)&&tries<10);game.last=key(x);return x;}
+
+/* 1. Găsește litera */
+function qFind(area,lvl){
+  const pool=lvl==='mic'?MIC:MARE;
+  const L=pickNew(pool,x=>x);
+  const ex=exampleFor(L);
+  const txt='Atinge litera '+show(L,lvl)+'!';
+  setPrompt(txt,'Atinge litera '+lname(L)+'!'+(lvl==='mic'&&ex?' Ca în '+ex+'.':''));
+  choiceTiles(area,[L].concat(distractors(L,pool,lvl==='mic'?2:3)),L,lvl);
+}
+
+/* 2. Prima literă */
+function qFirst(area,lvl){
+  const pool=lvl==='mic'?MIC:MARE;
+  const W=pickNew(WORDS.filter(w=>pool.includes(w.first)),x=>x.w);
+  const pic=el('div','pic',W.e);pic.setAttribute('role','img');pic.setAttribute('aria-label',W.w);pic.onclick=()=>speak(W.w);
+  area.appendChild(pic);
+  setPrompt('Cu ce literă începe?','Cu ce literă începe cuvântul '+W.w+'?');
+  choiceTiles(area,[W.first].concat(distractors(W.first,pool,lvl==='mic'?2:3)),W.first,lvl);
+}
+
+/* 3. Litera lipsă */
+function qMissing(area,lvl){
+  const pool=lvl==='mic'?MIC:MARE;
+  const cand=WORDS.filter(w=>lvl==='mic'?(w.w.length<=5&&pool.includes(w.first)):w.w.length>=3);
+  const W=pickNew(cand,x=>x.w);
+  const letters=[...W.w].map(c=>c.toLocaleUpperCase('ro'));
+  const idx=lvl==='mic'?0:Math.floor(Math.random()*letters.length);
+  const ans=letters[idx];
+  const pic=el('div','pic',W.e);pic.setAttribute('role','img');pic.setAttribute('aria-label',W.w);pic.onclick=()=>speak(W.w);
+  area.appendChild(pic);
+  const word=el('div','word');
+  letters.forEach((c,i)=>{const s=el('div','slot'+(i===idx?' blank':''),i===idx?'?':show(c,lvl));word.appendChild(s);});
+  area.appendChild(word);
+  setPrompt('Ce literă lipsește?','Ce literă lipsește din cuvântul '+W.w+'?');
+  const dpool=MARE.filter(x=>x!==ans&&!letters.includes(x));
+  choiceTiles(area,[ans].concat(shuffle(dpool).slice(0,lvl==='mic'?2:3)),ans,lvl,()=>{
+    const s=word.children[idx];s.textContent=show(ans,lvl);s.className='slot fill';
+  },'small');
+}
+
+/* 4. Scrie cuvântul */
+function qBuild(area,lvl){
+  const cand=WORDS.filter(w=>lvl==='mic'?w.w.length<=4:(w.w.length>=4&&w.w.length<=7));
+  const W=pickNew(cand,x=>x.w);
+  const letters=[...W.w].map(c=>c.toLocaleUpperCase('ro'));
+  const pic=el('div','pic',W.e);pic.setAttribute('role','img');pic.setAttribute('aria-label',W.w);pic.onclick=()=>speak(W.w);
+  area.appendChild(pic);
+  const word=el('div','word');letters.forEach(()=>word.appendChild(el('div','slot blank','')));area.appendChild(word);
+  setPrompt('Scrie cuvântul!','Scrie cuvântul '+W.w+'!');
+  const box=el('div','choices small');
+  let pos=0,mistakes=0;const g=game;
+  shuffle(letters.map((L,i)=>({L,i}))).forEach((o,j)=>{
+    const t=el('button','tile c'+(j%6),show(o.L,lvl));t.dataset.l=o.L;t.setAttribute('aria-label','litera '+lname(o.L));
+    t.onclick=()=>{
+      if(game!==g||g.locked)return;
+      box.querySelectorAll('.hint').forEach(h=>h.classList.remove('hint'));
+      if(o.L===letters[pos]){
+        const s=word.children[pos];s.textContent=show(o.L,lvl);s.className='slot fill';t.classList.add('used');pos++;
+        if(pos===letters.length){
+          g.locked=true;mark(mistakes<=1);
+          speak((mistakes<=1?praise(kid())+' ':'Gata! ')+W.w+'!',()=>{if(game===g)setTimeout(advance,500);});
+        }else speak(lname(o.L));
+      }else{
+        mistakes++;t.style.animation='none';void t.offsetWidth;t.style.animation='shake .4s';
+        if(mistakes>=2){const c=[...box.children].find(b=>!b.classList.contains('used')&&b.dataset.l===letters[pos]);c&&c.classList.add('hint');speak('Caută litera '+lname(letters[pos])+'.');}
+        else speak(oops());
+      }
+    };
+    box.appendChild(t);
+  });
+  area.appendChild(box);
+}
+
+/* ---------- final ---------- */
+function finish(){
+  const k=kid();const n=game.stars;const id=game.id;
+  k.stars+=n;persist();
+  silence();app.innerHTML='';
+  const s=el('div','finish');
+  s.appendChild(owlNode());
+  s.appendChild(el('h1','',n>=ROUND-1?'Felicitări, '+k.name+'!':'Bravo, '+k.name+'!'));
+  s.appendChild(el('div','bigstars',n?'⭐'.repeat(n):'🌟'));
+  s.appendChild(el('div','pill',(n?'Ai câștigat '+starsWord(n):'Ai terminat jocul')+' · în total ⭐ '+k.stars));
+  const a=el('div','actions');
+  const again=el('button','btn','🔁 Încă o dată');again.onclick=()=>startGame(id);
+  const other=el('button','btn alt','🎮 Alt joc');other.onclick=()=>{current='menu';game=null;render();};
+  a.appendChild(again);a.appendChild(other);s.appendChild(a);
+  app.appendChild(s);
+  confetti();
+  speak((n>=ROUND-1?'Felicitări, ':'Bravo, ')+k.name+'! '+(n?'Ai câștigat '+starsWord(n)+'!':'Ai terminat jocul!'));
+  game=null;current='done';
+}
+function confetti(){
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  const c=document.getElementById('confetti');c.innerHTML='';
+  const bits=['⭐','🎉','🌟','🎈','✨'];
+  for(let i=0;i<36;i++){const sp=el('span','',rnd(bits));sp.style.left=Math.random()*100+'%';sp.style.animationDuration=(2+Math.random()*2.5)+'s';sp.style.animationDelay=(Math.random()*.8)+'s';c.appendChild(sp);}
+  setTimeout(()=>c.innerHTML='',5500);
+}
+
+/* ---------- părinți ---------- */
+function parents(){
+  const p=el('div','panel');const c=el('div','card');p.appendChild(c);
+  c.appendChild(el('h2','','Pentru părinți'));
+  ['liza','mate'].forEach(id=>{
+    const k=save.kids[id];const r=el('div','row');r.appendChild(el('label','',k.name));
+    const seg=el('div','seg');
+    [['mic','5–6 ani'],['mare','7–8 ani']].forEach(([v,t])=>{
+      const b=el('button','',t);b.setAttribute('aria-pressed',k.level===v);
+      b.onclick=()=>{k.level=v;persist();seg.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));};
+      seg.appendChild(b);
+    });
+    r.appendChild(seg);c.appendChild(r);
+  });
+  c.appendChild(el('div','small','<b>5–6 ani:</b> litere mari de tipar, 3 variante, indicii (de ex. „ca în măr”).<br><b>7–8 ani:</b> litere mici, toate literele românești (Ă, Î, Ț…), 4 variante, cuvinte mai lungi.'));
+  const vr=el('div','row');vr.appendChild(el('label','','Voce'));
+  if(voices.length){
+    const sel=el('select');sel.id='voiceSel';
+    voices.forEach(v=>{const o=el('option','',v.name);o.value=v.voiceURI;if(voice&&v.voiceURI===voice.voiceURI)o.selected=true;sel.appendChild(o);});
+    sel.onchange=()=>{voice=voices.find(v=>v.voiceURI===sel.value)||voice;save.voice=voice.voiceURI;persist();speak('Bună! Eu sunt Bubu.');};
+    vr.appendChild(sel);
+  }else vr.appendChild(el('span','small','Nicio voce românească pe acest browser. Folosește Microsoft Edge.'));
+  c.appendChild(vr);
+  const rr=el('div','row');rr.appendChild(el('label','','Viteză'));
+  const rg=el('input');rg.type='range';rg.id='rate';rg.min='0.6';rg.max='1.2';rg.step='0.05';rg.value=save.rate;
+  rg.onchange=()=>{save.rate=+rg.value;persist();speak('Așa vorbesc acum.');};
+  rr.appendChild(rg);c.appendChild(rr);
+  const a=el('div','actions');
+  const test=el('button','btn alt','🔊 Testează vocea');test.onclick=()=>speak('Bună, Liza! Bună, Mate! Eu sunt bufnița Bubu.');
+  const reset=el('button','btn alt','Șterge steluțele');
+  reset.onclick=()=>{if(reset.dataset.sure){save.kids.liza.stars=0;save.kids.mate.stars=0;persist();reset.textContent='Gata, șterse';}else{reset.dataset.sure='1';reset.textContent='Sigur? Apasă din nou';}};
+  const close=el('button','btn','Gata');close.onclick=()=>{p.remove();render();};
+  a.appendChild(test);a.appendChild(reset);a.appendChild(close);c.appendChild(a);
+  p.onclick=e=>{if(e.target===p){p.remove();render();}};
+  document.body.appendChild(p);
+}
+
+render();
+})();
+</script>
