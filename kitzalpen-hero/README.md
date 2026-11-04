@@ -352,3 +352,14 @@ Order: … `<GuestStoriesSection/>` → `<FinalBookingCTA/>` → footer. The old
 - Bottom: slim swipeable cards (photo, category, name, driving time) with a round route button on each that opens Google Maps directly. Swiping or tapping a card flies the camera to its marker and highlights it, and tapping a marker scrolls to its card.
 - Smaller pins and home marker on phones. The home marker always stays on top. Attribution (ⓘ) is styled dark and sits above the cards.
 - Imagery: a little more brightness and saturation, softer hillshade. The area beyond the horizon is a light haze colour instead of black.
+
+### Map – satellite as tiles (update)
+The satellite layer was one 4096 px image draped on the terrain. Some devices (seen on iPhone) did not render it when zoomed in (e.g. at Kitzsteinhorn), leaving only grey relief. It is now a regular XYZ tile pyramid (EOxCloudless 2016, z9–13, overzoomed beyond) for the whole region:
+- `scripts/build-sat-tiles.py` downloads the tiles into `public/map/sat/` (git-ignored).
+- `scripts/pack-sat-tiles.py` packs them into `public/map/sat.pack` + `sat-index.json`, served to MapLibre through the custom protocol `kzsat://`. That means one download instead of 369 requests.
+- On the live site you can instead serve `public/map/sat/{z}/{x}/{y}.jpg` directly and set `tiles: ['/map/sat/{z}/{x}/{y}.jpg']`.
+
+Also fixed:
+- Tapping a card on mobile could select the neighbouring card. Selection now follows the card's snap position, and programmatic scrolls are ignored.
+- Markers behind a ridge stay visible (`opacityWhenCovered`).
+- Selection pitch is 50° on mobile.

@@ -18,6 +18,7 @@ const MAPLIBRE_JS = 'https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js';
 type MLGlobal = typeof import('maplibre-gl');
 
 let mlPromise: Promise<MLGlobal> | null = null;
+let satProtocol: Promise<void> | null = null;
 function loadMapLibre(): Promise<MLGlobal> {
   const w = window as unknown as { maplibregl?: MLGlobal };
   if (w.maplibregl) return Promise.resolve(w.maplibregl);
@@ -116,6 +117,7 @@ export function AlpineMapSection({ lang }: { lang: Lang }) {
   const [status, setStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [cat, setCat] = useState<'all' | MapCat>('all');
   const [sel, setSel] = useState<string | null>(null);
+  const progScroll = useRef(0);
   const [routes, setRoutes] = useState<Routes>({});
   const [is3d, setIs3d] = useState(true);
 
@@ -153,18 +155,32 @@ export function AlpineMapSection({ lang }: { lang: Lang }) {
       try {
         const ml = await loadMapLibre();
         const meta = await (await fetch(`${BASE}map/meta.json`)).json();
+        // satellite tiles come from one packed file (sat.pack + index) via a custom protocol
+        if (!satProtocol) {
+          satProtocol = (async () => {
+            const [idx, buf] = await Promise.all([fetch(`${BASE}map/sat-index.json`).then((r) => r.json()), fetch(`${BASE}map/sat.pack`).then((r) => r.arrayBuffer())]);
+            ml.addProtocol('kzsat', async (params: { url: string }) => {
+              const key = params.url.replace('kzsat://', '');
+              const e = (idx as Record<string, [number, number]>)[key];
+              if (!e) throw new Error('no tile');
+              return { data: buf.slice(e[0], e[0] + e[1]) };
+            });
+          })();
+        }
+        await satProtocol;
         if (cancelled) return;
         const [W, S, E, N] = meta.bbox as number[];
         const m = new ml.Map({
           container: el,
           attributionControl: false,
           center: [(W + E) / 2, (S + N) / 2], zoom: 9.4, pitch: 0, bearing: 0,
-          minZoom: 9, maxZoom: 14.6, maxPitch: 70, maxBounds: [[W - 0.05, S - 0.04], [E + 0.05, N + 0.04]],
+          minZoom: 9, maxZoom: 14.6, maxPitch: 70, maxBounds: [[12.0, 47.04], [12.88, 47.42]],
           dragRotate: true, touchPitch: true, cooperativeGestures: false,
           style: {
             version: 8,
             sources: {
-              sat: { type: 'image', url: abs('map/satellite.jpg'), coordinates: meta.coordinates },
+              // XYZ tiles (z9–13, overzoomed beyond) – drapes reliably on 3D terrain on every device, incl. iOS
+              sat: { type: 'raster', tiles: ['kzsat://{z}/{x}/{y}'], tileSize: 256, minzoom: 9, maxzoom: 13, bounds: [12.02, 47.06, 12.86, 47.40] },
               dem: { type: 'raster-dem', tiles: [abs('map/dem/') + '{z}/{x}/{y}.png'], tileSize: 256, encoding: 'terrarium', minzoom: 8, maxzoom: 11, bounds: [W, S, E, N] },
             },
             layers: [
@@ -193,7 +209,7 @@ export function AlpineMapSection({ lang }: { lang: Lang }) {
           const logo = h.querySelector<HTMLElement>('.map-home-logo');
           if (logo) { const u = `url(${abs('images/logo-kitzalpen.png')})`; logo.style.webkitMaskImage = u; logo.style.maskImage = u; }
           h.style.zIndex = '5';
-          homeMarker.current = new ml.Marker({ element: h, anchor: 'bottom' }).setLngLat([HOME[1], HOME[0]]).addTo(m);
+          homeMarker.current = new ml.Marker({ element: h, anchor: 'bottom', opacityWhenCovered: '0.9' } as never).setLngLat([HOME[1], HOME[0]]).addTo(m);
           gsap.fromTo(h.querySelector('.map-home-pin'), { scale: 0, y: 20 }, { scale: 1, y: 0, duration: reduced ? 0 : 0.8, ease: 'back.out(1.8)', delay: reduced ? 0 : 0.6 });
         });
         m.on('error', () => { /* tile errors outside the bbox are expected; the image + DEM are local */ });
@@ -222,7 +238,7 @@ export function AlpineMapSection({ lang }: { lang: Lang }) {
     const m = map.current; const p = MAP_POINTS.find((x) => x.id === id);
     if (!m || !p || !fly) return;
     const pad = mobile ? { top: 70, bottom: 120, left: 30, right: 60 } : { top: 60, bottom: 60, left: 440, right: 60 };
-    const cam = { center: [p.pos[1], p.pos[0]] as [number, number], zoom: 12.6, pitch: is3d ? 60 : 0, padding: pad };
+    const cam = { center: [p.pos[1], p.pos[0]] as [number, number], zoom: 12.4, pitch: is3d ? (mobile ? 50 : 56) : 0, padding: pad };
     if (reduced) m.jumpTo(cam); else m.flyTo({ ...cam, duration: 2200, curve: 1.4, essential: true });
   }, [mobile, reduced, is3d]);
 
@@ -246,7 +262,7 @@ export function AlpineMapSection({ lang }: { lang: Lang }) {
       el.setAttribute('aria-label', p.name[lang]);
       el.innerHTML = `<span class="map-pin-dot"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="${ICON[p.cat]}"/></svg></span><span class="map-pin-tip">${p.name[lang].replace(/</g, '&lt;')}</span>`;
       el.addEventListener('click', (e) => { e.stopPropagation(); select(p.id); });
-      const mk = new ml.Marker({ element: el, anchor: 'center' }).setLngLat([p.pos[1], p.pos[0]]).addTo(m);
+      const mk = new ml.Marker({ element: el, anchor: 'center', opacityWhenCovered: '0.9' } as never).setLngLat([p.pos[1], p.pos[0]]).addTo(m);
       markers.current.set(p.id, { m: mk, el });
       gsap.fromTo(el.firstElementChild, { scale: 0, autoAlpha: 0 }, { scale: 1, autoAlpha: 1, duration: reduced ? 0 : 0.5, ease: 'back.out(2)', delay: reduced ? 0 : 0.9 + i++ * 0.08 });
     });
@@ -272,15 +288,17 @@ export function AlpineMapSection({ lang }: { lang: Lang }) {
   useEffect(() => {
     if (!mobile || !sel || !strip.current) return;
     const card = strip.current.querySelector<HTMLElement>(`[data-id="${sel}"]`);
+    progScroll.current = Date.now();
     if (card) strip.current.scrollTo({ left: card.offsetLeft - 12, behavior: reduced ? 'auto' : 'smooth' });
   }, [sel, mobile, reduced]);
   useEffect(() => {
     const s = strip.current; if (!s || !mobile) return;
     let t = 0;
     const on = () => { window.clearTimeout(t); t = window.setTimeout(() => {
-      const mid = s.scrollLeft + s.clientWidth / 2;
+      if (Date.now() - progScroll.current < 900) return; // our own scroll, not a swipe
+      const left = s.scrollLeft + 12;
       let best: HTMLElement | null = null, d = Infinity;
-      s.querySelectorAll<HTMLElement>('[data-id]').forEach((c) => { const cd = Math.abs(c.offsetLeft + c.offsetWidth / 2 - mid); if (cd < d) { d = cd; best = c; } });
+      s.querySelectorAll<HTMLElement>('[data-id]').forEach((c) => { const cd = Math.abs(c.offsetLeft - left); if (cd < d) { d = cd; best = c; } });
       const id = (best as HTMLElement | null)?.dataset.id;
       if (id && id !== sel) select(id);
     }, 160); };
