@@ -8,11 +8,12 @@ import { BOOK_ROOMS } from '../../content/pensionPage';
 import { useFinePointer, useReducedMotion } from '../../lib/hooks';
 import { Icon, I } from './PensionRooms';
 import { PensionFinalCTA } from './PensionFinalCTA';
+import { HouseFacade } from './HouseFacade';
+import { useSeason } from '../../lib/season';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 const IMG = `${import.meta.env.BASE_URL}images/all-rooms/`;
 const TYPES: RoomType[] = ['double', 'triple', 'quad'];
-const FLOORS = [3, 2, 1, 0] as const;
 /** quiet, distinct type accents (work on dark and light) */
 const TONE: Record<RoomType, string> = { double: '#c9a46a', triple: '#7fb5a6', quad: '#d98b6a' };
 const CAT: Partial<Record<RoomType, string>> = { double: '#room-double', triple: '#room-triple' };
@@ -123,6 +124,7 @@ export function AllRoomsPage({ lang }: { lang: Lang }) {
   const reduced = useReducedMotion();
   const fine = useFinePointer();
   const t = ALL_ROOMS_COPY[lang];
+  const { season } = useSeason();
   const [type, setType] = useState<RoomType | 'all'>('all');
   const [floor, setFloor] = useState<number | 'all'>('all');
   const [hover, setHover] = useState<HouseRoom | null>(null);
@@ -141,13 +143,7 @@ export function AllRoomsPage({ lang }: { lang: Lang }) {
     const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
       .fromTo(q('.js-ar-line'), { yPercent: 115 }, { yPercent: 0, duration: 1.1, stagger: 0.1, ease: 'power4.out' }, 0.15)
       .fromTo(q('.js-ar-in'), { autoAlpha: 0, y: 18 }, { autoAlpha: 1, y: 0, duration: 0.8, stagger: 0.08 }, 0.6);
-    FLOORS.slice().reverse().forEach((f, k) => {
-      tl.fromTo(q(`.js-ar-floor[data-f="${f}"]`), { scaleX: 0 }, { scaleX: 1, duration: 0.7, ease: 'expo.out' }, 0.4 + k * 0.22)
-        .fromTo(q(`.js-ar-tile[data-f="${f}"]`), { autoAlpha: 0, y: 14, scale: 0.85 }, { autoAlpha: 1, y: 0, scale: 1, duration: 0.55, stagger: 0.045, ease: 'back.out(1.6)' }, 0.55 + k * 0.22);
-    });
-    tl.fromTo(q('.js-ar-roof'), { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 1.1, ease: 'power2.inOut' }, 1.35)
-      .fromTo(q('.js-ar-roofill'), { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.8 }, 1.9)
-      .fromTo(q('.js-ar-stat'), { autoAlpha: 0, y: 14 }, { autoAlpha: 1, y: 0, duration: 0.7, stagger: 0.08 }, 1.6);
+    tl      .fromTo(q('.js-ar-stat'), { autoAlpha: 0, y: 14 }, { autoAlpha: 1, y: 0, duration: 0.7, stagger: 0.08 }, 1.6);
     q('.js-ar-num').forEach((el) => {
       const o = { v: 0 }, end = Number(el.dataset.n);
       tl.to(o, { v: end, duration: 1.2, ease: 'power2.out', onUpdate: () => { el.textContent = String(Math.round(o.v)); } }, 1.65);
@@ -172,7 +168,7 @@ export function AllRoomsPage({ lang }: { lang: Lang }) {
       {/* hero: the house */}
       <section id="top" aria-labelledby="ar-title" className="relative isolate overflow-hidden bg-[#0f1411] text-cream">
         <div aria-hidden className="absolute inset-0 -z-10 bg-[radial-gradient(80%_70%_at_75%_40%,color-mix(in_srgb,var(--k-pine)_45%,transparent),transparent_70%)]" />
-        <div className="mx-auto grid max-w-[1440px] items-center gap-12 px-5 pb-16 pt-[132px] sm:px-6 md:px-10 md:pb-24 md:pt-[170px] lg:grid-cols-[minmax(0,.95fr)_minmax(0,1.05fr)] lg:gap-14 lg:px-14 lg:pt-[210px]">
+        <div className="mx-auto grid max-w-[1440px] items-center gap-12 px-5 pb-16 pt-[132px] sm:px-6 md:px-10 md:pb-24 md:pt-[170px] lg:grid-cols-[minmax(0,.95fr)_minmax(0,1.05fr)] lg:gap-14 lg:px-14 lg:pt-[250px]">
           <div className="min-w-0">
             <p className="js-ar-in flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[.32em] text-gold-light md:text-[12.5px]"><span aria-hidden className="h-px w-8 bg-gold-light" />{t.eyebrow}</p>
             <h1 id="ar-title" className="mt-5 font-display font-normal leading-[.98] tracking-[-0.02em]" style={{ fontSize: 'clamp(40px, 5.6vw, 88px)' }}>
@@ -192,40 +188,12 @@ export function AllRoomsPage({ lang }: { lang: Lang }) {
           {/* elevation */}
           <div className="relative min-w-0">
             <p className="js-ar-in mb-3 text-center text-[11px] font-semibold uppercase tracking-[.26em] text-cream/50">{t.house} · {t.houseHint}</p>
-            <div className="relative mx-auto w-full max-w-[600px]">
-              <svg viewBox="0 0 600 120" className="block w-full overflow-visible" aria-hidden>
-                <path className="js-ar-roofill" d="M24 118 300 14 576 118Z" fill="color-mix(in srgb, var(--k-gold) 10%, transparent)" />
-                <path className="js-ar-roof" d="M8 120 300 8 592 120" fill="none" stroke="var(--k-gold-light)" strokeWidth="2" pathLength={1} strokeDasharray="1" />
-                <path className="js-ar-roof" d="M270 30h60v22h-60z" fill="none" stroke="var(--k-gold-light)" strokeOpacity=".5" strokeWidth="1.2" pathLength={1} strokeDasharray="1" />
-              </svg>
-              <div className="rounded-b-[14px] border-x border-b border-cream/15 bg-white/[.03] px-2.5 pb-3 pt-1 sm:px-4">
-                {FLOORS.map((f) => {
-                  const rooms = HOUSE_ROOMS.filter((r) => r.floor === f);
-                  return (
-                    <div key={f} className="relative flex items-center gap-2 py-2 sm:gap-3">
-                      <span className="js-ar-floor absolute inset-x-0 bottom-0 h-px origin-left bg-cream/12" data-f={f} />
-                      <button type="button" onClick={() => setFloor(floor === f ? 'all' : f)} aria-pressed={floor === f}
-                        className={`lnum grid h-9 w-9 shrink-0 place-items-center rounded-full text-[12px] font-semibold transition-colors sm:h-10 sm:w-10 ${floor === f ? 'bg-gold-light text-deep' : 'border border-cream/25 text-cream/80 hover:border-cream'}`}
-                        aria-label={t.floors[f]}>{t.floorShort[f]}</button>
-                      <ul className={`grid flex-1 gap-1.5 sm:gap-2 ${f === 0 ? 'grid-cols-6' : 'grid-cols-6'}`}>
-                        {rooms.map((r) => (
-                          <li key={r.no} className={f === 0 ? 'col-start-3 col-span-2' : ''}>
-                            <button type="button" data-f={f} onClick={() => open(r, HOUSE_ROOMS)} aria-label={`${t.open(r.no)} · ${t.types[r.type]} · ${r.m2} m²`}
-                              onPointerEnter={(e) => e.pointerType === 'mouse' && setHover(r)} onPointerLeave={() => setHover(null)} onFocus={() => setHover(r)} onBlur={() => setHover(null)}
-                              className={`js-ar-tile ar-tile lnum relative grid h-11 w-full place-items-center rounded-[9px] text-[12.5px] font-semibold sm:h-12 sm:text-[14px] ${matches(r) ? '' : 'is-dim'}`}
-                              style={{ ['--tone' as string]: TONE[r.type] }}>
-                              {r.no}
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  );
-                })}
-              </div>
+            <div className="relative mx-auto w-full max-w-[620px] lg:max-w-[560px]">
+              <HouseFacade t={t} season={season} reduced={reduced} tone={TONE} floor={floor} matches={matches} hover={hover}
+                onHover={setHover} onOpen={(r) => open(r, HOUSE_ROOMS)} onFloor={(f) => setFloor(floor === f ? 'all' : f)} />
               {/* hover preview (desktop) */}
               {fine && (
-                <div className={`ar-peek pointer-events-none absolute -top-4 left-1/2 w-[300px] -translate-x-1/2 -translate-y-full overflow-hidden rounded-[16px] bg-[#FAF8F5] text-ink shadow-[0_30px_60px_-25px_rgba(0,0,0,.8)] ${hover ? 'is-on' : ''}`} aria-hidden>
+                <div className={`ar-peek pointer-events-none absolute left-1/2 top-[3%] z-10 w-[300px] overflow-hidden rounded-[16px] bg-[#FAF8F5] text-ink shadow-[0_30px_60px_-25px_rgba(0,0,0,.8)] ${hover ? 'is-on' : ''}`} aria-hidden>
                   {hover && (
                     <>
                       <div className="aspect-[16/9] overflow-hidden"><Pic p={hover.pics[0]} sizes="300px" className="h-full w-full object-cover" /></div>
