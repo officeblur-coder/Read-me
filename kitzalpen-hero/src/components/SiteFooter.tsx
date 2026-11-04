@@ -1,5 +1,5 @@
 import type { Lang } from '../content/hero';
-import { NAV } from '../content/hero';
+import { FOOTER_NAV } from '../content/hero';
 import { Logo } from './Logo';
 
 /**
@@ -19,7 +19,7 @@ export function SiteFooter({ lang }: { lang: Lang }) {
         <nav aria-label={de ? 'Schnelllinks' : 'Quick links'}>
           <p className="text-[11px] font-semibold uppercase tracking-[.24em] text-gold-light">{de ? 'Schnelllinks' : 'Quick links'}</p>
           <ul className="mt-4 grid grid-cols-2 gap-x-6 gap-y-2 text-[14px]">
-            {NAV[lang].map((n) => <li key={n.href}><a href={n.href} className="hover:text-cream">{n.label}</a></li>)}
+            {FOOTER_NAV[lang].map((n) => <li key={n.href}><a href={n.href} className="hover:text-cream">{n.label}</a></li>)}
           </ul>
         </nav>
         <div>

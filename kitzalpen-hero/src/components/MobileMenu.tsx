@@ -5,6 +5,7 @@ import { NAV, type Copy, type Lang } from '../content/hero';
 import { Logo } from './Logo';
 import { LangSwitch } from './Header';
 import { BOOKING_ENGINE } from './BookingBar';
+import { StayAccordion } from './StayMenu';
 
 interface Props { open: boolean; lang: Lang; copy: Copy; reduced: boolean; onClose: () => void; onLang: (l: Lang) => void; onBook?: () => void }
 
@@ -58,7 +59,7 @@ export function MobileMenu({ open, lang, copy, reduced, onClose, onLang }: Props
 
       <nav aria-label="Hauptnavigation" className="flex-1 overflow-y-auto px-[max(24px,env(safe-area-inset-left))] pt-6">
         <ul className="flex flex-col">
-          {NAV[lang].map((n) => (
+          {NAV[lang].map((n) => n.mega ? <StayAccordion key={n.label} lang={lang} label={n.label} onNavigate={onClose} /> : (
             <li key={n.href} className="js-mm-item border-b border-ivory/10">
               <a href={n.href} onClick={onClose} className="flex min-h-[60px] items-center justify-between font-display text-[34px] font-medium leading-none">
                 {n.label}

@@ -4,24 +4,36 @@ export type Season = 'summer' | 'winter';
 /** Real pages of kitzalpen.at – no invented URLs. */
 const SITE = 'https://www.kitzalpen.at';
 
-export const NAV: Record<Lang, { label: string; href: string }[]> = {
+/** `mega: true` opens the accommodation panel (pension, chalet, room categories) instead of linking away. */
+export interface NavItem { label: string; href: string; mega?: boolean }
+export const NAV: Record<Lang, NavItem[]> = {
   de: [
-    { label: 'Pension', href: '#pension' }, // preview route – live: `${SITE}/pension/`
-    { label: 'Chalet', href: `${SITE}/chalet/` },
-    { label: 'Zimmer', href: `${SITE}/rooms/` },
+    { label: 'Unterkunft', href: '#pension', mega: true }, // preview route – live: `${SITE}/pension/`
     { label: 'Restaurant', href: `${SITE}/restaurant/` },
     { label: 'Aktivitäten', href: `${SITE}/activities/` },
     { label: 'Gruppen', href: `${SITE}/group-activities/` },
     { label: 'Kontakt', href: `${SITE}/contact/` },
   ],
   en: [
-    { label: 'Guesthouse', href: '#pension' }, // preview route – live: `${SITE}/en/pension/`
-    { label: 'Chalet', href: `${SITE}/en/chalet/` },
-    { label: 'Rooms', href: `${SITE}/en/rooms/` },
+    { label: 'Accommodation', href: '#pension', mega: true }, // preview route – live: `${SITE}/en/pension/`
     { label: 'Restaurant', href: `${SITE}/en/restaurant/` },
     { label: 'Activities', href: `${SITE}/en/activities/` },
     { label: 'Groups', href: `${SITE}/en/group-activities/` },
     { label: 'Contact', href: `${SITE}/en/contact/` },
+  ],
+};
+
+/** Footer quick links keep the full flat list. */
+export const FOOTER_NAV: Record<Lang, NavItem[]> = {
+  de: [
+    { label: 'Pension', href: '#pension' }, { label: 'Chalet', href: `${SITE}/chalet/` }, { label: 'Zimmer', href: '#pension-rooms' },
+    { label: 'Restaurant', href: `${SITE}/restaurant/` }, { label: 'Aktivitäten', href: `${SITE}/activities/` },
+    { label: 'Gruppen', href: `${SITE}/group-activities/` }, { label: 'Kontakt', href: `${SITE}/contact/` },
+  ],
+  en: [
+    { label: 'Guesthouse', href: '#pension' }, { label: 'Chalet', href: `${SITE}/en/chalet/` }, { label: 'Rooms', href: '#pension-rooms' },
+    { label: 'Restaurant', href: `${SITE}/en/restaurant/` }, { label: 'Activities', href: `${SITE}/en/activities/` },
+    { label: 'Groups', href: `${SITE}/en/group-activities/` }, { label: 'Contact', href: `${SITE}/en/contact/` },
   ],
 };
 

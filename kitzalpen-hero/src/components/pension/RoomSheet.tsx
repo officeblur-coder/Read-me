@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import type { Lang } from '../../content/hero';
-import { BOOK_ROOMS, PR_COPY, ROOM_KEYS, roomData, type RoomKey } from '../../content/pensionPage';
+import { BOOK_ROOMS, PR_COPY, ROOM_KEYS, roomData, roomRoute, type RoomKey } from '../../content/pensionPage';
 import { ROOM_GALLERIES } from '../../content/pensionRoomPhotos';
 import { Icon, I, PRPicture, PR_IMG } from './PensionRooms';
 
@@ -168,7 +168,7 @@ export function RoomSheet({ roomKey, from, lang, reduced, onClose }: Props) {
             <a href={BOOK_ROOMS} target="_blank" rel="noopener noreferrer" className="pr-btn-primary inline-flex min-h-[54px] items-center justify-center gap-3 rounded-full px-7 text-[15.5px] font-semibold">
               {t.book} <Icon d={I.arrow} size={17} w={1.8} />
             </a>
-            <a href={t.roomHref(r.slug)} className="pr-btn-ghost inline-flex min-h-[54px] items-center justify-center rounded-full px-7 text-[15.5px] font-semibold">{t.details}</a>
+            <a href={roomRoute(roomKey)} onClick={() => { document.documentElement.style.overflow = ''; }} className="pr-btn-ghost inline-flex min-h-[54px] items-center justify-center rounded-full px-7 text-[15.5px] font-semibold">{t.details}</a>
           </div>
         </div>
 

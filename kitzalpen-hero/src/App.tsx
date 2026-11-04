@@ -17,6 +17,8 @@ import { ActivitiesPage } from './components/activities/ActivitiesPage';
 import { PensionHero } from './components/pension/PensionHero';
 import { PensionRooms } from './components/pension/PensionRooms';
 import { PensionFinalCTA } from './components/pension/PensionFinalCTA';
+import { RoomPage } from './components/pension/RoomPage';
+import { ROOM_KEYS, type RoomKey } from './content/pensionPage';
 import { AlpineExperienceSection } from './components/experience/AlpineExperienceSection';
 import { AlpineMapSection } from './components/map/AlpineMapSection';
 import { GuestStoriesSection } from './components/stories/GuestStoriesSection';
@@ -39,11 +41,26 @@ export default function App() {
 
   // dedicated pages: #activities-summer / #activities-winter (live site: /activities/summer|winter)
   // preview routing by hash: #pension, #activities-summer|winter (live site: /pension/, /activities/summer|winter)
-  type Route = 'home' | 'pension' | Season;
-  const routeOf = (): Route => { const h = window.location.hash; return h === '#pension' ? 'pension' : h === '#activities-summer' ? 'summer' : h === '#activities-winter' ? 'winter' : 'home'; };
+  // #room-<key> → room pages (live: /rooms/<slug>/); #pension-rooms → pension page at the room section
+  type Route = 'home' | 'pension' | Season | `room-${RoomKey}`;
+  const routeOf = (): Route => {
+    const h = window.location.hash.slice(1);
+    if (h === 'pension' || h === 'pension-rooms') return 'pension';
+    if (h === 'activities-summer') return 'summer';
+    if (h === 'activities-winter') return 'winter';
+    if (h.startsWith('room-') && ROOM_KEYS.includes(h.slice(5) as RoomKey)) return h as Route;
+    return 'home';
+  };
   const [page, setPage] = useState<Route>(routeOf);
   useEffect(() => {
-    const on = () => { const r = routeOf(); setPage((prev) => { if (prev !== r) window.setTimeout(() => window.scrollTo(0, 0), 0); return r; }); };
+    const toRooms = () => { if (window.location.hash === '#pension-rooms') window.setTimeout(() => document.getElementById('rooms')?.scrollIntoView({ behavior: 'auto', block: 'start' }), 80); };
+    const on = () => {
+      document.documentElement.style.overflow = '';
+      const r = routeOf();
+      setPage((prev) => { if (prev !== r) window.setTimeout(() => window.scrollTo(0, 0), 0); return r; });
+      toRooms();
+    };
+    toRooms();
     window.addEventListener('hashchange', on);
     return () => window.removeEventListener('hashchange', on);
   }, []);
@@ -79,12 +96,14 @@ export default function App() {
     <>
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-ivory focus:px-4 focus:py-2 focus:text-forest">{copy.skip}</a>
       <WeatherBand lang={lang} reduced={reduced} />
-      <Header lang={lang} copy={copy} compact={compact} fine={fine && !reduced} menuOpen={menu} onLang={setLang} onMenu={() => setMenu(true)} showSeason={page === 'pension'} />
+      <Header lang={lang} copy={copy} compact={compact} fine={fine && !reduced} menuOpen={menu} onLang={setLang} onMenu={() => setMenu(true)} showSeason={page === 'pension' || page.startsWith('room-')} />
       <MobileMenu open={menu} lang={lang} copy={copy} reduced={reduced} onClose={() => setMenu(false)} onLang={setLang} onBook={onBook} />
-      {page === 'pension' ? (
+      {page.startsWith('room-') ? (
+        <main id="main"><RoomPage key={page} k={page.slice(5) as RoomKey} lang={lang} /></main>
+      ) : page === 'pension' ? (
         <main id="main"><PensionHero lang={lang} /><PensionRooms lang={lang} /><PensionFinalCTA lang={lang} /></main>
       ) : page !== 'home' ? (
-        <main id="main"><ActivitiesPage season={page} lang={lang} /></main>
+        <main id="main"><ActivitiesPage season={page as Season} lang={lang} /></main>
       ) : (
       <main id="main">
         <Hero lang={lang} copy={copy} bookingRef={booking} onBookingSubmit={onSubmit} />

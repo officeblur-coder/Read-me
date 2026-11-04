@@ -4,6 +4,7 @@ import { NAV, type Copy, type Lang } from '../content/hero';
 import { useMagnetic } from '../lib/hooks';
 import { Logo } from './Logo';
 import { SeasonToggle } from './SeasonToggle';
+import { StayMenu } from './StayMenu';
 import { useSeason } from '../lib/season';
 
 interface Props {
@@ -58,7 +59,7 @@ export function Header({ lang, copy, compact, fine, menuOpen, onLang, onMenu, sh
 
         <nav aria-label="Hauptnavigation" className="hidden lg:block">
           <ul className="flex items-center gap-[clamp(18px,2.1vw,38px)] text-[15px] font-medium">
-            {NAV[lang].map((n) => (
+            {NAV[lang].map((n) => n.mega ? <StayMenu key={n.label} lang={lang} label={n.label} /> : (
               <li key={n.href} className="js-head">
                 <a href={n.href} className="nav-link relative inline-flex min-h-11 items-center opacity-90 transition-opacity hover:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-champagne">
                   {n.label}
@@ -70,7 +71,8 @@ export function Header({ lang, copy, compact, fine, menuOpen, onLang, onMenu, sh
 
         <div className="flex items-center gap-2 md:gap-5">
           {showSeason && <SeasonToggle active={season} copy={copy} onSelect={setSeason} className="header-season js-head shrink-0" labelClass="max-sm:sr-only" />}
-          <LangSwitch lang={lang} onLang={onLang} label={copy.lang} className="js-head" />
+          {/* phones on subpages: the season toggle takes this spot; DE/EN stays in the menu */}
+          <LangSwitch lang={lang} onLang={onLang} label={copy.lang} className={`js-head ${showSeason ? 'max-sm:hidden' : ''}`} />
           <a
             ref={bookRef}
             href={BOOKING_ENGINE}

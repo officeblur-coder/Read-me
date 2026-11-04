@@ -410,6 +410,14 @@
   .ph-secondary { color: #fff; border: 1px solid rgba(255,255,255,.8); transition: background-color .3s ease, border-color .3s ease, transform .3s ease; }
   .ph-secondary:hover { background: rgba(255,255,255,.1); border-color: var(--k-gold-light); transform: translateY(-2px); }
   .ph-primary:focus-visible, .ph-secondary:focus-visible { outline: 2px solid var(--k-cream); outline-offset: 3px; }
+  /* accommodation mega menu */
+  .stay-menu { z-index: 20; visibility: hidden; opacity: 0; transform: translate(-50%, 10px); pointer-events: none; transition: opacity .3s ease, transform .45s cubic-bezier(.2,.7,.2,1), visibility 0s linear .45s; }
+  .stay-menu[data-open='true'] { visibility: visible; opacity: 1; transform: translate(-50%, 0); pointer-events: auto; transition: opacity .3s ease, transform .45s cubic-bezier(.2,.7,.2,1), visibility 0s; }
+  .stay-menu .sm-item { opacity: 0; transform: translateY(8px); transition: opacity .4s ease, transform .5s cubic-bezier(.2,.7,.2,1); }
+  .stay-menu[data-open='true'] .sm-item { opacity: 1; transform: none; transition-delay: calc(var(--i) * 60ms + 60ms); }
+  .sm-all { color: #fff; background: var(--k-pine); transition: background-color .3s ease; }
+  .sm-all:hover { background: var(--k-deep); }
+  @media (prefers-reduced-motion: reduce) { .stay-menu, .stay-menu .sm-item { transition: none !important; transform: translate(-50%, 0); } .stay-menu .sm-item { transform: none; } }
   /* pension · rooms */
   .lnum { font-variant-numeric: lining-nums tabular-nums; }
   .pr-card { transition: transform .35s cubic-bezier(.2,.7,.2,1), box-shadow .35s ease, border-color .35s ease; }
