@@ -4,7 +4,7 @@
  * to the web host, e.g. https://www.kitzalpen.at/tour/ – then put the address of its index.htm here.
  * While it is empty, the button still opens the overlay and shows a short "coming soon" note.
  */
-export const TOUR_URL = '';
+export const TOUR_URL = 'https://kitzbuhelalpenpension.at/virtualtour/index.htm';
 
 export const TOUR_COPY = {
   de: { button: '360° Rundgang', title: 'Virtueller Rundgang', close: 'Rundgang schließen', loading: 'Rundgang wird geladen …',
