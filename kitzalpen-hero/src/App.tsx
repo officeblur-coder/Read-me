@@ -25,6 +25,8 @@ import { GroupsPage } from './components/groups/GroupsPage';
 import { VirtualTour } from './components/tour/VirtualTour';
 import { BackToTop } from './components/BackToTop';
 import { ContactPage } from './components/contact/ContactPage';
+import { MountainPage } from './components/mountain/MountainPage';
+import { MountainTeaser } from './components/mountain/MountainTeaser';
 import { SummerPage, WinterPage } from './components/activities/WinterPage';
 import { ROOM_KEYS, type RoomKey } from './content/pensionPage';
 import { AlpineExperienceSection } from './components/experience/AlpineExperienceSection';
@@ -50,7 +52,7 @@ export default function App() {
   // dedicated pages: #activities-summer / #activities-winter (live site: /activities/summer|winter)
   // preview routing by hash: #pension, #activities-summer|winter (live site: /pension/, /activities/summer|winter)
   // #room-<key> → room pages (live: /rooms/<slug>/); #pension-rooms → pension page at the room section
-  type Route = 'home' | 'pension' | 'chalet' | 'all-rooms' | 'restaurant' | 'groups' | 'contact' | Season | `room-${RoomKey}`;
+  type Route = 'home' | 'pension' | 'chalet' | 'all-rooms' | 'restaurant' | 'groups' | 'contact' | 'mountain' | Season | `room-${RoomKey}`;
   const routeOf = (): Route => {
     const h = window.location.hash.slice(1);
     if (h === 'pension' || h === 'pension-rooms') return 'pension';
@@ -59,6 +61,7 @@ export default function App() {
     if (h === 'restaurant') return 'restaurant';
     if (h === 'groups') return 'groups';
     if (h === 'contact') return 'contact';
+    if (h === 'mountain') return 'mountain';
     if (h === 'activities-summer') return 'summer';
     if (h === 'activities-winter') return 'winter';
     if (h.startsWith('room-') && ROOM_KEYS.includes(h.slice(5) as RoomKey)) return h as Route;
@@ -123,9 +126,11 @@ export default function App() {
     <>
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-ivory focus:px-4 focus:py-2 focus:text-forest">{copy.skip}</a>
       <WeatherBand lang={lang} reduced={reduced} />
-      <Header lang={lang} copy={copy} compact={compact} fine={fine && !reduced} menuOpen={menu} onLang={setLang} onMenu={() => setMenu(true)} showSeason={page === 'pension' || page === 'chalet' || page === 'contact' || page === 'summer' || page === 'winter' || page === 'all-rooms' || page.startsWith('room-')} />
+      <Header lang={lang} copy={copy} compact={compact} fine={fine && !reduced} menuOpen={menu} onLang={setLang} onMenu={() => setMenu(true)} showSeason={page === 'pension' || page === 'chalet' || page === 'contact' || page === 'mountain' || page === 'summer' || page === 'winter' || page === 'all-rooms' || page.startsWith('room-')} />
       <MobileMenu open={menu} lang={lang} copy={copy} reduced={reduced} onClose={() => setMenu(false)} onLang={setLang} onBook={onBook} />
-      {page === 'contact' ? (
+      {page === 'mountain' ? (
+        <main id="main"><MountainPage lang={lang} /></main>
+      ) : page === 'contact' ? (
         <main id="main"><ContactPage lang={lang} /></main>
       ) : page === 'groups' ? (
         <main id="main"><GroupsPage lang={lang} /></main>
@@ -150,6 +155,7 @@ export default function App() {
         <RestaurantSection lang={lang} />
         <ActivitiesSection lang={lang} />
         <AlpineExperienceSection lang={lang} />
+        <MountainTeaser lang={lang} />
         <AlpineMapSection lang={lang} />
         <GuestStoriesSection lang={lang} />
         <FinalBookingCTA lang={lang} />

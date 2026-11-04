@@ -418,6 +418,29 @@
   .sm-all { color: #fff; background: var(--k-pine); transition: background-color .3s ease; }
   .sm-all:hover { background: var(--k-deep); }
   @media (prefers-reduced-motion: reduce) { .stay-menu, .stay-menu .sm-item { transition: none !important; transform: translate(-50%, 0); } .stay-menu .sm-item { transform: none; } }
+  /* mountain experience */
+  .mx-fade { animation: mx-fade .5s ease both; }
+  @keyframes mx-fade { from { opacity: 0; transform: translateY(6px); } }
+  .mx-zoom { transition: transform 1.2s cubic-bezier(.2,.7,.2,1); }
+  .mx-fade:hover .mx-zoom { transform: scale(1.03); }
+  .mx-shimmer { background: linear-gradient(90deg, rgba(0,0,0,.06), rgba(0,0,0,.12), rgba(0,0,0,.06)); background-size: 200% 100%; animation: mx-shim 1.2s linear infinite; }
+  @keyframes mx-shim { to { background-position: -200% 0; } }
+  .mx-seg { color: var(--k-ink); transition: background-color .3s ease, color .3s ease; }
+  .mx-seg.is-on { background: var(--k-pine); color: var(--k-cream); }
+  .mx-cam { color: var(--k-cream); border: 1px solid rgba(255,255,255,.1); transition: background-color .3s ease, border-color .3s ease; }
+  .mx-cam:hover { background: rgba(255,255,255,.06); }
+  .mx-cam.is-on { border-color: var(--k-gold-light); background: rgba(255,255,255,.08); }
+  .mx-opt { color: var(--k-ink); background: #fff; border: 1px solid color-mix(in srgb, var(--k-pine) 15%, transparent); transition: border-color .3s ease, background-color .3s ease, transform .3s ease; }
+  .mx-opt:hover { border-color: var(--k-pine); transform: translateY(-2px); }
+  .mx-opt.is-on { background: var(--k-pine); color: var(--k-cream); border-color: var(--k-pine); }
+  .mx-prof { color: var(--k-cream); border: 1px solid rgba(255,255,255,.22); background: rgba(10,18,13,.3); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); transition: border-color .35s ease, background-color .35s ease, transform .35s ease; }
+  .mx-prof:hover { border-color: var(--k-gold-light); transform: translateY(-2px); }
+  .mx-prof.is-on { background: var(--k-cream); color: var(--k-deep); border-color: var(--k-cream); }
+  .mx-prof.is-on .text-cream\/70 { color: color-mix(in srgb, var(--k-deep) 70%, transparent); }
+  .mx-prof.is-on .text-gold-light { color: var(--k-gold-dark); }
+  .mx-seg:focus-visible, .mx-cam:focus-visible, .mx-opt:focus-visible, .mx-prof:focus-visible { outline: 2px solid var(--k-gold); outline-offset: 3px; }
+  @media (prefers-reduced-motion: reduce) { .mx-fade, .mx-shimmer { animation: none; } .mx-opt, .mx-prof { transition: none; } }
+  @media print { .site-header, .qa-root, .to-top, #mx-dash, #mx-cams, #mx-find, footer { display: none !important; } }
   /* back to top: above the concierge capsule */
   .to-top { right: max(16px, env(safe-area-inset-right)); bottom: calc(92px + env(safe-area-inset-bottom)); color: var(--k-cream); background: color-mix(in srgb, var(--k-deep) 82%, transparent);
     backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); box-shadow: 0 12px 30px -12px rgba(0,0,0,.55);

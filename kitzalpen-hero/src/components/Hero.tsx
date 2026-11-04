@@ -3,7 +3,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
 import type { Copy, Lang, Season } from '../content/hero';
-import { useFinePointer, useIsMobile, useMagnetic, useReducedMotion, useSize } from '../lib/hooks';
+import { useFinePointer, useIsMobile, useReducedMotion, useSize } from '../lib/hooks';
 import { SeasonCompare, type SeasonCompareHandle } from './SeasonCompare';
 import { SeasonToggle } from './SeasonToggle';
 import { SeasonFx } from './SeasonFx';
@@ -25,7 +25,6 @@ export function Hero({ lang, copy, bookingRef, onBookingSubmit }: Props) {
   const root = useRef<HTMLElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const compare = useRef<SeasonCompareHandle>(null);
-  const ctaRef = useRef<HTMLButtonElement>(null);
   const { w, h } = useSize(stage);
   const reduced = useReducedMotion();
   const fine = useFinePointer();
@@ -35,7 +34,6 @@ export function Hero({ lang, copy, bookingRef, onBookingSubmit }: Props) {
   const [initialSeason] = useState<Season>(globalSeason);
   const [season, setSeason] = useState<Season>(globalSeason);
   const [fx, setFx] = useState<Season | null>(null);
-  useMagnetic(ctaRef, fine && !reduced);
   const ready = w > 0 && h > 0;
 
   // the Hero selector drives the global season (palette + Activities)
@@ -113,9 +111,6 @@ export function Hero({ lang, copy, bookingRef, onBookingSubmit }: Props) {
               {copy.sub.join(' · ')}
             </p>
             <div className="js-fade pointer-events-auto mt-9 hidden items-center gap-4 md:flex">
-              <button ref={ctaRef} type="button" onClick={() => bookingRef.current?.focusArrival()} className="btn-gold inline-flex min-h-[52px] items-center gap-3 rounded-full px-8 text-[16px] font-semibold">
-                {copy.cta} <span className="arrow" aria-hidden>→</span>
-              </button>
               <button type="button" onPointerEnter={warmTour} onPointerDown={warmTour} onFocus={warmTour} onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); openTour(r.left + r.width / 2, r.top + r.height / 2); }}
                 className="vt-btn inline-flex min-h-[52px] items-center gap-2.5 rounded-full px-6 text-[15.5px] font-semibold">
                 <span className="vt-ring grid h-8 w-8 place-items-center rounded-full"><Icon360 size={18} /></span>{TOUR_COPY[lang].button}

@@ -242,6 +242,26 @@ export function AlpineMapSection({ lang }: { lang: Lang }) {
     if (reduced) m.jumpTo(cam); else m.flyTo({ ...cam, duration: 2200, curve: 1.4, essential: true });
   }, [mobile, reduced, is3d]);
 
+  // deep link from the mountain guide: #karte-<pointId> – scroll here, then fly to the point once ready
+  const pending = useRef<string | null>(null);
+  useEffect(() => {
+    const read = () => {
+      const mm = /^#karte-(.+)$/.exec(window.location.hash);
+      if (!mm || !MAP_POINTS.some((x) => x.id === mm[1])) return;
+      pending.current = mm[1];
+      window.setTimeout(() => root.current?.scrollIntoView({ behavior: 'auto', block: 'start' }), 120);
+    };
+    read();
+    window.addEventListener('hashchange', read);
+    return () => window.removeEventListener('hashchange', read);
+  }, []);
+  useEffect(() => {
+    if (status !== 'ready' || !pending.current) return;
+    const id = pending.current; pending.current = null; flown.current = true;
+    setCat('all');
+    window.setTimeout(() => select(id), 400);
+  }, [status, select]);
+
   useEffect(() => {
     const m = map.current; const ml = (window as unknown as { maplibregl?: MLGlobal }).maplibregl;
     if (status !== 'ready' || !m || !ml) return;

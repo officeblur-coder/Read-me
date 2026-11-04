@@ -9,6 +9,7 @@ import { useIsMobile, useReducedMotion } from '../../lib/hooks';
 import { SeasonFx } from '../SeasonFx';
 import { Icon } from '../pension/PensionRooms';
 import { PensionFinalCTA } from '../pension/PensionFinalCTA';
+import { MountainTeaser } from '../mountain/MountainTeaser';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -322,6 +323,7 @@ export function ActivityJourney({ lang, season }: { lang: Lang; season: Season }
         </div>
       </section>
 
+      <MountainTeaser lang={lang} />
       <PensionFinalCTA lang={lang} />
     </div>
   );

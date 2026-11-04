@@ -370,3 +370,20 @@ Also fixed:
   - The section opens with a full-bleed seasonal photo with the eyebrow, headline and subtitle on it. Winter uses the higher-resolution Wildkogel photo from kitzalpen.at, since the supplied skier photo is only 372 px wide; summer uses the hiker photo.
   - Compact cards (16:11 image, 2-line text) in a swipe strip with a "01 / 05" counter and progress line.
   - Desktop is unchanged.
+
+## Alpine Mountain Experience (`#mountain`)
+
+Dashboard, webcams, day planner and slope / adventure finder on one page; follows the shared Sommer/Winter
+state and DE/EN. Entry points: homepage teaser (after "The Alpine Experience"), both activity pages, footer.
+
+External services (no keys, no tracking):
+- **Open-Meteo** forecast API – temperature, weather, wind, modelled snow depth / snowfall for Resterkogel
+  and Wildkogel (cached 15 min in sessionStorage, labelled "weather model" with timestamp).
+- **Panomax** 360° viewers (kitzski.panomax.com, wildkogel-arena.panomax.com) – iframe loaded on click.
+- **feratel** still images used on kitzski.at (Resterkogel, Pengelstein) – shown as refreshed image with
+  the provider's Last-Modified time. Please confirm usage with KitzSki / feratel before go-live.
+- **Official interactive maps** (map.kitzski.at, intermaps Wildkogel) – live lift & slope status,
+  opened in an overlay on demand. Lift / slope counts are NOT shown by us: no public API exists.
+- Drive km / minutes: OSRM (public/map/routes.json). Directions: Google Maps URLs.
+
+Still to connect (needs operator access): an authorised lift/slope status feed (KitzSki, Wildkogel-Arena).

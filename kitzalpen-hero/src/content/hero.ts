@@ -27,12 +27,12 @@ export const FOOTER_NAV: Record<Lang, NavItem[]> = {
   de: [
     { label: 'Pension', href: '#pension' }, { label: 'Chalet', href: '#chalet' }, { label: 'Zimmer', href: '#all-rooms' },
     { label: 'Restaurant', href: '#restaurant' }, { label: 'Aktivitäten', href: '#activities-winter' }, // preview – live: /activities/
-    { label: 'Gruppen', href: '#groups' }, { label: 'Kontakt', href: '#contact' },
+    { label: 'Gruppen', href: '#groups' }, { label: 'Bergerlebnis', href: '#mountain' }, { label: 'Kontakt', href: '#contact' },
   ],
   en: [
     { label: 'Guesthouse', href: '#pension' }, { label: 'Chalet', href: '#chalet' }, { label: 'Rooms', href: '#all-rooms' },
     { label: 'Restaurant', href: '#restaurant' }, { label: 'Activities', href: '#activities-winter' }, // preview – live: /en/activities/
-    { label: 'Groups', href: '#groups' }, { label: 'Contact', href: '#contact' },
+    { label: 'Groups', href: '#groups' }, { label: 'Mountain guide', href: '#mountain' }, { label: 'Contact', href: '#contact' },
   ],
 };
 
