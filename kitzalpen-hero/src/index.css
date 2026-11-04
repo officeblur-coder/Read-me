@@ -410,6 +410,7 @@
   .ph-secondary { color: #fff; border: 1px solid rgba(255,255,255,.8); transition: background-color .3s ease, border-color .3s ease, transform .3s ease; }
   .ph-secondary:hover { background: rgba(255,255,255,.1); border-color: var(--k-gold-light); transform: translateY(-2px); }
   .ph-primary:focus-visible, .ph-secondary:focus-visible { outline: 2px solid var(--k-cream); outline-offset: 3px; }
+  .ph-bar { transform: scaleY(0); }
   .ph-rail { writing-mode: vertical-rl; }
   .ph-grain { opacity: .07; mix-blend-mode: overlay;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }

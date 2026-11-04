@@ -97,16 +97,21 @@ export function PensionHero({ lang }: { lang: Lang }) {
   const wordsIn = (d = 0) => gsap.timeline({ delay: d })
     .fromTo(q('.js-ph-word'), { yPercent: 115, rotate: 3 }, { yPercent: 0, rotate: 0, duration: 1, stagger: 0.045, ease: 'power4.out' }, 0);
 
-  // opening: the house appears through an arched window that opens to full frame
+  // opening: a cinematic shutter parts from the middle while the lens pulls focus on the house
   useGSAP(() => {
     if (reduced) return;
     const frame = q('.js-ph-frame')[0];
-    const arch = mobile ? 'inset(24% 20% 30% 20% round 400px 400px 14px 14px)' : 'inset(18% 39% 20% 39% round 400px 400px 14px 14px)';
     const open = 'inset(0% 0% 0% 0% round 0px 0px 0px 0px)';
+    gsap.set(frame, { clipPath: open });
+    const blur = mobile ? 14 : 22;
     const intro = gsap.timeline({ defaults: { ease: 'power3.out' } })
-      .fromTo(frame, { clipPath: arch }, { clipPath: open, duration: 1.7, ease: 'expo.inOut' }, 0.35)
-      .fromTo(q('.js-ph-kb'), { scale: 1.32 }, { scale: 1, duration: 2.3, ease: 'expo.inOut' }, 0.2)
-      .fromTo(q('.js-ph-veil'), { autoAlpha: 0 }, { autoAlpha: 1, duration: 1, ease: 'power1.out' }, 1.3)
+      // the slit widens to a letterbox, holds a beat, then the bars leave the frame
+      .fromTo(q('.js-ph-bar'), { scaleY: 1 }, { scaleY: 0.26, duration: 1.2, ease: 'expo.inOut' }, 0.15)
+      .to(q('.js-ph-bar'), { scaleY: 0, duration: 1.1, ease: 'expo.inOut' }, 1.45)
+      // focus pull + exposure settling, with a slow push away from the house
+      .fromTo(q('.js-ph-kb'), { scale: 1.16, filter: `blur(${blur}px) brightness(1.35) saturate(.65)` },
+        { scale: 1, filter: 'blur(0px) brightness(1) saturate(1)', duration: 2.6, ease: 'power2.inOut', clearProps: 'filter' }, 0.15)
+      .fromTo(q('.js-ph-veil'), { autoAlpha: 0 }, { autoAlpha: 1, duration: 1, ease: 'power1.out' }, 1.5)
       .fromTo(q('.js-ph-eyebrow'), { autoAlpha: 0, y: 14 }, { autoAlpha: 1, y: 0, duration: 0.7 }, 1.45)
       .fromTo(q('.js-ph-word'), { yPercent: 115, rotate: 3 }, { yPercent: 0, rotate: 0, duration: 1.1, stagger: 0.05, ease: 'power4.out' }, 1.5)
       .fromTo(q('.js-ph-rule'), { scaleX: 0 }, { scaleX: 1, duration: 0.9 }, 2.0)
@@ -121,7 +126,7 @@ export function PensionHero({ lang }: { lang: Lang }) {
     });
 
     // slow breathing of the photo, forever
-    intro.add(() => { gsap.to(q('.js-ph-kb'), { scale: 1.07, duration: 16, ease: 'sine.inOut', yoyo: true, repeat: -1 }); }, 2.5);
+    intro.add(() => { gsap.to(q('.js-ph-kb'), { scale: 1.07, duration: 16, ease: 'sine.inOut', yoyo: true, repeat: -1 }); }, 2.8);
 
     // on scroll the frame lifts into a rounded card and the copy drifts away faster than the photo
     intro.add(() => {
@@ -196,6 +201,8 @@ export function PensionHero({ lang }: { lang: Lang }) {
             </div>
           </div>
         </div>
+        <div aria-hidden className="js-ph-bar ph-bar pointer-events-none absolute inset-x-0 top-0 z-[8] h-1/2 origin-top bg-deep" />
+        <div aria-hidden className="js-ph-bar ph-bar pointer-events-none absolute inset-x-0 bottom-0 z-[8] h-[calc(50%+1px)] origin-bottom bg-deep" />
         <SeasonFx mode={season} mobile={mobile} reduced={reduced} />
         {/* contrast only where the text sits: bottom-left; tinted by the season palette */}
         <div aria-hidden className="js-ph-veil pointer-events-none absolute inset-0 z-[6]">
