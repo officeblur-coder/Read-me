@@ -20,6 +20,7 @@ export function VirtualTour({ lang }: { lang: Lang }) {
   const reduced = useReducedMotion();
   const [open, setOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [slow, setSlow] = useState(false);
   const panel = useRef<HTMLDivElement>(null);
   const closeBtn = useRef<HTMLButtonElement>(null);
   const origin = useRef({ x: 50, y: 50 });
@@ -38,6 +39,8 @@ export function VirtualTour({ lang }: { lang: Lang }) {
 
   useEffect(() => {
     if (!open) return;
+    setSlow(false);
+    const slowId = window.setTimeout(() => setSlow(true), 6000);
     const html = document.documentElement, prev = html.style.overflow;
     html.style.overflow = 'hidden';
     closeBtn.current?.focus({ preventScroll: true });
@@ -45,7 +48,7 @@ export function VirtualTour({ lang }: { lang: Lang }) {
     if (!reduced && panel.current) gsap.fromTo(panel.current, { clipPath: `circle(0% at ${x}% ${y}%)` }, { clipPath: `circle(150% at ${x}% ${y}%)`, duration: 0.9, ease: 'expo.inOut', clearProps: 'clipPath' });
     const key = (e: KeyboardEvent) => { if (e.key === 'Escape') close(); };
     window.addEventListener('keydown', key);
-    return () => { html.style.overflow = prev; window.removeEventListener('keydown', key); };
+    return () => { window.clearTimeout(slowId); html.style.overflow = prev; window.removeEventListener('keydown', key); };
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const close = () => {
@@ -76,6 +79,11 @@ export function VirtualTour({ lang }: { lang: Lang }) {
             <p className="mt-3 text-[15.5px] text-cream/70">{t.soonText}</p>
           </div>
         </div>
+      )}
+      {TOUR_URL && slow && (
+        <a href={TOUR_URL} target="_blank" rel="noopener noreferrer" className="absolute bottom-[max(18px,env(safe-area-inset-bottom))] left-1/2 z-10 inline-flex min-h-11 -translate-x-1/2 items-center gap-2 rounded-full bg-cream/95 px-5 text-[13.5px] font-semibold text-deep shadow-[0_10px_30px_-10px_rgba(0,0,0,.6)]">
+          {t.direct} ↗
+        </a>
       )}
       <button ref={closeBtn} type="button" onClick={close} aria-label={t.close}
         className="absolute right-[max(16px,env(safe-area-inset-right))] top-[max(16px,env(safe-area-inset-top))] z-10 grid h-12 w-12 place-items-center rounded-full bg-cream/95 text-deep shadow-[0_10px_30px_-10px_rgba(0,0,0,.6)] transition-transform hover:rotate-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-gold-light">
