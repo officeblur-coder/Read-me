@@ -3,8 +3,9 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
 import type { Lang, Season } from '../../content/hero';
-import { useFinePointer, useReducedMotion } from '../../lib/hooks';
+import { useFinePointer, useIsMobile, useReducedMotion } from '../../lib/hooks';
 import { useSeason } from '../../lib/season';
+import { SeasonFx } from '../SeasonFx';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 const IMG = `${import.meta.env.BASE_URL}images/pension/`;
@@ -16,22 +17,29 @@ const PHOTO: Record<Season, { stem: string; sizes: number[]; desk: string; mob: 
   summer: { stem: 'hero-summer', sizes: [900, 1600], desk: '70% 45%', mob: '78% 45%' },
 };
 
+/** Reitlehen 42 (OSM Nominatim, see content/map-points.json): 47.27268 N, 12.42573 E */
+const COORDS = '47°16′22″ N · 12°25′33″ E';
+
 const COPY = {
   de: {
-    eyebrow: 'Die Pension · Hollersbach',
+    eyebrow: 'Die Pension · Hollersbach im Pinzgau',
     winter: ['Ihr Zuhause in den Alpen,', 'ganz nah an den Bergen.'],
     summer: ['Nah an allem, was Ihren', 'Urlaub besonders macht.'],
-    facts: ['17 Zimmer', 'Restaurant im Haus', '2 km zur Panoramabahn'],
-    rooms: 'Zimmer entdecken', contact: 'Kontakt aufnehmen',
+    stats: [{ n: 17, u: '', l: 'Zimmer', m: 'Zimmer' }, { n: 4, u: '', l: 'Zimmerkategorien', m: 'Kategorien' }, { n: 2, u: ' km', l: 'zur Panoramabahn', m: 'Panoramabahn' }],
+    eyebrowShort: 'Die Pension · Hollersbach',
+    tag: 'Restaurant & Bar im Haus',
+    rooms: 'Zimmer entdecken', contact: 'Kontakt aufnehmen', scroll: 'Scrollen',
     roomsHref: `${SITE}/rooms/`, contactHref: `${SITE}/contact/`,
     alt: { winter: 'Die Pension im Winter, verschneit, mit Holzbalkonen', summer: 'Die Pension im Sommer mit Garten, Terrasse, Holzbalkonen und Bergen im Hintergrund' },
   },
   en: {
-    eyebrow: 'The Pension · Hollersbach',
+    eyebrow: 'The Pension · Hollersbach im Pinzgau',
     winter: ['Your alpine home,', 'closer to the mountains.'],
     summer: ['Stay close to everything', 'that matters.'],
-    facts: ['17 rooms', 'Restaurant in-house', '2 km to Panoramabahn'],
-    rooms: 'Explore our rooms', contact: 'Contact us',
+    stats: [{ n: 17, u: '', l: 'Rooms', m: 'Rooms' }, { n: 4, u: '', l: 'Room categories', m: 'Categories' }, { n: 2, u: ' km', l: 'to Panoramabahn', m: 'Panoramabahn' }],
+    eyebrowShort: 'The Pension · Hollersbach',
+    tag: 'Restaurant & bar in-house',
+    rooms: 'Explore our rooms', contact: 'Contact us', scroll: 'Scroll',
     roomsHref: `${SITE}/en/rooms/`, contactHref: `${SITE}/en/contact/`,
     alt: { winter: 'The guesthouse in winter, snow-covered, with wooden balconies', summer: 'The guesthouse in summer with garden, terrace, wooden balconies and mountains behind' },
   },
@@ -45,7 +53,6 @@ function Photo({ s, alt, active }: { s: Season; alt: string; active: boolean }) 
       <picture>
         <source type="image/avif" srcSet={set('avif')} sizes="100vw" />
         <source type="image/webp" srcSet={set('webp')} sizes="100vw" />
-        {/* active season loads eagerly (LCP); the other one lazily – the crossfade waits for it */}
         <img src={`${IMG}${p.stem}.jpg`} alt={active ? alt : ''} aria-hidden={!active} width={1600} height={1019}
           loading={active ? 'eager' : 'lazy'} decoding="async"
           // @ts-expect-error fetchpriority is valid HTML
@@ -56,6 +63,22 @@ function Photo({ s, alt, active }: { s: Season; alt: string; active: boolean }) 
   );
 }
 
+/** Stepped "timber slat" mask: n vertical boards rising from the bottom, staggered. */
+function slatPolygon(t: number, n: number, rtl: boolean) {
+  const lag = 0.55 / n;                       // stagger between boards
+  const span = 1 - lag * (n - 1);
+  const pts: string[] = ['0% 100%'];
+  for (let k = 0; k < n; k++) {
+    const i = rtl ? n - 1 - k : k;
+    const raw = Math.max(0, Math.min(1, (t - i * lag) / span));
+    const h = 1 - Math.pow(1 - raw, 3);       // ease-out per board
+    const y = (100 - h * 100).toFixed(2);
+    pts.push(`${((k / n) * 100).toFixed(3)}% ${y}%`, `${(((k + 1) / n) * 100).toFixed(3)}% ${y}%`);
+  }
+  pts.push('100% 100%');
+  return `polygon(${pts.join(', ')})`;
+}
+
 /** Pension page · Section 01 – cinematic hero. Reads the shared season; no selector of its own. */
 export function PensionHero({ lang }: { lang: Lang }) {
   const root = useRef<HTMLElement>(null);
@@ -63,51 +86,91 @@ export function PensionHero({ lang }: { lang: Lang }) {
   const [shown, setShown] = useState<Season>(season);
   const reduced = useReducedMotion();
   const fine = useFinePointer();
+  const mobile = useIsMobile();
   const tl = useRef<gsap.core.Timeline | null>(null);
   const first = useRef(true);
+  const mounted = useRef(false);
   const t = COPY[lang];
 
   const q = (s: string) => (root.current ? Array.from(root.current.querySelectorAll<HTMLElement>(s)) : []);
   const photo = (s: Season) => q(`.js-ph-photo[data-season="${s}"]`)[0];
-  const textIn = (d = 0) => gsap.timeline({ delay: d, defaults: { ease: 'power3.out' } })
-    .fromTo(q('.js-ph-line'), { yPercent: 110 }, { yPercent: 0, duration: 0.9, stagger: 0.12, ease: 'power4.out' }, 0);
+  const wordsIn = (d = 0) => gsap.timeline({ delay: d })
+    .fromTo(q('.js-ph-word'), { yPercent: 115, rotate: 3 }, { yPercent: 0, rotate: 0, duration: 1, stagger: 0.045, ease: 'power4.out' }, 0);
 
-  // initial reveal
+  // opening: the house appears through an arched window that opens to full frame
   useGSAP(() => {
     if (reduced) return;
-    gsap.timeline({ defaults: { ease: 'power3.out' } })
-      .fromTo(q('.js-ph-media'), { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.9, ease: 'power1.out' }, 0)
-      .fromTo(q('.ph-img'), { scale: 1.06 }, { scale: 1, duration: 1.8, ease: 'power2.out' }, 0)
-      .fromTo(q('.js-ph-eyebrow'), { autoAlpha: 0, y: 12 }, { autoAlpha: 1, y: 0, duration: 0.6 }, 0.35)
-      .fromTo(q('.js-ph-line'), { yPercent: 110 }, { yPercent: 0, duration: 0.95, stagger: 0.12, ease: 'power4.out' }, 0.45)
-      .fromTo(q('.js-ph-rule'), { scaleX: 0 }, { scaleX: 1, duration: 0.7 }, 0.95)
-      .fromTo(q('.js-ph-fact'), { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: 0.5, stagger: 0.08 }, 1.0)
-      .fromTo(q('.js-ph-cta'), { autoAlpha: 0, y: 18 }, { autoAlpha: 1, y: 0, duration: 0.6, stagger: 0.08 }, 1.2);
-    if (fine) gsap.to(q('.js-ph-par'), { yPercent: 8, ease: 'none', scrollTrigger: { trigger: root.current, start: 'top top', end: 'bottom top', scrub: 0.6 } });
-  }, { scope: root, dependencies: [reduced, fine] });
+    const frame = q('.js-ph-frame')[0];
+    const arch = mobile ? 'inset(24% 20% 30% 20% round 400px 400px 14px 14px)' : 'inset(18% 39% 20% 39% round 400px 400px 14px 14px)';
+    const open = 'inset(0% 0% 0% 0% round 0px 0px 0px 0px)';
+    const intro = gsap.timeline({ defaults: { ease: 'power3.out' } })
+      .fromTo(frame, { clipPath: arch }, { clipPath: open, duration: 1.7, ease: 'expo.inOut' }, 0.35)
+      .fromTo(q('.js-ph-kb'), { scale: 1.32 }, { scale: 1, duration: 2.3, ease: 'expo.inOut' }, 0.2)
+      .fromTo(q('.js-ph-veil'), { autoAlpha: 0 }, { autoAlpha: 1, duration: 1, ease: 'power1.out' }, 1.3)
+      .fromTo(q('.js-ph-eyebrow'), { autoAlpha: 0, y: 14 }, { autoAlpha: 1, y: 0, duration: 0.7 }, 1.45)
+      .fromTo(q('.js-ph-word'), { yPercent: 115, rotate: 3 }, { yPercent: 0, rotate: 0, duration: 1.1, stagger: 0.05, ease: 'power4.out' }, 1.5)
+      .fromTo(q('.js-ph-rule'), { scaleX: 0 }, { scaleX: 1, duration: 0.9 }, 2.0)
+      .fromTo(q('.js-ph-stat'), { autoAlpha: 0, y: 18 }, { autoAlpha: 1, y: 0, duration: 0.7, stagger: 0.1 }, 2.0)
+      .fromTo(q('.js-ph-cta'), { autoAlpha: 0, y: 18 }, { autoAlpha: 1, y: 0, duration: 0.7, stagger: 0.08 }, 2.2)
+      .fromTo(q('.js-ph-side'), { autoAlpha: 0 }, { autoAlpha: 1, duration: 1 }, 2.3);
 
-  // season switch: preload → headline out → crossfade → headline in
+    // numbers count up with the stats
+    q('.js-ph-num').forEach((el, i) => {
+      const end = Number(el.dataset.n); const o = { v: 0 };
+      intro.to(o, { v: end, duration: 1.4, ease: 'power2.out', onUpdate: () => { el.textContent = String(Math.round(o.v)); } }, 2.05 + i * 0.1);
+    });
+
+    // slow breathing of the photo, forever
+    intro.add(() => { gsap.to(q('.js-ph-kb'), { scale: 1.07, duration: 16, ease: 'sine.inOut', yoyo: true, repeat: -1 }); }, 2.5);
+
+    // on scroll the frame lifts into a rounded card and the copy drifts away faster than the photo
+    intro.add(() => {
+      gsap.timeline({ scrollTrigger: { trigger: root.current, start: 'top top', end: 'bottom top', scrub: 0.6 } })
+        .to(frame, { clipPath: mobile ? 'inset(0% 3% 8% 3% round 0px 0px 26px 26px)' : 'inset(0% 2.5% 10% 2.5% round 0px 0px 34px 34px)', ease: 'none' }, 0)
+        .to(q('.js-ph-par'), { yPercent: 14, ease: 'none' }, 0)
+        .to(q('.js-ph-copy'), { y: mobile ? -60 : -120, autoAlpha: 0.15, ease: 'none' }, 0)
+        .to(q('.js-ph-side'), { autoAlpha: 0, duration: 0.25, ease: 'none' }, 0);
+    }, 2.6);
+  }, { scope: root, dependencies: [reduced] });
+
+  // desktop: the scene follows the pointer a few pixels, like looking through a window
   useEffect(() => {
+    const el = root.current, layer = q('.js-ph-ptr')[0];
+    if (!el || !layer || !fine || reduced) return;
+    const xTo = gsap.quickTo(layer, 'x', { duration: 1.2, ease: 'power3.out' });
+    const yTo = gsap.quickTo(layer, 'y', { duration: 1.2, ease: 'power3.out' });
+    const move = (e: PointerEvent) => { const r = el.getBoundingClientRect(); xTo(-((e.clientX - r.left) / r.width - 0.5) * 22); yTo(-((e.clientY - r.top) / r.height - 0.5) * 14); };
+    el.addEventListener('pointermove', move);
+    return () => el.removeEventListener('pointermove', move);
+  }, [fine, reduced]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // season switch: headline out → the new photo rises in timber slats → headline in
+  useEffect(() => {
+    const isMount = !mounted.current; mounted.current = true;
+    if (isMount) return;
     tl.current?.kill();
     const from = photo(shown), to = photo(season);
     if (season === shown) {
-      if (from) gsap.to(from, { opacity: 1, duration: reduced ? 0 : 0.4 });
-      const other = photo(shown === 'summer' ? 'winter' : 'summer'); if (other) gsap.to(other, { opacity: 0, duration: reduced ? 0 : 0.4 });
-      if (!reduced) tl.current = textIn();
+      if (from) gsap.set(from, { opacity: 1, clipPath: 'none' });
+      const other = photo(shown === 'summer' ? 'winter' : 'summer'); if (other) gsap.set(other, { opacity: 0, clipPath: 'none' });
+      if (!reduced) tl.current = wordsIn();
       return;
     }
     if (!from || !to) { setShown(season); return; }
-    if (reduced) { gsap.set(from, { opacity: 0 }); gsap.set(to, { opacity: 1 }); setShown(season); return; }
+    if (reduced) { gsap.set(from, { opacity: 0 }); gsap.set(to, { opacity: 1, clipPath: 'none' }); setShown(season); return; }
     const img = to.querySelector('img') as HTMLImageElement | null;
     let alive = true;
     const run = () => {
       if (!alive) return;
+      const n = mobile ? 5 : 9, rtl = season === 'winter', s = { t: 0 };
+      gsap.set(to, { opacity: 1, zIndex: 2, clipPath: slatPolygon(0, n, rtl) });
+      gsap.set(from, { opacity: 1, zIndex: 1 });
       tl.current = gsap.timeline()
-        .to(q('.js-ph-line'), { yPercent: -110, duration: 0.35, stagger: 0.05, ease: 'power2.in' }, 0)
-        .fromTo(to, { opacity: 0 }, { opacity: 1, duration: 1, ease: 'power2.inOut' }, 0.05)
-        .fromTo(to.querySelector('.ph-img'), { scale: 1.05 }, { scale: 1, duration: 1.2, ease: 'power3.out' }, 0.05)
-        .to(from, { opacity: 0, duration: 1, ease: 'power2.inOut' }, 0.05)
-        .add(() => setShown(season), 0.38);
+        .to(q('.js-ph-word'), { yPercent: -115, duration: 0.4, stagger: 0.025, ease: 'power2.in' }, 0)
+        .to(s, { t: 1, duration: 1.5, ease: 'power1.inOut', onUpdate: () => { to.style.clipPath = slatPolygon(s.t, n, rtl); } }, 0.1)
+        .fromTo(to.querySelector('.ph-img'), { scale: 1.12, yPercent: 3 }, { scale: 1, yPercent: 0, duration: 1.9, ease: 'power3.out' }, 0.1)
+        .add(() => setShown(season), 0.5)
+        .add(() => { gsap.set(from, { opacity: 0, zIndex: 0 }); gsap.set(to, { clipPath: 'none', zIndex: 0 }); }, 1.62);
     };
     if (img) { img.loading = 'eager'; (img.decode ? img.decode() : Promise.resolve()).catch(() => {}).then(run); } else run();
     return () => { alive = false; };
@@ -115,44 +178,90 @@ export function PensionHero({ lang }: { lang: Lang }) {
 
   useLayoutEffect(() => {
     if (first.current) { first.current = false; return; }
-    if (!reduced) tl.current = textIn(0.02);
+    if (!reduced) tl.current = wordsIn(0.02);
   }, [shown]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const head = t[shown];
+  const words = (line: string) => line.split(' ').map((w, i) => (
+    <span key={i} className="inline-block overflow-hidden pb-[0.1em] align-top"><span className="js-ph-word inline-block">{w}</span>{' '}</span>
+  ));
   return (
-    <section ref={root} id="top" aria-labelledby="ph-title" className="relative isolate flex min-h-[94svh] items-end overflow-hidden bg-deep text-cream md:min-h-[100svh] md:items-center">
-      <div className="js-ph-media absolute inset-0 -z-10 overflow-hidden">
+    <section ref={root} id="top" aria-labelledby="ph-title" className="relative isolate flex min-h-[100svh] items-end overflow-hidden bg-deep text-cream">
+      <div className="js-ph-frame absolute inset-0 -z-10 overflow-hidden bg-deep">
         <div className="js-ph-par absolute inset-0">
-          <Photo s="winter" alt={t.alt.winter} active={shown === 'winter'} />
-          <Photo s="summer" alt={t.alt.summer} active={shown === 'summer'} />
-        </div>
-        {/* contrast only where the text sits: left on desktop, bottom on mobile; tinted by the season palette */}
-        <div aria-hidden className="absolute inset-0 bg-[linear-gradient(0deg,color-mix(in_srgb,var(--k-deep)_94%,transparent)_0%,color-mix(in_srgb,var(--k-deep)_78%,transparent)_38%,color-mix(in_srgb,var(--k-deep)_30%,transparent)_60%,transparent_74%)] md:bg-[linear-gradient(90deg,color-mix(in_srgb,var(--k-deep)_80%,transparent)_0%,color-mix(in_srgb,var(--k-deep)_45%,transparent)_38%,transparent_62%)]" />
-        <div aria-hidden className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[color-mix(in_srgb,var(--k-deep)_55%,transparent)] to-transparent" />
-      </div>
-
-      <div className="mx-auto w-full max-w-[1440px] px-5 pb-[calc(104px+env(safe-area-inset-bottom,0px))] pt-36 sm:px-6 md:px-10 md:pb-16 md:pt-40 lg:px-14">
-        <div className="max-w-[780px]">
-          <p className="js-ph-eyebrow text-[11.5px] font-semibold uppercase tracking-[.34em] text-cream/90 md:text-[13px]">{t.eyebrow}</p>
-          <h1 id="ph-title" className="mt-4 font-display font-normal leading-[1.02] tracking-[-0.012em] text-cream [text-shadow:0_2px_28px_rgba(0,0,0,.3)] md:mt-6" style={{ fontSize: 'clamp(36px, 5.2vw, 86px)' }}>
-            <span className="block overflow-hidden pb-[0.06em]"><span className="js-ph-line block">{head[0]}</span></span>
-            <span className="block overflow-hidden pb-[0.12em]"><span className="js-ph-line block text-gold-light">{head[1]}</span></span>
-          </h1>
-          <span aria-hidden className="js-ph-rule mt-6 block h-px w-16 origin-left bg-gold-light md:mt-8" />
-          <ul className="mt-5 flex flex-wrap gap-x-3 gap-y-1.5 text-[11.5px] font-semibold uppercase tracking-[.22em] text-cream/90 md:mt-6 md:text-[13px]">
-            {t.facts.map((f, i) => (
-              <li key={f} className="js-ph-fact flex items-center gap-3">{i > 0 && <span aria-hidden className="text-gold-light">·</span>}{f}</li>
-            ))}
-          </ul>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:gap-4 md:mt-10">
-            <a href={t.roomsHref} className="js-ph-cta ph-primary inline-flex min-h-[54px] items-center justify-center gap-3 rounded-full px-8 text-[15.5px] font-semibold">
-              {t.rooms} <span className="arrow" aria-hidden>→</span>
-            </a>
-            <a href={t.contactHref} className="js-ph-cta ph-secondary inline-flex min-h-[54px] items-center justify-center rounded-full px-8 text-[15.5px] font-semibold">
-              {t.contact}
-            </a>
+          <div className="js-ph-ptr absolute -inset-4">
+            <div className="js-ph-kb absolute inset-0 will-change-transform">
+              <Photo s="winter" alt={t.alt.winter} active={shown === 'winter'} />
+              <Photo s="summer" alt={t.alt.summer} active={shown === 'summer'} />
+            </div>
           </div>
         </div>
+        <SeasonFx mode={season} mobile={mobile} reduced={reduced} />
+        {/* contrast only where the text sits: bottom-left; tinted by the season palette */}
+        <div aria-hidden className="js-ph-veil pointer-events-none absolute inset-0 z-[6]">
+          <div className="absolute inset-0 bg-[linear-gradient(0deg,color-mix(in_srgb,var(--k-deep)_95%,transparent)_0%,color-mix(in_srgb,var(--k-deep)_72%,transparent)_34%,color-mix(in_srgb,var(--k-deep)_22%,transparent)_58%,transparent_72%)] md:bg-[linear-gradient(20deg,color-mix(in_srgb,var(--k-deep)_88%,transparent)_0%,color-mix(in_srgb,var(--k-deep)_55%,transparent)_32%,transparent_60%)]" />
+          <div className="absolute inset-0 hidden bg-[radial-gradient(60%_70%_at_100%_100%,color-mix(in_srgb,var(--k-deep)_70%,transparent),transparent_70%)] lg:block" />
+          <div className="absolute inset-x-0 top-0 h-44 bg-gradient-to-b from-[color-mix(in_srgb,var(--k-deep)_60%,transparent)] to-transparent" />
+          <div className="ph-grain absolute inset-0" />
+        </div>
+      </div>
+
+      {/* editorial side rail (desktop): real coordinates of the house */}
+      <p aria-hidden className="js-ph-side ph-rail pointer-events-none absolute right-6 top-1/2 hidden -translate-y-1/2 text-[11px] font-semibold uppercase tracking-[.38em] text-cream/75 lg:block xl:right-10">
+        {COORDS}<span className="mx-4 text-gold-light">—</span>Reitlehen 42
+      </p>
+
+      <div className="js-ph-copy relative z-10 mx-auto w-full max-w-[1440px] px-5 pb-[calc(100px+env(safe-area-inset-bottom,0px))] pt-36 sm:px-6 md:px-10 md:pb-14 lg:px-14">
+        <div className="grid items-end gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-16">
+          <div className="min-w-0 max-w-[1000px]">
+            <p className="js-ph-eyebrow flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[.32em] text-cream/90 md:text-[12.5px]">
+              <span aria-hidden className="h-px w-8 bg-gold-light max-sm:hidden" /><span className="sm:hidden">{t.eyebrowShort}</span><span className="max-sm:hidden">{t.eyebrow}</span>
+            </p>
+            <h1 id="ph-title" className="mt-5 font-display font-normal leading-[0.98] tracking-[-0.02em] text-cream [text-shadow:0_2px_30px_rgba(0,0,0,.28)] md:mt-7" style={{ fontSize: 'clamp(40px, 5.9vw, 100px)' }}>
+              <span className="block">{words(head[0])}</span>
+              <span className="block italic text-gold-light">{words(head[1])}</span>
+            </h1>
+            <dl className="mt-6 grid grid-cols-3 gap-3 lg:hidden">
+              {t.stats.map((s) => (
+                <div key={s.l} className="js-ph-stat flex min-w-0 flex-col gap-1.5 border-t border-cream/30 pt-2.5">
+                  <dt className="order-2 truncate text-[10px] font-semibold uppercase tracking-[.16em] text-cream/80">{s.m}</dt>
+                  <dd className="font-display text-[34px] leading-none text-cream"><span className="js-ph-num [font-variant-numeric:lining-nums_tabular-nums]" data-n={s.n}>{s.n}</span><span className="text-[.5em] text-gold-light">{s.u}</span></dd>
+                </div>
+              ))}
+            </dl>
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 md:mt-10">
+              <a href={t.roomsHref} className="js-ph-cta ph-primary inline-flex min-h-[54px] items-center justify-center gap-3 rounded-full px-8 text-[15.5px] font-semibold">
+                {t.rooms} <span className="arrow" aria-hidden>→</span>
+              </a>
+              <a href={t.contactHref} className="js-ph-cta ph-secondary inline-flex min-h-[54px] items-center justify-center rounded-full px-8 text-[15.5px] font-semibold">
+                {t.contact}
+              </a>
+            </div>
+          </div>
+
+          {/* the house in numbers */}
+          <div className="hidden lg:block lg:w-[300px]">
+            <span aria-hidden className="js-ph-rule hidden h-px w-full origin-left bg-cream/35 lg:block" />
+            <dl className="grid grid-cols-3 gap-3 lg:grid-cols-1 lg:gap-0">
+              {t.stats.map((s) => (
+                <div key={s.l} className="js-ph-stat flex min-w-0 flex-col gap-2 border-t border-cream/25 pt-3 lg:flex-row lg:items-baseline lg:justify-between lg:border-t-0 lg:border-b lg:border-cream/20 lg:py-4">
+                  <dt className="order-2 text-[10.5px] font-semibold uppercase leading-snug tracking-[.16em] text-cream/80 lg:text-[11.5px] lg:tracking-[.2em]">{s.l}</dt>
+                  <dd className="order-1 font-display leading-none text-cream" style={{ fontSize: 'clamp(30px, 3.4vw, 52px)' }}>
+                    <span className="js-ph-num [font-variant-numeric:lining-nums_tabular-nums]" data-n={s.n}>{s.n}</span><span className="text-[.5em] text-gold-light">{s.u}</span>
+                  </dd>
+                </div>
+              ))}
+            </dl>
+            <p className="js-ph-stat mt-4 hidden items-center gap-2.5 text-[11.5px] font-semibold uppercase tracking-[.2em] text-gold-light lg:flex">
+              <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-gold-light" />{t.tag}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* scroll cue */}
+      <div aria-hidden className="js-ph-side pointer-events-none absolute bottom-6 left-1/2 z-10 hidden -translate-x-1/2 flex-col items-center gap-3 text-[10.5px] font-semibold uppercase tracking-[.34em] text-cream/70 md:flex">
+        {t.scroll}<span className="ph-cue relative block h-12 w-px overflow-hidden bg-cream/25" />
       </div>
     </section>
   );

@@ -410,6 +410,12 @@
   .ph-secondary { color: #fff; border: 1px solid rgba(255,255,255,.8); transition: background-color .3s ease, border-color .3s ease, transform .3s ease; }
   .ph-secondary:hover { background: rgba(255,255,255,.1); border-color: var(--k-gold-light); transform: translateY(-2px); }
   .ph-primary:focus-visible, .ph-secondary:focus-visible { outline: 2px solid var(--k-cream); outline-offset: 3px; }
+  .ph-rail { writing-mode: vertical-rl; }
+  .ph-grain { opacity: .07; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  .ph-cue::after { content: ''; position: absolute; left: 0; top: -50%; width: 1px; height: 50%; background: var(--k-gold-light); animation: ph-cue 2.2s cubic-bezier(.6,0,.3,1) infinite; }
+  @keyframes ph-cue { to { top: 100%; } }
+  @media (prefers-reduced-motion: reduce) { .ph-cue::after { animation: none; top: 25%; } }
   /* subpage season toggle: icons only on phones; on desktop it hangs below the header's right edge */
   .header-season button { padding-left: 12px; padding-right: 12px; }
   @media (max-width: 639px) { .header-season button { padding-left: 0; padding-right: 0; } }
