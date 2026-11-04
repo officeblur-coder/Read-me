@@ -11,14 +11,14 @@ export const NAV: Record<Lang, NavItem[]> = {
     { label: 'Unterkunft', href: '#pension', mega: true }, // preview route – live: `${SITE}/pension/`
     { label: 'Restaurant', href: '#restaurant' }, // preview – live: /restaurant/
     { label: 'Aktivitäten', href: '#activities-winter' }, // preview – live: /activities/
-    { label: 'Gruppen', href: `${SITE}/group-activities/` },
+    { label: 'Gruppen', href: '#groups' },
     { label: 'Kontakt', href: `${SITE}/contact/` },
   ],
   en: [
     { label: 'Accommodation', href: '#pension', mega: true }, // preview route – live: `${SITE}/en/pension/`
     { label: 'Restaurant', href: '#restaurant' }, // preview – live: /en/restaurant/
     { label: 'Activities', href: '#activities-winter' }, // preview – live: /en/activities/
-    { label: 'Groups', href: `${SITE}/en/group-activities/` },
+    { label: 'Groups', href: '#groups' },
     { label: 'Contact', href: `${SITE}/en/contact/` },
   ],
 };
@@ -28,12 +28,12 @@ export const FOOTER_NAV: Record<Lang, NavItem[]> = {
   de: [
     { label: 'Pension', href: '#pension' }, { label: 'Chalet', href: '#chalet' }, { label: 'Zimmer', href: '#all-rooms' },
     { label: 'Restaurant', href: '#restaurant' }, { label: 'Aktivitäten', href: '#activities-winter' }, // preview – live: /activities/
-    { label: 'Gruppen', href: `${SITE}/group-activities/` }, { label: 'Kontakt', href: `${SITE}/contact/` },
+    { label: 'Gruppen', href: '#groups' }, { label: 'Kontakt', href: `${SITE}/contact/` },
   ],
   en: [
     { label: 'Guesthouse', href: '#pension' }, { label: 'Chalet', href: '#chalet' }, { label: 'Rooms', href: '#all-rooms' },
     { label: 'Restaurant', href: '#restaurant' }, { label: 'Activities', href: '#activities-winter' }, // preview – live: /en/activities/
-    { label: 'Groups', href: `${SITE}/en/group-activities/` }, { label: 'Contact', href: `${SITE}/en/contact/` },
+    { label: 'Groups', href: '#groups' }, { label: 'Contact', href: `${SITE}/en/contact/` },
   ],
 };
 

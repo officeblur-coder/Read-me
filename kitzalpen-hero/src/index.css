@@ -418,6 +418,23 @@
   .sm-all { color: #fff; background: var(--k-pine); transition: background-color .3s ease; }
   .sm-all:hover { background: var(--k-deep); }
   @media (prefers-reduced-motion: reduce) { .stay-menu, .stay-menu .sm-item { transition: none !important; transform: translate(-50%, 0); } .stay-menu .sm-item { transform: none; } }
+  /* groups page */
+  .g-tab { min-height: 48px; padding: 0 16px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--k-pine) 18%, transparent); color: var(--k-ink); transition: background-color .3s ease, color .3s ease, border-color .3s ease; }
+  .g-tab.is-on { background: var(--k-pine); border-color: var(--k-pine); color: var(--k-cream); }
+  .g-tab.is-on .text-goldink { color: var(--k-gold-light); }
+  @media (min-width: 1024px) {
+    .g-tab { border: 0; border-bottom: 1px solid color-mix(in srgb, var(--k-pine) 14%, transparent); border-radius: 0; padding: 20px 4px; background: none !important; color: color-mix(in srgb, var(--k-ink) 55%, transparent); }
+    .g-tab:hover { color: var(--k-ink); }
+    .g-tab.is-on { color: var(--k-pine); border-color: var(--k-pine); }
+    .g-tab.is-on .text-goldink { color: var(--k-gold-dark); }
+    .g-tab .g-tab-arrow { opacity: 0; transform: translateX(-6px); transition: opacity .3s ease, transform .3s ease; }
+    .g-tab.is-on .g-tab-arrow { opacity: 1; transform: none; }
+  }
+  .g-tab:focus-visible, .g-way:focus-visible { outline: 2px solid var(--k-gold); outline-offset: 3px; }
+  .g-way { transition: transform .35s cubic-bezier(.2,.7,.2,1), border-color .3s ease, box-shadow .35s ease; }
+  .g-way:hover { transform: translateY(-3px); box-shadow: 0 20px 36px -26px rgba(20,35,25,.5); }
+  .g-way:not(.is-primary):hover { border-color: var(--k-pine); }
+  @media (prefers-reduced-motion: reduce) { .g-way, .g-tab { transition: none; } .g-way:hover { transform: none; } }
   /* winter activities */
   .w-chip { display: inline-flex; align-items: center; gap: 7px; min-height: 34px; padding: 0 14px; border-radius: 999px; font-size: 13px; font-weight: 600; color: #f4efe4; border: 1px solid rgba(232,203,150,.45); background: rgba(232,203,150,.08); }
   .w-chip-soft { border-color: rgba(207,227,255,.22); background: rgba(207,227,255,.06); color: rgba(244,239,228,.85); font-weight: 500; }

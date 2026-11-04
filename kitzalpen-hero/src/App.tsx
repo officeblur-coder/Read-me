@@ -21,6 +21,7 @@ import { RoomPage } from './components/pension/RoomPage';
 import { ChaletPage } from './components/chalet/ChaletPage';
 import { AllRoomsPage } from './components/pension/AllRoomsPage';
 import { DiningPage } from './components/restaurant/DiningPage';
+import { GroupsPage } from './components/groups/GroupsPage';
 import { SummerPage, WinterPage } from './components/activities/WinterPage';
 import { ROOM_KEYS, type RoomKey } from './content/pensionPage';
 import { AlpineExperienceSection } from './components/experience/AlpineExperienceSection';
@@ -46,13 +47,14 @@ export default function App() {
   // dedicated pages: #activities-summer / #activities-winter (live site: /activities/summer|winter)
   // preview routing by hash: #pension, #activities-summer|winter (live site: /pension/, /activities/summer|winter)
   // #room-<key> → room pages (live: /rooms/<slug>/); #pension-rooms → pension page at the room section
-  type Route = 'home' | 'pension' | 'chalet' | 'all-rooms' | 'restaurant' | Season | `room-${RoomKey}`;
+  type Route = 'home' | 'pension' | 'chalet' | 'all-rooms' | 'restaurant' | 'groups' | Season | `room-${RoomKey}`;
   const routeOf = (): Route => {
     const h = window.location.hash.slice(1);
     if (h === 'pension' || h === 'pension-rooms') return 'pension';
     if (h === 'chalet') return 'chalet';
     if (h === 'all-rooms') return 'all-rooms';
     if (h === 'restaurant') return 'restaurant';
+    if (h === 'groups') return 'groups';
     if (h === 'activities-summer') return 'summer';
     if (h === 'activities-winter') return 'winter';
     if (h.startsWith('room-') && ROOM_KEYS.includes(h.slice(5) as RoomKey)) return h as Route;
@@ -119,7 +121,9 @@ export default function App() {
       <WeatherBand lang={lang} reduced={reduced} />
       <Header lang={lang} copy={copy} compact={compact} fine={fine && !reduced} menuOpen={menu} onLang={setLang} onMenu={() => setMenu(true)} showSeason={page === 'pension' || page === 'chalet' || page === 'summer' || page === 'winter' || page === 'all-rooms' || page.startsWith('room-')} />
       <MobileMenu open={menu} lang={lang} copy={copy} reduced={reduced} onClose={() => setMenu(false)} onLang={setLang} onBook={onBook} />
-      {page === 'restaurant' ? (
+      {page === 'groups' ? (
+        <main id="main"><GroupsPage lang={lang} /></main>
+      ) : page === 'restaurant' ? (
         <main id="main"><DiningPage lang={lang} /></main>
       ) : page === 'all-rooms' ? (
         <main id="main"><AllRoomsPage lang={lang} /></main>
