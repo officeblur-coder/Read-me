@@ -20,6 +20,7 @@ import { PensionFinalCTA } from './components/pension/PensionFinalCTA';
 import { RoomPage } from './components/pension/RoomPage';
 import { ChaletPage } from './components/chalet/ChaletPage';
 import { AllRoomsPage } from './components/pension/AllRoomsPage';
+import { WinterPage } from './components/activities/WinterPage';
 import { ROOM_KEYS, type RoomKey } from './content/pensionPage';
 import { AlpineExperienceSection } from './components/experience/AlpineExperienceSection';
 import { AlpineMapSection } from './components/map/AlpineMapSection';
@@ -117,7 +118,7 @@ export default function App() {
       ) : page === 'pension' ? (
         <main id="main"><PensionHero lang={lang} /><PensionRooms lang={lang} /><PensionFinalCTA lang={lang} /></main>
       ) : page !== 'home' ? (
-        <main id="main"><ActivitiesPage season={page as Season} lang={lang} /></main>
+        <main id="main">{page === 'winter' ? <WinterPage lang={lang} /> : <ActivitiesPage season={page as Season} lang={lang} />}</main>
       ) : (
       <main id="main">
         <Hero lang={lang} copy={copy} bookingRef={booking} onBookingSubmit={onSubmit} />

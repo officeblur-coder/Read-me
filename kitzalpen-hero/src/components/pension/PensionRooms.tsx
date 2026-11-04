@@ -17,7 +17,7 @@ export function PRPicture({ pic, lang, sizes, className = '', eager = false, alt
     <picture>
       <source type="image/avif" srcSet={set('avif')} sizes={sizes} />
       <source type="image/webp" srcSet={set('webp')} sizes={sizes} />
-      <img src={`${PR_IMG}${pic.name}.jpg`} alt={alt ?? pic.alt[lang]} width={pic.w} height={pic.h} loading={eager ? 'eager' : 'lazy'} decoding="async" draggable={false} className={className} />
+      <img src={`${PR_IMG}${pic.name}-${pic.sizes[pic.sizes.length - 1]}.webp`} alt={alt ?? pic.alt[lang]} width={pic.w} height={pic.h} loading={eager ? 'eager' : 'lazy'} decoding="async" draggable={false} className={className} />
     </picture>
   );
 }

@@ -418,6 +418,21 @@
   .sm-all { color: #fff; background: var(--k-pine); transition: background-color .3s ease; }
   .sm-all:hover { background: var(--k-deep); }
   @media (prefers-reduced-motion: reduce) { .stay-menu, .stay-menu .sm-item { transition: none !important; transform: translate(-50%, 0); } .stay-menu .sm-item { transform: none; } }
+  /* winter activities */
+  .w-chip { display: inline-flex; align-items: center; gap: 7px; min-height: 34px; padding: 0 14px; border-radius: 999px; font-size: 13px; font-weight: 600; color: #f4efe4; border: 1px solid rgba(232,203,150,.45); background: rgba(232,203,150,.08); }
+  .w-chip-soft { border-color: rgba(207,227,255,.22); background: rgba(207,227,255,.06); color: rgba(244,239,228,.85); font-weight: 500; }
+  .wc-sweep { animation: wc-sweep 9s linear infinite; }
+  @keyframes wc-sweep { to { transform: rotate(360deg); } }
+  .wc-home-pulse { animation: wc-pulse 2.8s ease-out infinite; }
+  @keyframes wc-pulse { 0% { transform: scale(.6); opacity: 1; } 100% { transform: scale(2.2); opacity: 0; } }
+  .wc-pt { outline: none; }
+  .wc-pt .wc-halo { transition: r .3s ease; }
+  .wc-pt:hover .wc-halo, .wc-pt:focus-visible .wc-halo, .wc-pt.is-on .wc-halo { r: 18px; }
+  .wc-pt:focus-visible text { text-decoration: underline; }
+  .w-cue::after { content: ''; position: absolute; left: 0; top: -50%; width: 1px; height: 50%; background: var(--k-gold-light); animation: ph-cue 2.2s cubic-bezier(.6,0,.3,1) infinite; }
+  .w-fade { animation: w-fade .5s ease; }
+  @keyframes w-fade { from { opacity: 0; transform: translateY(6px); } }
+  @media (prefers-reduced-motion: reduce) { .wc-sweep, .wc-home-pulse, .w-cue::after, .w-fade { animation: none; } }
   /* all rooms · house sketch */
   .sk-card { position: relative; margin: 0; padding: 3.5% 3.5% 2.5%; border-radius: 18px; background: #f6f1e7; transform: rotate(-0.8deg);
     box-shadow: 0 40px 70px -35px rgba(0,0,0,.8), 0 2px 0 rgba(255,255,255,.4) inset; }
