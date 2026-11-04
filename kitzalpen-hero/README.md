@@ -344,3 +344,11 @@ Order: … `<GuestStoriesSection/>` → `<FinalBookingCTA/>` → footer. The old
 - Motion: on load, photo fade with 1.06 → 1, eyebrow, headline lines, rule, facts staggered, then CTAs (≈1.8 s). On a season change, the new photo is decoded first, then the headline lifts out, the photos crossfade (1 s, 1.05 → 1) and the new headline reveals. Rapid toggling is safe. Desktop parallax. Reduced motion: static.
 - Focal points per photo and breakpoint keep the building in frame. Gradient on the left (desktop) or bottom (mobile) only.
 - Small global fix: on subpages the header items are revealed by App (the homepage hero intro normally does this).
+
+### Map – mobile redesign (update)
+- Map is full-bleed and taller (78svh), with no bottom sheet covering it.
+- Filter chips sit as a scrollable row over the top edge of the map.
+- Controls are one compact rounded group (zoom, 2D/3D, reset).
+- Bottom: slim swipeable cards (photo, category, name, driving time) with a round route button on each that opens Google Maps directly. Swiping or tapping a card flies the camera to its marker and highlights it, and tapping a marker scrolls to its card.
+- Smaller pins and home marker on phones. The home marker always stays on top. Attribution (ⓘ) is styled dark and sits above the cards.
+- Imagery: a little more brightness and saturation, softer hillshade. The area beyond the horizon is a light haze colour instead of black.

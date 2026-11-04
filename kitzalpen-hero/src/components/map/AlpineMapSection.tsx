@@ -82,6 +82,24 @@ function PlaceCard({ p, lang, copy, route, compact, onClose }: { p: MapPoint; la
   );
 }
 
+/** Mobile: slim card – photo, name, distance and a direct route button. */
+function MiniCard({ p, lang, copy, route, active }: { p: MapPoint; lang: Lang; copy: (typeof MAP_COPY)['de']; route?: { km: number; min: number }; active: boolean }) {
+  return (
+    <div className={`map-mini flex items-center gap-3 rounded-[16px] p-2 pr-2.5 ${active ? 'is-active' : ''}`}>
+      <span className="grid h-[60px] w-[60px] shrink-0 place-items-center overflow-hidden rounded-[11px] bg-[linear-gradient(150deg,var(--k-pine),var(--k-deep))] text-gold-light">
+        {p.photo ? <img src={`${BASE}images/activities/${p.photo}.webp`} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" /> : <CatIcon c={p.cat} size={24} />}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[.16em] text-gold-light"><CatIcon c={p.cat} size={11} />{copy.cats[p.cat]}</span>
+        <span className="mt-0.5 block truncate font-display text-[18px] font-medium leading-tight text-cream">{p.name[lang]}</span>
+        <span className="block truncate text-[11.5px] tabular-nums text-cream/65">{route ? copy.drive(route.km, route.min) : p.access[lang]}</span>
+      </span>
+      <a href={directionsUrl(p)} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} aria-label={`${copy.directions}: ${p.name[lang]}`}
+        className="map-dir grid h-11 w-11 shrink-0 place-items-center rounded-full"><DirIcon /></a>
+    </div>
+  );
+}
+
 export function AlpineMapSection({ lang }: { lang: Lang }) {
   const root = useRef<HTMLElement>(null);
   const holder = useRef<HTMLDivElement>(null);
@@ -98,7 +116,6 @@ export function AlpineMapSection({ lang }: { lang: Lang }) {
   const [status, setStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [cat, setCat] = useState<'all' | MapCat>('all');
   const [sel, setSel] = useState<string | null>(null);
-  const [sheet, setSheet] = useState(false);
   const [routes, setRoutes] = useState<Routes>({});
   const [is3d, setIs3d] = useState(true);
 
@@ -151,9 +168,9 @@ export function AlpineMapSection({ lang }: { lang: Lang }) {
               dem: { type: 'raster-dem', tiles: [abs('map/dem/') + '{z}/{x}/{y}.png'], tileSize: 256, encoding: 'terrarium', minzoom: 8, maxzoom: 11, bounds: [W, S, E, N] },
             },
             layers: [
-              { id: 'bg', type: 'background', paint: { 'background-color': '#0b1a14' } },
-              { id: 'sat', type: 'raster', source: 'sat', paint: { 'raster-fade-duration': 0, 'raster-contrast': 0.06, 'raster-saturation': 0.05 } },
-              { id: 'hill', type: 'hillshade', source: 'dem', paint: { 'hillshade-exaggeration': 0.18, 'hillshade-shadow-color': '#0a1410', 'hillshade-highlight-color': '#ffffff', 'hillshade-accent-color': '#000000' } },
+              { id: 'bg', type: 'background', paint: { 'background-color': '#9db1bf' } },
+              { id: 'sat', type: 'raster', source: 'sat', paint: { 'raster-fade-duration': 0, 'raster-contrast': 0.12, 'raster-saturation': 0.18, 'raster-brightness-min': 0.06 } },
+              { id: 'hill', type: 'hillshade', source: 'dem', paint: { 'hillshade-exaggeration': 0.12, 'hillshade-shadow-color': '#0a1410', 'hillshade-highlight-color': '#ffffff', 'hillshade-accent-color': '#000000' } },
             ],
             terrain: { source: 'dem', exaggeration: 1.2 },
           } as never,
@@ -175,6 +192,7 @@ export function AlpineMapSection({ lang }: { lang: Lang }) {
           h.innerHTML = '<span class="map-home-halo"></span><span class="map-home-pin"><span class="map-home-logo"></span></span><span class="map-home-label">KitzAlpen</span>';
           const logo = h.querySelector<HTMLElement>('.map-home-logo');
           if (logo) { const u = `url(${abs('images/logo-kitzalpen.png')})`; logo.style.webkitMaskImage = u; logo.style.maskImage = u; }
+          h.style.zIndex = '5';
           homeMarker.current = new ml.Marker({ element: h, anchor: 'bottom' }).setLngLat([HOME[1], HOME[0]]).addTo(m);
           gsap.fromTo(h.querySelector('.map-home-pin'), { scale: 0, y: 20 }, { scale: 1, y: 0, duration: reduced ? 0 : 0.8, ease: 'back.out(1.8)', delay: reduced ? 0 : 0.6 });
         });
@@ -191,8 +209,8 @@ export function AlpineMapSection({ lang }: { lang: Lang }) {
     const m = map.current; if (!m) return;
     const st = ScrollTrigger.create({ trigger: holder.current, start: 'top 75%', once: true, onEnter: () => {
       flown.current = true;
-      const target = { center: [HOME[1] - 0.03, HOME[0] - 0.02] as [number, number], zoom: mobile ? 9.9 : 10.45, pitch: mobile ? 50 : 56, bearing: -14,
-        padding: mobile ? { top: 0, bottom: 180, left: 0, right: 0 } : { top: 0, bottom: 0, left: 400, right: 0 } };
+      const target = { center: [HOME[1] - 0.03, HOME[0] - 0.02] as [number, number], zoom: mobile ? 9.9 : 10.45, pitch: mobile ? 46 : 56, bearing: -14,
+        padding: mobile ? { top: 50, bottom: 110, left: 0, right: 0 } : { top: 0, bottom: 0, left: 400, right: 0 } };
       if (reduced) m.jumpTo(target); else m.flyTo({ ...target, duration: 4200, curve: 1.3, essential: true });
     } });
     return () => st.kill();
@@ -203,7 +221,7 @@ export function AlpineMapSection({ lang }: { lang: Lang }) {
     setSel(id);
     const m = map.current; const p = MAP_POINTS.find((x) => x.id === id);
     if (!m || !p || !fly) return;
-    const pad = mobile ? { top: 40, bottom: Math.round(window.innerHeight * 0.32), left: 20, right: 20 } : { top: 60, bottom: 60, left: 440, right: 60 };
+    const pad = mobile ? { top: 70, bottom: 120, left: 30, right: 60 } : { top: 60, bottom: 60, left: 440, right: 60 };
     const cam = { center: [p.pos[1], p.pos[0]] as [number, number], zoom: 12.6, pitch: is3d ? 60 : 0, padding: pad };
     if (reduced) m.jumpTo(cam); else m.flyTo({ ...cam, duration: 2200, curve: 1.4, essential: true });
   }, [mobile, reduced, is3d]);
@@ -254,7 +272,7 @@ export function AlpineMapSection({ lang }: { lang: Lang }) {
   useEffect(() => {
     if (!mobile || !sel || !strip.current) return;
     const card = strip.current.querySelector<HTMLElement>(`[data-id="${sel}"]`);
-    if (card) strip.current.scrollTo({ left: card.offsetLeft - 16, behavior: reduced ? 'auto' : 'smooth' });
+    if (card) strip.current.scrollTo({ left: card.offsetLeft - 12, behavior: reduced ? 'auto' : 'smooth' });
   }, [sel, mobile, reduced]);
   useEffect(() => {
     const s = strip.current; if (!s || !mobile) return;
@@ -273,8 +291,8 @@ export function AlpineMapSection({ lang }: { lang: Lang }) {
   const reset = () => {
     const m = map.current; if (!m) return;
     setSel(null);
-    const cam = { center: [HOME[1] - 0.03, HOME[0] - 0.02] as [number, number], zoom: mobile ? 9.9 : 10.45, pitch: is3d ? (mobile ? 50 : 56) : 0, bearing: -14,
-      padding: mobile ? { top: 0, bottom: 180, left: 0, right: 0 } : { top: 0, bottom: 0, left: 400, right: 0 } };
+    const cam = { center: [HOME[1] - 0.03, HOME[0] - 0.02] as [number, number], zoom: mobile ? 9.9 : 10.45, pitch: is3d ? (mobile ? 46 : 56) : 0, bearing: -14,
+      padding: mobile ? { top: 50, bottom: 110, left: 0, right: 0 } : { top: 0, bottom: 0, left: 400, right: 0 } };
     if (reduced) m.jumpTo(cam); else m.flyTo({ ...cam, duration: 1800, essential: true });
   };
   const toggle3d = () => { const m = map.current; if (!m) return; const n = !is3d; setIs3d(n); m.easeTo({ pitch: n ? 58 : 0, duration: reduced ? 0 : 900 }); };
@@ -301,7 +319,7 @@ export function AlpineMapSection({ lang }: { lang: Lang }) {
           <p className="js-map-sub max-w-[34ch] text-[17px] leading-relaxed text-ink/75 md:pb-4 md:text-right md:text-[19px]">{copy.sub}</p>
         </header>
 
-        <div ref={holder} className="map-holder relative h-[70svh] min-h-[460px] overflow-hidden rounded-[22px] bg-deep md:h-[720px]">
+        <div ref={holder} className="map-holder relative -mx-5 h-[78svh] min-h-[520px] overflow-hidden bg-deep sm:-mx-6 md:mx-0 md:h-[720px] md:rounded-[22px]">
           <div ref={mapEl} className="absolute inset-0" role="region" aria-label={copy.mapLabel} />
 
           {status !== 'ready' && (
@@ -316,7 +334,7 @@ export function AlpineMapSection({ lang }: { lang: Lang }) {
           )}
 
           {/* custom controls */}
-          <div className="absolute right-3 top-3 z-[2] flex flex-col gap-2 md:right-5 md:top-5">
+          <div className="map-ctls absolute right-3 top-[60px] z-[2] flex flex-col overflow-hidden md:right-5 md:top-5 md:gap-2 md:overflow-visible">
             <button type="button" className="map-ctl" aria-label={copy.zoomIn} onClick={() => map.current?.zoomIn()}>+</button>
             <button type="button" className="map-ctl" aria-label={copy.zoomOut} onClick={() => map.current?.zoomOut()}>−</button>
             <button type="button" className="map-ctl text-[11px] font-bold tracking-[.06em]" aria-label={copy.tilt} aria-pressed={is3d} onClick={toggle3d}>{is3d ? '3D' : '2D'}</button>
@@ -353,16 +371,21 @@ export function AlpineMapSection({ lang }: { lang: Lang }) {
             </div>
           </aside>
 
-          {/* mobile: bottom sheet with filters + swipeable cards */}
-          <div className={`map-sheet absolute inset-x-0 bottom-0 z-[2] md:hidden ${sheet ? 'is-open' : ''}`}>
-            <button type="button" onClick={() => setSheet((s) => !s)} aria-expanded={sheet} className="mx-auto flex min-h-[44px] w-full items-center justify-center gap-2 text-[12px] font-semibold uppercase tracking-[.18em] text-cream/85">
-              <span aria-hidden className="h-1 w-10 rounded-full bg-cream/40" /> <span className="sr-only">{sheet ? copy.hideList : copy.showList}</span>
-            </button>
-            {sheet && <div className="px-3 pb-2">{filters}</div>}
-            <div ref={strip} className="map-strip flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-3">
+          {/* mobile: filter chips on top, slim swipeable cards at the bottom – the map stays visible */}
+          <div className="map-chips absolute inset-x-0 top-0 z-[3] md:hidden">
+            <div role="group" aria-label={copy.list} className="flex gap-1.5 overflow-x-auto px-3 py-3">
+              {CATS[season].map((c) => (
+                <button key={c} type="button" aria-pressed={cat === c} onClick={() => { setCat(c); setSel(null); }} className={`map-filter shrink-0 ${cat === c ? 'is-on' : ''}`}>{copy.cats[c]}</button>
+              ))}
+            </div>
+          </div>
+          <div className="map-bottom absolute inset-x-0 bottom-0 z-[2] pb-3 pt-10 md:hidden">
+            <div ref={strip} className="map-strip flex snap-x snap-mandatory gap-2.5 overflow-x-auto px-3 scroll-px-3">
               {visible.map((p) => (
-                <div key={p.id} data-id={p.id} className={`w-[82%] max-w-[330px] shrink-0 snap-center ${sel === p.id ? 'is-active' : ''}`} onClick={() => select(p.id)}>
-                  <PlaceCard p={p} lang={lang} copy={copy} route={routes[p.id]} compact={!sheet} />
+                <div key={p.id} data-id={p.id} role="button" tabIndex={0} aria-pressed={sel === p.id}
+                  onClick={() => select(p.id)} onKeyDown={(e) => { if (e.key === 'Enter') select(p.id); }}
+                  className="w-[86%] max-w-[340px] shrink-0 snap-start">
+                  <MiniCard p={p} lang={lang} copy={copy} route={routes[p.id]} active={sel === p.id} />
                 </div>
               ))}
             </div>

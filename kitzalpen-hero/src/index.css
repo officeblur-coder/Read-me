@@ -354,7 +354,6 @@
   @keyframes map-halo { 0% { transform: scale(.6); opacity: .9; } 100% { transform: scale(1.8); opacity: 0; } }
   @media (prefers-reduced-motion: reduce) { .map-home-halo { animation: none; } }
   .maplibregl-ctrl-attrib { font: 11px/1.4 Manrope, system-ui, sans-serif; }
-  @media (max-width: 767px) { .map-holder .maplibregl-ctrl-bottom-right { bottom: auto; top: 0; right: 56px; } }
 
 
   /* ------------------------------------------------ guest stories */
@@ -418,6 +417,35 @@
     .header-season { position: absolute !important; right: 56px; top: calc(100% + 6px); }
     .site-header[data-compact='true'] .header-season { top: calc(100% + 8px); }
   }
+
+
+  /* map – mobile layout */
+  .map-chips { background: linear-gradient(180deg, color-mix(in srgb, var(--k-deep) 70%, transparent), transparent); }
+  .map-chips [role=group] { scrollbar-width: none; }
+  .map-chips [role=group]::-webkit-scrollbar { display: none; }
+  .map-chips .map-filter { background: color-mix(in srgb, var(--k-deep) 70%, transparent); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  .map-chips .map-filter.is-on { background: var(--k-gold); }
+  .map-bottom { background: linear-gradient(0deg, color-mix(in srgb, var(--k-deep) 80%, transparent) 0%, color-mix(in srgb, var(--k-deep) 40%, transparent) 60%, transparent); pointer-events: none; }
+  .map-bottom .map-strip { pointer-events: auto; }
+  .map-mini { background: color-mix(in srgb, var(--k-deep) 88%, transparent); border: 1px solid color-mix(in srgb, var(--k-gold) 22%, transparent);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); box-shadow: 0 12px 28px -14px rgba(0,0,0,.6); transition: border-color .3s, transform .3s; }
+  .map-mini.is-active { border-color: var(--k-gold); }
+  [data-id]:active .map-mini { transform: scale(.98); }
+  @media (max-width: 767px) {
+    .map-ctls { gap: 0; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--k-gold) 30%, transparent); background: color-mix(in srgb, var(--k-deep) 82%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+    .map-ctls .map-ctl { width: 42px; height: 42px; border: 0; border-radius: 0; background: transparent; backdrop-filter: none; }
+    .map-ctls .map-ctl[aria-pressed] { font-size: 11px; }
+    .map-ctls .map-ctl + .map-ctl { border-top: 1px solid color-mix(in srgb, var(--k-cream) 12%, transparent); }
+    .map-home-pin { width: 46px; height: 46px; }
+    .map-home-logo { width: 32px; height: 13px; }
+    .map-home-label { margin-top: 7px; font-size: 9.5px; padding: 2px 7px; }
+    .map-pin { width: 40px; height: 40px; }
+    .map-pin-dot { width: 30px; height: 30px; }
+    .map-holder .maplibregl-ctrl-bottom-right { top: auto !important; right: 0 !important; bottom: 96px; }
+  }
+  .map-holder .maplibregl-ctrl-attrib.maplibregl-compact { background: color-mix(in srgb, var(--k-deep) 85%, transparent); color: var(--k-cream); }
+  .map-holder .maplibregl-ctrl-attrib.maplibregl-compact a { color: var(--k-gold-light); }
+  .map-holder .maplibregl-ctrl-attrib-button { filter: invert(1); opacity: .8; }
 
   .field { transition: background-color .3s; }
   .field:hover, .field:focus-within { background: rgba(244,239,228,.06); }
