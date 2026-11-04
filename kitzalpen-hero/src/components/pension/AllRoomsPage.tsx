@@ -8,8 +8,7 @@ import { BOOK_ROOMS } from '../../content/pensionPage';
 import { useFinePointer, useReducedMotion } from '../../lib/hooks';
 import { Icon, I } from './PensionRooms';
 import { PensionFinalCTA } from './PensionFinalCTA';
-import { HouseFacade } from './HouseFacade';
-import { useSeason } from '../../lib/season';
+import { HouseSketch } from './HouseSketch';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 const IMG = `${import.meta.env.BASE_URL}images/all-rooms/`;
@@ -124,7 +123,6 @@ export function AllRoomsPage({ lang }: { lang: Lang }) {
   const reduced = useReducedMotion();
   const fine = useFinePointer();
   const t = ALL_ROOMS_COPY[lang];
-  const { season } = useSeason();
   const [type, setType] = useState<RoomType | 'all'>('all');
   const [floor, setFloor] = useState<number | 'all'>('all');
   const [hover, setHover] = useState<HouseRoom | null>(null);
@@ -189,11 +187,11 @@ export function AllRoomsPage({ lang }: { lang: Lang }) {
           <div className="relative min-w-0">
             <p className="js-ar-in mb-3 text-center text-[11px] font-semibold uppercase tracking-[.26em] text-cream/50">{t.house} · {t.houseHint}</p>
             <div className="relative mx-auto w-full max-w-[620px] lg:max-w-[560px]">
-              <HouseFacade t={t} season={season} reduced={reduced} tone={TONE} floor={floor} matches={matches} hover={hover}
+              <HouseSketch t={t} reduced={reduced} tone={TONE} floor={floor} matches={matches} hover={hover}
                 onHover={setHover} onOpen={(r) => open(r, HOUSE_ROOMS)} onFloor={(f) => setFloor(floor === f ? 'all' : f)} />
               {/* hover preview (desktop) */}
               {fine && (
-                <div className={`ar-peek pointer-events-none absolute left-1/2 top-[3%] z-10 w-[300px] overflow-hidden rounded-[16px] bg-[#FAF8F5] text-ink shadow-[0_30px_60px_-25px_rgba(0,0,0,.8)] ${hover ? 'is-on' : ''}`} aria-hidden>
+                <div className={`ar-peek pointer-events-none absolute left-0 top-[26%] z-10 w-[240px] overflow-hidden rounded-[16px] bg-[#FAF8F5] text-ink shadow-[0_30px_60px_-25px_rgba(0,0,0,.8)] ${hover ? 'is-on' : ''}`} aria-hidden>
                   {hover && (
                     <>
                       <div className="aspect-[16/9] overflow-hidden"><Pic p={hover.pics[0]} sizes="300px" className="h-full w-full object-cover" /></div>
