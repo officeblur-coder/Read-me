@@ -418,6 +418,17 @@
   .sm-all { color: #fff; background: var(--k-pine); transition: background-color .3s ease; }
   .sm-all:hover { background: var(--k-deep); }
   @media (prefers-reduced-motion: reduce) { .stay-menu, .stay-menu .sm-item { transition: none !important; transform: translate(-50%, 0); } .stay-menu .sm-item { transform: none; } }
+  /* live accents for the mountain guide */
+  .live-dot { position: relative; display: inline-block; width: 8px; height: 8px; border-radius: 999px; background: #5ec27a; flex-shrink: 0; }
+  .live-dot::after { content: ''; position: absolute; inset: -4px; border-radius: 999px; border: 1.5px solid #5ec27a; animation: live-ping 1.8s ease-out infinite; }
+  @keyframes live-ping { 0% { transform: scale(.5); opacity: 1; } 100% { transform: scale(1.6); opacity: 0; } }
+  .live-pill { border-color: rgba(94,194,122,.55) !important; }
+  .mt-chip { color: var(--k-cream); border: 1px solid rgba(255,255,255,.22); transition: background-color .3s ease, border-color .3s ease; }
+  .mt-chip:hover { border-color: var(--k-gold-light); background: rgba(255,255,255,.08); }
+  .mt-teaser-bar { transition: background-color .3s ease; }
+  .mt-teaser-bar:hover { background: rgba(255,255,255,.05); }
+  .mt-chip:focus-visible, .mt-teaser-bar:focus-visible { outline: 2px solid var(--k-gold-light); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { .live-dot::after { animation: none; opacity: 0; } }
   /* mountain experience */
   .mx-fade { animation: mx-fade .5s ease both; }
   @keyframes mx-fade { from { opacity: 0; transform: translateY(6px); } }

@@ -61,7 +61,7 @@ export default function App() {
     if (h === 'restaurant') return 'restaurant';
     if (h === 'groups') return 'groups';
     if (h === 'contact') return 'contact';
-    if (h === 'mountain') return 'mountain';
+    if (h === 'mountain' || h.startsWith('mountain-')) return 'mountain';
     if (h === 'activities-summer') return 'summer';
     if (h === 'activities-winter') return 'winter';
     if (h.startsWith('room-') && ROOM_KEYS.includes(h.slice(5) as RoomKey)) return h as Route;
@@ -149,13 +149,13 @@ export default function App() {
       ) : (
       <main id="main">
         <Hero lang={lang} copy={copy} bookingRef={booking} onBookingSubmit={onSubmit} />
+        <MountainTeaser lang={lang} />
         <RoomsSection lang={lang} />
         <AmenitiesSection lang={lang} />
         <ChaletSection lang={lang} />
         <RestaurantSection lang={lang} />
         <ActivitiesSection lang={lang} />
         <AlpineExperienceSection lang={lang} />
-        <MountainTeaser lang={lang} />
         <AlpineMapSection lang={lang} />
         <GuestStoriesSection lang={lang} />
         <FinalBookingCTA lang={lang} />

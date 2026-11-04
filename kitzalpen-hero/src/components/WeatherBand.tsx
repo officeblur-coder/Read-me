@@ -6,7 +6,7 @@ import { useSeason } from '../lib/season';
 const SNAPSHOT = `${import.meta.env.BASE_URL}weather.json`;
 
 /** Live from Open-Meteo, every 15 min; falls back to the bundled snapshot when the live call is blocked. */
-function useWeather() {
+export function useWeather() {
   const [data, setData] = useState<WeatherData | null>(null);
   const [live, setLive] = useState(false);
   useEffect(() => {
@@ -85,8 +85,10 @@ export function WeatherBand({ lang, reduced }: { lang: Lang; reduced: boolean })
   );
 
   return (
-    <aside aria-label={L.title} className="weather-band fixed inset-x-0 top-0 z-[45] border-b border-gold/20 bg-deep text-[12px] text-cream" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-      <div className="flex h-[34px] items-center">
+    <aside aria-label={L.title} className="weather-band fixed inset-x-0 top-0 z-[45] cursor-pointer border-b border-gold/20 bg-deep text-[12px] text-cream" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+      {/* the whole band opens the mountain guide */}
+      <a href="#mountain" className="absolute inset-0 z-[2]" aria-label={L.title}><span className="sr-only">{L.title}</span></a>
+      <div className="relative flex h-[34px] items-center">
         <p className="relative z-[1] flex h-full shrink-0 items-center gap-2 bg-deep pl-[max(14px,env(safe-area-inset-left))] pr-4 text-[10.5px] font-semibold uppercase tracking-[.22em] text-gold-light shadow-[12px_0_14px_-6px_var(--k-deep)]">
           <span className={`h-1.5 w-1.5 rounded-full ${live ? 'bg-[#5ec27a]' : 'bg-gold'}`} aria-hidden />{L.title}
         </p>

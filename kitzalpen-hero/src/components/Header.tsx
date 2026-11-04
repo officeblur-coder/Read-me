@@ -62,7 +62,7 @@ export function Header({ lang, copy, compact, fine, menuOpen, onLang, onMenu, sh
             {NAV[lang].map((n, i) => n.mega ? <StayMenu key="stay" lang={lang} label={n.label} /> : (
               <li key={i} className="js-head">
                 <a href={n.href === '#activities-winter' ? `#activities-${season}` : n.href} className="nav-link relative inline-flex min-h-11 items-center opacity-90 transition-opacity hover:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-champagne">
-                  {n.label}
+                  {n.live && <span aria-hidden className="live-dot mr-2" />}{n.label}
                 </a>
               </li>
             ))}

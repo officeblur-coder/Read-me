@@ -64,7 +64,7 @@ export function MobileMenu({ open, lang, copy, reduced, onClose, onLang }: Props
           {NAV[lang].map((n, i) => n.mega ? <StayAccordion key="stay" lang={lang} label={n.label} onNavigate={onClose} /> : (
             <li key={i} className="js-mm-item border-b border-ivory/10">
               <a href={n.href === '#activities-winter' ? `#activities-${season}` : n.href} onClick={onClose} className="flex min-h-[60px] items-center justify-between font-display text-[34px] font-medium leading-none">
-                {n.label}
+                <span className="flex items-center">{n.live && <span aria-hidden className="live-dot mr-3" />}{n.label}</span>
                 <span aria-hidden className="text-champagne text-xl">→</span>
               </a>
             </li>

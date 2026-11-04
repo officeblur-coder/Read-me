@@ -9,6 +9,7 @@ import { SeasonToggle } from './SeasonToggle';
 import { SeasonFx } from './SeasonFx';
 import { useSeason } from '../lib/season';
 import { Icon360 } from './tour/VirtualTour';
+import { useWeather } from './WeatherBand';
 import { TOUR_COPY, openTour, warmTour } from '../content/tour';
 import { BookingBar, type BookingBarHandle, type BookingRequest } from './BookingBar';
 
@@ -30,6 +31,8 @@ export function Hero({ lang, copy, bookingRef, onBookingSubmit }: Props) {
   const fine = useFinePointer();
   const mobile = useIsMobile();
   const { season: globalSeason, setSeason: setGlobalSeason } = useSeason();
+  const { data: wx } = useWeather();
+  const kz = wx?.spots.kitzski;
   // opens directly on the active season (calendar: 1 Nov–15 Apr winter, or the visitor's choice) – no 50/50 glide
   const [initialSeason] = useState<Season>(globalSeason);
   const [season, setSeason] = useState<Season>(globalSeason);
@@ -115,13 +118,19 @@ export function Hero({ lang, copy, bookingRef, onBookingSubmit }: Props) {
                 className="vt-btn inline-flex min-h-[52px] items-center gap-2.5 rounded-full px-6 text-[15.5px] font-semibold">
                 <span className="vt-ring grid h-8 w-8 place-items-center rounded-full"><Icon360 size={18} /></span>{TOUR_COPY[lang].button}
               </button>
+              <a href="#mountain" className="vt-btn live-pill inline-flex min-h-[52px] items-center gap-2.5 rounded-full px-5 text-[15px] font-semibold">
+                <span aria-hidden className="live-dot" />{lang === 'de' ? 'Live vom Berg' : 'Live from the mountain'}{kz && <span className="lnum text-gold-light">· KitzSki {Math.round(kz.temp)}°</span>}
+              </a>
             </div>
             {/* phones: the tour button sits right under the headline */}
-            <div className="js-fade pointer-events-auto mt-5 flex justify-center md:hidden">
+            <div className="js-fade pointer-events-auto mt-5 flex flex-wrap justify-center gap-2 md:hidden">
               <button type="button" onPointerEnter={warmTour} onPointerDown={warmTour} onFocus={warmTour} onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); openTour(r.left + r.width / 2, r.top + r.height / 2); }}
                 className="vt-btn inline-flex min-h-[46px] items-center gap-2.5 rounded-full pl-1.5 pr-5 text-[14.5px] font-semibold">
                 <span className="vt-ring grid h-8 w-8 place-items-center rounded-full"><Icon360 size={18} /></span>{TOUR_COPY[lang].button}
               </button>
+              <a href="#mountain" className="vt-btn live-pill inline-flex min-h-[46px] items-center gap-2 rounded-full px-4 text-[14px] font-semibold">
+                <span aria-hidden className="live-dot" />Live{kz && <span className="lnum text-gold-light">{Math.round(kz.temp)}°</span>}
+              </a>
             </div>
           </div>
         </div>

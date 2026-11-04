@@ -376,6 +376,11 @@ export function MountainPage({ lang }: { lang: Lang }) {
     loadConditions(ac.signal).then(setWx).catch(() => { if (!ac.signal.aborted) setWx({ state: 'error', data: {}, source: '' }); });
     return () => ac.abort();
   }, []);
+  // deep links from the homepage: #mountain-cams / -plan / -find / -dash
+  useEffect(() => {
+    const m = /^#mountain-(dash|cams|plan|find)$/.exec(window.location.hash);
+    if (m) window.setTimeout(() => document.getElementById(`mx-${m[1]}`)?.scrollIntoView({ behavior: 'auto', block: 'start' }), 250);
+  }, []);
   // a chosen resort also picks its first webcam
   const pickResort = (r: ResortId) => { setResort(r); setCam(WEBCAMS.find((x) => x.resort === r)!.id); };
   const toCam = (r: ResortId) => { pickResort(r); document.getElementById('mx-cams')?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' }); };
