@@ -101,7 +101,7 @@ export const PR_COPY = {
 };
 /** Preview routes (hash) for the room pages – live: /rooms/<slug>/ */
 export const roomRoute = (k: RoomKey) => `#room-${k}`;
-export const ROOMS_ROUTE = '#pension-rooms';
+export const ROOMS_ROUTE = '#all-rooms';
 
 /** Accommodation mega menu + room pages. Descriptions only restate verified facts (beds, TV, WLAN, private bathroom, shower). */
 export const STAY_COPY = {
