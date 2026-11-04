@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lyra TV</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* 1920x1080 stage, scaled to any screen. Timeline is driven by render(t) so the
+   same page can play live on a TV browser or be captured frame by frame. */
+:root{
+  --bg:#06120c; --bg2:#0b1d14; --gold:#d8b46a; --gold2:#f1d9a0; --gold3:#a8843f;
+  --text:#f5efe2; --muted:#c9c1ad;
+  --serif:'Cormorant Garamond','Times New Roman',serif;
+  --sans:'Montserrat',system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;cursor:none}
+body{display:grid;place-items:center}
+#stage{position:relative;width:1920px;height:1080px;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--sans);transform-origin:center}
+.scene{position:absolute;inset:0;opacity:0;will-change:opacity}
+.abs{position:absolute}
+.photo{position:absolute;inset:0;overflow:hidden}
+.photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;will-change:transform}
+.shade-l{position:absolute;inset:0;background:
+  linear-gradient(90deg,rgba(4,13,8,.96) 0%,rgba(4,13,8,.88) 30%,rgba(4,13,8,.45) 52%,rgba(4,13,8,0) 70%),
+  linear-gradient(0deg,rgba(4,13,8,.55),rgba(4,13,8,0) 35%)}
+.hero-text{position:absolute;left:120px;top:200px;bottom:100px;width:820px;display:flex;flex-direction:column;justify-content:center;gap:0}
+.eyebrow{font-size:24px;font-weight:600;letter-spacing:.42em;text-transform:uppercase;color:var(--gold)}
+.badge{display:inline-block;align-self:flex-start;margin-top:22px;font-size:20px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;padding:9px 18px;border-radius:999px;background:linear-gradient(135deg,var(--gold2),var(--gold));color:#1b1407}
+.title{font-family:var(--serif);font-weight:600;font-size:104px;line-height:.98;margin-top:18px;text-wrap:balance}
+.sub{font-family:var(--serif);font-style:italic;font-size:36px;color:var(--gold2);margin-top:20px;line-height:1.25}
+.desc{font-size:26px;line-height:1.5;color:var(--muted);margin-top:22px;max-width:720px}
+.pricebox{display:flex;align-items:baseline;gap:18px;margin-top:40px}
+.price{font-family:var(--serif);font-weight:700;font-size:120px;line-height:.9;color:var(--gold2)}
+.price small{font-family:var(--sans);font-size:30px;font-weight:600;letter-spacing:.12em;color:var(--gold);margin-left:10px}
+.weight{font-size:24px;color:var(--muted);letter-spacing:.08em}
+.rule{width:120px;height:2px;background:linear-gradient(90deg,var(--gold),transparent);margin-top:34px}
+
+/* trio */
+.trio-bg{position:absolute;inset:-60px;background-size:cover;background-position:center;filter:blur(40px) brightness(.32) saturate(1.2)}
+.trio-head{position:absolute;left:0;right:0;top:120px;text-align:center}
+.trio-head .t{font-family:var(--serif);font-weight:600;font-size:96px;line-height:1}
+.trio-head .s{font-family:var(--serif);font-style:italic;font-size:34px;color:var(--gold2);margin-top:12px}
+.cards{position:absolute;left:110px;right:110px;bottom:96px;display:grid;grid-template-columns:repeat(3,1fr);gap:44px}
+.card{border-radius:30px;overflow:hidden;background:linear-gradient(180deg,#10281c,#0a1a12);border:1.5px solid rgba(216,180,106,.28);box-shadow:0 40px 80px rgba(0,0,0,.55)}
+.card .ci{height:430px;overflow:hidden}
+.card img{width:100%;height:100%;object-fit:cover;will-change:transform}
+.card .cb{padding:26px 30px 30px;display:flex;justify-content:space-between;align-items:flex-end;gap:16px}
+.card .cn{font-family:var(--serif);font-weight:600;font-size:42px;line-height:1.02}
+.card .cs{font-size:20px;color:var(--muted);margin-top:8px;font-style:italic;font-family:var(--serif)}
+.card .price{font-size:68px}
+.card .price small{font-size:20px;margin-left:6px}
+
+/* intro / outro */
+#embers{position:absolute;inset:0;pointer-events:none}
+.center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.logo-big{width:520px;filter:drop-shadow(0 30px 60px rgba(0,0,0,.6))}
+.kicker{font-size:26px;letter-spacing:.5em;text-transform:uppercase;color:var(--gold);margin-top:34px}
+.welcome{font-family:var(--serif);font-style:italic;font-size:84px;margin-top:22px;height:100px;position:relative;width:1200px}
+.welcome span{position:absolute;left:0;right:0;background:linear-gradient(180deg,#fff7e3,var(--gold2) 55%,var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+
+.outro-left{position:absolute;left:140px;top:0;bottom:0;width:900px;display:flex;flex-direction:column;justify-content:center}
+.outro-left .big{font-family:var(--serif);font-weight:600;font-size:110px;line-height:1}
+.outro-left .big em{color:var(--gold2)}
+.lines{margin-top:46px;display:flex;flex-direction:column;gap:18px}
+.lines div{font-size:34px;display:flex;gap:18px;align-items:center}
+.lines b{font-size:22px;letter-spacing:.2em;color:var(--gold);width:56px}
+.qr-card{position:absolute;right:170px;top:50%;width:560px;height:560px;margin-top:-280px;background:#fff;border-radius:40px;padding:34px;box-shadow:0 50px 120px rgba(0,0,0,.6),0 0 0 3px var(--gold)}
+.qr-card img{width:100%;height:100%;display:block}
+.qr-cap{position:absolute;right:170px;width:560px;top:calc(50% + 310px);text-align:center;font-size:24px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold)}
+
+/* persistent chrome */
+#chrome{position:absolute;inset:0;pointer-events:none;opacity:0;z-index:100}
+#chrome .logo{position:absolute;left:64px;top:46px;width:190px;filter:drop-shadow(0 10px 24px rgba(0,0,0,.6))}
+#chrome .mini-qr{position:absolute;right:56px;top:40px;display:flex;align-items:center;gap:22px;padding:16px 16px 16px 30px;border-radius:26px;background:rgba(6,18,12,.78);border:1.5px solid rgba(216,180,106,.4);backdrop-filter:blur(10px)}
+#chrome .mini-qr img{width:196px;height:196px;border-radius:12px;background:#fff;padding:8px}
+#chrome .mini-qr .mt{font-size:19px;line-height:1.5;color:var(--text);text-align:right}
+#chrome .mini-qr .mt b{display:block;font-family:var(--serif);font-size:34px;color:var(--gold2);font-weight:600;line-height:1.1;margin-bottom:6px}
+#chrome .dots{position:absolute;left:50%;bottom:40px;transform:translateX(-50%);display:flex;gap:10px}
+#chrome .dots i{width:10px;height:10px;border-radius:5px;background:rgba(245,239,226,.28)}
+#chrome .dots i.on{width:34px;background:var(--gold)}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<script src="../data.js"></script>
+<script>
+(() => {
+"use strict";
+const ITEMS = window.LYRA_ITEMS, CATS = window.LYRA_CATS;
+const BY = {}; CATS.forEach(c => (ITEMS[c.id] || []).forEach(it => { it.cat = c.id; BY[it.id] = BY[it.id] || it; }));
+const catName = (id, i) => CATS.find(c => c.id === id).n[i];
+const fmt = p => (Number.isInteger(p) ? String(p) : p.toFixed(2).replace(".", ","));
+const IMG = n => `img/${n}.jpg`;
+
+/* ---------- storyboard (seconds) ---------- */
+const XF = 0.8;                       // cross-fade between scenes
+const SCENES = [
+  { type: "intro", dur: 6.5 },
+  { type: "hero", id: "ciolan-varza-rosie", badge: "Noutate · Új · New" },
+  { type: "hero", id: "sarmale", badge: "Rețeta casei · Házi recept" },
+  { type: "trio", cat: "ciorbe", ids: ["burta", "fasole-pita", "gulas"] },
+  { type: "hero", id: "costite-bbq", badge: "BBQ Smoker" },
+  { type: "trio", cat: "burgeri", ids: ["double-smash", "spicy-smash", "smash-burger"], title: ["New Smash Burgers", "by Lyra · Black Angus"] },
+  { type: "hero", id: "antricot", badge: "Noutate · Új · New" },
+  { type: "hero", id: "platou-lyra", badge: "2–3 persoane · személy · people" },
+  { type: "hero", id: "pastrav", badge: "Cuptor pe cărbune · Faszén" },
+  { type: "trio", cat: "desert", ids: ["papanas", "somloi", "cinnamon-rolls"] },
+  { type: "trio", cat: "cocktails", ids: ["aperol", "hugo", "limoncello"] },
+  { type: "outro", dur: 9 }
+];
+SCENES.forEach(s => { s.dur = s.dur || (s.type === "hero" ? 6.6 : 7.4); });
+let acc = 0; SCENES.forEach(s => { s.start = acc; acc += s.dur - XF; });
+const TOTAL = acc + XF;               // loops seamlessly: outro fades into intro
+window.LYRA_TV_TOTAL = TOTAL;
+
+/* ---------- build DOM ---------- */
+const stage = document.getElementById("stage");
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+// "Platou à la Lyra · 2–3 persoane" -> "Platou à la Lyra" (the badge already says it)
+const short = n => n.split(" · ")[0];
+// category label: Romanian, plus Hungarian when it differs and fits on one line
+function eyebrow(c) { const ro = catName(c, 0), hu = catName(c, 2); return ro === hu || (ro + hu).length > 34 ? ro : `${ro} · ${hu}`; }
+function heroHTML(s) {
+  const it = BY[s.id];
+  return `<div class="photo"><img src="${IMG(s.id)}" alt=""></div><div class="shade-l"></div>
+    <div class="hero-text">
+      <div class="eyebrow r">${esc(eyebrow(it.cat))}</div>
+      ${s.badge ? `<div class="badge r">${esc(s.badge)}</div>` : ""}
+      <div class="title r">${esc(short(it.n[0]))}</div>
+      <div class="sub r">${esc(short(it.n[2]))}<br>${esc(short(it.n[1]))}</div>
+      ${it.d ? `<div class="desc r">${esc(it.d[0])}</div>` : ""}
+      <div class="rule r"></div>
+      <div class="pricebox r"><div class="price">${fmt(it.p)}<small>LEI</small></div>${it.w ? `<div class="weight">${esc(it.w)}</div>` : ""}</div>
+    </div>`;
+}
+function trioHTML(s) {
+  const t = s.title || [catName(s.cat, 0), `${catName(s.cat, 2)} · ${catName(s.cat, 1)}`];
+  return `<div class="trio-bg" style="background-image:url(${IMG(s.ids[1])})"></div>
+    <div class="trio-head"><div class="t r">${esc(t[0])}</div><div class="s r">${esc(t[1])}</div></div>
+    <div class="cards">${s.ids.map(id => { const it = BY[id]; return `<div class="card r"><div class="ci"><img src="${IMG(id)}" alt=""></div>
+      <div class="cb"><div><div class="cn">${esc(it.n[0])}</div>${it.n[2] !== it.n[0] ? `<div class="cs">${esc(it.n[2])}</div>` : ""}</div><div class="price">${fmt(it.p)}<small>LEI</small></div></div></div>`; }).join("")}</div>`;
+}
+const introHTML = () => `<div class="photo"><img src="${IMG("restaurant")}" alt="" style="filter:brightness(.38) saturate(1.1)"></div>
+  <canvas id="embers" width="1920" height="1080"></canvas>
+  <div class="center"><img class="logo-big r" src="../img/logo.webp" alt="Lyra"><div class="kicker r">Pensiune · Restaurant · 1999</div>
+  <div class="welcome r"><span>Bun venit</span><span>Üdvözöljük</span><span>Welcome</span></div></div>`;
+const outroHTML = () => `<div class="photo"><img src="${IMG("carne-garnita")}" alt="" style="filter:blur(30px) brightness(.28);transform:scale(1.1)"></div>
+  <div class="outro-left"><div class="big r">Meniul complet<br><em>pe telefon</em></div>
+    <div class="lines"><div class="r"><b>RO</b>Scanați codul și alegeți limba</div><div class="r"><b>HU</b>Olvassa be a kódot – teljes étlap</div><div class="r"><b>EN</b>Scan the code for the full menu</div></div></div>
+  <div class="qr-card r"><img src="qr.png" alt="QR"></div><div class="qr-cap r">Română · Magyar · English</div>`;
+
+SCENES.forEach((s, i) => {
+  const el = document.createElement("div"); el.className = "scene " + s.type;
+  el.innerHTML = s.type === "hero" ? heroHTML(s) : s.type === "trio" ? trioHTML(s) : s.type === "intro" ? introHTML() : outroHTML();
+  stage.appendChild(el); s.el = el; s.reveal = [...el.querySelectorAll(".r")];
+  s.img = el.querySelector(".photo img"); s.cards = [...el.querySelectorAll(".card img")];
+  s.welcome = [...el.querySelectorAll(".welcome span")];
+});
+const chrome = document.createElement("div"); chrome.id = "chrome";
+const content = SCENES.filter(s => s.type === "hero" || s.type === "trio");
+chrome.innerHTML = `<img class="logo" src="../img/logo.webp" alt="">
+  <div class="mini-qr"><div class="mt"><b>Meniu digital</b>RO · HU · EN<br>scanați · scan</div><img src="qr.png" alt=""></div>
+  <div class="dots">${content.map(() => "<i></i>").join("")}</div>`;
+stage.appendChild(chrome);
+const dots = [...chrome.querySelectorAll(".dots i")];
+
+/* ---------- timing helpers ---------- */
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const ease = x => 1 - Math.pow(1 - clamp(x), 3);
+const easeIO = x => { x = clamp(x); return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+
+/* deterministic embers */
+const cv = stage.querySelector("#embers"), cx = cv.getContext("2d");
+const P = Array.from({ length: 90 }, (_, i) => { const r = n => { const x = Math.sin(i * 127.1 + n * 311.7) * 43758.5453; return x - Math.floor(x); };
+  return { x: r(1) * 1920, y: r(2) * 1080, s: 1 + r(3) * 3, v: 30 + r(4) * 70, ph: r(5) * 6.28, a: r(6) }; });
+function embers(t, alpha) {
+  cx.clearRect(0, 0, 1920, 1080); if (alpha <= 0) return;
+  for (const p of P) {
+    const y = ((p.y - p.v * t) % 1180 + 1180) % 1180 - 50, x = p.x + Math.sin(p.ph + t * 1.3) * 22;
+    const g = cx.createRadialGradient(x, y, 0, x, y, p.s * 5);
+    g.addColorStop(0, `rgba(255,${190 + (p.a * 50) | 0},100,${alpha * (0.45 + 0.4 * Math.sin(p.ph + t * 3))})`); g.addColorStop(1, "rgba(255,120,40,0)");
+    cx.fillStyle = g; cx.beginPath(); cx.arc(x, y, p.s * 5, 0, 6.28); cx.fill();
+  }
+}
+
+/* ---------- render one moment ---------- */
+function render(T) {
+  const t = ((T % TOTAL) + TOTAL) % TOTAL;
+  let chromeA = 0, activeDot = -1;
+  SCENES.forEach((s, i) => {
+    let lt = t - s.start;
+    // the intro also covers the loop seam (outro fading into it)
+    if (s.type === "intro" && t > TOTAL - XF) lt = t - TOTAL;
+    const vis = lt > -XF && lt < s.dur;
+    if (!vis) { if (s.el.style.opacity !== "0") s.el.style.opacity = 0; return; }
+    const fin = clamp((lt + XF) / XF), fout = clamp((s.dur - lt) / XF);
+    const a = Math.min(fin, fout);
+    s.el.style.opacity = a; s.el.style.zIndex = i + 1;
+    const p = clamp(lt / s.dur);
+    if (s.img) s.img.style.transform = `scale(${1.04 + 0.1 * p}) translate(${(-1.4 * p).toFixed(3)}%, ${(-0.6 * p).toFixed(3)}%)`;
+    s.cards.forEach((im, k) => im.style.transform = `scale(${1.02 + 0.08 * p + k * 0.005})`);
+    // staggered entrance, gentle exit
+    s.reveal.forEach((el, k) => {
+      const e = ease((lt - 0.25 - k * 0.12) / 0.9), out = clamp((s.dur - XF - lt) / 0.5);
+      el.style.opacity = e * out;
+      el.style.transform = `translateY(${(1 - e) * 46}px)`;
+    });
+    if (s.type === "intro") {
+      embers(t < s.dur ? t : t - TOTAL + s.dur, a);
+      s.welcome.forEach((w, k) => { const c = lt - 1.6 - k * 1.45; const o = clamp(c / 0.4) * clamp((1.45 - c) / 0.4); w.style.opacity = k === 2 && c > 0 ? clamp(c / 0.4) : o; w.style.transform = `translateY(${(1 - clamp(c / 0.5)) * 20}px)`; });
+    }
+    if (s.type === "hero" || s.type === "trio") { chromeA = Math.max(chromeA, a); if (a > 0.5) activeDot = content.indexOf(s); }
+  });
+  chrome.style.opacity = chromeA;
+  dots.forEach((d, k) => d.classList.toggle("on", k === activeDot));
+}
+window.render = render;
+
+/* ---------- live playback (TV browser) unless capturing ---------- */
+function fit() { const s = Math.min(innerWidth / 1920, innerHeight / 1080); stage.style.transform = `scale(${s})`; }
+addEventListener("resize", fit); fit();
+if (!/[?&]capture/.test(location.search)) {
+  const t0 = performance.now();
+  (function loop(now) { render((now - t0) / 1000); requestAnimationFrame(loop); })(t0);
+} else render(0);
+})();
+</script>
+</body>
+</html>
