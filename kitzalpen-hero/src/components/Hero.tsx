@@ -8,6 +8,8 @@ import { SeasonCompare, type SeasonCompareHandle } from './SeasonCompare';
 import { SeasonToggle } from './SeasonToggle';
 import { SeasonFx } from './SeasonFx';
 import { useSeason } from '../lib/season';
+import { Icon360 } from './tour/VirtualTour';
+import { TOUR_COPY, openTour } from '../content/tour';
 import { BookingBar, type BookingBarHandle, type BookingRequest } from './BookingBar';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
@@ -110,9 +112,20 @@ export function Hero({ lang, copy, bookingRef, onBookingSubmit }: Props) {
             <p className="js-fade mt-5 hidden text-[13px] font-semibold uppercase tracking-[.3em] text-ivory/90 md:block lg:text-[14px]">
               {copy.sub.join(' · ')}
             </p>
-            <div className="js-fade pointer-events-auto mt-9 hidden md:flex">
+            <div className="js-fade pointer-events-auto mt-9 hidden items-center gap-4 md:flex">
               <button ref={ctaRef} type="button" onClick={() => bookingRef.current?.focusArrival()} className="btn-gold inline-flex min-h-[52px] items-center gap-3 rounded-full px-8 text-[16px] font-semibold">
                 {copy.cta} <span className="arrow" aria-hidden>→</span>
+              </button>
+              <button type="button" onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); openTour(r.left + r.width / 2, r.top + r.height / 2); }}
+                className="vt-btn inline-flex min-h-[52px] items-center gap-2.5 rounded-full px-6 text-[15.5px] font-semibold">
+                <span className="vt-ring grid h-8 w-8 place-items-center rounded-full"><Icon360 size={18} /></span>{TOUR_COPY[lang].button}
+              </button>
+            </div>
+            {/* phones: the tour button sits right under the headline */}
+            <div className="js-fade pointer-events-auto mt-5 flex justify-center md:hidden">
+              <button type="button" onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); openTour(r.left + r.width / 2, r.top + r.height / 2); }}
+                className="vt-btn inline-flex min-h-[46px] items-center gap-2.5 rounded-full pl-1.5 pr-5 text-[14.5px] font-semibold">
+                <span className="vt-ring grid h-8 w-8 place-items-center rounded-full"><Icon360 size={18} /></span>{TOUR_COPY[lang].button}
               </button>
             </div>
           </div>

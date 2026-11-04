@@ -22,6 +22,7 @@ import { ChaletPage } from './components/chalet/ChaletPage';
 import { AllRoomsPage } from './components/pension/AllRoomsPage';
 import { DiningPage } from './components/restaurant/DiningPage';
 import { GroupsPage } from './components/groups/GroupsPage';
+import { VirtualTour } from './components/tour/VirtualTour';
 import { SummerPage, WinterPage } from './components/activities/WinterPage';
 import { ROOM_KEYS, type RoomKey } from './content/pensionPage';
 import { AlpineExperienceSection } from './components/experience/AlpineExperienceSection';
@@ -150,6 +151,7 @@ export default function App() {
       </main>
       )}
       <SiteFooter lang={lang} />
+      <VirtualTour lang={lang} />
       <QuickActions lang={lang} reduced={reduced} />
     </>
   );
