@@ -8,8 +8,8 @@ import type { Season } from '../content/hero';
  *
  * Opening the site: the season follows the calendar in Hollersbach –
  * 1 November to 15 April = winter, the rest of the year = summer.
- * A choice made by the visitor is kept for the current browser tab (sessionStorage),
- * so reloads and the activities pages keep it; a new visit starts from the calendar again.
+ * A choice made by the visitor is kept while they browse (in memory); every page load
+ * starts from the calendar again.
  * index.html runs the same rule before first paint, so there is no flash.
  */
 export const SEASON_KEY = 'kitzalpen-season';
@@ -32,8 +32,9 @@ interface Ctx { season: Season; stored: Season | null; setSeason: (s: Season) =>
 const SeasonContext = createContext<Ctx>({ season: 'summer', stored: null, setSeason: () => {} });
 
 export function SeasonProvider({ children }: { children: ReactNode }) {
-  const [stored] = useState(readStoredSeason);
-  const [season, set] = useState<Season>(() => stored ?? seasonByDate());
+  // opening always follows the calendar; a visitor's switch is kept while they move around the site
+  const [stored] = useState<Season | null>(null);
+  const [season, set] = useState<Season>(() => seasonByDate());
 
   useEffect(() => {
     document.documentElement.dataset.season = season;

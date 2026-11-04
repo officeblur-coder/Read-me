@@ -1,4 +1,4 @@
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { PHOTOS, PHOTOS_M, type Copy, type Photo, type Season } from '../content/hero';
 import { placePhotos, quad, type Placement } from '../lib/align';
@@ -31,7 +31,7 @@ const CURVE = {
 /** Seconds for a full sweep from one side to the other. */
 const SWEEP = 1.5;
 
-function PhotoLayer({ photo, place, priority }: { photo: Photo; place: Placement; priority?: boolean }) {
+function PhotoLayer({ photo, place, priority, onReady }: { photo: Photo; place: Placement; priority?: boolean; onReady?: () => void }) {
   const n = photo.name;
   const set = (ext: string) => photo.sizes.map((s) => `${BASE}${n}-${s}.${ext} ${s}w`).join(', ');
   return (
@@ -49,6 +49,8 @@ function PhotoLayer({ photo, place, priority }: { photo: Photo; place: Placement
               decoding="async"
               // @ts-expect-error fetchpriority is valid HTML, React 18 types lag behind
               fetchpriority={priority ? 'high' : 'auto'}
+              onLoad={onReady}
+              ref={(el) => { if (el?.complete && el.naturalWidth) onReady?.(); }}
               draggable={false}
               className="absolute left-0 top-0 max-w-none select-none"
               style={{ width: place.w, height: place.h, transform: `translate3d(${place.x}px, ${place.y}px, 0)` }}
@@ -72,6 +74,8 @@ export const SeasonCompare = forwardRef<SeasonCompareHandle, Props>(function Sea
   const state = useRef({ p: initial === 'winter' ? 0 : 1 });           // 1 = all summer, 0 = all winter
   const dominant = useRef<Season>(initial);
   const settled = useRef<Season | null>(null);
+  const [openReady, setOpenReady] = useState(false);
+  const markReady = useCallback(() => setOpenReady(true), []);
   const geo = mobile ? CURVE.mobile : CURVE.desktop;
 
   const [summerPlace, winterPlace] = useMemo(() => {
@@ -162,8 +166,11 @@ export const SeasonCompare = forwardRef<SeasonCompareHandle, Props>(function Sea
     <div className="absolute inset-0 overflow-hidden bg-charcoal">
       {summerPlace && winterPlace && (
         <>
-          <div className="absolute inset-0"><PhotoLayer photo={(mobile ? PHOTOS_M : PHOTOS).summer} place={summerPlace} priority /></div>
-          <div ref={winterRef} className="absolute inset-0"><PhotoLayer photo={(mobile ? PHOTOS_M : PHOTOS).winter} place={winterPlace} /></div>
+          {/* the season the hero opens on loads first; the other one stays hidden until it is there – no flash of the wrong season */}
+          <div className="absolute inset-0" style={{ visibility: initial === 'winter' && !openReady ? 'hidden' : undefined }}>
+            <PhotoLayer photo={(mobile ? PHOTOS_M : PHOTOS).summer} place={summerPlace} priority={initial === 'summer'} />
+          </div>
+          <div ref={winterRef} className="absolute inset-0"><PhotoLayer photo={(mobile ? PHOTOS_M : PHOTOS).winter} place={winterPlace} priority={initial === 'winter'} onReady={markReady} /></div>
         </>
       )}
 

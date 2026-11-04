@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <!-- LCP: the summer photograph is the first thing painted -->
     <!-- season before first paint: no flash of the wrong palette -->
-    <script>try{var s=sessionStorage.getItem('kitzalpen-season');if(s!=='winter'&&s!=='summer'){var p=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Vienna',month:'numeric',day:'numeric'}).formatToParts(new Date()),m=+p.find(function(x){return x.type==='month'}).value,d=+p.find(function(x){return x.type==='day'}).value;s=(m>=11||m<=3||(m===4&&d<=15))?'winter':'summer';}document.documentElement.dataset.season=s;}catch(e){}</script>
+    <script>try{var s;if(1){var p=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Vienna',month:'numeric',day:'numeric'}).formatToParts(new Date()),m=+p.find(function(x){return x.type==='month'}).value,d=+p.find(function(x){return x.type==='day'}).value;s=(m>=11||m<=3||(m===4&&d<=15))?'winter':'summer';}document.documentElement.dataset.season=s;}catch(e){}</script>
   </head>
   <body>
     <div id="root"></div>
