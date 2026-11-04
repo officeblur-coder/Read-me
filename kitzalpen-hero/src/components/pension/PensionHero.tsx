@@ -8,13 +8,13 @@ import { useSeason } from '../../lib/season';
 import { SeasonFx } from '../SeasonFx';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
-const IMG = `${import.meta.env.BASE_URL}images/pension/`;
+const IMG = `${import.meta.env.BASE_URL}images/hero/`;
 const SITE = 'https://www.kitzalpen.at';
 
-/** Two original photos; focal points keep the building in frame on desktop and mobile. */
-const PHOTO: Record<Season, { stem: string; sizes: number[]; desk: string; mob: string }> = {
-  winter: { stem: 'hero-winter', sizes: [900, 1600], desk: '62% 50%', mob: '50% 45%' },
-  summer: { stem: 'hero-summer', sizes: [900, 1600], desk: '70% 45%', mob: '78% 45%' },
+/** Client photos: landscape for desktop/tablet, portrait for phones; focal points keep the house in frame. */
+const PHOTO: Record<Season, { d: string; m: string; dSizes: number[]; mSizes: number[]; desk: string; mob: string }> = {
+  winter: { d: 'winter-d', m: 'winter-m', dSizes: [960, 1672], mSizes: [640, 941], desk: '68% 60%', mob: '55% 50%' },
+  summer: { d: 'summer-d', m: 'summer-m', dSizes: [960, 1671], mSizes: [640, 941], desk: '60% 45%', mob: '52% 45%' },
 };
 
 /** Reitlehen 42 (OSM Nominatim, see content/map-points.json): 47.27268 N, 12.42573 E */
@@ -30,7 +30,7 @@ const COPY = {
     tag: 'Restaurant & Bar im Haus',
     rooms: 'Zimmer entdecken', contact: 'Kontakt aufnehmen', scroll: 'Scrollen',
     roomsHref: `${SITE}/rooms/`, contactHref: `${SITE}/contact/`,
-    alt: { winter: 'Die Pension im Winter, verschneit, mit Holzbalkonen', summer: 'Die Pension im Sommer mit Garten, Terrasse, Holzbalkonen und Bergen im Hintergrund' },
+    alt: { winter: 'Die Pension im Winter, verschneit, vor bewaldeten Bergen in der Morgensonne', summer: 'Die Pension im Sommer mit Holzbalkonen, Blumen, Terrasse und Bergen im Hintergrund' },
   },
   en: {
     eyebrow: 'The Pension · Hollersbach im Pinzgau',
@@ -41,19 +41,21 @@ const COPY = {
     tag: 'Restaurant & bar in-house',
     rooms: 'Explore our rooms', contact: 'Contact us', scroll: 'Scroll',
     roomsHref: `${SITE}/en/rooms/`, contactHref: `${SITE}/en/contact/`,
-    alt: { winter: 'The guesthouse in winter, snow-covered, with wooden balconies', summer: 'The guesthouse in summer with garden, terrace, wooden balconies and mountains behind' },
+    alt: { winter: 'The guesthouse in winter, snow-covered, in front of forested mountains in the morning sun', summer: 'The guesthouse in summer with wooden balconies, flowers, terrace and mountains behind' },
   },
 };
 
 function Photo({ s, alt, active }: { s: Season; alt: string; active: boolean }) {
   const p = PHOTO[s];
-  const set = (ext: string) => p.sizes.map((w) => `${IMG}${p.stem}-${w}.${ext} ${w}w`).join(', ');
+  const set = (stem: string, sizes: number[], ext: string) => sizes.map((w) => `${IMG}${stem}-${w}.${ext} ${w}w`).join(', ');
   return (
     <div className={`js-ph-photo absolute inset-0 ${active ? '' : 'opacity-0'}`} data-season={s}>
       <picture>
-        <source type="image/avif" srcSet={set('avif')} sizes="100vw" />
-        <source type="image/webp" srcSet={set('webp')} sizes="100vw" />
-        <img src={`${IMG}${p.stem}.jpg`} alt={active ? alt : ''} aria-hidden={!active} width={1600} height={1019}
+        <source media="(max-width: 767px)" type="image/avif" srcSet={set(p.m, p.mSizes, 'avif')} sizes="100vw" />
+        <source media="(max-width: 767px)" type="image/webp" srcSet={set(p.m, p.mSizes, 'webp')} sizes="100vw" />
+        <source type="image/avif" srcSet={set(p.d, p.dSizes, 'avif')} sizes="100vw" />
+        <source type="image/webp" srcSet={set(p.d, p.dSizes, 'webp')} sizes="100vw" />
+        <img src={`${IMG}${p.d}.jpg`} alt={active ? alt : ''} aria-hidden={!active} width={1672} height={941}
           loading={active ? 'eager' : 'lazy'} decoding="async"
           // @ts-expect-error fetchpriority is valid HTML
           fetchpriority={active ? 'high' : 'low'}

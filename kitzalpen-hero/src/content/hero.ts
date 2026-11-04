@@ -109,8 +109,14 @@ export type Copy = (typeof COPY)['de'];
  * bh = height from upper balcony rail to lower balcony beam (fraction of image height).
  * Both are the same building from the same viewpoint, so they line up exactly.
  */
-export const PHOTOS = {
-  summer: { name: 'summer', w: 1600, h: 1031, sizes: [960, 1600], lx: 0.465, ly: 0.285, bh: 0.31, alt: 'Die Pension im Sommer, Terrasse und Hecke vor den Bergen' },
-  winter: { name: 'winter', w: 2000, h: 1734, sizes: [1000, 2000], lx: 0.335, ly: 0.405, bh: 0.275, alt: 'Die Pension im Winter, Balkone und Terrasse verschneit' },
-} as const;
-export type Photo = (typeof PHOTOS)[Season];
+export interface Photo { name: string; w: number; h: number; sizes: number[]; lx: number; ly: number; bh: number; alt: string }
+/** Client photos (Nov 2026). lx/ly = centre of the house, used to keep it in the same place in both seasons. */
+export const PHOTOS: Record<Season, Photo> = {
+  summer: { name: 'hero/summer-d', w: 1671, h: 941, sizes: [960, 1671], lx: 0.56, ly: 0.52, bh: 0.6, alt: 'Die Pension im Sommer mit Holzbalkonen, Blumen, Terrasse und Bergen im Hintergrund' },
+  winter: { name: 'hero/winter-d', w: 1672, h: 941, sizes: [960, 1672], lx: 0.66, ly: 0.63, bh: 0.6, alt: 'Die Pension im Winter, verschneit, vor bewaldeten Bergen in der Morgensonne' },
+};
+/** Portrait versions for phones. */
+export const PHOTOS_M: Record<Season, Photo> = {
+  summer: { name: 'hero/summer-m', w: 941, h: 1671, sizes: [640, 941], lx: 0.52, ly: 0.52, bh: 0.3, alt: PHOTOS.summer.alt },
+  winter: { name: 'hero/winter-m', w: 941, h: 1672, sizes: [640, 941], lx: 0.54, ly: 0.53, bh: 0.3, alt: PHOTOS.winter.alt },
+};

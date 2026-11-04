@@ -1,6 +1,6 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
 import gsap from 'gsap';
-import { PHOTOS, type Copy, type Photo, type Season } from '../content/hero';
+import { PHOTOS, PHOTOS_M, type Copy, type Photo, type Season } from '../content/hero';
 import { placePhotos, quad, type Placement } from '../lib/align';
 
 export interface SeasonCompareHandle {
@@ -76,8 +76,9 @@ export const SeasonCompare = forwardRef<SeasonCompareHandle, Props>(function Sea
 
   const [summerPlace, winterPlace] = useMemo(() => {
     if (!W || !H) return [null, null] as const;
-    const anchor = mobile ? { x: 0.06, y: 0.3 } : { x: 0.4, y: 0.3 };
-    return placePhotos(W, H, PHOTOS.summer, PHOTOS.winter, anchor);
+    const set = mobile ? PHOTOS_M : PHOTOS;
+    const anchor = mobile ? { x: 0.5, y: 0.4 } : { x: 0.64, y: 0.56 };
+    return placePhotos(W, H, set.summer, set.winter, anchor);
   }, [W, H, mobile]);
 
   // the whole curve leaves the frame at p = 0 / 1
@@ -161,8 +162,8 @@ export const SeasonCompare = forwardRef<SeasonCompareHandle, Props>(function Sea
     <div className="absolute inset-0 overflow-hidden bg-charcoal">
       {summerPlace && winterPlace && (
         <>
-          <div className="absolute inset-0"><PhotoLayer photo={PHOTOS.summer} place={summerPlace} priority /></div>
-          <div ref={winterRef} className="absolute inset-0"><PhotoLayer photo={PHOTOS.winter} place={winterPlace} /></div>
+          <div className="absolute inset-0"><PhotoLayer photo={(mobile ? PHOTOS_M : PHOTOS).summer} place={summerPlace} priority /></div>
+          <div ref={winterRef} className="absolute inset-0"><PhotoLayer photo={(mobile ? PHOTOS_M : PHOTOS).winter} place={winterPlace} /></div>
         </>
       )}
 
