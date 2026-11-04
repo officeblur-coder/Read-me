@@ -108,7 +108,7 @@ export const STAY_COPY = {
   de: {
     menuLabel: 'Unterkunft',
     pension: { chip: 'Haupthaus', title: 'Die Pension', text: '17 Zimmer im Haupthaus, Restaurant im Haus.', href: '#pension' },
-    chalet: { chip: 'Privates Chalet', title: 'KitzAlpen Chalet', text: 'Freistehendes Chalet für bis zu 4 Gäste.', href: `${SITE}/chalet/` },
+    chalet: { chip: 'Privates Chalet', title: 'KitzAlpen Chalet', text: 'Freistehendes Chalet für bis zu 4 Gäste.', href: '#chalet' },
     more: 'Mehr erfahren',
     categories: 'Zimmerkategorien',
     upTo: (n: number) => `bis ${n} Gäste`,
@@ -136,7 +136,7 @@ export const STAY_COPY = {
   en: {
     menuLabel: 'Accommodation',
     pension: { chip: 'Main building', title: 'The pension', text: '17 rooms in the main building, restaurant on site.', href: '#pension' },
-    chalet: { chip: 'Private chalet', title: 'KitzAlpen Chalet', text: 'Detached chalet for up to 4 guests.', href: `${SITE}/en/chalet/` },
+    chalet: { chip: 'Private chalet', title: 'KitzAlpen Chalet', text: 'Detached chalet for up to 4 guests.', href: '#chalet' },
     more: 'Learn more',
     categories: 'Room categories',
     upTo: (n: number) => `up to ${n} guests`,

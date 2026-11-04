@@ -42,7 +42,7 @@ export const CHALET_COPY = {
       { icon: 'beds', label: 'Doppelbett & Stockbett' },
     ] as { icon: ChaletIcon; label: string }[],
     cta: 'Mehr Details',
-    ctaHref: 'https://www.kitzalpen.at/chalet/',
+    ctaHref: '#chalet', // preview route – live: /chalet/
     season: { summer: 'Sommer', winter: 'Winter' },
     scrollHint: 'Scrollen: vom Sommer in den Winter',
     gallery: 'Chalet-Galerie',
@@ -67,7 +67,7 @@ export const CHALET_COPY = {
       { icon: 'beds', label: 'Double bed & bunk bed' },
     ] as { icon: ChaletIcon; label: string }[],
     cta: 'More details',
-    ctaHref: 'https://www.kitzalpen.at/en/chalet/',
+    ctaHref: '#chalet', // preview route – live: /en/chalet/
     season: { summer: 'Summer', winter: 'Winter' },
     scrollHint: 'Scroll: from summer into winter',
     gallery: 'Chalet gallery',
