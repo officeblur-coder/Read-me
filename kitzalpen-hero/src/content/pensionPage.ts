@@ -2,7 +2,6 @@ import type { Lang } from './hero';
 import { ROOMS, ROOMS_COPY } from './rooms';
 import { BOOKING_ENGINE } from '../components/BookingBar';
 
-const SITE = 'https://www.kitzalpen.at';
 
 /**
  * Pension page, sections below the hero.
@@ -55,7 +54,7 @@ export const PR_COPY = {
     finalTitle: 'Bereit für erholsame Tage in Hollersbach?',
     finalText: 'Entdecken Sie unsere Zimmer oder senden Sie uns eine persönliche Anfrage für Ihren nächsten Urlaub in den Alpen.',
     viewRooms: 'Zimmer entdecken', inquiry: 'Anfrage senden',
-    roomsHref: `${SITE}/rooms/`, contactHref: `${SITE}/contact/`,
+    roomsHref: '#all-rooms', contactHref: '#contact',
     finalAlt: { summer: 'Bergsee zwischen grünen Hängen und Felsgipfeln, vorne blühende Almrosen', winter: 'Verschneites Hochgebirgspanorama mit präparierten Pisten unter blauem Himmel' },
   },
   en: {
@@ -95,7 +94,7 @@ export const PR_COPY = {
     finalTitle: 'Ready for a relaxing stay in Hollersbach?',
     finalText: 'Explore our rooms or send us a personal inquiry for your next alpine escape.',
     viewRooms: 'View rooms', inquiry: 'Make an inquiry',
-    roomsHref: `${SITE}/en/rooms/`, contactHref: `${SITE}/en/contact/`,
+    roomsHref: '#all-rooms', contactHref: '#contact',
     finalAlt: { summer: 'Mountain lake between green slopes and rocky peaks, alpine roses in bloom in front', winter: 'Snowy high-alpine panorama with groomed slopes under a blue sky' },
   },
 };

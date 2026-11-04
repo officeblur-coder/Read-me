@@ -39,7 +39,9 @@ export function SeasonFx({ mode, mobile, reduced }: Props) {
       W = c.clientWidth; H = c.clientHeight;
       c.width = W * dpr; c.height = H * dpr;
       const n = Math.round(Math.min(mobile ? 90 : 170, (W * H) / (mobile ? 3800 : 9000)));
-      flakes = Array.from({ length: n }, () => spawn(true, false));
+      // keep snowing through resizes (the first ResizeObserver call comes right after the snow starts)
+      flakes = Array.from({ length: n }, () => spawn(true, snowing.current));
+      if (snowing.current && !raf) { last = performance.now(); raf = requestAnimationFrame(tick); }
     };
     const spawn = (anywhere: boolean, on: boolean): F => {
       const depth = Math.random();                       // 0 far … 1 near
@@ -91,9 +93,9 @@ export function SeasonFx({ mode, mobile, reduced }: Props) {
     if (snowing.current) (canvas.current as (HTMLCanvasElement & { __start?: () => void }) | null)?.__start?.();
 
     const d = reduced ? 0 : 1;
-    gsap.to(canvas.current, { opacity: winter ? 1 : 0, duration: (winter ? 0.4 : 1.4) * d, ease: 'power1.out' });
-    gsap.to(cool.current, { autoAlpha: winter ? 1 : 0, duration: 1.6 * d, ease: 'power2.out' });
-    gsap.to(warm.current, { autoAlpha: summer ? 1 : 0, duration: 2 * d, ease: 'power2.out' });
+    gsap.to(canvas.current, { opacity: winter ? 1 : 0, duration: (winter ? 0.4 : 1.4) * d, ease: 'power1.out', overwrite: true });
+    gsap.to(cool.current, { autoAlpha: winter ? 1 : 0, duration: 1.6 * d, ease: 'power2.out', overwrite: true });
+    gsap.to(warm.current, { autoAlpha: summer ? 1 : 0, duration: 2 * d, ease: 'power2.out', overwrite: true });
     if (summer) {
       gsap.fromTo(sun.current, { autoAlpha: 0, scale: 0.82, y: 24 }, { autoAlpha: 1, scale: 1, y: 0, duration: 2.2 * d, ease: 'power2.out', overwrite: true });
     } else {

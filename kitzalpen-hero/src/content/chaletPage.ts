@@ -37,7 +37,6 @@ export const CHALET_ALL: CPic[] = [CP.ext3, CP.ext1, CP.ext2, CP.int2, CP.int8, 
 
 export const CHALET_BOOKING = 'https://chalet-kitzalpen.pynbooking.direct/';
 export const CHALET_MAPS = 'https://maps.app.goo.gl/EfXXFEyuBKU49ENV8';
-const SITE = 'https://www.kitzalpen.at';
 
 export const CHALET_PAGE = {
   de: {
@@ -45,7 +44,7 @@ export const CHALET_PAGE = {
     title: ['Ihr privates', 'Alpenrefugium.'],
     sub: 'Eigenständiges Chalet für bis zu 4 Gäste – im Dorf Hollersbach im Pinzgau.',
     chips: ['Bis zu 4 Gäste', '2 Schlafzimmer', 'Voll ausgestattete Küche', 'Bad mit WC'],
-    book: 'Chalet buchen', inquiry: 'Anfrage senden', contactHref: `${SITE}/contact/`,
+    book: 'Chalet buchen', inquiry: 'Anfrage senden', contactHref: '#contact',
     scroll: 'Entdecken',
     introEyebrow: 'Das Chalet',
     intro: 'Ein warmes und einladendes alpines Refugium.',
@@ -83,7 +82,7 @@ export const CHALET_PAGE = {
     title: ['Your private', 'alpine retreat.'],
     sub: 'A self-contained chalet for up to 4 guests – in the village of Hollersbach im Pinzgau.',
     chips: ['Up to 4 guests', '2 bedrooms', 'Fully equipped kitchen', 'Bathroom with WC'],
-    book: 'Book the chalet', inquiry: 'Send an inquiry', contactHref: `${SITE}/en/contact/`,
+    book: 'Book the chalet', inquiry: 'Send an inquiry', contactHref: '#contact',
     scroll: 'Discover',
     introEyebrow: 'The chalet',
     intro: 'A warm and inviting alpine refuge.',

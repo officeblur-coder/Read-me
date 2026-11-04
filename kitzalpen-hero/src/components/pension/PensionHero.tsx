@@ -9,7 +9,6 @@ import { SeasonFx } from '../SeasonFx';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 const IMG = `${import.meta.env.BASE_URL}images/hero/`;
-const SITE = 'https://www.kitzalpen.at';
 
 /** Client photos: landscape for desktop/tablet, portrait for phones; focal points keep the house in frame. */
 const PHOTO: Record<Season, { d: string; m: string; dSizes: number[]; mSizes: number[]; desk: string; mob: string }> = {
@@ -29,7 +28,7 @@ const COPY = {
     eyebrowShort: 'Die Pension · Hollersbach',
     tag: 'Restaurant & Bar im Haus',
     rooms: 'Zimmer entdecken', contact: 'Kontakt aufnehmen', scroll: 'Scrollen',
-    roomsHref: `${SITE}/rooms/`, contactHref: `${SITE}/contact/`,
+    roomsHref: '#all-rooms', contactHref: '#contact',
     alt: { winter: 'Die Pension im Winter, verschneit, vor bewaldeten Bergen in der Morgensonne', summer: 'Die Pension im Sommer mit Holzbalkonen, Blumen, Terrasse und Bergen im Hintergrund' },
   },
   en: {
@@ -40,7 +39,7 @@ const COPY = {
     eyebrowShort: 'The Pension · Hollersbach',
     tag: 'Restaurant & bar in-house',
     rooms: 'Explore our rooms', contact: 'Contact us', scroll: 'Scroll',
-    roomsHref: `${SITE}/en/rooms/`, contactHref: `${SITE}/en/contact/`,
+    roomsHref: '#all-rooms', contactHref: '#contact',
     alt: { winter: 'The guesthouse in winter, snow-covered, in front of forested mountains in the morning sun', summer: 'The guesthouse in summer with wooden balconies, flowers, terrace and mountains behind' },
   },
 };

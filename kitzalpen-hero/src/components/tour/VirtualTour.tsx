@@ -40,7 +40,7 @@ export function VirtualTour({ lang }: { lang: Lang }) {
   useEffect(() => {
     if (!open) return;
     setSlow(false);
-    const slowId = window.setTimeout(() => setSlow(true), 6000);
+    const slowId = window.setTimeout(() => setSlow(true), 10000);
     const html = document.documentElement, prev = html.style.overflow;
     html.style.overflow = 'hidden';
     closeBtn.current?.focus({ preventScroll: true });
@@ -81,7 +81,7 @@ export function VirtualTour({ lang }: { lang: Lang }) {
         </div>
       )}
       {TOUR_URL && slow && (
-        <a href={TOUR_URL} target="_blank" rel="noopener noreferrer" className="absolute bottom-[max(18px,env(safe-area-inset-bottom))] left-1/2 z-10 inline-flex min-h-11 -translate-x-1/2 items-center gap-2 rounded-full bg-cream/95 px-5 text-[13.5px] font-semibold text-deep shadow-[0_10px_30px_-10px_rgba(0,0,0,.6)]">
+        <a href={TOUR_URL} target="_blank" rel="noopener noreferrer" className="absolute right-[calc(max(16px,env(safe-area-inset-right))+60px)] top-[max(16px,env(safe-area-inset-top))] z-10 inline-flex min-h-12 items-center gap-2 rounded-full bg-cream/90 px-4 text-[12.5px] font-semibold text-deep shadow-[0_10px_30px_-10px_rgba(0,0,0,.6)] backdrop-blur-sm">
           {t.direct} ↗
         </a>
       )}

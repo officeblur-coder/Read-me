@@ -2,7 +2,6 @@ export type Lang = 'de' | 'en';
 export type Season = 'summer' | 'winter';
 
 /** Real pages of kitzalpen.at – no invented URLs. */
-const SITE = 'https://www.kitzalpen.at';
 
 /** `mega: true` opens the accommodation panel (pension, chalet, room categories) instead of linking away. */
 export interface NavItem { label: string; href: string; mega?: boolean }
@@ -12,14 +11,14 @@ export const NAV: Record<Lang, NavItem[]> = {
     { label: 'Restaurant', href: '#restaurant' }, // preview – live: /restaurant/
     { label: 'Aktivitäten', href: '#activities-winter' }, // preview – live: /activities/
     { label: 'Gruppen', href: '#groups' },
-    { label: 'Kontakt', href: `${SITE}/contact/` },
+    { label: 'Kontakt', href: '#contact' },
   ],
   en: [
     { label: 'Accommodation', href: '#pension', mega: true }, // preview route – live: `${SITE}/en/pension/`
     { label: 'Restaurant', href: '#restaurant' }, // preview – live: /en/restaurant/
     { label: 'Activities', href: '#activities-winter' }, // preview – live: /en/activities/
     { label: 'Groups', href: '#groups' },
-    { label: 'Contact', href: `${SITE}/en/contact/` },
+    { label: 'Contact', href: '#contact' },
   ],
 };
 
@@ -28,12 +27,12 @@ export const FOOTER_NAV: Record<Lang, NavItem[]> = {
   de: [
     { label: 'Pension', href: '#pension' }, { label: 'Chalet', href: '#chalet' }, { label: 'Zimmer', href: '#all-rooms' },
     { label: 'Restaurant', href: '#restaurant' }, { label: 'Aktivitäten', href: '#activities-winter' }, // preview – live: /activities/
-    { label: 'Gruppen', href: '#groups' }, { label: 'Kontakt', href: `${SITE}/contact/` },
+    { label: 'Gruppen', href: '#groups' }, { label: 'Kontakt', href: '#contact' },
   ],
   en: [
     { label: 'Guesthouse', href: '#pension' }, { label: 'Chalet', href: '#chalet' }, { label: 'Rooms', href: '#all-rooms' },
     { label: 'Restaurant', href: '#restaurant' }, { label: 'Activities', href: '#activities-winter' }, // preview – live: /en/activities/
-    { label: 'Groups', href: '#groups' }, { label: 'Contact', href: `${SITE}/en/contact/` },
+    { label: 'Groups', href: '#groups' }, { label: 'Contact', href: '#contact' },
   ],
 };
 

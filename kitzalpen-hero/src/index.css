@@ -418,6 +418,24 @@
   .sm-all { color: #fff; background: var(--k-pine); transition: background-color .3s ease; }
   .sm-all:hover { background: var(--k-deep); }
   @media (prefers-reduced-motion: reduce) { .stay-menu, .stay-menu .sm-item { transition: none !important; transform: translate(-50%, 0); } .stay-menu .sm-item { transform: none; } }
+  /* back to top: above the concierge capsule */
+  .to-top { right: max(16px, env(safe-area-inset-right)); bottom: calc(92px + env(safe-area-inset-bottom)); color: var(--k-cream); background: color-mix(in srgb, var(--k-deep) 82%, transparent);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); box-shadow: 0 12px 30px -12px rgba(0,0,0,.55);
+    opacity: 0; transform: translateY(14px) scale(.9); pointer-events: none; transition: opacity .35s ease, transform .45s cubic-bezier(.2,.7,.2,1), background-color .3s ease; }
+  .to-top.is-on { opacity: 1; transform: none; pointer-events: auto; }
+  .to-top:hover { background: var(--k-pine); }
+  .to-top:focus-visible { outline: 2px solid var(--k-gold-light); outline-offset: 3px; }
+  @media (min-width: 1024px) { .to-top { right: 28px; bottom: 104px; } }
+  @media (prefers-reduced-motion: reduce) { .to-top { transition: opacity .2s ease; transform: none; } }
+  /* contact page */
+  .c-quick { color: var(--k-cream); border: 1px solid rgba(255,255,255,.28); background: rgba(10,18,13,.25); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); transition: border-color .3s ease, background-color .3s ease, transform .3s ease; }
+  .c-quick:hover { border-color: var(--k-gold-light); background: rgba(255,255,255,.08); transform: translateY(-2px); }
+  .c-input:focus-visible { box-shadow: 0 0 0 3px color-mix(in srgb, var(--k-gold) 35%, transparent); }
+  .c-wa { color: var(--k-pine); border: 1px solid color-mix(in srgb, var(--k-pine) 35%, transparent); transition: border-color .3s ease, background-color .3s ease; }
+  .c-wa:hover { border-color: var(--k-pine); background: color-mix(in srgb, var(--k-pine) 6%, transparent); }
+  .c-pin { animation: c-pin 2.6s ease-in-out infinite; }
+  @keyframes c-pin { 50% { transform: translate(-50%, calc(-100% - 8px)); } }
+  @media (prefers-reduced-motion: reduce) { .c-pin { animation: none; } }
   /* virtual tour */
   .vt-btn { color: #fff; border: 1px solid rgba(255,255,255,.7); background: rgba(10,18,13,.22); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); transition: background-color .3s ease, border-color .3s ease, transform .3s ease; }
   .vt-btn:hover { background: rgba(255,255,255,.14); border-color: var(--k-gold-light); transform: translateY(-2px); }

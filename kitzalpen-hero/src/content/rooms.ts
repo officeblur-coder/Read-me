@@ -66,7 +66,6 @@ export interface RoomFeature {
   verify?: string;
 }
 
-const SITE = 'https://www.kitzalpen.at';
 
 /**
  * Feature check against kitzalpen.at:
@@ -81,8 +80,8 @@ export const ROOMS_COPY = {
     sub: 'Gemütliche Zimmer mit viel Holz, modernen Details und alpenländischer Atmosphäre – perfekt zum Entspannen.',
     total: '17 Zimmer im Haupthaus · vier Kategorien',
     cta: 'Zimmer entdecken',
-    ctaHref: `${SITE}/rooms/`,
-    roomHref: (slug: string) => `${SITE}/rooms/${slug}/`,
+    ctaHref: '#all-rooms',
+    roomHref: (slug: string) => `#room-${slug}`,
     details: 'Details ansehen',
     features: [
       { icon: 'bed', title: 'Komfortable Zimmer', short: 'Komfortable Zimmer' },
@@ -111,8 +110,8 @@ export const ROOMS_COPY = {
     sub: 'Cosy rooms with plenty of wood, modern details and an Alpine atmosphere – made for unwinding.',
     total: '17 rooms in the main house · four categories',
     cta: 'Explore the rooms',
-    ctaHref: `${SITE}/en/rooms/`,
-    roomHref: (slug: string) => `${SITE}/en/rooms/${slug}/`,
+    ctaHref: '#all-rooms',
+    roomHref: (slug: string) => `#room-${slug}`,
     details: 'View details',
     features: [
       { icon: 'bed', title: 'Comfortable rooms', short: 'Comfortable rooms' },
