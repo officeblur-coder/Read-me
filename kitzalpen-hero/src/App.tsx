@@ -66,6 +66,12 @@ export default function App() {
   }, []);
 
   useEffect(() => { document.documentElement.lang = lang; }, [lang]);
+  // switching language must never leave header items hidden (they start hidden until the intro reveals them)
+  const langMounted = useRef(false);
+  useEffect(() => {
+    if (!langMounted.current) { langMounted.current = true; return; }
+    gsap.set('.js-head', { autoAlpha: 1, y: 0 });
+  }, [lang]);
 
   // subpages have no hero intro, which normally reveals the header items
   useEffect(() => {
