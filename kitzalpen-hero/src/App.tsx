@@ -13,14 +13,14 @@ import { WeatherBand } from './components/WeatherBand';
 import { ChaletSection } from './components/chalet/ChaletSection';
 import { RestaurantSection } from './components/restaurant/RestaurantSection';
 import { ActivitiesSection } from './components/activities/ActivitiesSection';
-import { ActivitiesPage } from './components/activities/ActivitiesPage';
+import { useSeason } from './lib/season';
 import { PensionHero } from './components/pension/PensionHero';
 import { PensionRooms } from './components/pension/PensionRooms';
 import { PensionFinalCTA } from './components/pension/PensionFinalCTA';
 import { RoomPage } from './components/pension/RoomPage';
 import { ChaletPage } from './components/chalet/ChaletPage';
 import { AllRoomsPage } from './components/pension/AllRoomsPage';
-import { WinterPage } from './components/activities/WinterPage';
+import { SummerPage, WinterPage } from './components/activities/WinterPage';
 import { ROOM_KEYS, type RoomKey } from './content/pensionPage';
 import { AlpineExperienceSection } from './components/experience/AlpineExperienceSection';
 import { AlpineMapSection } from './components/map/AlpineMapSection';
@@ -71,6 +71,14 @@ export default function App() {
   }, []);
 
   useEffect(() => { document.documentElement.lang = lang; }, [lang]);
+  // activities: the shared Sommer/Winter switch also switches between the two activity pages
+  const { season, setSeason } = useSeason();
+  const seasonMounted = useRef(false);
+  useEffect(() => { if ((page === 'summer' || page === 'winter') && page !== season) setSeason(page); }, [page]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!seasonMounted.current) { seasonMounted.current = true; return; }
+    if ((page === 'summer' || page === 'winter') && page !== season) window.location.hash = `#activities-${season}`;
+  }, [season]); // eslint-disable-line react-hooks/exhaustive-deps
   // switching language must never leave header items hidden (they start hidden until the intro reveals them)
   const langMounted = useRef(false);
   useEffect(() => {
@@ -107,7 +115,7 @@ export default function App() {
     <>
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-ivory focus:px-4 focus:py-2 focus:text-forest">{copy.skip}</a>
       <WeatherBand lang={lang} reduced={reduced} />
-      <Header lang={lang} copy={copy} compact={compact} fine={fine && !reduced} menuOpen={menu} onLang={setLang} onMenu={() => setMenu(true)} showSeason={page === 'pension' || page === 'chalet' || page === 'all-rooms' || page.startsWith('room-')} />
+      <Header lang={lang} copy={copy} compact={compact} fine={fine && !reduced} menuOpen={menu} onLang={setLang} onMenu={() => setMenu(true)} showSeason={page === 'pension' || page === 'chalet' || page === 'summer' || page === 'winter' || page === 'all-rooms' || page.startsWith('room-')} />
       <MobileMenu open={menu} lang={lang} copy={copy} reduced={reduced} onClose={() => setMenu(false)} onLang={setLang} onBook={onBook} />
       {page === 'all-rooms' ? (
         <main id="main"><AllRoomsPage lang={lang} /></main>
@@ -118,7 +126,7 @@ export default function App() {
       ) : page === 'pension' ? (
         <main id="main"><PensionHero lang={lang} /><PensionRooms lang={lang} /><PensionFinalCTA lang={lang} /></main>
       ) : page !== 'home' ? (
-        <main id="main">{page === 'winter' ? <WinterPage lang={lang} /> : <ActivitiesPage season={page as Season} lang={lang} />}</main>
+        <main id="main">{page === 'winter' ? <WinterPage lang={lang} /> : <SummerPage lang={lang} />}</main>
       ) : (
       <main id="main">
         <Hero lang={lang} copy={copy} bookingRef={booking} onBookingSubmit={onSubmit} />

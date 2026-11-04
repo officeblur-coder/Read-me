@@ -6,6 +6,7 @@ import { Logo } from './Logo';
 import { LangSwitch } from './Header';
 import { BOOKING_ENGINE } from './BookingBar';
 import { StayAccordion } from './StayMenu';
+import { useSeason } from '../lib/season';
 
 interface Props { open: boolean; lang: Lang; copy: Copy; reduced: boolean; onClose: () => void; onLang: (l: Lang) => void; onBook?: () => void }
 
@@ -14,6 +15,7 @@ export function MobileMenu({ open, lang, copy, reduced, onClose, onLang }: Props
   const root = useRef<HTMLDivElement>(null);
   const tl = useRef<gsap.core.Timeline | null>(null);
   const closeBtn = useRef<HTMLButtonElement>(null);
+  const { season } = useSeason();
 
   useGSAP(() => {
     tl.current = gsap.timeline({ paused: true, defaults: { ease: 'power3.out' } })
@@ -61,7 +63,7 @@ export function MobileMenu({ open, lang, copy, reduced, onClose, onLang }: Props
         <ul className="flex flex-col">
           {NAV[lang].map((n, i) => n.mega ? <StayAccordion key="stay" lang={lang} label={n.label} onNavigate={onClose} /> : (
             <li key={i} className="js-mm-item border-b border-ivory/10">
-              <a href={n.href} onClick={onClose} className="flex min-h-[60px] items-center justify-between font-display text-[34px] font-medium leading-none">
+              <a href={n.href === '#activities-winter' ? `#activities-${season}` : n.href} onClick={onClose} className="flex min-h-[60px] items-center justify-between font-display text-[34px] font-medium leading-none">
                 {n.label}
                 <span aria-hidden className="text-champagne text-xl">→</span>
               </a>
