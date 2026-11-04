@@ -15,6 +15,8 @@ import { RestaurantSection } from './components/restaurant/RestaurantSection';
 import { ActivitiesSection } from './components/activities/ActivitiesSection';
 import { ActivitiesPage } from './components/activities/ActivitiesPage';
 import { PensionHero } from './components/pension/PensionHero';
+import { PensionRooms } from './components/pension/PensionRooms';
+import { PensionFinalCTA } from './components/pension/PensionFinalCTA';
 import { AlpineExperienceSection } from './components/experience/AlpineExperienceSection';
 import { AlpineMapSection } from './components/map/AlpineMapSection';
 import { GuestStoriesSection } from './components/stories/GuestStoriesSection';
@@ -80,7 +82,7 @@ export default function App() {
       <Header lang={lang} copy={copy} compact={compact} fine={fine && !reduced} menuOpen={menu} onLang={setLang} onMenu={() => setMenu(true)} showSeason={page === 'pension'} />
       <MobileMenu open={menu} lang={lang} copy={copy} reduced={reduced} onClose={() => setMenu(false)} onLang={setLang} onBook={onBook} />
       {page === 'pension' ? (
-        <main id="main"><PensionHero lang={lang} /></main>
+        <main id="main"><PensionHero lang={lang} /><PensionRooms lang={lang} /><PensionFinalCTA lang={lang} /></main>
       ) : page !== 'home' ? (
         <main id="main"><ActivitiesPage season={page} lang={lang} /></main>
       ) : (
