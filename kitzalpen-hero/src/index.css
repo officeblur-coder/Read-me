@@ -514,6 +514,7 @@
   .to-dot.is-easy, .to-band.is-easy { fill: #4f9a6a; background: #4f9a6a; }
   .to-dot.is-medium, .to-band.is-medium { fill: #d2453b; background: #d2453b; }
   .to-dot.is-hard, .to-band.is-hard { fill: #1d1f1e; background: #1d1f1e; }
+  .to-band.is-none { background: var(--k-pine); }
   .to-level.is-easy { background: color-mix(in srgb, #4f9a6a 16%, transparent); color: #2f6e46; }
   .to-level.is-medium { background: color-mix(in srgb, #d2453b 14%, transparent); color: #a8332b; }
   .to-level.is-hard { background: color-mix(in srgb, #1d1f1e 12%, transparent); color: #1d1f1e; }

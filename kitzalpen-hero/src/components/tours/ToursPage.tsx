@@ -136,7 +136,7 @@ export function ToursPage({ lang }: { lang: Lang }) {
           {list.map((x: Tour) => (
             <article key={x.id} id={`to-${x.id}`} className="js-to-card tp-card flex scroll-mt-32 flex-col overflow-hidden rounded-[24px] bg-cream">
               {x.img ? <div className="aspect-[16/9] overflow-hidden"><img src={`${BASE}${x.img}`} alt={x.name[lang]} loading="lazy" className="h-full w-full object-cover" /></div>
-                : <div aria-hidden className={`to-band is-${x.level ?? 'medium'} h-2`} />}
+                : <div aria-hidden className={`to-band is-${x.level ?? 'none'} h-2`} />}
               <div className="flex flex-1 flex-col p-6">
                 <div className="flex flex-wrap items-center gap-2">
                   {x.level && <span className={`to-level is-${x.level} rounded-full px-2.5 py-1 text-[11.5px] font-bold uppercase tracking-[.1em]`}>{LEVEL[x.level][lang]}</span>}
