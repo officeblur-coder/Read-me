@@ -25,7 +25,9 @@ export function QuickActions({ lang, reduced }: { lang: Lang; reduced: boolean }
   const { season } = useSeason();
   const [shown, setShown] = useState(false);
   const [slim, setSlim] = useState(false);
-  const [open, setOpen] = useState(false);
+  const [mode, setMode] = useState<null | 'book' | 'wa'>(null);
+  const open = mode !== null;
+  const setOpen = (v: boolean | ((o: boolean) => boolean)) => setMode((m) => { const nx = typeof v === 'function' ? v(m !== null) : v; return nx ? (m ?? 'book') : null; });
   const root = useRef<HTMLDivElement>(null);
   const panel = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -36,6 +38,11 @@ export function QuickActions({ lang, reduced }: { lang: Lang; reduced: boolean }
     room: de ? 'Zimmer in der Pension' : 'Room in the guesthouse', roomSub: de ? '17 Zimmer · Frühstück im Haus' : '17 rooms · breakfast in house',
     chalet: de ? 'KitzAlpen Chalet' : 'KitzAlpen Chalet', chaletSub: de ? 'Eigenes Haus · bis 4 Gäste' : 'Private house · up to 4 guests',
     waLine: de ? 'Fragen? Schreiben Sie uns auf WhatsApp' : 'Questions? Message us on WhatsApp',
+    waTitle: de ? 'Wie können wir helfen?' : 'How can we help?',
+    q1: de ? 'Sie möchten übernachten?' : 'Looking for a place to stay?', q1s: de ? 'Direkt zur Online-Buchung' : 'Straight to online booking',
+    q2: de ? 'Sie haben eine Frage?' : 'Have a question?', q2s: de ? 'Schreiben Sie uns auf WhatsApp' : 'Message us on WhatsApp',
+    q3: de ? 'Sie sind eine Gruppe?' : 'Travelling as a group?', q3s: de ? 'Gruppe beschreiben – per WhatsApp oder E-Mail senden' : 'Describe your group – send via WhatsApp or email',
+    waText: de ? 'Hallo KitzAlpen, ich habe eine Frage: ' : 'Hello KitzAlpen, I have a question: ',
   };
 
   useEffect(() => {
@@ -68,7 +75,7 @@ export function QuickActions({ lang, reduced }: { lang: Lang; reduced: boolean }
       return () => { window.removeEventListener('pointerdown', off); window.removeEventListener('keydown', esc); };
     }
     gsap.to(p, { autoAlpha: 0, y: 10, duration: reduced ? 0 : 0.25, ease: 'power2.in', onComplete: () => { gsap.set(p, { display: 'none' }); } });
-  }, [open, reduced]);
+  }, [mode, reduced]);
 
   const opts = [
     { href: QUICK_ACTIONS.room, label: t.room, sub: t.roomSub, img: 'rooms/room-1-800.webp' },
@@ -84,13 +91,30 @@ export function QuickActions({ lang, reduced }: { lang: Lang; reduced: boolean }
       style={{ marginBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))' }}
     >
       {/* panel / sheet */}
-      <div ref={panel} id="qa-panel" role="dialog" aria-label={t.title} className="qa-panel absolute bottom-[calc(100%+10px)] left-0 right-0 hidden rounded-[22px] p-3 lg:left-auto lg:w-[380px]">
+      <div ref={panel} id="qa-panel" role="dialog" aria-label={mode === 'wa' ? t.waTitle : t.title} className="qa-panel absolute bottom-[calc(100%+10px)] left-0 right-0 hidden rounded-[22px] p-3 lg:left-auto lg:w-[380px]">
         <div className="flex items-center justify-between px-2 pb-2 pt-1">
-          <p className="font-display text-[22px] italic text-cream">{t.title}</p>
+          <p className="font-display text-[22px] italic text-cream">{mode === 'wa' ? t.waTitle : t.title}</p>
           <button type="button" onClick={() => setOpen(false)} aria-label={t.close} className="grid h-10 w-10 place-items-center rounded-full text-cream/70 hover:bg-cream/10 hover:text-cream focus-visible:outline focus-visible:outline-2 focus-visible:outline-gold">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden><path d="M6 6l12 12M18 6 6 18" /></svg>
           </button>
         </div>
+        {mode === 'wa' ? (
+          <ul className="flex flex-col gap-2">
+            {[
+              { href: QUICK_ACTIONS.room, ext: true, n: '1', l: t.q1, s: t.q1s },
+              { href: `https://wa.me/40748192821?text=${encodeURIComponent(t.waText)}`, ext: true, n: '2', l: t.q2, s: t.q2s },
+              { href: '#groups-plan', ext: false, n: '3', l: t.q3, s: t.q3s },
+            ].map((o) => (
+              <li key={o.n} className="qa-opt">
+                <a href={o.href} {...(o.ext ? { target: '_blank', rel: 'noopener noreferrer' } : {})} onClick={() => setMode(null)} className="qa-card group flex items-center gap-3.5 rounded-[16px] p-3 pr-4">
+                  <span className="lnum grid h-11 w-11 shrink-0 place-items-center rounded-full border border-gold/50 font-display text-[20px] text-gold-light">{o.n}</span>
+                  <span className="min-w-0 flex-1"><span className="block text-[15.5px] font-semibold leading-tight text-cream">{o.l}</span><span className="mt-0.5 block text-[12.5px] text-cream/65">{o.s}</span></span>
+                  <span aria-hidden className="qa-go grid h-9 w-9 shrink-0 place-items-center rounded-full border border-gold/50 text-gold-light">{o.ext ? '↗' : '→'}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        ) : <>
         <ul className="flex flex-col gap-2">
           {opts.map((o) => (
             <li key={o.href} className="qa-opt">
@@ -108,18 +132,19 @@ export function QuickActions({ lang, reduced }: { lang: Lang; reduced: boolean }
         <a href={QUICK_ACTIONS.whatsapp} target="_blank" rel="noopener noreferrer" className="qa-opt mt-2 flex min-h-11 items-center justify-center gap-2 rounded-[14px] text-[13px] font-medium text-cream/75 hover:text-cream">
           <span className="text-[#5ec27a]">{WA}</span>{t.waLine}
         </a>
+        </>}
       </div>
 
       {/* the capsule */}
       <div className={`qa-capsule flex items-center gap-1.5 rounded-full p-1.5 transition-[padding] duration-300 ${slim ? 'lg:p-1' : ''}`}>
-        <a href={QUICK_ACTIONS.whatsapp} target="_blank" rel="noopener noreferrer" aria-label={t.wa} title="WhatsApp · +40 748 192 821"
+        <button type="button" onClick={() => setMode((m) => (m === 'wa' ? null : 'wa'))} aria-label={t.wa} aria-expanded={mode === 'wa'} aria-controls="qa-panel" title="WhatsApp · +40 748 192 821"
           className={`qa-wa grid shrink-0 place-items-center rounded-full transition-[width,height] duration-300 ${slim ? 'h-11 w-11' : 'h-12 w-12'}`}>
           {WA}
-        </a>
-        <button ref={trigger} type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-controls="qa-panel"
+        </button>
+        <button ref={trigger} type="button" onClick={() => setMode((m) => (m === 'book' ? null : 'book'))} aria-expanded={mode === 'book'} aria-controls="qa-panel"
           className={`qa-book flex flex-1 items-center justify-center gap-2.5 rounded-full px-6 text-[15px] font-semibold transition-[height] duration-300 lg:flex-none lg:px-7 ${slim ? 'h-11' : 'h-12'}`}>
           <Cal /> {t.book}
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden className={`transition-transform duration-300 ${open ? '' : 'rotate-180'}`}><path d="m6 9 6 6 6-6" /></svg>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden className={`transition-transform duration-300 ${mode === 'book' ? '' : 'rotate-180'}`}><path d="m6 9 6 6 6-6" /></svg>
         </button>
       </div>
     </div>
