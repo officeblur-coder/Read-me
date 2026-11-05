@@ -131,10 +131,10 @@ export function ArrivalPage({ lang }: { lang: Lang }) {
       <section aria-labelledby="ar-how" className="bg-soft px-5 py-20 sm:px-6 md:px-10 md:py-28 lg:px-14">
         <div className="mx-auto max-w-[1360px]">
           {heading(t.howEyebrow, t.howTitle, 'ar-how')}
-          <div role="tablist" aria-label={t.howTitle} className="js-ar-rev mt-10 inline-flex rounded-full border border-pine/15 bg-cream p-1.5">
+          <div role="tablist" aria-label={t.howTitle} className="js-ar-rev mt-10 flex w-full max-w-full rounded-full border border-pine/15 bg-cream p-1.5 sm:inline-flex sm:w-auto">
             {(['car', 'train', 'plane'] as const).map((m) => (
               <button key={m} type="button" role="tab" aria-selected={mode === m} aria-controls="ar-routes" onClick={() => switchMode(m)}
-                className={`ar-mode inline-flex min-h-12 items-center gap-2 rounded-full px-4 text-[15px] font-semibold sm:px-6 ${mode === m ? 'is-on' : ''}`}>
+                className={`ar-mode inline-flex min-h-12 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full px-2.5 text-[14px] font-semibold sm:flex-none sm:gap-2 sm:px-6 sm:text-[15px] ${mode === m ? 'is-on' : ''}`}>
                 <Icon d={ICO[m]} size={18} w={1.6} />{t.modes[m]}
               </button>
             ))}
