@@ -41,7 +41,7 @@ function Compass({ lang, active, onPick, big, stops, short }: { lang: Lang; acti
     ...TOWNS.map((s) => ({ id: s.id, name: s.name, km: s.km, bearing: s.bearing, air: s.air, kind: 'town' as const })),
   ];
   return (
-    <svg viewBox="0 0 500 500" className="w-full overflow-visible" role="img" aria-label={t.compass}>
+    <svg viewBox="0 0 500 500" className="w-full overflow-visible" role="group" aria-label={t.compass}>
       <defs>
         <radialGradient id="wc-glow"><stop offset="0" stopColor="var(--k-gold-light)" stopOpacity=".55" /><stop offset="1" stopColor="var(--k-gold-light)" stopOpacity="0" /></radialGradient>
         <linearGradient id="wc-beam" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="var(--w-ice)" stopOpacity="0" /><stop offset="1" stopColor="var(--w-ice)" stopOpacity=".22" /></linearGradient>

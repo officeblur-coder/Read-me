@@ -4,7 +4,8 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
 import { COPY, type Lang } from './content/hero';
-import { activateSiteLang, baseLang, prepareSiteLang, saveSiteLang, siteLang, startSiteLang, type SiteLang } from './lib/i18n';
+import { SEO, seoKey } from './content/seo';
+import { activateSiteLang, baseLang, locale, tr, prepareSiteLang, saveSiteLang, siteLang, startSiteLang, type SiteLang } from './lib/i18n';
 import { Header } from './components/Header';
 import { SkiPage } from './components/ski/SkiPage';
 import { ArrivalPage } from './components/arrival/ArrivalPage';
@@ -104,6 +105,21 @@ export default function App() {
   }, []);
 
   useEffect(() => { document.documentElement.lang = site; }, [site]);
+  // SEO: title + description (+ Open Graph) per route and language
+  useEffect(() => {
+    const [title, desc] = SEO[seoKey(page)][lang];
+    const set = (sel: string, attr: string, val: string) => {
+      let m = document.head.querySelector<HTMLMetaElement>(sel);
+      if (!m) { m = document.createElement('meta'); const [k, v] = sel.replace(/^meta\[|\]$/g, '').split('='); m.setAttribute(k, v.replace(/"/g, '')); document.head.appendChild(m); }
+      m.setAttribute(attr, val);
+    };
+    const cut = title.lastIndexOf(' · KitzAlpen');
+    document.title = cut > 0 ? tr(title.slice(0, cut)) + title.slice(cut) : tr(title);
+    set('meta[name="description"]', 'content', tr(desc));
+    set('meta[property="og:title"]', 'content', document.title);
+    set('meta[property="og:description"]', 'content', tr(desc));
+    set('meta[property="og:locale"]', 'content', locale(lang).replace('-', '_'));
+  }, [page, site, lang]);
   // activities: the shared Sommer/Winter switch also switches between the two activity pages
   const { season, setSeason } = useSeason();
   const seasonMounted = useRef(false);

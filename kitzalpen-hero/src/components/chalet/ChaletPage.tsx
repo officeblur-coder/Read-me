@@ -177,8 +177,9 @@ export function ChaletPage({ lang }: { lang: Lang }) {
           <p className="js-ch-eyebrow flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[.32em] text-cream/90 md:text-[12.5px]"><span aria-hidden className="h-px w-8 bg-gold-light max-sm:hidden" /><span className="sm:hidden">{t.eyebrow.split(' · ')[0]}</span><span className="max-sm:hidden">{t.eyebrow}</span></p>
           <h1 id="ch-title" className="mt-5 font-display font-normal leading-[.95] tracking-[-0.025em] [text-shadow:0_2px_30px_rgba(0,0,0,.35)]" style={{ fontSize: 'clamp(48px, 9vw, 150px)' }}>
             {t.title.map((line, li) => (
-              <span key={li} className={`block overflow-hidden pb-[0.06em] ${li ? 'italic text-gold-light' : ''}`} aria-label={line}>
-                {Array.from(line).map((ch, ci) => <span key={ci} aria-hidden className="js-ch-char inline-block whitespace-pre">{ch}</span>)}
+              <span key={li} data-i18n-skip className={`block overflow-hidden pb-[0.06em] ${li ? 'italic text-gold-light' : ''}`}>
+                <span className="sr-only">{tr(line)}</span>
+                {Array.from(tr(line)).map((ch, ci) => <span key={ci} aria-hidden className="js-ch-char inline-block whitespace-pre">{ch}</span>)}
               </span>
             ))}
           </h1>

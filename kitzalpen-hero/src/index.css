@@ -488,6 +488,8 @@
   .c-input:focus-visible { box-shadow: 0 0 0 3px color-mix(in srgb, var(--k-gold) 35%, transparent); }
   .c-wa { color: var(--k-pine); border: 1px solid color-mix(in srgb, var(--k-pine) 35%, transparent); transition: border-color .3s ease, background-color .3s ease; }
   .c-wa:hover { border-color: var(--k-pine); background: color-mix(in srgb, var(--k-pine) 6%, transparent); }
+  /* a11y: small grey text keeps ≥ 4.5:1 contrast on the light backgrounds */
+  .text-ink\/45, .text-ink\/50, .text-ink\/55, .text-ink\/60 { color: color-mix(in srgb, var(--k-ink) 76%, transparent) !important; }
   /* explore map */
   .xm-home { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px 6px 6px; border-radius: 999px; background: var(--k-pine); color: var(--k-cream); font: 600 12px/1 Manrope, sans-serif; box-shadow: 0 8px 20px -8px rgba(0,0,0,.5); }
   .xm-home span { width: 10px; height: 10px; border-radius: 50%; background: var(--k-gold-light); }

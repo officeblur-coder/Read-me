@@ -137,7 +137,7 @@ export function TopPage({ lang }: { lang: Lang }) {
             <p className="mt-6 min-h-[56px] font-display text-[26px] italic leading-tight text-pine" aria-live="polite">{hot ? (() => { const e = list.find((x) => x.id === hot)!; return <>{nm(e, lang)} <span className="lnum font-sans text-[15px] not-italic text-ink/60">· {nf(e.km)} km · {e.town}</span></>; })() : ''}</p>
           </div>
           <div className="js-tp-radar relative mx-auto w-full max-w-[560px]">
-            <svg viewBox="-80 0 520 360" className="w-full overflow-visible" role="img" aria-label={t.radarTitle}>
+            <svg viewBox="-80 0 520 360" className="w-full overflow-visible" role="group" aria-label={t.radarTitle}>
               {[5, 15, 35, 70].map((k) => <circle key={k} className="js-tp-ring" cx="180" cy="180" r={Math.sqrt(k / 70) * R} fill="none" stroke="var(--k-pine)" strokeOpacity={k === 70 ? 0.35 : 0.14} strokeDasharray={k === 70 ? '0' : '3 5'} />)}
               {[5, 15, 35, 70].map((k) => <text key={k} x={180 + 4} y={180 - Math.sqrt(k / 70) * R - 4} fontSize="9" fill="var(--k-ink)" opacity=".45" className="lnum">{k} km</text>)}
               {['N', 'O', 'S', 'W'].map((d, i) => <text key={d} x={180 + Math.sin((i * Math.PI) / 2) * (R + 16)} y={180 - Math.cos((i * Math.PI) / 2) * (R + 16) + 4} fontSize="11" textAnchor="middle" fill="var(--k-ink)" opacity=".5" fontWeight="600">{lang === 'de' ? d : ['N', 'E', 'S', 'W'][i]}</text>)}

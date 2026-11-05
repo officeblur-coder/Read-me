@@ -102,7 +102,7 @@ export function ToursPage({ lang }: { lang: Lang }) {
               <p className="mt-4 text-[13px] text-ink/50">{t.matrixNote}</p>
               <p className="mt-6 min-h-[64px] font-display text-[25px] italic leading-tight text-pine" aria-live="polite">{hot ? (() => { const x = list.find((y) => y.id === hot)!; return <>{x.name[lang]}<span className="lnum mt-1 block font-sans text-[14px] not-italic text-ink/60">{nf(x.km!)} km · {nf(x.up!, 0)} m</span></>; })() : ''}</p>
             </div>
-            <svg viewBox={`0 0 ${W} ${H}`} className="w-full overflow-visible" role="img" aria-label={t.matrixTitle}>
+            <svg viewBox={`0 0 ${W} ${H}`} className="w-full overflow-visible" role="group" aria-label={t.matrixTitle}>
               {[0, 0.25, 0.5, 0.75, 1].map((f) => <line key={f} x1={P} x2={W - 10} y1={H - P - f * (H - P - 14)} y2={H - P - f * (H - P - 14)} stroke="var(--k-pine)" strokeOpacity=".1" />)}
               {[0, 0.5, 1].map((f) => <text key={f} x={P - 8} y={H - P - f * (H - P - 14) + 4} fontSize="10" textAnchor="end" fill="var(--k-ink)" opacity=".5" className="lnum">{Math.round(maxUp * f)}</text>)}
               {[0, 0.5, 1].map((f) => <text key={f} x={P + f * (W - P - 10)} y={H - P + 18} fontSize="10" textAnchor="middle" fill="var(--k-ink)" opacity=".5" className="lnum">{Math.round(maxKm * f)}</text>)}

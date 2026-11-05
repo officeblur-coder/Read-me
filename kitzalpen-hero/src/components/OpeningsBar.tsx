@@ -64,7 +64,7 @@ export function OpeningsBar({ lang }: { lang: Lang }) {
         </a>
         <div className="ob-viewport relative min-w-0 flex-1 overflow-hidden">
         {[0, 1].map((copy) => (
-        <ul key={copy} aria-hidden={copy === 1 || undefined} className={`ob-run flex items-center gap-5 pr-5 ${copy === 1 ? 'ob-clone' : ''}`}>
+        <ul key={copy} aria-hidden={copy === 1 || undefined} ref={copy === 1 ? (el) => { el?.setAttribute('inert', ''); } : undefined} className={`ob-run flex items-center gap-5 pr-5 ${copy === 1 ? 'ob-clone' : ''}`}>
           {season === 'winter' ? sorted.map(item) : SUMMER_LIFTS.map((s) => (
             <li key={s.name} className="shrink-0 whitespace-nowrap"><a href={s.url} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-[30px] items-center gap-2 hover:text-gold-light"><span className="font-semibold">{s.name}</span><span className="text-cream/60">{L.times} ↗</span></a></li>
           ))}

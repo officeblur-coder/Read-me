@@ -1,0 +1,26 @@
+import type { Lang } from './hero';
+
+/** Page titles + meta descriptions per preview route (DE/EN; the other languages run through the dictionary). */
+type M = Record<Lang, [string, string]>;
+const S = ' · KitzAlpen Hollersbach';
+export const SEO: Record<string, M> = {
+  home: { de: ['KitzAlpen – Pension, Chalet & Restaurant in Hollersbach im Pinzgau', 'Pension mit Restaurant und eigenständiges Chalet in Hollersbach im Pinzgau – rund 2 km zur Panoramabahn ins Skigebiet KitzSki, mitten im Nationalpark Hohe Tauern.'],
+    en: ['KitzAlpen – guesthouse, chalet & restaurant in Hollersbach im Pinzgau', 'Guesthouse with restaurant and a self-contained chalet in Hollersbach im Pinzgau – about 2 km to the Panoramabahn into the KitzSki ski area, in the Hohe Tauern National Park.'] },
+  pension: { de: ['Pension' + S, 'Alpine Zimmer im Haupthaus mit Frühstücksbuffet und Restaurant – Doppel-, Dreibett-, Familien- und Vierbettzimmer in Hollersbach.'], en: ['Guesthouse' + S, 'Alpine rooms in the main house with breakfast buffet and restaurant – double, triple, family and four-bed rooms in Hollersbach.'] },
+  'all-rooms': { de: ['Alle Zimmer' + S, 'Alle Zimmer der Pension nach Etage und Kategorie – mit Fotos, Größe und Belegung.'], en: ['All rooms' + S, 'Every room in the guesthouse by floor and category – with photos, size and occupancy.'] },
+  room: { de: ['Zimmer' + S, 'Zimmerdetails mit Fotos, Ausstattung und Belegung – direkt buchen bei KitzAlpen.'], en: ['Room' + S, 'Room details with photos, amenities and occupancy – book directly with KitzAlpen.'] },
+  chalet: { de: ['Chalet' + S, 'Das KitzAlpen Chalet in Hollersbach – eigenes Haus für bis zu 4 Gäste mit voll ausgestatteter Küche.'], en: ['Chalet' + S, 'The KitzAlpen Chalet in Hollersbach – a house of your own for up to 4 guests with a fully equipped kitchen.'] },
+  restaurant: { de: ['Restaurant' + S, 'Frühstück und Abendessen im Restaurant der Pension KitzAlpen in Hollersbach im Pinzgau.'], en: ['Restaurant' + S, 'Breakfast and dinner in the KitzAlpen guesthouse restaurant in Hollersbach im Pinzgau.'] },
+  groups: { de: ['Gruppenreisen' + S, 'Gruppenaufenthalt planen – Pension und Chalet, Halbpension, Parkplätze, Skiaufbewahrung und Gruppenrabatte. Anfrage per E-Mail oder WhatsApp.'], en: ['Group stays' + S, 'Plan a group stay – guesthouse and chalet, half board, parking, ski storage and group discounts. Enquire by email or WhatsApp.'] },
+  contact: { de: ['Kontakt & Anfahrt' + S, 'Reitlehen 42, 5731 Hollersbach im Pinzgau – Telefon, E-Mail, WhatsApp und Anfrageformular.'], en: ['Contact & directions' + S, 'Reitlehen 42, 5731 Hollersbach im Pinzgau – phone, email, WhatsApp and enquiry form.'] },
+  mountain: { de: ['Bergerlebnis live' + S, 'Bergwetter, Webcams, Liftstatus-Links und Skitag-Planer für KitzSki und Wildkogel-Arena.'], en: ['Mountain live' + S, 'Mountain weather, webcams, lift-status links and ski-day planner for KitzSki and the Wildkogel Arena.'] },
+  winter: { de: ['Winteraktivitäten' + S, 'Skifahren, Rodeln, Winterwandern und Ausflüge rund um Hollersbach im Pinzgau.'], en: ['Winter activities' + S, 'Skiing, tobogganing, winter hiking and day trips around Hollersbach im Pinzgau.'] },
+  summer: { de: ['Sommeraktivitäten' + S, 'Wandern, Radfahren, Seen und Ausflüge rund um Hollersbach im Nationalpark Hohe Tauern.'], en: ['Summer activities' + S, 'Hiking, cycling, lakes and day trips around Hollersbach in the Hohe Tauern National Park.'] },
+  ski: { de: ['Skigebiete & Skipässe' + S, 'Sechs Skigebiete ab Hollersbach – KitzSki 5 Minuten entfernt. Pistenkilometer, Saisonzeiten, Skibusse und der passende Skipass.'], en: ['Ski areas & ski passes' + S, 'Six ski areas from Hollersbach – KitzSki five minutes away. Slope kilometres, season dates, ski buses and the right ski pass.'] },
+  arrival: { de: ['Anreise & Mobilität' + S, 'Anreise mit Auto, Bahn oder Flugzeug – und gratis Bus & Bahn im Land Salzburg mit dem Guest Mobility Ticket.'], en: ['Arrival & mobility' + S, 'Arriving by car, train or plane – and free buses & trains across Salzburg with the Guest Mobility Ticket.'] },
+  experiences: { de: ['Top 15 Erlebnisse' + S, 'Die besten Sommer- und Wintererlebnisse im Umkreis von 70 km um Hollersbach – mit offiziellen Infos und Route.'], en: ['Top 15 experiences' + S, 'The best summer and winter experiences within 70 km of Hollersbach – with official information and directions.'] },
+  tours: { de: ['Touren-Explorer' + S, 'Rad-, Mountainbike-, Motorrad- und Wandertouren ab Hollersbach – Länge, Höhenmeter, GPX und Route zum Start.'], en: ['Tour explorer' + S, 'Cycling, mountain-bike, motorcycle and hiking tours from Hollersbach – length, ascent, GPX and route to the start.'] },
+  places: { de: ['Orte-Guide' + S, 'Hollersbach, Mittersill, Bramberg & Neukirchen, Krimml, Kitzbühel und Zell am See–Kaprun im Porträt.'], en: ['Places guide' + S, 'Hollersbach, Mittersill, Bramberg & Neukirchen, Krimml, Kitzbühel and Zell am See–Kaprun at a glance.'] },
+  explore: { de: ['Entdecken' + S, 'Alles rund um Ihren Aufenthalt: Erlebnisse, Touren, Skigebiete, Orte, Karte und Urlaubsplaner.'], en: ['Explore' + S, 'Everything around your stay: experiences, tours, ski areas, places, map and holiday planner.'] },
+};
+export const seoKey = (page: string) => (page.startsWith('room-') ? 'room' : SEO[page] ? page : 'home');
