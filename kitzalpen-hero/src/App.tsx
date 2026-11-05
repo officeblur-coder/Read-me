@@ -27,6 +27,7 @@ import { BackToTop } from './components/BackToTop';
 import { ContactPage } from './components/contact/ContactPage';
 import { MountainPage } from './components/mountain/MountainPage';
 import { MountainTeaser } from './components/mountain/MountainTeaser';
+import { DualStay } from './components/DualStay';
 import { SummerPage, WinterPage } from './components/activities/WinterPage';
 import { ROOM_KEYS, type RoomKey } from './content/pensionPage';
 import { AlpineExperienceSection } from './components/experience/AlpineExperienceSection';
@@ -149,6 +150,7 @@ export default function App() {
       ) : (
       <main id="main">
         <Hero lang={lang} copy={copy} bookingRef={booking} onBookingSubmit={onSubmit} />
+        <DualStay lang={lang} />
         <MountainTeaser lang={lang} />
         <RoomsSection lang={lang} />
         <AmenitiesSection lang={lang} />

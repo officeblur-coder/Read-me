@@ -54,7 +54,7 @@ export function Header({ lang, copy, compact, fine, menuOpen, onLang, onMenu, sh
     >
       <div className="mx-auto flex max-w-[1680px] items-center justify-between gap-6 px-[max(16px,env(safe-area-inset-left))] md:px-10 lg:px-14">
         <a href="#top" aria-label="KitzAlpen – Startseite" className="js-head shrink-0 rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-champagne">
-          <Logo className={`transition-[width] duration-[450ms] ease-premium ${compact ? 'w-[118px] md:w-[136px]' : 'w-[148px] md:w-[178px]'}`} />
+          <Logo className={`transition-[width] duration-[450ms] ease-premium ${compact ? 'w-[150px] md:w-[178px]' : 'w-[176px] md:w-[218px]'}`} />
         </a>
 
         <nav aria-label="Hauptnavigation" className="hidden lg:block">

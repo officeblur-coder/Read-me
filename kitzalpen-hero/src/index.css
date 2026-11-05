@@ -424,6 +424,15 @@
   .sm-all { color: #fff; background: var(--k-pine); transition: background-color .3s ease; }
   .sm-all:hover { background: var(--k-deep); }
   @media (prefers-reduced-motion: reduce) { .stay-menu, .stay-menu .sm-item { transition: none !important; transform: translate(-50%, 0); } .stay-menu .sm-item { transform: none; } }
+  /* day / evening (independent of the season palette) */
+  .ds-img { transition: opacity .9s ease, filter .9s ease, transform 1.2s cubic-bezier(.2,.7,.2,1); }
+  .ds-img.is-ev { filter: brightness(.72) saturate(.9) sepia(.12); }
+  .ds-panel:hover .ds-img { transform: scale(1.03); }
+  .ds-panel:focus-within { outline: 2px solid var(--k-gold); outline-offset: 4px; }
+  :root[data-daypart='evening'] .site-header[data-compact='true'] { background: color-mix(in srgb, #0d1310 88%, transparent); }
+  :root[data-daypart='evening'] .js-zoom img, :root[data-daypart='evening'] .ph-img, :root[data-daypart='evening'] .ch-img { filter: brightness(.82) saturate(.92) sepia(.08); transition: filter 1.2s ease; }
+  :root[data-daypart='evening'] .weather-band { box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--k-gold) 45%, transparent); }
+  @media (prefers-reduced-motion: reduce) { .ds-img { transition: none; } }
   /* live accents for the mountain guide */
   .live-dot { position: relative; display: inline-block; width: 8px; height: 8px; border-radius: 999px; background: #5ec27a; flex-shrink: 0; }
   .live-dot::after { content: ''; position: absolute; inset: -4px; border-radius: 999px; border: 1.5px solid #5ec27a; animation: live-ping 1.8s ease-out infinite; }

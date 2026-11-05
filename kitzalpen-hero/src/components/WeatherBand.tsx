@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { OpeningsBar } from './OpeningsBar';
+import { sunriseToday, useDaypart, type DaypartMode } from '../lib/daypart';
 import type { Lang } from '../content/hero';
 import { parseOpenMeteo, sky, SKY_LABEL, WEATHER_URL, type Sky, type WeatherData } from '../content/weather';
 import { useSeason } from '../lib/season';
@@ -66,10 +67,11 @@ export function WeatherBand({ lang }: { lang: Lang; reduced?: boolean }) {
   const { data, live } = useWeather();
   const time = useViennaTime(lang);
   const [open, setOpen] = useState(false);
+  const { daypart, mode, setMode } = useDaypart();
   const winter = season === 'winter';
   const L = lang === 'de'
-    ? { title: 'Wetter', valley: 'Tal', mountain: 'Berg', hl: 'Heute', snow: 'Schnee', fresh: 'Neuschnee', wind: 'Wind', time: 'Ortszeit', more: 'Bergwetter & Webcams', src: 'Open-Meteo · Modellwerte', updated: 'Stand', loading: 'Wetter wird geladen …', na: 'Wetter derzeit nicht verfügbar', details: 'Wetterdetails' }
-    : { title: 'Weather', valley: 'Valley', mountain: 'Mountain', hl: 'Today', snow: 'Snow', fresh: 'New snow', wind: 'Wind', time: 'Local time', more: 'Mountain weather & webcams', src: 'Open-Meteo · model values', updated: 'Updated', loading: 'Loading weather …', na: 'Weather currently unavailable', details: 'Weather details' };
+    ? { dp: { auto: 'Auto', day: 'Tag', evening: 'Abend' }, dpLabel: 'Tages- / Abendansicht', sunrise: 'Sonnenaufgang', title: 'Wetter', valley: 'Tal', mountain: 'Berg', hl: 'Heute', snow: 'Schnee', fresh: 'Neuschnee', wind: 'Wind', time: 'Ortszeit', more: 'Bergwetter & Webcams', src: 'Open-Meteo · Modellwerte', updated: 'Stand', loading: 'Wetter wird geladen …', na: 'Wetter derzeit nicht verfügbar', details: 'Wetterdetails' }
+    : { dp: { auto: 'Auto', day: 'Day', evening: 'Evening' }, dpLabel: 'Day / evening view', sunrise: 'Sunrise', title: 'Weather', valley: 'Valley', mountain: 'Mountain', hl: 'Today', snow: 'Snow', fresh: 'New snow', wind: 'Wind', time: 'Local time', more: 'Mountain weather & webcams', src: 'Open-Meteo · model values', updated: 'Updated', loading: 'Loading weather …', na: 'Weather currently unavailable', details: 'Weather details' };
   const v = data?.spots.hollersbach, m = data?.spots.kitzski;
   const upd = data?.time ? data.time.slice(11, 16) : '';
   const sep = <span aria-hidden className="h-5 w-px shrink-0 bg-cream/15" />;
@@ -100,6 +102,11 @@ export function WeatherBand({ lang }: { lang: Lang; reduced?: boolean }) {
           {m && <span className="hidden items-center gap-5 xl:flex">{sep}{mountain}</span>}
           <span className="ml-auto flex shrink-0 items-center gap-4 md:gap-5">
             <span className="lnum flex items-center gap-2 whitespace-nowrap"><span className="hidden text-[10.5px] font-semibold uppercase tracking-[.18em] text-cream/55 sm:inline">{L.time}</span><b className="font-semibold">{time}</b></span>
+            <span role="group" aria-label={`${L.dpLabel} · ${L.sunrise} ${sunriseToday(lang)}`} title={`${L.sunrise} ${sunriseToday(lang)} · ${daypart === 'evening' ? L.dp.evening : L.dp.day}`} className="dp-ctrl hidden items-center rounded-full border border-cream/20 p-0.5 lg:flex">
+              {(['auto', 'day', 'evening'] as DaypartMode[]).map((k) => (
+                <button key={k} type="button" aria-pressed={mode === k} onClick={() => setMode(k)} className={`min-h-[28px] rounded-full px-2.5 text-[11.5px] font-semibold ${mode === k ? 'bg-cream text-deep' : 'text-cream/75 hover:text-cream'}`}>{L.dp[k]}</button>
+              ))}
+            </span>
             <a href="#mountain-dash" className="wb-link hidden min-h-[34px] items-center gap-1.5 rounded-full border border-gold/35 px-3.5 text-[12px] font-semibold text-gold-light md:inline-flex">{L.more} →</a>
             <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-controls="wb-panel" aria-label={L.details}
               className="grid h-9 w-9 place-items-center rounded-full border border-cream/20 xl:hidden">
@@ -113,7 +120,9 @@ export function WeatherBand({ lang }: { lang: Lang; reduced?: boolean }) {
             {v && <span className="lnum">{L.valley} · Hollersbach 807 m · {L.hl} {fmt(v.min, lang)} / {fmt(v.max, lang)} · {L.wind} {Math.round(v.wind)} km/h</span>}
             {mountain}
             <a href="#mountain-dash" onClick={() => setOpen(false)} className="inline-flex min-h-11 items-center self-start rounded-full border border-gold/35 px-4 font-semibold text-gold-light">{L.more} →</a>
-            <span className="text-[11.5px] text-cream/45">{L.src}{upd ? ` · ${L.updated} ${upd}` : ''}</span>
+            <span className="flex items-center gap-2 text-[12.5px]"><span className="text-cream/60">{L.dpLabel}</span>{(['auto', 'day', 'evening'] as DaypartMode[]).map((k) => (
+              <button key={k} type="button" aria-pressed={mode === k} onClick={() => setMode(k)} className={`min-h-9 rounded-full px-3 font-semibold ${mode === k ? 'bg-cream text-deep' : 'border border-cream/25'}`}>{L.dp[k]}</button>))}</span>
+            <span className="text-[11.5px] text-cream/45">{L.sunrise} {sunriseToday(lang)} · {L.src}{upd ? ` · ${L.updated} ${upd}` : ''}</span>
           </div>
         </div>
       </aside>

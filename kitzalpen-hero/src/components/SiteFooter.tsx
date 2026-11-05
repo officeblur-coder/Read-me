@@ -13,7 +13,7 @@ export function SiteFooter({ lang }: { lang: Lang }) {
     <footer className="bg-deep px-5 pb-[calc(110px+env(safe-area-inset-bottom,0px))] pt-14 text-cream/75 sm:px-6 md:px-10 md:pb-14 lg:px-14">
       <div className="mx-auto grid max-w-[1360px] gap-10 md:grid-cols-[1.4fr_1fr_1fr]">
         <div>
-          <Logo className="w-[160px] text-cream" />
+          <Logo className="w-[220px] text-cream" />
           <p className="mt-4 max-w-[36ch] text-[14px] leading-relaxed">{de ? 'Gästehaus im Salzburger Land – Unterkunft in Hollersbach im Pinzgau, Österreich.' : 'Guesthouse in the Salzburger Land – accommodation in Hollersbach im Pinzgau, Austria.'}</p>
         </div>
         <nav aria-label={de ? 'Schnelllinks' : 'Quick links'}>

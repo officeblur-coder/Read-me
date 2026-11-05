@@ -50,7 +50,7 @@ export function MobileMenu({ open, lang, copy, reduced, onClose, onLang }: Props
       style={{ visibility: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
       <div className="flex items-center justify-between px-[max(16px,env(safe-area-inset-left))] py-5">
-        <Logo className="w-[148px]" />
+        <Logo className="w-[176px]" />
         <div className="flex items-center gap-2">
           <LangSwitch lang={lang} onLang={onLang} label={copy.lang} />
           <button ref={closeBtn} type="button" onClick={onClose} aria-label={copy.close} className="grid h-11 w-11 place-items-center rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-champagne">

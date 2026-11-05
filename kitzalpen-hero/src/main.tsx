@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
 import { SeasonProvider } from './lib/season';
+import { DaypartProvider } from './lib/daypart';
 import './index.css';
 
 document.documentElement.classList.add('js');
@@ -9,7 +10,9 @@ document.documentElement.classList.add('js');
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <SeasonProvider>
-      <App />
+      <DaypartProvider>
+        <App />
+      </DaypartProvider>
     </SeasonProvider>
   </StrictMode>,
 );

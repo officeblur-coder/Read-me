@@ -384,7 +384,7 @@ export function AlpineMapSection({ lang }: { lang: Lang }) {
           {/* desktop: floating panel – home, filters, list / selected card */}
           <aside className="map-panel absolute bottom-5 left-5 top-5 z-[2] hidden w-[380px] flex-col overflow-hidden rounded-[20px] md:flex">
             <div className="flex items-center gap-3 border-b border-cream/10 p-4">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-cream/10 text-cream"><Logo className="w-8" /></span>
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-cream/10 text-cream"><Logo mark className="w-7" /></span>
               <div className="min-w-0"><p className="text-[14px] font-semibold text-cream">{copy.home}</p><p className="text-[12px] text-cream/60">{copy.homeSub}</p></div>
             </div>
             <div className="border-b border-cream/10 p-4">{filters}</div>
