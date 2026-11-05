@@ -3,6 +3,7 @@ import type { Lang } from '../../content/hero';
 import { GROUP_CONTACT, PLANNER_COPY } from '../../content/groupsPage';
 import { ROOMS } from '../../content/rooms';
 import { Icon, I } from '../pension/PensionRooms';
+import { locale } from '../../lib/i18n';
 
 const ICO = {
   mail: ['M3.5 6h17v12h-17Z', 'm4 7 8 6 8-6'],
@@ -18,7 +19,7 @@ const CAP: Record<Stay, number> = { pension: PENSION_CAP, chalet: CHALET_CAP, bo
 const WA = GROUP_CONTACT.wa.replace(/\D/g, '');
 
 const iso = (d: Date) => d.toISOString().slice(0, 10);
-const fmt = (s: string, lang: Lang) => (s ? new Date(`${s}T12:00:00`).toLocaleDateString(lang === 'de' ? 'de-AT' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '');
+const fmt = (s: string, lang: Lang) => (s ? new Date(`${s}T12:00:00`).toLocaleDateString(locale(lang), { day: 'numeric', month: 'short', year: 'numeric' }) : '');
 
 /** Group Stay Planner – builds a structured, non-binding enquiry and sends it by email or WhatsApp. */
 export function GroupPlanner({ lang }: { lang: Lang }) {

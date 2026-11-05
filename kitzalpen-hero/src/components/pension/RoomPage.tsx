@@ -8,6 +8,7 @@ import { ROOM_COVERS, ROOM_GALLERIES } from '../../content/pensionRoomPhotos';
 import { useReducedMotion } from '../../lib/hooks';
 import { Icon, I, PRPicture } from './PensionRooms';
 import { PensionFinalCTA } from './PensionFinalCTA';
+import { tr } from '../../lib/i18n';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -111,8 +112,8 @@ export function RoomPage({ k, lang }: { k: RoomKey; lang: Lang }) {
               <a href={ROOMS_ROUTE} className="hover:text-cream">{s.back}</a><span className="mx-2">/</span><span className="text-cream/90">{c.label}</span>
             </nav>
             <p className="js-rp-in mt-8 text-[11.5px] font-semibold uppercase tracking-[.34em] text-gold-light md:text-[12.5px]">{s.roomNo(no)}</p>
-            <h1 id="rp-title" className="mt-4 font-display font-normal leading-[1] tracking-[-0.02em]" style={{ fontSize: 'clamp(42px, 6vw, 92px)' }}>
-              {c.name.split(' ').reduce<string[][]>((acc, w) => { const l = acc[acc.length - 1]; if (!l || l.join(' ').length + w.length > 16) acc.push([w]); else l.push(w); return acc; }, []).map((l, i) => (
+            <h1 id="rp-title" data-i18n-skip className="mt-4 font-display font-normal leading-[1] tracking-[-0.02em]" style={{ fontSize: 'clamp(42px, 6vw, 92px)' }}>
+              {tr(c.name).split(' ').reduce<string[][]>((acc, w) => { const l = acc[acc.length - 1]; if (!l || l.join(' ').length + w.length > 16) acc.push([w]); else l.push(w); return acc; }, []).map((l, i) => (
                 <span key={i} className="block overflow-hidden pb-[0.08em]"><span className="js-rp-line block">{l.join(' ')}</span></span>
               ))}
             </h1>

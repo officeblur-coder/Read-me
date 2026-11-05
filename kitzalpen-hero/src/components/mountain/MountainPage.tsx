@@ -12,6 +12,7 @@ import { BOOKING_ENGINE } from '../BookingBar';
 import { useReducedMotion } from '../../lib/hooks';
 import { useSeason } from '../../lib/season';
 import { Icon, I } from '../pension/PensionRooms';
+import { locale } from '../../lib/i18n';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -33,8 +34,8 @@ const ICO = {
   print: ['M7 9V3h10v6', 'M5 9h14v8h-3v4H8v-4H5Z'],
   pin: ['M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11Z', 'M12 12.2a2.2 2.2 0 1 0 0-4.4 2.2 2.2 0 0 0 0 4.4Z'],
 };
-const fmtTime = (iso: string, lang: Lang) => new Date(iso).toLocaleString(lang === 'de' ? 'de-AT' : 'en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Vienna' });
-const fmtDay = (d: string, lang: Lang) => new Date(`${d}T12:00:00`).toLocaleDateString(lang === 'de' ? 'de-AT' : 'en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+const fmtTime = (iso: string, lang: Lang) => new Date(iso).toLocaleString(locale(lang), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Vienna' });
+const fmtDay = (d: string, lang: Lang) => new Date(`${d}T12:00:00`).toLocaleDateString(locale(lang), { weekday: 'short', day: 'numeric', month: 'short' });
 
 function Ext({ href, children, className = '' }: { href: string; children: React.ReactNode; className?: string }) {
   return <a href={href} target="_blank" rel="noopener noreferrer" className={className}>{children}</a>;
@@ -77,7 +78,7 @@ function Dashboard({ lang, season, t, resort, setResort, wx, onMap }: { lang: La
       { k: 'last', icon: ICO.flake, label: t.lastSnow, value: val(<span className="text-[22px]">{d?.lastSnow ? fmtDay(d.lastSnow, lang) : t.noSnowRecent}</span>), note: d ? `${t.newSnow}: ${d.newSnow7} cm` : undefined },
     ] : [
       { k: 'wind', icon: ICO.wind, label: t.wind, value: val(<>{Math.round(d?.wind ?? 0)}<span className="text-[.5em] text-ink/50"> km/h</span></>) },
-      { k: 'alt', icon: ICO.slope, label: t.elevation, value: val(<>{d?.elevation.toLocaleString(lang === 'de' ? 'de-AT' : 'en-GB')}<span className="text-[.5em] text-ink/50"> m</span></>) },
+      { k: 'alt', icon: ICO.slope, label: t.elevation, value: val(<>{d?.elevation.toLocaleString(locale(lang))}<span className="text-[.5em] text-ink/50"> m</span></>) },
     ]),
   ];
   return (

@@ -2,16 +2,17 @@ import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { NAV, type Copy, type Lang } from '../content/hero';
+import type { SiteLang } from '../lib/i18n';
 import { Logo } from './Logo';
 import { LangSwitch } from './Header';
 import { BOOKING_ENGINE } from './BookingBar';
 import { StayAccordion } from './StayMenu';
 import { useSeason } from '../lib/season';
 
-interface Props { open: boolean; lang: Lang; copy: Copy; reduced: boolean; onClose: () => void; onLang: (l: Lang) => void; onBook?: () => void }
+interface Props { open: boolean; lang: Lang; copy: Copy; reduced: boolean; onClose: () => void; site: SiteLang; onLang: (l: SiteLang) => void; onBook?: () => void }
 
 /** Full-screen forest panel. Opening plays a timeline, closing reverses it. */
-export function MobileMenu({ open, lang, copy, reduced, onClose, onLang }: Props) {
+export function MobileMenu({ open, lang, copy, reduced, site, onClose, onLang }: Props) {
   const root = useRef<HTMLDivElement>(null);
   const tl = useRef<gsap.core.Timeline | null>(null);
   const closeBtn = useRef<HTMLButtonElement>(null);
@@ -52,7 +53,6 @@ export function MobileMenu({ open, lang, copy, reduced, onClose, onLang }: Props
       <div className="flex items-center justify-between px-[max(16px,env(safe-area-inset-left))] py-5">
         <Logo className="w-[176px]" />
         <div className="flex items-center gap-2">
-          <LangSwitch lang={lang} onLang={onLang} label={copy.lang} />
           <button ref={closeBtn} type="button" onClick={onClose} aria-label={copy.close} className="grid h-11 w-11 place-items-center rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-champagne">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden><path d="M5 5l14 14M19 5 5 19" /></svg>
           </button>
@@ -73,6 +73,7 @@ export function MobileMenu({ open, lang, copy, reduced, onClose, onLang }: Props
       </nav>
 
       <div className="js-mm-foot px-[max(24px,env(safe-area-inset-left))] pb-8 pt-6">
+        <LangSwitch grid site={site} onLang={onLang} label={copy.lang} className="mb-5" />
         <a href={BOOKING_ENGINE} target="_blank" rel="noopener noreferrer" onClick={onClose} className="btn-gold flex min-h-[52px] w-full items-center justify-center gap-3 rounded-full text-[16px] font-semibold">
           {copy.cta} <span className="arrow" aria-hidden>→</span>
         </a>

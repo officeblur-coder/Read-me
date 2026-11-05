@@ -4,6 +4,7 @@ import { sunriseToday, useDaypart, type DaypartMode } from '../lib/daypart';
 import type { Lang } from '../content/hero';
 import { parseOpenMeteo, sky, SKY_LABEL, WEATHER_URL, type Sky, type WeatherData } from '../content/weather';
 import { useSeason } from '../lib/season';
+import { locale } from '../lib/i18n';
 
 const SNAPSHOT = `${import.meta.env.BASE_URL}weather.json`;
 
@@ -45,11 +46,11 @@ const Icon = ({ s, size = 15 }: { s: Sky; size?: number }) => (
   </svg>
 );
 
-const fmt = (n: number, lang: Lang) => `${n.toLocaleString(lang === 'de' ? 'de-AT' : 'en-GB', { maximumFractionDigits: 0 })}°`;
+const fmt = (n: number, lang: Lang) => `${n.toLocaleString(locale(lang), { maximumFractionDigits: 0 })}°`;
 
 /** Austrian local time, ticking every 20 s (never the visitor's own time zone). */
 function useViennaTime(lang: Lang) {
-  const f = () => new Intl.DateTimeFormat(lang === 'de' ? 'de-AT' : 'en-GB', { timeZone: 'Europe/Vienna', hour: '2-digit', minute: '2-digit' }).format(new Date());
+  const f = () => new Intl.DateTimeFormat(locale(lang), { timeZone: 'Europe/Vienna', hour: '2-digit', minute: '2-digit' }).format(new Date());
   const [t, setT] = useState(f);
   useEffect(() => { setT(f()); const id = window.setInterval(() => setT(f()), 20000); return () => window.clearInterval(id); }, [lang]); // eslint-disable-line react-hooks/exhaustive-deps
   return t;

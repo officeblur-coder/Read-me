@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { Lang } from '../content/hero';
 import { OPENINGS_DEFAULT, SUMMER_LIFTS, todayVienna, type Opening, type OpeningsData } from '../content/seasonOpenings';
 import { useSeason } from '../lib/season';
+import { locale } from '../lib/i18n';
 
 const OVERRIDE = `${import.meta.env.BASE_URL}openings.json`;
 
@@ -31,7 +32,7 @@ export function OpeningsBar({ lang }: { lang: Lang }) {
   const { season } = useSeason();
   const data = useOpenings();
   const today = todayVienna();
-  const loc = lang === 'de' ? 'de-AT' : 'en-GB';
+  const loc = locale(lang);
   const day = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString(loc, { day: 'numeric', month: 'short' });
   const L = lang === 'de'
     ? { title: `Saisonstart ${data.season}`, planned: 'geplant ab', started: 'Saisonstart lt. Plan', live: 'Live-Status', open: 'in Betrieb lt. Betreiber',

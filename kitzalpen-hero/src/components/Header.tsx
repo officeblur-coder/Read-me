@@ -1,4 +1,5 @@
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { SITE_LANGS, type SiteLang } from '../lib/i18n';
 import { BOOKING_ENGINE } from './BookingBar';
 import { NAV, type Copy, type Lang } from '../content/hero';
 import { useMagnetic } from '../lib/hooks';
@@ -15,32 +16,61 @@ interface Props {
   menuOpen: boolean;
   /** subpages have no hero selector, so the shared Sommer/Winter toggle sits in the header */
   showSeason?: boolean;
-  onLang: (l: Lang) => void;
+  site: SiteLang;
+  onLang: (l: SiteLang) => void;
   onBook?: () => void;
   onMenu: () => void;
 }
 
-export function LangSwitch({ lang, onLang, label, className = '' }: { lang: Lang; onLang: (l: Lang) => void; label: string; className?: string }) {
-  return (
-    <div role="group" aria-label={label} className={`flex items-center text-[13px] font-semibold tracking-[.08em] ${className}`}>
-      {(['de', 'en'] as Lang[]).map((l, i) => (
-        <span key={l} className="flex items-center">
-          {i > 0 && <span aria-hidden className="mx-1 h-3.5 w-px bg-current opacity-40" />}
-          <button
-            type="button"
-            onClick={() => onLang(l)}
-            aria-pressed={lang === l}
-            className={`grid min-h-11 min-w-11 place-items-center rounded-full uppercase transition-opacity duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-champagne ${lang === l ? 'opacity-100' : 'opacity-55 hover:opacity-90'}`}
-          >
-            {l}
-          </button>
-        </span>
+/** Language picker: compact dropdown in the header, a full grid in the mobile menu (`grid`). */
+export function LangSwitch({ site, onLang, label, className = '', grid = false }: { site: SiteLang; onLang: (l: SiteLang) => void; label: string; className?: string; grid?: boolean }) {
+  const [open, setOpen] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const off = (e: Event) => { if (!box.current?.contains(e.target as Node)) setOpen(false); };
+    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    document.addEventListener('pointerdown', off); document.addEventListener('keydown', esc);
+    return () => { document.removeEventListener('pointerdown', off); document.removeEventListener('keydown', esc); };
+  }, [open]);
+  if (grid) return (
+    <div role="group" aria-label={label} translate="no" className={`grid grid-cols-4 gap-2 ${className}`}>
+      {SITE_LANGS.map((l) => (
+        <button key={l.code} type="button" lang={l.code} onClick={() => onLang(l.code)} aria-pressed={site === l.code}
+          className={`lang-pill flex min-h-12 flex-col items-center justify-center rounded-[14px] px-1 text-center ${site === l.code ? 'is-on' : ''}`}>
+          <span className="text-[13px] font-semibold uppercase tracking-[.1em]">{l.code}</span>
+          <span className="text-[10.5px] opacity-70">{l.name}</span>
+        </button>
       ))}
+    </div>
+  );
+  return (
+    <div ref={box} translate="no" className={`relative ${className}`}>
+      <button type="button" aria-haspopup="listbox" aria-expanded={open} aria-label={`${label}: ${SITE_LANGS.find((l) => l.code === site)?.name}`} onClick={() => setOpen((o) => !o)}
+        className="flex min-h-11 items-center gap-1.5 rounded-full px-3 text-[13px] font-semibold uppercase tracking-[.08em] focus-visible:outline focus-visible:outline-2 focus-visible:outline-champagne">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3Z" /></svg>
+        {site}
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden className={`transition-transform duration-300 ${open ? 'rotate-180' : ''}`}><path d="m6 9 6 6 6-6" /></svg>
+      </button>
+      {open && (
+        <ul role="listbox" aria-label={label} className="lang-menu absolute right-0 top-[calc(100%+8px)] z-[60] w-[208px] overflow-hidden rounded-[18px] p-1.5">
+          {SITE_LANGS.map((l) => (
+            <li key={l.code}>
+              <button type="button" role="option" lang={l.code} aria-selected={site === l.code} onClick={() => { setOpen(false); onLang(l.code); }}
+                className={`lang-opt flex w-full items-center gap-3 rounded-[12px] px-3 py-2.5 text-left ${site === l.code ? 'is-on' : ''}`}>
+                <span className="w-7 text-[12px] font-semibold uppercase tracking-[.1em] opacity-70">{l.code}</span>
+                <span className="text-[14.5px] font-medium">{l.name}</span>
+                {site === l.code && <svg className="ml-auto" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M5 12.5l4.2 4.2L19 7" /></svg>}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
 
-export function Header({ lang, copy, compact, fine, menuOpen, onLang, onMenu, showSeason }: Props) {
+export function Header({ lang, copy, compact, fine, menuOpen, site, onLang, onMenu, showSeason }: Props) {
   const { season, setSeason } = useSeason();
   const bookRef = useRef<HTMLAnchorElement>(null);
   useMagnetic(bookRef, fine);
@@ -72,7 +102,7 @@ export function Header({ lang, copy, compact, fine, menuOpen, onLang, onMenu, sh
         <div className="flex items-center gap-2 md:gap-5">
           {showSeason && <SeasonToggle active={season} copy={copy} onSelect={setSeason} className="header-season js-head shrink-0" labelClass="max-sm:sr-only" />}
           {/* phones on subpages: the season toggle takes this spot; DE/EN stays in the menu */}
-          <LangSwitch lang={lang} onLang={onLang} label={copy.lang} className={`js-head ${showSeason ? 'max-sm:hidden' : ''}`} />
+          <LangSwitch site={site} onLang={onLang} label={copy.lang} className={`js-head ${showSeason ? 'max-sm:hidden' : ''}`} />
           <a
             ref={bookRef}
             href={BOOKING_ENGINE}

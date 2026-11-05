@@ -8,13 +8,13 @@ const SNOW = 'M38 17 L44 8 L50 17 L46 15 L44 18 L41 15 Z';
 
 export function Logo({ className = '', mark = false, accent = 'var(--k-gold-light)' }: { className?: string; color?: string; mark?: boolean; accent?: string }) {
   if (mark) return (
-    <svg viewBox="0 0 68 54" className={`block ${className}`} role="img" aria-label="KitzAlpen">
+    <svg viewBox="0 0 68 54" data-i18n-skip="" className={`block ${className}`} role="img" aria-label="KitzAlpen">
       <path d={PEAKS} fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinejoin="round" strokeLinecap="round" />
       <path d={SNOW} fill={accent} />
     </svg>
   );
   return (
-    <svg viewBox="0 0 330 80" className={`block ${className}`} role="img" aria-label="KitzAlpen – Pension & Chalet">
+    <svg viewBox="0 0 330 80" data-i18n-skip="" className={`block ${className}`} role="img" aria-label="KitzAlpen – Pension & Chalet">
       <g transform="translate(0 12)">
         <path d={PEAKS} fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinejoin="round" strokeLinecap="round" />
         <path d={SNOW} fill={accent} />

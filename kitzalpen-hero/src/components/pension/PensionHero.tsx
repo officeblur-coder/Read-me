@@ -6,6 +6,7 @@ import type { Lang, Season } from '../../content/hero';
 import { useFinePointer, useIsMobile, useReducedMotion } from '../../lib/hooks';
 import { useSeason } from '../../lib/season';
 import { SeasonFx } from '../SeasonFx';
+import { tr } from '../../lib/i18n';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 const IMG = `${import.meta.env.BASE_URL}images/hero/`;
@@ -188,8 +189,8 @@ export function PensionHero({ lang }: { lang: Lang }) {
   }, [shown]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const head = t[shown];
-  const words = (line: string) => line.split(' ').map((w, i) => (
-    <span key={i} className="inline-block overflow-hidden pb-[0.1em] align-top"><span className="js-ph-word inline-block">{w}</span>{' '}</span>
+  const words = (line: string) => tr(line).split(' ').map((w, i) => (
+    <span key={i} data-i18n-skip className="inline-block overflow-hidden pb-[0.1em] align-top"><span className="js-ph-word inline-block">{w}</span>{' '}</span>
   ));
   return (
     <section ref={root} id="top" aria-labelledby="ph-title" className="relative isolate flex min-h-[100svh] items-end overflow-hidden bg-deep text-cream">

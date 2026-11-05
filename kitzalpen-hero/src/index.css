@@ -482,6 +482,16 @@
   .c-input:focus-visible { box-shadow: 0 0 0 3px color-mix(in srgb, var(--k-gold) 35%, transparent); }
   .c-wa { color: var(--k-pine); border: 1px solid color-mix(in srgb, var(--k-pine) 35%, transparent); transition: border-color .3s ease, background-color .3s ease; }
   .c-wa:hover { border-color: var(--k-pine); background: color-mix(in srgb, var(--k-pine) 6%, transparent); }
+  /* language picker */
+  .lang-menu { background: var(--k-cream); color: var(--k-ink); box-shadow: 0 24px 60px -20px rgba(8,24,18,.45), 0 0 0 1px color-mix(in srgb, var(--k-pine) 10%, transparent); animation: lang-in .22s ease-out; }
+  @keyframes lang-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+  .lang-opt { transition: background-color .2s ease; }
+  .lang-opt:hover, .lang-opt:focus-visible { background: color-mix(in srgb, var(--k-pine) 8%, transparent); outline: none; }
+  .lang-opt.is-on { color: var(--k-pine); }
+  .lang-pill { border: 1px solid rgba(255,255,255,.18); transition: background-color .25s ease, border-color .25s ease, color .25s ease; }
+  .lang-pill:hover { border-color: var(--k-gold-light); }
+  .lang-pill.is-on { background: var(--k-gold-light); border-color: var(--k-gold-light); color: var(--k-deep); }
+  @media (prefers-reduced-motion: reduce) { .lang-menu { animation: none; } }
   /* group stay planner */
   .gp-step { color: var(--k-pine); transition: background-color .25s ease; }
   .gp-step:hover:not(:disabled) { background: color-mix(in srgb, var(--k-pine) 8%, transparent); }

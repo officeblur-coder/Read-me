@@ -1,5 +1,6 @@
 import { forwardRef, useEffect, useId, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import type { Copy, Lang } from '../content/hero';
+import { locale } from '../lib/i18n';
 
 export interface BookingRequest {
   checkIn: string;   // ISO yyyy-mm-dd
@@ -54,7 +55,7 @@ const Chevron = ({ up }: { up?: boolean }) => (
 function DateField({ label, value, min, onChange, lang, inputRef }: { label: string; value: string; min: string; onChange: (v: string) => void; lang: Lang; inputRef?: React.Ref<HTMLInputElement> }) {
   const id = useId();
   const shown = value
-    ? new Date(value + 'T12:00:00').toLocaleDateString(lang === 'de' ? 'de-AT' : 'en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
+    ? new Date(value + 'T12:00:00').toLocaleDateString(locale(lang), { weekday: 'short', day: 'numeric', month: 'short' })
     : label;
   return (
     <div className="field relative flex min-h-[52px] min-w-0 flex-1 items-center gap-3 px-4 md:px-6">

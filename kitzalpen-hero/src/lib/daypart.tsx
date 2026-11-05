@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
+import { locale } from './i18n';
 
 /**
  * Automatic Alpine day / evening (independent of Summer/Winter).
@@ -42,7 +43,7 @@ export function daypartAt(now = new Date()): Daypart {
 /** Local Austrian sunrise time as "HH:MM" for today (shown in the preview control). */
 export const sunriseToday = (lang: string) => {
   const v = vienna(new Date());
-  return new Intl.DateTimeFormat(lang === 'de' ? 'de-AT' : 'en-GB', { timeZone: 'Europe/Vienna', hour: '2-digit', minute: '2-digit' }).format(sunriseUTC(v.y, v.m, v.d));
+  return new Intl.DateTimeFormat(locale(lang === 'de' ? 'de' : 'en'), { timeZone: 'Europe/Vienna', hour: '2-digit', minute: '2-digit' }).format(sunriseUTC(v.y, v.m, v.d));
 };
 
 interface Ctx { daypart: Daypart; mode: DaypartMode; setMode: (m: DaypartMode) => void }

@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
 import { COPY, type Lang } from './content/hero';
+import { activateSiteLang, baseLang, prepareSiteLang, saveSiteLang, siteLang, startSiteLang, type SiteLang } from './lib/i18n';
 import { Header } from './components/Header';
 import { MobileMenu } from './components/MobileMenu';
 import { Hero } from './components/Hero';
@@ -42,7 +44,12 @@ import { useFinePointer, useReducedMotion } from './lib/hooks';
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
 export default function App() {
-  const [lang, setLang] = useState<Lang>(() => (document.documentElement.lang === 'en' ? 'en' : 'de'));
+  const [site, setSite] = useState<SiteLang>(siteLang);
+  const lang: Lang = baseLang(site);
+  const setLang = useCallback((l: SiteLang) => {
+    saveSiteLang(l);
+    prepareSiteLang(l).catch(() => undefined).then(() => { activateSiteLang(l); flushSync(() => setSite(l)); startSiteLang(); });
+  }, []);
   const [compact, setCompact] = useState(false);
   const [menu, setMenu] = useState(false);
   const booking = useRef<BookingBarHandle>(null);
@@ -85,7 +92,7 @@ export default function App() {
     return () => window.removeEventListener('hashchange', on);
   }, []);
 
-  useEffect(() => { document.documentElement.lang = lang; }, [lang]);
+  useEffect(() => { document.documentElement.lang = site; }, [site]);
   // activities: the shared Sommer/Winter switch also switches between the two activity pages
   const { season, setSeason } = useSeason();
   const seasonMounted = useRef(false);
@@ -99,7 +106,7 @@ export default function App() {
   useEffect(() => {
     if (!langMounted.current) { langMounted.current = true; return; }
     gsap.set('.js-head', { autoAlpha: 1, y: 0 });
-  }, [lang]);
+  }, [site]);
 
   // subpages have no hero intro, which normally reveals the header items
   useEffect(() => {
@@ -130,8 +137,8 @@ export default function App() {
     <>
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-ivory focus:px-4 focus:py-2 focus:text-forest">{copy.skip}</a>
       <WeatherBand lang={lang} reduced={reduced} />
-      <Header lang={lang} copy={copy} compact={compact} fine={fine && !reduced} menuOpen={menu} onLang={setLang} onMenu={() => setMenu(true)} showSeason={page === 'pension' || page === 'chalet' || page === 'contact' || page === 'mountain' || page === 'summer' || page === 'winter' || page === 'all-rooms' || page.startsWith('room-')} />
-      <MobileMenu open={menu} lang={lang} copy={copy} reduced={reduced} onClose={() => setMenu(false)} onLang={setLang} onBook={onBook} />
+      <Header lang={lang} copy={copy} compact={compact} fine={fine && !reduced} menuOpen={menu} site={site} onLang={setLang} onMenu={() => setMenu(true)} showSeason={page === 'pension' || page === 'chalet' || page === 'contact' || page === 'mountain' || page === 'summer' || page === 'winter' || page === 'all-rooms' || page.startsWith('room-')} />
+      <MobileMenu open={menu} lang={lang} copy={copy} reduced={reduced} site={site} onClose={() => setMenu(false)} onLang={setLang} onBook={onBook} />
       {page === 'mountain' ? (
         <main id="main"><MountainPage lang={lang} /></main>
       ) : page === 'contact' ? (

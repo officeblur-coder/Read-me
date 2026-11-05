@@ -8,6 +8,7 @@ import { useIsMobile, useReducedMotion } from '../../lib/hooks';
 import { useSeason } from '../../lib/season';
 import { SeasonFx } from '../SeasonFx';
 import { Icon, I } from '../pension/PensionRooms';
+import { tr } from '../../lib/i18n';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 const BASE = `${import.meta.env.BASE_URL}images/`;
@@ -143,7 +144,7 @@ export function ChaletPage({ lang }: { lang: Lang }) {
     return () => mm.revert();
   }, { scope: root, dependencies: [reduced, lang] });
 
-  const words = t.intro.split(' ');
+  const words = tr(t.intro).split(' ');
   return (
     <div ref={root}>
       {/* hero */}
@@ -202,7 +203,7 @@ export function ChaletPage({ lang }: { lang: Lang }) {
           <div>
             <p className="js-ch-rev text-[11.5px] font-semibold uppercase tracking-[.34em] text-goldink">{t.introEyebrow}</p>
             <h2 id="ch-intro" className="js-ch-statement mt-5 font-display font-normal leading-[1.02] tracking-[-0.02em]" style={{ fontSize: 'clamp(40px, 6vw, 96px)' }}>
-              {words.map((w, i) => <span key={i} className="js-ch-word">{w}{i < words.length - 1 ? ' ' : ''}</span>)}
+              {words.map((w, i) => <span key={i} data-i18n-skip className="js-ch-word">{w}{i < words.length - 1 ? ' ' : ''}</span>)}
             </h2>
             <p className="js-ch-rev mt-8 max-w-[560px] text-[16.5px] leading-relaxed text-ink/70 md:text-[18px]">{t.introText}</p>
           </div>
