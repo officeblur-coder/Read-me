@@ -159,9 +159,9 @@ export function GroupsPage({ lang }: { lang: Lang }) {
             <ul className="mt-6 grid grid-cols-9 gap-1.5 sm:gap-2" aria-hidden>
               {tiles.map((s, i) => <li key={i} className="js-g-tile aspect-[3/4] rounded-[6px]" style={{ background: TONE[s] }} />)}
             </ul>
-            <ul className="mt-6 grid grid-cols-2 gap-x-6 gap-y-3">
+            <ul className="mt-6 grid grid-cols-1 gap-x-6 gap-y-3 min-[420px]:grid-cols-2">
               {ROOMS.map((r) => (
-                <li key={r.slug} className="flex items-center gap-3 text-[14px]">
+                <li key={r.slug} className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5 text-[14px]">
                   <span className="h-3 w-3 shrink-0 rounded-[3px]" style={{ background: TONE[r.slug] }} />
                   <span className="lnum font-semibold">{r.count}×</span><span className="text-ink/75">{t.cats[r.slug as keyof typeof t.cats]}</span>
                   <span className="ml-auto text-[12.5px] text-ink/50">{t.beds(r.guests)}</span>
