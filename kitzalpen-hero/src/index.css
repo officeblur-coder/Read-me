@@ -488,6 +488,18 @@
   .c-input:focus-visible { box-shadow: 0 0 0 3px color-mix(in srgb, var(--k-gold) 35%, transparent); }
   .c-wa { color: var(--k-pine); border: 1px solid color-mix(in srgb, var(--k-pine) 35%, transparent); transition: border-color .3s ease, background-color .3s ease; }
   .c-wa:hover { border-color: var(--k-pine); background: color-mix(in srgb, var(--k-pine) 6%, transparent); }
+  /* tours & places */
+  .to-tile { color: var(--k-cream); outline: 2px solid transparent; outline-offset: 3px; transition: outline-color .3s ease, transform .4s cubic-bezier(.2,.8,.2,1); }
+  .to-tile:hover { transform: translateY(-3px); }
+  .to-tile.is-on { outline-color: var(--k-gold-light); }
+  .to-tile:focus-visible { outline-color: var(--k-gold); }
+  .to-dot.is-easy, .to-band.is-easy { fill: #4f9a6a; background: #4f9a6a; }
+  .to-dot.is-medium, .to-band.is-medium { fill: #d2453b; background: #d2453b; }
+  .to-dot.is-hard, .to-band.is-hard { fill: #1d1f1e; background: #1d1f1e; }
+  .to-level.is-easy { background: color-mix(in srgb, #4f9a6a 16%, transparent); color: #2f6e46; }
+  .to-level.is-medium { background: color-mix(in srgb, #d2453b 14%, transparent); color: #a8332b; }
+  .to-level.is-hard { background: color-mix(in srgb, #1d1f1e 12%, transparent); color: #1d1f1e; }
+  @media (prefers-reduced-motion: reduce) { .to-tile, .to-tile:hover { transition: none; transform: none; } }
   /* top experiences */
   .tp-type { color: var(--k-cream); background: radial-gradient(circle at 75% 15%, color-mix(in srgb, var(--k-gold) 30%, transparent), transparent 55%), linear-gradient(160deg, var(--k-pine), var(--k-deep)); }
   .tp-card { box-shadow: 0 30px 60px -45px rgba(16,46,35,.55); transition: transform .4s cubic-bezier(.2,.8,.2,1), box-shadow .4s ease; }
