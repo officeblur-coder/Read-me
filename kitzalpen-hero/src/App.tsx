@@ -13,6 +13,7 @@ import { TopPage, TopTeaser } from './components/top/TopPage';
 import { PlacesPage, ToursPage } from './components/tours/ToursPage';
 import { ExplorePage } from './components/ExplorePage';
 import { SideRail } from './components/SideRail';
+import { PromoPopup } from './components/PromoPopup';
 import { MobileMenu } from './components/MobileMenu';
 import { Hero } from './components/Hero';
 import { RoomsSection } from './components/rooms/RoomsSection';
@@ -219,6 +220,7 @@ export default function App() {
       <BackToTop lang={lang} reduced={reduced} />
       <QuickActions lang={lang} reduced={reduced} />
       <SideRail lang={lang} hidden={menu} />
+      <PromoPopup lang={lang} reduced={reduced} blocked={menu} />
     </>
   );
 }

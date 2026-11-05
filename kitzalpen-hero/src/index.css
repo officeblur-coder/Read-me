@@ -488,6 +488,11 @@
   .c-input:focus-visible { box-shadow: 0 0 0 3px color-mix(in srgb, var(--k-gold) 35%, transparent); }
   .c-wa { color: var(--k-pine); border: 1px solid color-mix(in srgb, var(--k-pine) 35%, transparent); transition: border-color .3s ease, background-color .3s ease; }
   .c-wa:hover { border-color: var(--k-pine); background: color-mix(in srgb, var(--k-pine) 6%, transparent); }
+  /* promo pop-up */
+  .promo-backdrop { background: rgba(6,14,22,.55); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); animation: promo-fade .4s ease-out; }
+  .promo-card { background: var(--k-cream); box-shadow: 0 50px 120px -40px rgba(0,0,0,.7); max-height: calc(100svh - 32px); overflow-y: auto; }
+  @keyframes promo-fade { from { opacity: 0; } to { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .promo-backdrop { animation: none; } }
   /* mobile tab bar */
   .qa-tabs { background: color-mix(in srgb, var(--k-deep) 94%, transparent); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-top: 1px solid rgba(255,255,255,.08); box-shadow: 0 -12px 30px -18px rgba(0,0,0,.5); }
   .qa-tab { color: color-mix(in srgb, var(--k-cream) 82%, transparent); transition: color .2s ease, background-color .2s ease; }
