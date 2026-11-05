@@ -7,6 +7,7 @@ import { Logo } from './Logo';
 import { LangSwitch } from './Header';
 import { BOOKING_ENGINE } from './BookingBar';
 import { StayAccordion } from './StayMenu';
+import { ExploreAccordion } from './ExploreMenu';
 import { useSeason } from '../lib/season';
 
 interface Props { open: boolean; lang: Lang; copy: Copy; reduced: boolean; onClose: () => void; site: SiteLang; onLang: (l: SiteLang) => void; onBook?: () => void }
@@ -61,7 +62,7 @@ export function MobileMenu({ open, lang, copy, reduced, site, onClose, onLang }:
 
       <nav aria-label="Hauptnavigation" className="flex-1 overflow-y-auto px-[max(24px,env(safe-area-inset-left))] pt-6">
         <ul className="flex flex-col">
-          {NAV[lang].map((n, i) => n.mega ? <StayAccordion key="stay" lang={lang} label={n.label} onNavigate={onClose} /> : (
+          {NAV[lang].map((n, i) => n.mega ? <StayAccordion key="stay" lang={lang} label={n.label} onNavigate={onClose} /> : n.explore ? <ExploreAccordion key="explore" lang={lang} label={n.label} onNavigate={onClose} /> : (
             <li key={i} className="js-mm-item border-b border-ivory/10">
               <a href={n.href === '#activities-winter' ? `#activities-${season}` : n.href} onClick={onClose} className="flex min-h-[60px] items-center justify-between font-display text-[34px] font-medium leading-none">
                 <span className="flex items-center">{n.live && <span aria-hidden className="live-dot mr-3" />}{n.label}</span>

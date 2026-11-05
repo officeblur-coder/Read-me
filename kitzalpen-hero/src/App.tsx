@@ -10,6 +10,7 @@ import { SkiPage } from './components/ski/SkiPage';
 import { ArrivalPage } from './components/arrival/ArrivalPage';
 import { TopPage, TopTeaser } from './components/top/TopPage';
 import { PlacesPage, ToursPage } from './components/tours/ToursPage';
+import { ExplorePage } from './components/ExplorePage';
 import { MobileMenu } from './components/MobileMenu';
 import { Hero } from './components/Hero';
 import { RoomsSection } from './components/rooms/RoomsSection';
@@ -64,7 +65,7 @@ export default function App() {
   // dedicated pages: #activities-summer / #activities-winter (live site: /activities/summer|winter)
   // preview routing by hash: #pension, #activities-summer|winter (live site: /pension/, /activities/summer|winter)
   // #room-<key> → room pages (live: /rooms/<slug>/); #pension-rooms → pension page at the room section
-  type Route = 'home' | 'ski' | 'arrival' | 'experiences' | 'tours' | 'places' | 'pension' | 'chalet' | 'all-rooms' | 'restaurant' | 'groups' | 'contact' | 'mountain' | Season | `room-${RoomKey}`;
+  type Route = 'home' | 'explore' | 'ski' | 'arrival' | 'experiences' | 'tours' | 'places' | 'pension' | 'chalet' | 'all-rooms' | 'restaurant' | 'groups' | 'contact' | 'mountain' | Season | `room-${RoomKey}`;
   const routeOf = (): Route => {
     const h = window.location.hash.slice(1);
     if (h === 'pension' || h === 'pension-rooms') return 'pension';
@@ -76,6 +77,7 @@ export default function App() {
     if (h === 'arrival') return 'arrival';
     if (h === 'experiences') return 'experiences';
     if (h === 'tours') return 'tours';
+    if (h === 'explore') return 'explore';
     if (h === 'places') return 'places';
     if (h === 'contact') return 'contact';
     if (h === 'mountain' || h.startsWith('mountain-')) return 'mountain';
@@ -152,6 +154,8 @@ export default function App() {
         <main id="main"><MountainPage lang={lang} /></main>
       ) : page === 'contact' ? (
         <main id="main"><ContactPage lang={lang} /></main>
+      ) : page === 'explore' ? (
+        <main id="main"><ExplorePage lang={lang} /></main>
       ) : page === 'tours' ? (
         <main id="main"><ToursPage lang={lang} /></main>
       ) : page === 'places' ? (

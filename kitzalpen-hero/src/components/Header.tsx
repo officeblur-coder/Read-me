@@ -6,6 +6,7 @@ import { useMagnetic } from '../lib/hooks';
 import { Logo } from './Logo';
 import { SeasonToggle } from './SeasonToggle';
 import { StayMenu } from './StayMenu';
+import { ExploreMenu } from './ExploreMenu';
 import { useSeason } from '../lib/season';
 
 interface Props {
@@ -89,7 +90,7 @@ export function Header({ lang, copy, compact, fine, menuOpen, site, onLang, onMe
 
         <nav aria-label="Hauptnavigation" className="hidden xl:block">
           <ul className="flex items-center gap-[clamp(14px,1.45vw,36px)] text-[14.5px] font-medium 2xl:text-[15px]">
-            {NAV[lang].map((n, i) => n.mega ? <StayMenu key="stay" lang={lang} label={n.label} /> : (
+            {NAV[lang].map((n, i) => n.mega ? <StayMenu key="stay" lang={lang} label={n.label} /> : n.explore ? <ExploreMenu key="explore" lang={lang} label={n.label} /> : (
               <li key={i} className="js-head">
                 <a href={n.href === '#activities-winter' ? `#activities-${season}` : n.href} className="nav-link relative inline-flex min-h-11 items-center opacity-90 transition-opacity hover:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-champagne">
                   {n.live && <span aria-hidden className="live-dot mr-2" />}{n.label}

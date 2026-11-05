@@ -4,13 +4,12 @@ export type Season = 'summer' | 'winter';
 /** Real pages of kitzalpen.at – no invented URLs. */
 
 /** `mega: true` opens the accommodation panel (pension, chalet, room categories) instead of linking away. */
-export interface NavItem { label: string; href: string; mega?: boolean; live?: boolean }
+export interface NavItem { label: string; href: string; mega?: boolean; explore?: boolean; live?: boolean }
 export const NAV: Record<Lang, NavItem[]> = {
   de: [
     { label: 'Unterkunft', href: '#pension', mega: true }, // preview route – live: `${SITE}/pension/`
     { label: 'Restaurant', href: '#restaurant' }, // preview – live: /restaurant/
-    { label: 'Aktivitäten', href: '#activities-winter' }, // preview – live: /activities/
-    { label: 'Skigebiete', href: '#ski' },
+    { label: 'Entdecken', href: '#explore', explore: true },
     { label: 'Gruppen', href: '#groups' },
     { label: 'Bergerlebnis', href: '#mountain', live: true },
     { label: 'Kontakt', href: '#contact' },
@@ -18,8 +17,7 @@ export const NAV: Record<Lang, NavItem[]> = {
   en: [
     { label: 'Accommodation', href: '#pension', mega: true }, // preview route – live: `${SITE}/en/pension/`
     { label: 'Restaurant', href: '#restaurant' }, // preview – live: /en/restaurant/
-    { label: 'Activities', href: '#activities-winter' }, // preview – live: /en/activities/
-    { label: 'Ski areas', href: '#ski' },
+    { label: 'Explore', href: '#explore', explore: true },
     { label: 'Groups', href: '#groups' },
     { label: 'Mountain', href: '#mountain', live: true },
     { label: 'Contact', href: '#contact' },
