@@ -31,12 +31,12 @@ export const FOOTER_NAV: Record<Lang, NavItem[]> = {
   de: [
     { label: 'Pension', href: '#pension' }, { label: 'Chalet', href: '#chalet' }, { label: 'Zimmer', href: '#all-rooms' },
     { label: 'Restaurant', href: '#restaurant' }, { label: 'Aktivitäten', href: '#activities-winter' }, // preview – live: /activities/
-    { label: 'Gruppen', href: '#groups' }, { label: 'Bergerlebnis', href: '#mountain' }, { label: 'Skigebiete & Skipässe', href: '#ski' }, { label: 'Anreise & Mobilität', href: '#arrival' }, { label: 'Kontakt', href: '#contact' },
+    { label: 'Gruppen', href: '#groups' }, { label: 'Bergerlebnis', href: '#mountain' }, { label: 'Top 15 Erlebnisse', href: '#experiences' }, { label: 'Skigebiete & Skipässe', href: '#ski' }, { label: 'Anreise & Mobilität', href: '#arrival' }, { label: 'Kontakt', href: '#contact' },
   ],
   en: [
     { label: 'Guesthouse', href: '#pension' }, { label: 'Chalet', href: '#chalet' }, { label: 'Rooms', href: '#all-rooms' },
     { label: 'Restaurant', href: '#restaurant' }, { label: 'Activities', href: '#activities-winter' }, // preview – live: /en/activities/
-    { label: 'Groups', href: '#groups' }, { label: 'Mountain guide', href: '#mountain' }, { label: 'Ski areas & passes', href: '#ski' }, { label: 'Arrival & mobility', href: '#arrival' }, { label: 'Contact', href: '#contact' },
+    { label: 'Groups', href: '#groups' }, { label: 'Mountain guide', href: '#mountain' }, { label: 'Top 15 experiences', href: '#experiences' }, { label: 'Ski areas & passes', href: '#ski' }, { label: 'Arrival & mobility', href: '#arrival' }, { label: 'Contact', href: '#contact' },
   ],
 };
 

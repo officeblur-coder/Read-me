@@ -26,10 +26,11 @@ const bearing = (e: Exp) => {
 };
 const dirUrl = (e: Exp) => `https://www.google.com/maps/dir/?api=1&origin=${HOME_LL[0]},${HOME_LL[1]}&destination=${e.lat},${e.lon}&travelmode=driving`;
 const img = (p?: string | null) => (p ? `${BASE}${p}` : null);
+const nm = (e: Exp, lang: Lang) => (lang === 'de' ? e.name : e.nameEn ?? e.name);
 
 function Pic({ e, lang, className = '' }: { e: Exp; lang: Lang; className?: string }) {
   const src = img(e.img);
-  return src ? <img src={src} alt={e.name} loading="lazy" className={`h-full w-full object-cover ${className}`} /> : (
+  return src ? <img src={src} alt={nm(e, lang)} loading="lazy" className={`h-full w-full object-cover ${className}`} /> : (
     <div className={`tp-type relative h-full w-full overflow-hidden ${className}`} aria-hidden>
       <svg viewBox="0 0 400 260" preserveAspectRatio="none" className="absolute inset-x-0 bottom-0 h-[70%] w-full"><path d="M0 260V170l70-60 50 40 90-100 80 90 50-40 60 60v100Z" fill="currentColor" opacity=".16" /><path d="M0 260v-40l100-60 70 40 110-70 120 80v50Z" fill="currentColor" opacity=".22" /></svg>
       <span className="absolute left-5 top-4 text-[11px] font-semibold uppercase tracking-[.22em] opacity-70">{CATS[e.cat][lang]}</span>
@@ -89,7 +90,7 @@ export function TopPage({ lang }: { lang: Lang }) {
   return (
     <div ref={root} className="bg-cream text-ink">
       {/* hero */}
-      <section id="top" aria-labelledby="tp-title" className="relative isolate overflow-hidden bg-deep pb-[calc(90px+env(safe-area-inset-bottom,0px))] pt-40 text-cream md:pb-24">
+      <section id="top" aria-labelledby="tp-title" className="relative isolate overflow-hidden bg-deep pb-[calc(90px+env(safe-area-inset-bottom,0px))] pt-52 text-cream md:pb-24 md:pt-60">
         <div aria-hidden className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_80%_10%,color-mix(in_srgb,var(--k-gold)_22%,transparent),transparent_50%),radial-gradient(circle_at_10%_90%,color-mix(in_srgb,var(--k-pine)_70%,transparent),transparent_60%)]" />
         <div className="mx-auto grid max-w-[1440px] items-center gap-12 px-5 sm:px-6 md:px-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:px-14">
           <div>
@@ -117,7 +118,7 @@ export function TopPage({ lang }: { lang: Lang }) {
                 <span aria-hidden className="absolute inset-0 bg-gradient-to-t from-[color-mix(in_srgb,var(--k-deep)_88%,transparent)] via-transparent to-transparent" />
                 <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-gold-light px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-[.1em] text-deep"><Icon d={ICO.star} size={11} w={2} />Top</span>
                 <span className="absolute inset-x-3 bottom-3 md:inset-x-4 md:bottom-4">
-                  <span className="block font-display text-[16px] italic leading-tight md:text-[23px]">{e.name}</span>
+                  <span className="block font-display text-[16px] italic leading-tight md:text-[23px]">{nm(e, lang)}</span>
                   <span className="lnum mt-1 block text-[11.5px] text-cream/75 md:text-[12.5px]">{nf(e.km)} km</span>
                 </span>
               </a>
@@ -133,23 +134,24 @@ export function TopPage({ lang }: { lang: Lang }) {
             {heading(t.radarEyebrow, t.radarTitle, 'tp-radar')}
             <p className="js-tp-rev mt-5 max-w-[48ch] text-[16px] leading-relaxed text-ink/70">{t.radarText}</p>
             <p className="js-tp-rev mt-4 text-[13px] text-ink/50">{t.radarNote}</p>
-            <p className="mt-6 min-h-[56px] font-display text-[26px] italic leading-tight text-pine" aria-live="polite">{hot ? (() => { const e = list.find((x) => x.id === hot)!; return <>{e.name} <span className="lnum font-sans text-[15px] not-italic text-ink/60">· {nf(e.km)} km · {e.town}</span></>; })() : ''}</p>
+            <p className="mt-6 min-h-[56px] font-display text-[26px] italic leading-tight text-pine" aria-live="polite">{hot ? (() => { const e = list.find((x) => x.id === hot)!; return <>{nm(e, lang)} <span className="lnum font-sans text-[15px] not-italic text-ink/60">· {nf(e.km)} km · {e.town}</span></>; })() : ''}</p>
           </div>
           <div className="js-tp-radar relative mx-auto w-full max-w-[560px]">
-            <svg viewBox="0 0 360 360" className="w-full" role="img" aria-label={t.radarTitle}>
-              {[10, 30, 50, 70].map((k) => <circle key={k} className="js-tp-ring" cx="180" cy="180" r={(k / 70) * R} fill="none" stroke="var(--k-pine)" strokeOpacity={k === 70 ? 0.35 : 0.14} strokeDasharray={k === 70 ? '0' : '3 5'} />)}
-              {[10, 30, 50, 70].map((k) => <text key={k} x={180 + 4} y={180 - (k / 70) * R - 4} fontSize="9" fill="var(--k-ink)" opacity=".45" className="lnum">{k} km</text>)}
+            <svg viewBox="-80 0 520 360" className="w-full overflow-visible" role="img" aria-label={t.radarTitle}>
+              {[5, 15, 35, 70].map((k) => <circle key={k} className="js-tp-ring" cx="180" cy="180" r={Math.sqrt(k / 70) * R} fill="none" stroke="var(--k-pine)" strokeOpacity={k === 70 ? 0.35 : 0.14} strokeDasharray={k === 70 ? '0' : '3 5'} />)}
+              {[5, 15, 35, 70].map((k) => <text key={k} x={180 + 4} y={180 - Math.sqrt(k / 70) * R - 4} fontSize="9" fill="var(--k-ink)" opacity=".45" className="lnum">{k} km</text>)}
               {['N', 'O', 'S', 'W'].map((d, i) => <text key={d} x={180 + Math.sin((i * Math.PI) / 2) * (R + 16)} y={180 - Math.cos((i * Math.PI) / 2) * (R + 16) + 4} fontSize="11" textAnchor="middle" fill="var(--k-ink)" opacity=".5" fontWeight="600">{lang === 'de' ? d : ['N', 'E', 'S', 'W'][i]}</text>)}
               <g>
                 <circle cx="180" cy="180" r="11" fill="var(--k-pine)" />
                 <path d="M174 182l6-6 6 6v6h-12Z" fill="var(--k-cream)" />
               </g>
               {list.map((e) => {
-                const b = (bearing(e) * Math.PI) / 180, d = (Math.min(e.km, 70) / 70) * R;
+                const b = (bearing(e) * Math.PI) / 180, d = Math.sqrt(Math.min(e.km, 70) / 70) * R;
                 const x = 180 + Math.sin(b) * d, y = 180 - Math.cos(b) * d, on = hot === e.id;
                 return (
-                  <a key={e.id} href={`#tp-${e.id}`} onMouseEnter={() => setHot(e.id)} onFocus={() => setHot(e.id)} onMouseLeave={() => setHot(null)} aria-label={`${e.name}, ${e.km} km`}>
-                    <circle className="js-tp-dot" cx={x} cy={y} r={on ? 9 : e.signature ? 7 : 5.5} fill={e.signature ? 'var(--k-gold)' : 'var(--k-pine)'} stroke="var(--k-cream)" strokeWidth="2" style={{ transition: 'r .2s ease' }} />
+                  <a key={e.id} href={`#tp-${e.id}`} onMouseEnter={() => setHot(e.id)} onFocus={() => setHot(e.id)} onMouseLeave={() => setHot(null)} aria-label={`${nm(e, lang)}, ${e.km} km`}>
+                    <circle className="js-tp-dot" cx={x} cy={y} r={on ? 9 : e.signature ? 8 : 5.5} fill={e.signature ? 'var(--k-goldink, var(--k-gold))' : 'var(--k-pine)'} stroke="var(--k-cream)" strokeWidth="2" style={{ transition: 'r .2s ease' }} />
+                    {(e.signature || on) && <text x={x + (Math.sin(b) >= 0 ? 12 : -12)} y={y + 4} fontSize="10.5" fontWeight="600" textAnchor={Math.sin(b) >= 0 ? 'start' : 'end'} fill="var(--k-ink)" stroke="var(--k-cream)" strokeWidth="3" paintOrder="stroke">{nm(e, lang)}</text>}
                   </a>
                 );
               })}
@@ -186,7 +188,7 @@ export function TopPage({ lang }: { lang: Lang }) {
                       <span>{e.town}</span><span className="inline-flex items-center gap-1"><Icon d={ICO.car} size={13} w={1.7} />{nf(e.km)} km · {t.min(e.min)}</span>
                       {e.family && <span className="inline-flex items-center gap-1 text-pine"><Icon d={ICO.family} size={14} w={1.5} />{t.family}</span>}
                     </p>
-                    <h3 className="mt-2 font-display text-[27px] italic leading-tight text-pine">{e.name}</h3>
+                    <h3 className="mt-2 font-display text-[27px] italic leading-tight text-pine">{nm(e, lang)}</h3>
                     <p className="mt-2 text-[14.5px] leading-relaxed text-ink/75">{e.text[lang]}</p>
                     {e.facts[lang].length > 0 && <ul className="mt-3 space-y-1.5">{e.facts[lang].map((f) => <li key={f} className="flex gap-2 text-[13.5px] leading-snug text-ink/70"><span className="mt-0.5 text-goldink"><Icon d={ICO.check} size={13} w={2.2} /></span>{f}</li>)}</ul>}
                     {e.open && <p className="mt-3 rounded-[12px] bg-soft px-3 py-2 text-[12.5px] leading-snug text-ink/65">{e.open[lang]}</p>}
@@ -246,7 +248,7 @@ export function TopTeaser({ lang }: { lang: Lang }) {
                 <Pic e={e} lang={lang} className="transition-transform duration-[1200ms] ease-out group-hover:scale-[1.06]" />
                 <span aria-hidden className="absolute inset-0 bg-gradient-to-t from-[color-mix(in_srgb,var(--k-deep)_85%,transparent)] via-transparent to-transparent" />
                 <span className="lnum absolute left-4 top-3 font-display text-[40px] leading-none [text-shadow:0_2px_14px_rgba(0,0,0,.4)]">{String(list.indexOf(e) + 1).padStart(2, '0')}</span>
-                <span className="absolute inset-x-4 bottom-4"><span className="block font-display text-[21px] italic leading-tight">{e.name}</span><span className="lnum mt-1 block text-[12.5px] text-cream/75">{e.km} km · {CATS[e.cat][lang]}</span></span>
+                <span className="absolute inset-x-4 bottom-4"><span className="block font-display text-[21px] italic leading-tight">{nm(e, lang)}</span><span className="lnum mt-1 block text-[12.5px] text-cream/75">{e.km.toLocaleString(locale(lang))} km · {CATS[e.cat][lang]}</span></span>
               </a>
             </li>
           ))}

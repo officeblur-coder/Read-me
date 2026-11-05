@@ -8,6 +8,7 @@ import { activateSiteLang, baseLang, prepareSiteLang, saveSiteLang, siteLang, st
 import { Header } from './components/Header';
 import { SkiPage } from './components/ski/SkiPage';
 import { ArrivalPage } from './components/arrival/ArrivalPage';
+import { TopPage, TopTeaser } from './components/top/TopPage';
 import { MobileMenu } from './components/MobileMenu';
 import { Hero } from './components/Hero';
 import { RoomsSection } from './components/rooms/RoomsSection';
@@ -62,7 +63,7 @@ export default function App() {
   // dedicated pages: #activities-summer / #activities-winter (live site: /activities/summer|winter)
   // preview routing by hash: #pension, #activities-summer|winter (live site: /pension/, /activities/summer|winter)
   // #room-<key> → room pages (live: /rooms/<slug>/); #pension-rooms → pension page at the room section
-  type Route = 'home' | 'ski' | 'arrival' | 'pension' | 'chalet' | 'all-rooms' | 'restaurant' | 'groups' | 'contact' | 'mountain' | Season | `room-${RoomKey}`;
+  type Route = 'home' | 'ski' | 'arrival' | 'experiences' | 'pension' | 'chalet' | 'all-rooms' | 'restaurant' | 'groups' | 'contact' | 'mountain' | Season | `room-${RoomKey}`;
   const routeOf = (): Route => {
     const h = window.location.hash.slice(1);
     if (h === 'pension' || h === 'pension-rooms') return 'pension';
@@ -72,6 +73,7 @@ export default function App() {
     if (h === 'groups' || h === 'groups-plan') return 'groups';
     if (h === 'ski' || h === 'ski-passes') return 'ski';
     if (h === 'arrival') return 'arrival';
+    if (h === 'experiences') return 'experiences';
     if (h === 'contact') return 'contact';
     if (h === 'mountain' || h.startsWith('mountain-')) return 'mountain';
     if (h === 'activities-summer') return 'summer';
@@ -147,6 +149,8 @@ export default function App() {
         <main id="main"><MountainPage lang={lang} /></main>
       ) : page === 'contact' ? (
         <main id="main"><ContactPage lang={lang} /></main>
+      ) : page === 'experiences' ? (
+        <main id="main"><TopPage lang={lang} /></main>
       ) : page === 'arrival' ? (
         <main id="main"><ArrivalPage lang={lang} /></main>
       ) : page === 'ski' ? (
@@ -170,6 +174,7 @@ export default function App() {
         <Hero lang={lang} copy={copy} bookingRef={booking} onBookingSubmit={onSubmit} />
         <DualStay lang={lang} />
         <MountainTeaser lang={lang} />
+        <TopTeaser lang={lang} />
         <RoomsSection lang={lang} />
         <AmenitiesSection lang={lang} />
         <ChaletSection lang={lang} />
