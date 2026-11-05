@@ -482,6 +482,16 @@
   .c-input:focus-visible { box-shadow: 0 0 0 3px color-mix(in srgb, var(--k-gold) 35%, transparent); }
   .c-wa { color: var(--k-pine); border: 1px solid color-mix(in srgb, var(--k-pine) 35%, transparent); transition: border-color .3s ease, background-color .3s ease; }
   .c-wa:hover { border-color: var(--k-pine); background: color-mix(in srgb, var(--k-pine) 6%, transparent); }
+  /* ski areas */
+  .sk-split-0 { background: #3b7bd1; } .sk-split-1 { background: #d2453b; } .sk-split-2 { background: #1d1f1e; }
+  .sk-pick { color: var(--k-cream); border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.04); transition: background-color .25s ease, border-color .25s ease, color .25s ease; }
+  .sk-pick:hover { border-color: var(--k-gold-light); }
+  .sk-pick.is-on { background: var(--k-cream); color: var(--k-deep); border-color: var(--k-cream); }
+  .sk-box { border: 1.5px solid currentColor; opacity: .8; }
+  .sk-pick.is-on .sk-box { background: var(--k-pine); color: var(--k-cream); border-color: var(--k-pine); opacity: 1; }
+  .sk-pass { border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.05); transition: border-color .3s ease, transform .3s ease; }
+  .sk-pass.is-best { border-color: var(--k-gold-light); background: linear-gradient(160deg, color-mix(in srgb, var(--k-gold) 18%, transparent), rgba(255,255,255,.04)); }
+  .sk-pin:focus-visible, .sk-pick:focus-visible { outline: 2px solid var(--k-gold); outline-offset: 3px; border-radius: 12px; }
   /* language picker */
   .lang-menu { background: var(--k-cream); color: var(--k-ink); box-shadow: 0 24px 60px -20px rgba(8,24,18,.45), 0 0 0 1px color-mix(in srgb, var(--k-pine) 10%, transparent); animation: lang-in .22s ease-out; }
   @keyframes lang-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }

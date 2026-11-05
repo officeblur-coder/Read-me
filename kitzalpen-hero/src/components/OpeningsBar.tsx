@@ -36,9 +36,9 @@ export function OpeningsBar({ lang }: { lang: Lang }) {
   const day = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString(loc, { day: 'numeric', month: 'short' });
   const L = lang === 'de'
     ? { title: `Saisonstart ${data.season}`, planned: 'geplant ab', started: 'Saisonstart lt. Plan', live: 'Live-Status', open: 'in Betrieb lt. Betreiber',
-        note: 'Geplante Termine – abhängig von Schnee und Wetter; Saisonstart heißt nicht, dass alle Pisten offen sind.', checked: 'geprüft', summer: 'Sommerbetrieb der Bergbahnen', times: 'Zeiten' }
+        note: 'Geplante Termine – abhängig von Schnee und Wetter; Saisonstart heißt nicht, dass alle Pisten offen sind.', checked: 'geprüft', all: 'Alle Skigebiete & Skipässe', summer: 'Sommerbetrieb der Bergbahnen', times: 'Zeiten' }
     : { title: `Season start ${data.season}`, planned: 'planned from', started: 'season start as planned', live: 'Live status', open: 'open per operator',
-        note: 'Planned dates – depending on snow and weather; season start does not mean all pistes are open.', checked: 'checked', summer: 'Mountain lifts in summer', times: 'Times' };
+        note: 'Planned dates – depending on snow and weather; season start does not mean all pistes are open.', checked: 'checked', all: 'All ski areas & ski passes', summer: 'Mountain lifts in summer', times: 'Times' };
 
   const sorted = [...data.items].sort((a, b) => (a.start ?? '0').localeCompare(b.start ?? '0'));
   const item = (o: Opening) => {
@@ -59,13 +59,14 @@ export function OpeningsBar({ lang }: { lang: Lang }) {
   return (
     <aside aria-label={season === 'winter' ? L.title : L.summer} className="openings-bar border-b border-gold/15 text-[12px] text-cream">
       <div className="flex h-full items-center">
-        <p className="flex h-full shrink-0 items-center gap-2 pl-[max(14px,env(safe-area-inset-left))] pr-3 text-[10.5px] font-semibold uppercase tracking-[.2em] text-gold-light">
-          <Flake /><span className="max-sm:sr-only">{season === 'winter' ? L.title : L.summer}</span>
-        </p>
+        <a href="#ski" className="flex h-full shrink-0 items-center gap-2 pl-[max(14px,env(safe-area-inset-left))] pr-3 text-[10.5px] font-semibold uppercase tracking-[.2em] text-gold-light hover:text-cream">
+          <Flake /><span className="max-sm:sr-only">{season === 'winter' ? L.title : L.summer}</span><span aria-hidden className="max-sm:hidden">→</span>
+        </a>
         <ul className="rs-track flex min-w-0 flex-1 items-center gap-5 overflow-x-auto pr-4">
           {season === 'winter' ? sorted.map(item) : SUMMER_LIFTS.map((s) => (
             <li key={s.name} className="shrink-0 whitespace-nowrap"><a href={s.url} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-[30px] items-center gap-2 hover:text-gold-light"><span className="font-semibold">{s.name}</span><span className="text-cream/60">{L.times} ↗</span></a></li>
           ))}
+          {season === 'winter' && <li className="shrink-0 whitespace-nowrap"><a href="#ski" className="inline-flex min-h-[30px] items-center gap-1.5 font-semibold text-gold-light hover:text-cream">{L.all} →</a></li>}
           {season === 'winter' && <li className="shrink-0 whitespace-nowrap text-[11px] text-cream/45" title={L.note}>{L.note.split(';')[0]} · {L.checked} {day(data.verifiedAt)}</li>}
         </ul>
       </div>
