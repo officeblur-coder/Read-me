@@ -101,6 +101,11 @@ export function ArrivalPage({ lang }: { lang: Lang }) {
                 <ul className="mt-2 space-y-1.5 text-deep/65">{t.gmtNo.map((x) => <li key={x} className="flex gap-2 leading-snug"><span className="mt-0.5 text-deep/40"><Icon d={ICO.no} size={13} w={2.2} /></span>{x}</li>)}</ul>
               </div>
             </div>
+            <a href={PLANNERS.mplus} {...ext} className="group mx-6 mb-5 flex items-start gap-3 rounded-[14px] border border-gold/40 bg-gold/10 p-3.5 md:mx-7">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gold-light font-display text-[15px] font-semibold text-deep">M+</span>
+              <span className="min-w-0 text-[13px] leading-snug text-deep/75"><b className="block text-[14px] text-deep">{t.mplus}</b>{t.mplusText}</span>
+              <span className="mt-1 text-deep/50 transition-transform group-hover:translate-x-0.5"><Icon d={ICO.ext} size={13} w={1.8} /></span>
+            </a>
             <a href={PLANNERS.gmt} {...ext} className="flex min-h-12 items-center justify-between bg-pine px-6 text-[14px] font-semibold text-cream hover:bg-deep md:px-7">{t.gmtMore}<Icon d={ICO.ext} size={14} w={1.8} /></a>
           </article>
         </div>
