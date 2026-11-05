@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
+import { OpeningsBar } from './OpeningsBar';
 import type { Lang } from '../content/hero';
-import { parseOpenMeteo, sky, SKY_LABEL, SPOTS, WEATHER_URL, type Sky, type WeatherData } from '../content/weather';
+import { parseOpenMeteo, sky, SKY_LABEL, WEATHER_URL, type Sky, type WeatherData } from '../content/weather';
 import { useSeason } from '../lib/season';
 
 const SNAPSHOT = `${import.meta.env.BASE_URL}weather.json`;
@@ -37,70 +38,86 @@ const ICON: Record<Sky, string[]> = {
   snow: ['M6.5 13.5h11a4 4 0 0 0 .5-8 6 6 0 0 0-11.5 1.6 3.2 3.2 0 0 0 0 6.4Z', 'M8 17v.01M12 19v.01M16 17v.01M10 21v.01M14 21v.01'],
   storm: ['M6.5 13.5h11a4 4 0 0 0 .5-8 6 6 0 0 0-11.5 1.6 3.2 3.2 0 0 0 0 6.4Z', 'M12.5 14.5l-2 3.5h3l-2 3.5'],
 };
-const Icon = ({ s }: { s: Sky }) => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="shrink-0">
+const Icon = ({ s, size = 15 }: { s: Sky; size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="shrink-0">
     {ICON[s].map((d, i) => <path key={i} d={d} />)}
   </svg>
 );
-const Flake = () => (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden className="shrink-0"><path d="M12 2v20M3.3 7l17.4 10M3.3 17 20.7 7" /></svg>
-);
+
 const fmt = (n: number, lang: Lang) => `${n.toLocaleString(lang === 'de' ? 'de-AT' : 'en-GB', { maximumFractionDigits: 0 })}°`;
 
+/** Austrian local time, ticking every 20 s (never the visitor's own time zone). */
+function useViennaTime(lang: Lang) {
+  const f = () => new Intl.DateTimeFormat(lang === 'de' ? 'de-AT' : 'en-GB', { timeZone: 'Europe/Vienna', hour: '2-digit', minute: '2-digit' }).format(new Date());
+  const [t, setT] = useState(f);
+  useEffect(() => { setT(f()); const id = window.setInterval(() => setT(f()), 20000); return () => window.clearInterval(id); }, [lang]); // eslint-disable-line react-hooks/exhaustive-deps
+  return t;
+}
+
 /**
- * A thin band above the header that stays while scrolling. It runs as a slow ticker.
- * Winter: weather + snow depth + fresh snow for the three ski areas.
- * Summer: weather only.
+ * Two fixed bars above the header.
+ *  1 · Alpine weather bar: valley (Hollersbach) and mountain (KitzSki) kept apart and labelled,
+ *      Austrian time, link to the mountain guide. No ticker. On phones: the essentials + a details panel.
+ *  2 · OpeningsBar (season starts in winter, lift timetables in summer).
+ * Heights are fixed via CSS variables, so loading weather never shifts the layout.
  */
-export function WeatherBand({ lang, reduced }: { lang: Lang; reduced: boolean }) {
+export function WeatherBand({ lang }: { lang: Lang; reduced?: boolean }) {
   const { season } = useSeason();
   const { data, live } = useWeather();
+  const time = useViennaTime(lang);
+  const [open, setOpen] = useState(false);
   const winter = season === 'winter';
   const L = lang === 'de'
-    ? { title: winter ? 'Wetter & Schnee' : 'Wetter', snow: 'Schnee', fresh: 'Neuschnee', range: 'heute', src: winter ? 'Wetterdaten: Open-Meteo.com · Schneehöhen = Modellwerte' : 'Wetterdaten: Open-Meteo.com', loading: 'Wetter wird geladen …', updated: 'Stand' }
-    : { title: winter ? 'Weather & snow' : 'Weather', snow: 'Snow', fresh: 'Fresh', range: 'today', src: winter ? 'Weather data: Open-Meteo.com · snow depths are model values' : 'Weather data: Open-Meteo.com', loading: 'Loading weather …', updated: 'Updated' };
-  const time = data?.time ? data.time.slice(11, 16) : '';
-
-  const items = data ? SPOTS.map((s) => {
-    const w = data.spots[s.id]; if (!w) return null;
-    const k = sky(w.code);
-    return (
-      <li key={s.id} className="flex shrink-0 items-center gap-2.5 whitespace-nowrap">
-        <span className="font-semibold text-cream">{s.name}</span>
-        <span className="text-cream/50 tabular-nums">{s.alt.toLocaleString('de-DE')} m</span>
-        <span className="flex items-center gap-1.5 text-gold-light" title={SKY_LABEL[k][lang]}><Icon s={k} /><span className="sr-only">{SKY_LABEL[k][lang]}</span><span className="tabular-nums text-cream">{fmt(w.temp, lang)}</span></span>
-        <span className="tabular-nums text-cream/55">{L.range} {fmt(w.min, lang)} / {fmt(w.max, lang)}</span>
-        {winter && s.ski && (
-          <span className="flex items-center gap-1.5 tabular-nums text-gold-light"><Flake />{L.snow} {w.snowCm} cm{w.newSnowCm > 0 ? ` · ${L.fresh} +${w.newSnowCm} cm` : ''}</span>
-        )}
-        <span aria-hidden className="ml-4 h-1 w-1 rounded-full bg-gold/60" />
-      </li>
-    );
-  }) : null;
-
-  const tail = (
-    <li className="flex shrink-0 items-center gap-2 whitespace-nowrap text-cream/45">
-      {time && <span>{L.updated} {time}{live ? '' : ' ·'}</span>}<span>{L.src}</span><span aria-hidden className="ml-6 h-1 w-1 rounded-full bg-gold/60" />
-    </li>
+    ? { title: 'Wetter', valley: 'Tal', mountain: 'Berg', hl: 'Heute', snow: 'Schnee', fresh: 'Neuschnee', wind: 'Wind', time: 'Ortszeit', more: 'Bergwetter & Webcams', src: 'Open-Meteo · Modellwerte', updated: 'Stand', loading: 'Wetter wird geladen …', na: 'Wetter derzeit nicht verfügbar', details: 'Wetterdetails' }
+    : { title: 'Weather', valley: 'Valley', mountain: 'Mountain', hl: 'Today', snow: 'Snow', fresh: 'New snow', wind: 'Wind', time: 'Local time', more: 'Mountain weather & webcams', src: 'Open-Meteo · model values', updated: 'Updated', loading: 'Loading weather …', na: 'Weather currently unavailable', details: 'Weather details' };
+  const v = data?.spots.hollersbach, m = data?.spots.kitzski;
+  const upd = data?.time ? data.time.slice(11, 16) : '';
+  const sep = <span aria-hidden className="h-5 w-px shrink-0 bg-cream/15" />;
+  const mountain = m && (
+    <span className="flex items-center gap-2 whitespace-nowrap">
+      <span className="text-[10.5px] font-semibold uppercase tracking-[.18em] text-cream/55">{L.mountain}</span>
+      <span className="text-cream/80">KitzSki 1.665 m</span>
+      <Icon s={sky(m.code)} /><b className="lnum font-semibold">{fmt(m.temp, lang)}</b>
+      {winter ? <span className="text-cream/70">· {L.snow} {m.snowCm} cm{m.newSnowCm > 0 ? ` · ${L.fresh} +${m.newSnowCm}` : ''}</span> : <span className="text-cream/70">· {L.wind} {Math.round(m.wind)} km/h</span>}
+    </span>
   );
 
   return (
-    <aside aria-label={L.title} className="weather-band fixed inset-x-0 top-0 z-[45] cursor-pointer border-b border-gold/20 bg-deep text-[12px] text-cream" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-      {/* the whole band opens the mountain guide */}
-      <a href="#mountain" className="absolute inset-0 z-[2]" aria-label={L.title}><span className="sr-only">{L.title}</span></a>
-      <div className="relative flex h-[34px] items-center">
-        <p className="relative z-[1] flex h-full shrink-0 items-center gap-2 bg-deep pl-[max(14px,env(safe-area-inset-left))] pr-4 text-[10.5px] font-semibold uppercase tracking-[.22em] text-gold-light shadow-[12px_0_14px_-6px_var(--k-deep)]">
-          <span className={`h-1.5 w-1.5 rounded-full ${live ? 'bg-[#5ec27a]' : 'bg-gold'}`} aria-hidden />{L.title}
-        </p>
-        <div className="relative min-w-0 flex-1 overflow-hidden [mask-image:linear-gradient(90deg,transparent,#000_3%,#000_96%,transparent)]">
-          {data ? (
-            <div className={`wb-track flex w-max ${reduced ? '' : 'wb-run'}`}>
-              <ul className="flex items-center gap-6 pr-6">{items}{tail}</ul>
-              {!reduced && <ul aria-hidden className="flex items-center gap-6 pr-6">{items}{tail}</ul>}
-            </div>
-          ) : <p className="px-2 text-cream/60">{L.loading}</p>}
+    <div className="topbars fixed inset-x-0 top-0 z-[45] bg-deep" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+      <aside aria-label={L.title} className="weather-band relative border-b border-gold/20 text-[13px] text-cream">
+        <div className="mx-auto flex h-full max-w-[1680px] items-center gap-4 px-[max(14px,env(safe-area-inset-left))] md:gap-5 md:px-10 lg:px-14">
+          {/* valley – always visible */}
+          <span className="flex min-w-0 items-center gap-2.5 whitespace-nowrap">
+            <span className="hidden text-[10.5px] font-semibold uppercase tracking-[.18em] text-cream/55 md:inline">{L.valley}</span>
+            <span className="font-semibold">Hollersbach</span>
+            {v ? (<>
+              <span className="text-gold-light"><Icon s={sky(v.code)} size={20} /></span>
+              <b className="lnum font-display text-[24px] font-medium leading-none md:text-[26px]">{fmt(v.temp, lang)}</b>
+              <span className="truncate text-cream/80">{SKY_LABEL[sky(v.code)][lang]}</span>
+              <span className="lnum hidden text-cream/55 lg:inline">{L.hl} {fmt(v.min, lang)} / {fmt(v.max, lang)}</span>
+            </>) : <span className="text-cream/55">{data === null && !live ? L.loading : L.na}</span>}
+          </span>
+          {m && <span className="hidden items-center gap-5 xl:flex">{sep}{mountain}</span>}
+          <span className="ml-auto flex shrink-0 items-center gap-4 md:gap-5">
+            <span className="lnum flex items-center gap-2 whitespace-nowrap"><span className="hidden text-[10.5px] font-semibold uppercase tracking-[.18em] text-cream/55 sm:inline">{L.time}</span><b className="font-semibold">{time}</b></span>
+            <a href="#mountain-dash" className="wb-link hidden min-h-[34px] items-center gap-1.5 rounded-full border border-gold/35 px-3.5 text-[12px] font-semibold text-gold-light md:inline-flex">{L.more} →</a>
+            <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-controls="wb-panel" aria-label={L.details}
+              className="grid h-9 w-9 place-items-center rounded-full border border-cream/20 xl:hidden">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden className={`transition-transform ${open ? 'rotate-180' : ''}`}><path d="m6 9 6 6 6-6" /></svg>
+            </button>
+          </span>
         </div>
-      </div>
-    </aside>
+        {/* details panel (phones / tablets) – overlays, never pushes the layout */}
+        <div id="wb-panel" hidden={!open} className="absolute inset-x-0 top-full z-10 border-b border-gold/20 bg-deep/97 px-[max(16px,env(safe-area-inset-left))] py-4 shadow-[0_20px_40px_-20px_rgba(0,0,0,.6)] backdrop-blur-md xl:hidden">
+          <div className="flex flex-col gap-3 text-[13.5px]">
+            {v && <span className="lnum">{L.valley} · Hollersbach 807 m · {L.hl} {fmt(v.min, lang)} / {fmt(v.max, lang)} · {L.wind} {Math.round(v.wind)} km/h</span>}
+            {mountain}
+            <a href="#mountain-dash" onClick={() => setOpen(false)} className="inline-flex min-h-11 items-center self-start rounded-full border border-gold/35 px-4 font-semibold text-gold-light">{L.more} →</a>
+            <span className="text-[11.5px] text-cream/45">{L.src}{upd ? ` · ${L.updated} ${upd}` : ''}</span>
+          </div>
+        </div>
+      </aside>
+      <OpeningsBar lang={lang} />
+    </div>
   );
 }

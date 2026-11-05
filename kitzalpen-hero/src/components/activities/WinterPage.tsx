@@ -214,8 +214,8 @@ export function ActivityJourney({ lang, season }: { lang: Lang; season: Season }
       <section aria-label={t.eyebrow} className="js-w-journey relative px-5 sm:px-6 md:px-10 lg:px-14">
         <div className="mx-auto grid max-w-[1440px] lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-16">
           {/* rail */}
-          <aside aria-hidden className="max-lg:sticky max-lg:top-[106px] max-lg:z-20 max-lg:-mx-5 max-lg:px-5 max-lg:py-2.5 max-lg:backdrop-blur-md max-lg:[background:color-mix(in_srgb,var(--w-bg)_85%,transparent)] lg:block">
-            <div className="lg:sticky lg:top-[150px] lg:pt-4">
+          <aside aria-hidden className="max-lg:sticky max-lg:top-[calc(var(--wb-h)+var(--ob-h)+70px)] max-lg:z-20 max-lg:-mx-5 max-lg:px-5 max-lg:py-2.5 max-lg:backdrop-blur-md max-lg:[background:color-mix(in_srgb,var(--w-bg)_85%,transparent)] lg:block">
+            <div className="lg:sticky lg:top-[calc(var(--wb-h)+var(--ob-h)+110px)] lg:pt-4">
               <div className="flex items-center gap-4 lg:block">
                 <p className="hidden text-[11px] font-semibold uppercase tracking-[.3em] text-[var(--w-ice)]/60 lg:block">{t.road}</p>
                 <p className="lnum font-display leading-none text-gold-light lg:mt-2" style={{ fontSize: mobile ? 34 : 'clamp(80px, 8vw, 140px)' }}><span ref={kmEl}>{STOPS_[0].km}</span><span className="text-[.35em] text-cream/60"> km</span></p>

@@ -212,7 +212,7 @@ export function AllRoomsPage({ lang }: { lang: Lang }) {
       </section>
 
       {/* filters */}
-      <div className="ar-filters sticky top-[106px] z-30 border-b border-ink/[.07] bg-[#FAF8F5]/92 backdrop-blur-md">
+      <div className="ar-filters sticky top-[calc(var(--wb-h)+var(--ob-h)+70px)] z-30 border-b border-ink/[.07] bg-[#FAF8F5]/92 backdrop-blur-md">
         <div className="rs-track mx-auto flex max-w-[1440px] items-center gap-2 overflow-x-auto px-5 py-3 sm:px-6 md:px-10 lg:px-14 lg:pr-[300px]">
           <span className="mr-1 shrink-0 text-[10.5px] font-semibold uppercase tracking-[.2em] text-ink/45 max-md:sr-only">{t.filterType}</span>
           <button type="button" className={chip(type === 'all')} aria-pressed={type === 'all'} onClick={() => setType('all')}>{t.all}<span className="lnum opacity-60">18</span></button>

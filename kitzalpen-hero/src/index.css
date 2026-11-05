@@ -55,7 +55,13 @@
 
 @layer components {
   /* header spacing with safe-area */
-  .site-header { top: calc(34px + env(safe-area-inset-top, 0px)); padding-top: 18px; padding-bottom: 18px; }
+  :root { --wb-h: 48px; --ob-h: 32px; }
+  html { scroll-padding-top: calc(var(--wb-h) + var(--ob-h) + 40px); }
+  @media (min-width: 768px) { :root { --wb-h: 54px; } }
+  .weather-band { height: var(--wb-h); }
+  .openings-bar { height: var(--ob-h); background: color-mix(in srgb, var(--k-pine) 92%, #000); }
+  .wb-link { transition: background-color .3s ease; } .wb-link:hover { background: rgba(236,220,180,.1); }
+  .site-header { top: calc(var(--wb-h) + var(--ob-h) + env(safe-area-inset-top, 0px)); padding-top: 18px; padding-bottom: 18px; }
   @media (min-width: 768px) { .site-header { padding-top: 24px; padding-bottom: 24px; } }
   .site-header[data-compact='true'] { padding-top: 10px; padding-bottom: 10px; }
 
