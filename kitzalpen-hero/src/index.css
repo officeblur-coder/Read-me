@@ -488,6 +488,11 @@
   .c-input:focus-visible { box-shadow: 0 0 0 3px color-mix(in srgb, var(--k-gold) 35%, transparent); }
   .c-wa { color: var(--k-pine); border: 1px solid color-mix(in srgb, var(--k-pine) 35%, transparent); transition: border-color .3s ease, background-color .3s ease; }
   .c-wa:hover { border-color: var(--k-pine); background: color-mix(in srgb, var(--k-pine) 6%, transparent); }
+  /* top experiences */
+  .tp-type { color: var(--k-cream); background: radial-gradient(circle at 75% 15%, color-mix(in srgb, var(--k-gold) 30%, transparent), transparent 55%), linear-gradient(160deg, var(--k-pine), var(--k-deep)); }
+  .tp-card { box-shadow: 0 30px 60px -45px rgba(16,46,35,.55); transition: transform .4s cubic-bezier(.2,.8,.2,1), box-shadow .4s ease; }
+  .tp-card:hover { transform: translateY(-4px); box-shadow: 0 40px 70px -40px rgba(16,46,35,.6); }
+  @media (prefers-reduced-motion: reduce) { .tp-card, .tp-card:hover { transition: none; transform: none; } }
   /* arrival */
   .ar-ticket { background: #fbf7ee; box-shadow: 0 40px 90px -40px rgba(0,0,0,.65), 0 0 0 1px rgba(255,255,255,.4) inset; }
   .ar-perf::before, .ar-perf::after { content: ''; position: absolute; top: -13px; width: 24px; height: 24px; border-radius: 50%; background: var(--k-deep); }
