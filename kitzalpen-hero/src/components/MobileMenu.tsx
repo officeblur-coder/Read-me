@@ -47,7 +47,7 @@ export function MobileMenu({ open, lang, copy, reduced, site, onClose, onLang }:
       aria-modal="true"
       aria-hidden={!open}
       aria-label="Menü"
-      className="fixed inset-0 z-50 flex flex-col bg-forest-deep text-ivory lg:hidden"
+      className="fixed inset-0 z-50 flex flex-col bg-forest-deep text-ivory xl:hidden"
       style={{ visibility: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
       <div className="flex items-center justify-between px-[max(16px,env(safe-area-inset-left))] py-5">

@@ -62,13 +62,17 @@ export function OpeningsBar({ lang }: { lang: Lang }) {
         <a href="#ski" className="flex h-full shrink-0 items-center gap-2 pl-[max(14px,env(safe-area-inset-left))] pr-3 text-[10.5px] font-semibold uppercase tracking-[.2em] text-gold-light hover:text-cream">
           <Flake /><span className="max-sm:sr-only">{season === 'winter' ? L.title : L.summer}</span><span aria-hidden className="max-sm:hidden">→</span>
         </a>
-        <ul className="rs-track flex min-w-0 flex-1 items-center gap-5 overflow-x-auto pr-4">
+        <div className="ob-viewport relative min-w-0 flex-1 overflow-hidden">
+        {[0, 1].map((copy) => (
+        <ul key={copy} aria-hidden={copy === 1 || undefined} className={`ob-run flex items-center gap-5 pr-5 ${copy === 1 ? 'ob-clone' : ''}`}>
           {season === 'winter' ? sorted.map(item) : SUMMER_LIFTS.map((s) => (
             <li key={s.name} className="shrink-0 whitespace-nowrap"><a href={s.url} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-[30px] items-center gap-2 hover:text-gold-light"><span className="font-semibold">{s.name}</span><span className="text-cream/60">{L.times} ↗</span></a></li>
           ))}
           {season === 'winter' && <li className="shrink-0 whitespace-nowrap"><a href="#ski" className="inline-flex min-h-[30px] items-center gap-1.5 font-semibold text-gold-light hover:text-cream">{L.all} →</a></li>}
           {season === 'winter' && <li className="shrink-0 whitespace-nowrap text-[11px] text-cream/45" title={L.note}>{L.note.split(';')[0]} · {L.checked} {day(data.verifiedAt)}</li>}
         </ul>
+        ))}
+        </div>
       </div>
     </aside>
   );

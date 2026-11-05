@@ -10,6 +10,7 @@ export const NAV: Record<Lang, NavItem[]> = {
     { label: 'Unterkunft', href: '#pension', mega: true }, // preview route – live: `${SITE}/pension/`
     { label: 'Restaurant', href: '#restaurant' }, // preview – live: /restaurant/
     { label: 'Aktivitäten', href: '#activities-winter' }, // preview – live: /activities/
+    { label: 'Skigebiete', href: '#ski' },
     { label: 'Gruppen', href: '#groups' },
     { label: 'Bergerlebnis', href: '#mountain', live: true },
     { label: 'Kontakt', href: '#contact' },
@@ -18,6 +19,7 @@ export const NAV: Record<Lang, NavItem[]> = {
     { label: 'Accommodation', href: '#pension', mega: true }, // preview route – live: `${SITE}/en/pension/`
     { label: 'Restaurant', href: '#restaurant' }, // preview – live: /en/restaurant/
     { label: 'Activities', href: '#activities-winter' }, // preview – live: /en/activities/
+    { label: 'Ski areas', href: '#ski' },
     { label: 'Groups', href: '#groups' },
     { label: 'Mountain', href: '#mountain', live: true },
     { label: 'Contact', href: '#contact' },

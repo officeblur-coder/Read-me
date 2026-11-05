@@ -82,13 +82,13 @@ export function Header({ lang, copy, compact, fine, menuOpen, site, onLang, onMe
         compact ? 'bg-forest/80 shadow-[0_8px_30px_rgba(0,0,0,.18)] backdrop-blur-md' : 'bg-transparent'
       }`}
     >
-      <div className="mx-auto flex max-w-[1680px] items-center justify-between gap-6 px-[max(16px,env(safe-area-inset-left))] md:px-10 lg:px-14">
+      <div className="mx-auto flex max-w-[1680px] items-center justify-between gap-6 px-[max(16px,env(safe-area-inset-left))] md:px-10 2xl:px-14">
         <a href="#top" aria-label="KitzAlpen – Startseite" className="js-head shrink-0 rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-champagne">
           <Logo className={`transition-[width] duration-[450ms] ease-premium ${compact ? 'w-[150px] md:w-[178px]' : 'w-[176px] md:w-[218px]'}`} />
         </a>
 
-        <nav aria-label="Hauptnavigation" className="hidden lg:block">
-          <ul className="flex items-center gap-[clamp(18px,2.1vw,38px)] text-[15px] font-medium">
+        <nav aria-label="Hauptnavigation" className="hidden xl:block">
+          <ul className="flex items-center gap-[clamp(14px,1.45vw,36px)] text-[14.5px] font-medium 2xl:text-[15px]">
             {NAV[lang].map((n, i) => n.mega ? <StayMenu key="stay" lang={lang} label={n.label} /> : (
               <li key={i} className="js-head">
                 <a href={n.href === '#activities-winter' ? `#activities-${season}` : n.href} className="nav-link relative inline-flex min-h-11 items-center opacity-90 transition-opacity hover:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-champagne">
@@ -99,7 +99,7 @@ export function Header({ lang, copy, compact, fine, menuOpen, site, onLang, onMe
           </ul>
         </nav>
 
-        <div className="flex items-center gap-2 md:gap-5">
+        <div className="flex items-center gap-2 md:gap-4 2xl:gap-5">
           {showSeason && <SeasonToggle active={season} copy={copy} onSelect={setSeason} className="header-season js-head shrink-0" labelClass="max-sm:sr-only" />}
           {/* phones on subpages: the season toggle takes this spot; DE/EN stays in the menu */}
           <LangSwitch site={site} onLang={onLang} label={copy.lang} className={`js-head ${showSeason ? 'max-sm:hidden' : ''}`} />
@@ -108,7 +108,7 @@ export function Header({ lang, copy, compact, fine, menuOpen, site, onLang, onMe
             href={BOOKING_ENGINE}
             target="_blank"
             rel="noopener noreferrer"
-            className="whitespace-nowrap js-head btn-outline hidden min-h-11 items-center gap-2.5 rounded-full border border-champagne/70 px-6 text-[15px] font-semibold lg:inline-flex"
+            className="whitespace-nowrap js-head btn-outline hidden min-h-11 items-center gap-2.5 rounded-full border border-champagne/70 px-5 text-[15px] font-semibold lg:inline-flex 2xl:px-6"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden><rect x="3.5" y="5" width="17" height="15" rx="2" /><path d="M3.5 10h17M8 3v4M16 3v4" /></svg>
             {copy.book}
@@ -119,7 +119,7 @@ export function Header({ lang, copy, compact, fine, menuOpen, site, onLang, onMe
             aria-expanded={menuOpen}
             aria-controls="mobile-menu"
             aria-label={menuOpen ? copy.close : copy.menu}
-            className="js-head grid h-11 w-11 place-items-center rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-champagne lg:hidden"
+            className="js-head grid h-11 w-11 place-items-center rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-champagne xl:hidden"
           >
             <span className="flex w-7 flex-col gap-[7px]" aria-hidden>
               <i className="block h-[2px] w-full rounded bg-current" />

@@ -60,6 +60,12 @@
   @media (min-width: 768px) { :root { --wb-h: 54px; } }
   .weather-band { height: var(--wb-h); }
   .openings-bar { height: var(--ob-h); background: color-mix(in srgb, var(--k-pine) 92%, #000); }
+  /* ticker: two identical runs slide left in a loop; hover/focus pauses, reduced motion scrolls by hand */
+  .ob-viewport { display: flex; -webkit-mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 40px), transparent); }
+  .ob-run { flex: none; animation: ob-tick 60s linear infinite; }
+  .ob-viewport:hover .ob-run, .ob-viewport:focus-within .ob-run { animation-play-state: paused; }
+  @keyframes ob-tick { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+  @media (prefers-reduced-motion: reduce) { .ob-viewport { overflow-x: auto; } .ob-run { animation: none; } .ob-clone { display: none; } }
   .wb-link { transition: background-color .3s ease; } .wb-link:hover { background: rgba(236,220,180,.1); }
   .site-header { top: calc(var(--wb-h) + var(--ob-h) + env(safe-area-inset-top, 0px)); padding-top: 18px; padding-bottom: 18px; }
   @media (min-width: 768px) { .site-header { padding-top: 24px; padding-bottom: 24px; } }
