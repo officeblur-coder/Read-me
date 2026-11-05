@@ -44,7 +44,7 @@ export function ExploreMap({ lang }: { lang: Lang }) {
 
   const pts = useMemo<Pt[]>(() => [
     ...TOP[season].map((e) => ({ id: e.id, layer: 'exp' as const, lat: e.lat, lon: e.lon, name: nm(e), sub: CATS[e.cat][lang], km: e.km, href: '#experiences' })),
-    ...TOURS.map((x) => ({ id: x.id, layer: 'tour' as const, lat: x.lat, lon: x.lon, name: x.name[lang], sub: TOUR_TYPES.find((y) => y.id === x.type)!.label[lang], km: x.startKm, href: '#tours' })),
+    ...TOURS.filter((x) => TOUR_TYPES.find((y) => y.id === x.type)!.season === season).map((x) => ({ id: x.id, layer: 'tour' as const, lat: x.lat, lon: x.lon, name: x.name[lang], sub: TOUR_TYPES.find((y) => y.id === x.type)!.label[lang], km: x.startKm, href: '#tours' })),
     ...PLACES.filter((p) => p.km >= 1.5).map((p) => ({ id: p.id, layer: 'place' as const, lat: p.lat, lon: p.lon, name: p.name, sub: p.tagline[lang], km: p.km, href: '#places' })),
   ], [season, lang]); // eslint-disable-line react-hooks/exhaustive-deps
 

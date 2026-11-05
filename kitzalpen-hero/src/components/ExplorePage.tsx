@@ -3,7 +3,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
 import type { Lang } from '../content/hero';
-import { EXPLORE, EXPLORE_COPY } from '../content/explore';
+import { EXPLORE_COPY, exploreFor, exploreText } from '../content/explore';
 import { useReducedMotion } from '../lib/hooks';
 import { useSeason } from '../lib/season';
 import { Icon, I } from './pension/PensionRooms';
@@ -39,14 +39,14 @@ export function ExplorePage({ lang }: { lang: Lang }) {
           </h1>
           <p className="js-ex-in mt-5 max-w-[620px] text-[16px] leading-relaxed text-cream/80 md:text-[18px]">{t.sub}</p>
           <ul className="mt-12 grid auto-rows-[240px] gap-4 md:grid-cols-4 md:auto-rows-[220px] md:gap-5">
-            {EXPLORE.map((x, i) => (
+            {exploreFor(season).map((x, i) => (
               <li key={x.id} className={`js-ex-card ${span[i] ?? ''}`}>
                 <a href={x.href(season)} className="group relative isolate flex h-full flex-col justify-end overflow-hidden rounded-[24px] p-6 md:p-7">
                   <img src={`${BASE}${x.img[season]}`} alt="" loading={i < 3 ? 'eager' : 'lazy'} className="absolute inset-0 -z-10 h-full w-full object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.06]" />
                   <span aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-t from-[color-mix(in_srgb,var(--k-deep)_92%,transparent)] via-[color-mix(in_srgb,var(--k-deep)_30%,transparent)] to-transparent" />
                   {i === 0 && <span className="lnum font-display text-[80px] leading-[.85] text-gold-light md:text-[120px]">15</span>}
                   <span className={`flex items-center gap-2 font-display italic leading-tight ${i === 0 ? 'mt-2 text-[34px] md:text-[44px]' : 'text-[25px] md:text-[27px]'}`}>{x.live && <span aria-hidden className="live-dot" />}{x.title[lang]}</span>
-                  <span className="mt-1.5 max-w-[42ch] text-[14px] leading-snug text-cream/80">{x.text[lang]}</span>
+                  <span className="mt-1.5 max-w-[42ch] text-[14px] leading-snug text-cream/80">{exploreText(x, season, lang)}</span>
                   <span className="absolute right-5 top-5 grid h-11 w-11 place-items-center rounded-full bg-cream/15 backdrop-blur transition-transform duration-300 group-hover:translate-x-1"><Icon d={I.arrow} size={17} w={1.8} /></span>
                 </a>
               </li>

@@ -1,9 +1,11 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
 import type { Lang } from '../../content/hero';
-import { HOME, LEVEL, PLACES, TOURS, TOURS_COPY, TOUR_TYPES, type Tour, type TourType } from '../../content/tours';
+import { DEFAULT_TYPE, HOME, LEVEL, PLACES, TOURS, TOURS_COPY, TOUR_TYPES, type Tour, type TourType } from '../../content/tours';
+import type { Season } from '../../content/hero';
+import { useSeason } from '../../lib/season';
 import { useFinePointer, useReducedMotion } from '../../lib/hooks';
 import { locale } from '../../lib/i18n';
 import { Icon, I } from '../pension/PensionRooms';
@@ -47,7 +49,10 @@ export function ToursPage({ lang }: { lang: Lang }) {
   const reduced = useReducedMotion();
   useFinePointer();
   const t = TOURS_COPY[lang];
-  const [type, setType] = useState<TourType>('hike');
+  const { season, setSeason } = useSeason();
+  const [type, setType] = useState<TourType>(DEFAULT_TYPE[season]);
+  const types = TOUR_TYPES.filter((x) => x.season === season);
+  useEffect(() => { if (!types.some((x) => x.id === type)) setType(DEFAULT_TYPE[season]); }, [season]); // eslint-disable-line react-hooks/exhaustive-deps
   const [hot, setHot] = useState<string | null>(null);
   const list = useMemo(() => TOURS.filter((x) => x.type === type), [type]);
   const nf = (n: number, d = 1) => n.toLocaleString(locale(lang), { maximumFractionDigits: d });
@@ -74,16 +79,21 @@ export function ToursPage({ lang }: { lang: Lang }) {
           <p className="js-to-in text-[11.5px] font-semibold uppercase tracking-[.34em] text-cream/90 md:text-[13px]">{t.eyebrow}</p>
           <h1 id="to-title" className="mt-4 font-display font-normal leading-[1.02] md:mt-6" style={{ fontSize: 'clamp(42px, 5.8vw, 92px)' }}>
             <span className="block overflow-hidden pb-[0.06em]"><span className="js-to-line block">{t.title[0]}</span></span>
-            <span className="block overflow-hidden pb-[0.12em]"><span className="js-to-line block italic text-gold-light">{t.title[1]}</span></span>
+            <span className="block overflow-hidden pb-[0.12em]"><span className="js-to-line block italic text-gold-light">{t.title[1][season]}</span></span>
           </h1>
           <p className="js-to-in mt-5 max-w-[600px] text-[16px] leading-relaxed text-cream/85 md:text-[18px]">{t.sub}</p>
-          <div role="tablist" aria-label={t.pick} className="js-to-in mt-10 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-            {TOUR_TYPES.map((x) => {
+          <div className="js-to-in mt-7 inline-flex rounded-full border border-cream/20 bg-cream/5 p-1.5" role="group" aria-label={t.seasonLabel}>
+            {(['winter', 'summer'] as Season[]).map((s2) => (
+              <button key={s2} type="button" aria-pressed={season === s2} onClick={() => setSeason(s2)} className={`min-h-11 rounded-full px-5 text-[14.5px] font-semibold transition-colors ${season === s2 ? 'bg-cream text-deep' : 'text-cream/80 hover:text-cream'}`}>{t.seasons[s2]}</button>
+            ))}
+          </div>
+          <div role="tablist" aria-label={t.pick} className="js-to-in mt-6 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+            {types.map((x) => {
               const on = type === x.id;
               return (
                 <button key={x.id} type="button" role="tab" aria-selected={on} aria-controls="to-list" onClick={() => choose(x.id)}
                   className={`to-tile group relative isolate flex aspect-[4/3] flex-col justify-end overflow-hidden rounded-[20px] p-4 text-left md:aspect-[4/3.2] md:p-5 ${on ? 'is-on' : ''}`}>
-                  <img src={`${BASE}${x.img}`} alt="" className="absolute inset-0 -z-10 h-full w-full object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.06]" />
+                  {x.img ? <img src={`${BASE}${x.img}`} alt="" className="absolute inset-0 -z-10 h-full w-full object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.06]" /> : <span aria-hidden className="tp-type absolute inset-0 -z-10" />}
                   <span aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-t from-[color-mix(in_srgb,var(--k-deep)_90%,transparent)] via-[color-mix(in_srgb,var(--k-deep)_30%,transparent)] to-transparent" />
                   <span className="font-display text-[22px] italic leading-tight md:text-[28px]">{x.label[lang]}</span>
                   <span className="mt-1 text-[12.5px] text-cream/75 md:text-[13.5px]">{x.sub[lang]} · {t.count(TOURS.filter((y) => y.type === x.id).length)}</span>
@@ -131,6 +141,7 @@ export function ToursPage({ lang }: { lang: Lang }) {
                 <div className="flex flex-wrap items-center gap-2">
                   {x.level && <span className={`to-level is-${x.level} rounded-full px-2.5 py-1 text-[11.5px] font-bold uppercase tracking-[.1em]`}>{LEVEL[x.level][lang]}</span>}
                   {x.family && <span className="inline-flex items-center gap-1 rounded-full bg-pine/10 px-2.5 py-1 text-[11.5px] font-semibold text-pine"><Icon d={ICO.family} size={13} w={1.5} />{t.family}</span>}
+                  {x.floodlit && <span className="inline-flex items-center gap-1 rounded-full bg-gold/15 px-2.5 py-1 text-[11.5px] font-semibold text-goldink">☾ {t.floodlit}</span>}
                 </div>
                 <h3 className="mt-3 font-display text-[26px] italic leading-tight text-pine">{x.name[lang]}</h3>
                 <dl className="lnum mt-4 grid grid-cols-3 gap-2 text-center">
@@ -167,6 +178,7 @@ export function ToursPage({ lang }: { lang: Lang }) {
 export function PlacesPage({ lang }: { lang: Lang }) {
   const root = useRef<HTMLDivElement>(null);
   const reduced = useReducedMotion();
+  const { season } = useSeason();
   const t = TOURS_COPY[lang];
   const nf = (n: number) => n.toLocaleString(locale(lang), { maximumFractionDigits: 1 });
   useReveal(root, reduced);
@@ -187,8 +199,8 @@ export function PlacesPage({ lang }: { lang: Lang }) {
       </section>
       {PLACES.map((p, i) => (
         <section key={p.id} id={`pl-${p.id}`} aria-labelledby={`pl-${p.id}-t`} className={`scroll-mt-28 px-5 py-16 sm:px-6 md:px-10 md:py-24 lg:px-14 ${i % 2 ? 'bg-soft' : ''}`}>
-          <div className={`mx-auto grid max-w-[1360px] items-center gap-8 lg:gap-16 ${p.img ? 'lg:grid-cols-2' : ''}`}>
-            {p.img && <div className={`js-to-rev relative aspect-[4/3] overflow-hidden rounded-[26px] ${i % 2 ? 'lg:order-2' : ''}`}><img src={`${BASE}${p.img}`} alt={p.name} loading="lazy" className="h-full w-full object-cover" /></div>}
+          <div className={`mx-auto grid max-w-[1360px] items-center gap-8 lg:gap-16 lg:grid-cols-2`}>
+            <div className={`js-to-rev relative aspect-[4/3] overflow-hidden rounded-[26px] ${i % 2 ? 'lg:order-2' : ''}`}>{p.img[season] ? <img src={`${BASE}${p.img[season]}`} alt={p.name} loading="lazy" className="h-full w-full object-cover" /> : <div aria-hidden className="tp-type flex h-full w-full items-end p-8"><span className="font-display text-[44px] italic leading-none opacity-80">{p.name}</span></div>}</div>
             <div className="js-to-rev min-w-0">
               <p className="lnum flex items-center gap-3 text-[12.5px] font-semibold uppercase tracking-[.24em] text-goldink"><span>{String(i + 1).padStart(2, '0')}</span><span aria-hidden className="h-px w-10 bg-goldink/40" />{p.km < 1.5 ? t.here : t.away(nf(p.km), p.min)}</p>
               <h2 id={`pl-${p.id}-t`} className="mt-3 font-display font-medium italic leading-[1.02] text-pine" style={{ fontSize: 'clamp(36px, 4.4vw, 66px)' }}>{p.name}</h2>

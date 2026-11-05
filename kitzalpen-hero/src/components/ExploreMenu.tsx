@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import type { Lang } from '../content/hero';
-import { EXPLORE, EXPLORE_COPY } from '../content/explore';
+import { EXPLORE_COPY, exploreFor, exploreText } from '../content/explore';
 import { useSeason } from '../lib/season';
 
 const BASE = import.meta.env.BASE_URL;
@@ -16,7 +16,7 @@ export function ExploreMenu({ lang, label }: { lang: Lang; label: string }) {
   const timer = useRef<number>();
   const id = useId();
   const t = EXPLORE_COPY[lang];
-  const [feat, ...rest] = EXPLORE;
+  const [feat, ...rest] = exploreFor(season);
   const later = (v: boolean, ms: number) => { window.clearTimeout(timer.current); timer.current = window.setTimeout(() => setOpen(v), ms); };
   useEffect(() => {
     if (!open) return;
@@ -43,7 +43,7 @@ export function ExploreMenu({ lang, label }: { lang: Lang; label: string }) {
             <span className="absolute left-5 top-5 rounded-full bg-white/90 px-3 py-1 text-[10.5px] font-semibold uppercase tracking-[.2em] text-ink">{t.featured}</span>
             <span className="lnum font-display text-[64px] leading-[.85] text-gold-light">15</span>
             <span className="mt-2 font-display text-[27px] leading-tight">{feat.title[lang]}</span>
-            <span className="mt-1 text-[13.5px] text-cream/80">{feat.text[lang]}</span>
+            <span className="mt-1 text-[13.5px] text-cream/80">{exploreText(feat, season, lang)}</span>
           </a>
           <div className="sm-item flex flex-col p-4" style={{ ['--i' as string]: 1 }}>
             <ul className="grid grid-cols-2 gap-1">
@@ -53,7 +53,7 @@ export function ExploreMenu({ lang, label }: { lang: Lang; label: string }) {
                     <span className="relative h-16 w-20 shrink-0 overflow-hidden rounded-[12px]"><img src={`${BASE}${x.img[season]}`} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" /></span>
                     <span className="min-w-0 flex-1">
                       <span className="flex items-center gap-2 text-[15px] font-semibold text-ink">{x.live && <span aria-hidden className="live-dot" />}{x.title[lang]}</span>
-                      <span className="mt-0.5 block text-[12.5px] leading-snug text-ink/60">{x.text[lang]}</span>
+                      <span className="mt-0.5 block text-[12.5px] leading-snug text-ink/60">{exploreText(x, season, lang)}</span>
                     </span>
                     <Chevron className="shrink-0 text-ink/35 transition-transform duration-300 group-hover:translate-x-1 group-hover:text-pine" />
                   </a>
@@ -82,7 +82,7 @@ export function ExploreAccordion({ lang, label, onNavigate }: { lang: Lang; labe
       <div id={id} className="grid transition-[grid-template-rows] duration-500 ease-out" style={{ gridTemplateRows: open ? '1fr' : '0fr' }}>
         <div className="overflow-hidden">
           <ul className="flex flex-col gap-1 pb-5" {...(!open ? { inert: '' as unknown as boolean } : {})}>
-            {EXPLORE.map((x) => (
+            {exploreFor(season).map((x) => (
               <li key={x.id}>
                 <a href={x.href(season)} onClick={onNavigate} className="flex min-h-12 items-center gap-3 text-[17px] font-medium">
                   <span className="h-10 w-12 shrink-0 overflow-hidden rounded-[8px]"><img src={`${BASE}${x.img[season]}`} alt="" loading="lazy" className="h-full w-full object-cover" /></span>
