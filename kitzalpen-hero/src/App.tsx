@@ -60,7 +60,7 @@ export default function App() {
     if (h === 'chalet') return 'chalet';
     if (h === 'all-rooms') return 'all-rooms';
     if (h === 'restaurant') return 'restaurant';
-    if (h === 'groups') return 'groups';
+    if (h === 'groups' || h === 'groups-plan') return 'groups';
     if (h === 'contact') return 'contact';
     if (h === 'mountain' || h.startsWith('mountain-')) return 'mountain';
     if (h === 'activities-summer') return 'summer';
@@ -70,7 +70,10 @@ export default function App() {
   };
   const [page, setPage] = useState<Route>(routeOf);
   useEffect(() => {
-    const toRooms = () => { if (window.location.hash === '#pension-rooms') window.setTimeout(() => document.getElementById('rooms')?.scrollIntoView({ behavior: 'auto', block: 'start' }), 80); };
+    const toRooms = () => {
+      const target = window.location.hash === '#pension-rooms' ? 'rooms' : window.location.hash === '#groups-plan' ? 'g-planner' : '';
+      if (target) window.setTimeout(() => document.getElementById(target)?.scrollIntoView({ behavior: 'auto', block: 'start' }), 80);
+    };
     const on = () => {
       document.documentElement.style.overflow = '';
       const r = routeOf();

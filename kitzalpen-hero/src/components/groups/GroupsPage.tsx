@@ -7,6 +7,7 @@ import { GROUP_CONTACT, GROUP_TYPES, GROUPS_COPY } from '../../content/groupsPag
 import { ROOMS } from '../../content/rooms';
 import { useFinePointer, useReducedMotion } from '../../lib/hooks';
 import { Icon, I } from '../pension/PensionRooms';
+import { GroupPlanner } from './GroupPlanner';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 const BASE = import.meta.env.BASE_URL;
@@ -89,7 +90,7 @@ export function GroupsPage({ lang }: { lang: Lang }) {
             </h1>
             <p className="js-g-in mt-5 max-w-[560px] text-[16px] leading-relaxed text-cream/90 md:text-[18px]">{t.sub}</p>
             <div className="js-g-in mt-8 flex flex-col gap-3 sm:flex-row sm:gap-4">
-              <a href={t.contactHref} className="ph-primary inline-flex min-h-[54px] items-center justify-center gap-3 rounded-full px-8 text-[15.5px] font-semibold">{t.enquiry} <span className="arrow" aria-hidden>→</span></a>
+              <a href={t.contactHref} onClick={(e) => { e.preventDefault(); document.getElementById('g-planner')?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' }); }} className="ph-primary inline-flex min-h-[54px] items-center justify-center gap-3 rounded-full px-8 text-[15.5px] font-semibold">{t.enquiry} <span className="arrow" aria-hidden>→</span></a>
               <a href={`tel:${GROUP_CONTACT.tel}`} className="ph-secondary inline-flex min-h-[54px] items-center justify-center gap-2.5 rounded-full px-8 text-[15.5px] font-semibold"><Icon d={ICO.phone} size={17} w={1.6} />{t.call}</a>
             </div>
           </div>
@@ -171,6 +172,8 @@ export function GroupsPage({ lang }: { lang: Lang }) {
           </div>
         </div>
       </section>
+
+      <GroupPlanner lang={lang} />
 
       {/* planning map */}
       <section aria-labelledby="g-map" className="px-4 py-16 sm:px-6 md:px-10 md:py-20 lg:px-14">

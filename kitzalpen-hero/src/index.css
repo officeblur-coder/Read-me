@@ -482,6 +482,22 @@
   .c-input:focus-visible { box-shadow: 0 0 0 3px color-mix(in srgb, var(--k-gold) 35%, transparent); }
   .c-wa { color: var(--k-pine); border: 1px solid color-mix(in srgb, var(--k-pine) 35%, transparent); transition: border-color .3s ease, background-color .3s ease; }
   .c-wa:hover { border-color: var(--k-pine); background: color-mix(in srgb, var(--k-pine) 6%, transparent); }
+  /* group stay planner */
+  .gp-step { color: var(--k-pine); transition: background-color .25s ease; }
+  .gp-step:hover:not(:disabled) { background: color-mix(in srgb, var(--k-pine) 8%, transparent); }
+  .gp-step:disabled { opacity: .3; cursor: not-allowed; }
+  .gp-chip { color: var(--k-ink); border: 1px solid color-mix(in srgb, var(--k-pine) 18%, transparent); background: #fff; transition: background-color .25s ease, color .25s ease, border-color .25s ease, transform .25s ease; }
+  .gp-chip:hover { border-color: var(--k-pine); }
+  .gp-chip.is-on { background: var(--k-pine); color: var(--k-cream); border-color: var(--k-pine); }
+  .gp-card { color: var(--k-ink); border: 1px solid color-mix(in srgb, var(--k-pine) 15%, transparent); background: #fff; transition: background-color .3s ease, color .3s ease, border-color .3s ease, transform .3s ease, box-shadow .3s ease; }
+  .gp-card:hover { border-color: var(--k-pine); transform: translateY(-2px); }
+  .gp-card.is-on { background: var(--k-pine); color: var(--k-cream); border-color: var(--k-pine); box-shadow: 0 18px 40px -24px rgba(16,46,35,.7); }
+  .gp-chip:focus-visible, .gp-card:focus-visible, .gp-step:focus-visible { outline: 2px solid var(--k-gold); outline-offset: 2px; }
+  .gp-bar { background: linear-gradient(90deg, var(--k-gold-light), var(--k-gold)); transition: width .6s cubic-bezier(.2,.8,.2,1), background .3s ease; }
+  .gp-bar.is-over { background: linear-gradient(90deg, #e2a35a, #d0743c); }
+  .gp-wa { color: var(--k-cream); border: 1px solid rgba(255,255,255,.3); transition: border-color .3s ease, background-color .3s ease; }
+  .gp-wa:hover { border-color: var(--k-gold-light); background: rgba(255,255,255,.06); }
+  @media (prefers-reduced-motion: reduce) { .gp-bar, .gp-card, .gp-chip { transition: none; } }
   .c-pin { animation: c-pin 2.6s ease-in-out infinite; }
   @keyframes c-pin { 50% { transform: translate(-50%, calc(-100% - 8px)); } }
   @media (prefers-reduced-motion: reduce) { .c-pin { animation: none; } }

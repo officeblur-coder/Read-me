@@ -18,14 +18,15 @@ const IMG = `${import.meta.env.BASE_URL}images/`;
 const PHOTO: Record<'pension' | 'chalet', Record<Season, Record<Daypart, string>>> = {
   pension: {
     winter: { day: `${IMG}evening/pension-winter-day.webp`, evening: `${IMG}evening/pension-winter.webp` },
-    summer: { day: `${IMG}hero/summer-d-1671.webp`, evening: `${IMG}hero/summer-d-1671.webp` },
+    summer: { day: `${IMG}hero/summer-d-1671.webp`, evening: `${IMG}restaurant/bar-1600.webp` },
   },
   chalet: {
     winter: { day: `${IMG}chalet/winter-1536.webp`, evening: `${IMG}chalet-page/exterior-03-1024.webp` },
-    summer: { day: `${IMG}chalet/summer-1440.webp`, evening: `${IMG}chalet/summer-1440.webp` },
+    summer: { day: `${IMG}chalet/summer-1440.webp`, evening: `${IMG}retreat/cabin.webp` },
   },
 };
-const GENUINE_EVENING = { pension: { winter: true, summer: false }, chalet: { winter: true, summer: false } };
+// summer evening: warm interior evening shots for now (owner: "use these until we find better ones")
+const GENUINE_EVENING = { pension: { winter: true, summer: true }, chalet: { winter: true, summer: true } };
 
 const COPY = {
   de: {
