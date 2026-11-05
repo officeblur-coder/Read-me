@@ -252,7 +252,17 @@ export function TopTeaser({ lang }: { lang: Lang }) {
               </a>
             </li>
           ))}
-        </ul>
+                </ul>
+        <div className="mt-12 grid gap-4 md:mt-20 md:grid-cols-2">
+          {([['#tours', t.toursCard, t.toursSub, 'images/groups/tauern-radweg-cycling.webp'], ['#places', t.placesCard, t.placesSub, 'images/winter/town-kitzbuehel.webp']] as const).map(([href, title, sub, pic]) => (
+            <a key={href} href={href} className="group relative isolate flex min-h-[150px] items-end justify-between gap-4 overflow-hidden rounded-[24px] p-6 text-cream md:min-h-[180px] md:p-8">
+              <img src={`${BASE}${pic}`} alt="" loading="lazy" className="absolute inset-0 -z-10 h-full w-full object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.05]" />
+              <span aria-hidden className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,color-mix(in_srgb,var(--k-deep)_88%,transparent),color-mix(in_srgb,var(--k-deep)_35%,transparent))]" />
+              <span><span className="block font-display text-[28px] italic leading-tight md:text-[34px]">{title}</span><span className="mt-1 block text-[14px] text-cream/80">{sub}</span></span>
+              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-cream/15 backdrop-blur transition-transform group-hover:translate-x-1"><Icon d={I.arrow} size={18} w={1.8} /></span>
+            </a>
+          ))}
+        </div>
       </div>
     </section>
   );

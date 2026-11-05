@@ -29,7 +29,7 @@ export const TOP_COPY = {
     all: 'Alle', sortLabel: 'Sortierung', sort: { rank: 'Empfehlung', km: 'Entfernung' }, min: (m: number) => `ca. ${m} Min.`, family: 'familienfreundlich',
     official: 'Offizielle Seite', route: 'Route ab KitzAlpen', note: 'Angaben laut offiziellen Seiten der Anbieter, Stand November 2026 – Öffnungszeiten bitte vor dem Besuch prüfen.',
     ctaTitle: 'Ihr Ausgangspunkt für alles.', ctaText: 'Zimmer in der Pension oder das eigene Chalet – mitten im Oberpinzgau.', rooms: 'Zimmer ansehen', arrival: 'Anreise & Mobilität',
-    teaserEyebrow: { winter: 'Top-Erlebnisse · Winter', summer: 'Top-Erlebnisse · Sommer' } as Record<Season, string>, teaserTitle: 'Die besten Erlebnisse im Umkreis von 70 km.', teaserCta: 'Alle 15 entdecken',
+    teaserEyebrow: { winter: 'Top-Erlebnisse · Winter', summer: 'Top-Erlebnisse · Sommer' } as Record<Season, string>, teaserTitle: 'Die besten Erlebnisse im Umkreis von 70 km.', teaserCta: 'Alle 15 entdecken', toursCard: 'Touren-Explorer', toursSub: 'Rad, Mountainbike, Motorrad und Wandern – mit GPX und Route zum Start', placesCard: 'Orte-Guide', placesSub: 'Hollersbach, Mittersill, Krimml, Kitzbühel und mehr',
   },
   en: {
     eyebrow: { winter: 'Winter 2026/27 · within 70 km', summer: 'Summer · within 70 km' } as Record<Season, string>,
@@ -41,7 +41,7 @@ export const TOP_COPY = {
     all: 'All', sortLabel: 'Sort', sort: { rank: 'Our pick', km: 'Distance' }, min: (m: number) => `approx. ${m} min`, family: 'family-friendly',
     official: 'Official website', route: 'Route from KitzAlpen', note: 'Details as stated on the providers’ official websites, November 2026 – please check opening times before your visit.',
     ctaTitle: 'Your base for all of it.', ctaText: 'A room in the pension or your own chalet – right in the Upper Pinzgau.', rooms: 'See the rooms', arrival: 'Arrival & mobility',
-    teaserEyebrow: { winter: 'Top experiences · winter', summer: 'Top experiences · summer' } as Record<Season, string>, teaserTitle: 'The best experiences within 70 km.', teaserCta: 'Discover all 15',
+    teaserEyebrow: { winter: 'Top experiences · winter', summer: 'Top experiences · summer' } as Record<Season, string>, teaserTitle: 'The best experiences within 70 km.', teaserCta: 'Discover all 15', toursCard: 'Tour explorer', toursSub: 'Cycling, mountain biking, motorcycling and hiking – with GPX and route to the start', placesCard: 'Places guide', placesSub: 'Hollersbach, Mittersill, Krimml, Kitzbühel and more',
   },
 };
 
