@@ -12,6 +12,7 @@ import { ArrivalPage } from './components/arrival/ArrivalPage';
 import { TopPage, TopTeaser } from './components/top/TopPage';
 import { PlacesPage, ToursPage } from './components/tours/ToursPage';
 import { ExplorePage } from './components/ExplorePage';
+import { SideRail } from './components/SideRail';
 import { MobileMenu } from './components/MobileMenu';
 import { Hero } from './components/Hero';
 import { RoomsSection } from './components/rooms/RoomsSection';
@@ -78,7 +79,7 @@ export default function App() {
     if (h === 'arrival') return 'arrival';
     if (h === 'experiences') return 'experiences';
     if (h === 'tours') return 'tours';
-    if (h === 'explore') return 'explore';
+    if (h === 'explore' || h === 'explore-map') return 'explore';
     if (h === 'places') return 'places';
     if (h === 'contact') return 'contact';
     if (h === 'mountain' || h.startsWith('mountain-')) return 'mountain';
@@ -90,7 +91,7 @@ export default function App() {
   const [page, setPage] = useState<Route>(routeOf);
   useEffect(() => {
     const toRooms = () => {
-      const target = window.location.hash === '#pension-rooms' ? 'rooms' : window.location.hash === '#groups-plan' ? 'g-planner' : window.location.hash === '#ski-passes' ? 'sk-passes' : '';
+      const target = window.location.hash === '#pension-rooms' ? 'rooms' : window.location.hash === '#groups-plan' ? 'g-planner' : window.location.hash === '#ski-passes' ? 'sk-passes' : window.location.hash === '#explore-map' ? 'explore-map' : '';
       if (target) window.setTimeout(() => document.getElementById(target)?.scrollIntoView({ behavior: 'auto', block: 'start' }), 80);
     };
     const on = () => {
@@ -217,6 +218,7 @@ export default function App() {
       <VirtualTour lang={lang} />
       <BackToTop lang={lang} reduced={reduced} />
       <QuickActions lang={lang} reduced={reduced} />
+      <SideRail lang={lang} hidden={menu} />
     </>
   );
 }
