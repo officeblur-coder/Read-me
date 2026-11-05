@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<title>Meniu Lyra — tipar A4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Montserrat:wght@500;600&display=swap" rel="stylesheet">
+<style>
+/* Print layout: trim A4 (210 x 297 mm) plus 20 mm bleed on the left and right
+   = 250 x 297 mm sheets. Content keeps a 14 mm safe margin inside the trim.
+   Sage paper, forest-green ink, a little Lyra gold for prices and rules. */
+:root{
+  --paper:#eef0e6;      /* sage-tinted paper */
+  --paper2:#e3e8db;     /* deeper sage for panels */
+  --ink:#1d3327;        /* forest green */
+  --ink2:#4f6556;       /* secondary text */
+  --ink3:#7d8f80;       /* captions */
+  --gold:#a07c36;       /* prices, rules */
+  --leaf:#9fb39c;       /* botanical line art */
+  --display:'Cormorant Garamond','Times New Roman',serif;
+  --body:'EB Garamond','Times New Roman',serif;
+  --label:'Montserrat',Arial,sans-serif;
+  --bleed:20mm;
+}
+@page{size:250mm 297mm;margin:0}
+/* ?trim : A4 preview without bleed (for screen/email checks, not for the printer) */
+html.trimmed{--bleed:0mm}
+html.trimmed .sheet{width:210mm}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:#777}
+body{-webkit-print-color-adjust:exact;print-color-adjust:exact;color:var(--ink);font-family:var(--body)}
+.sheet{width:250mm;height:297mm;background:var(--paper);position:relative;overflow:hidden;page-break-after:always;margin:0 auto 10mm}
+@media print{.sheet{margin:0}html,body{background:none}}
+.trim{position:absolute;left:var(--bleed);top:0;width:210mm;height:297mm}
+.content{position:absolute;left:14mm;right:14mm;top:14mm;bottom:19mm;overflow:hidden;display:flex;flex-direction:column}
+.content.spread{justify-content:space-between}
+.foot{position:absolute;left:14mm;right:14mm;bottom:9mm;display:flex;justify-content:space-between;align-items:center;font-family:var(--label);font-size:6pt;letter-spacing:.28em;text-transform:uppercase;color:var(--ink3)}
+.foot .pg{font-family:var(--display);font-size:11pt;letter-spacing:0;color:var(--gold);font-weight:600}
+.run{font-family:var(--label);font-size:6.5pt;letter-spacing:.32em;text-transform:uppercase;color:var(--ink3);text-align:center;padding-bottom:5mm;margin-bottom:5mm;border-bottom:.3mm solid rgba(29,51,39,.14)}
+.sprig{position:absolute;pointer-events:none}
+.sprig path{fill:none;stroke:var(--leaf);stroke-width:.9;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- category header ---------- */
+.head{text-align:center;padding:1mm 0 5mm}
+.head.joined{margin-top:6mm;padding-top:7mm;border-top:.3mm solid rgba(29,51,39,.14)}
+.head .no{font-family:var(--label);font-size:7pt;letter-spacing:.4em;color:var(--gold)}
+.head h1{font-family:var(--display);font-weight:600;font-size:34pt;letter-spacing:.16em;line-height:1;margin-top:3mm;text-transform:uppercase;text-wrap:balance}
+.orn{display:flex;align-items:center;justify-content:center;gap:4mm;margin:3.5mm auto 2.5mm;width:110mm}
+.orn i{flex:1;height:.3mm;background:linear-gradient(90deg,transparent,rgba(160,124,54,.7))}
+.orn i:last-child{background:linear-gradient(90deg,rgba(160,124,54,.7),transparent)}
+.orn svg{width:7mm;height:7mm}
+.orn svg path{fill:none;stroke:var(--gold);stroke-width:1.3;stroke-linecap:round}
+.head .tr{font-family:var(--display);font-size:15pt;letter-spacing:.3em;text-transform:uppercase;color:var(--ink2)}
+.head .note{font-family:var(--body);font-style:italic;font-size:9.5pt;color:var(--ink2);margin-top:3mm}
+
+/* ---------- feature dish (photo + text, alternating) ---------- */
+.feat{display:grid;grid-template-columns:82mm 1fr;gap:9mm;align-items:center;padding:3mm 0}
+.feat.rev{grid-template-columns:1fr 82mm}
+.feat.rev .ph{order:2}
+.feat .ph{height:58mm;border-radius:41mm 41mm 3mm 3mm;overflow:hidden;box-shadow:0 2mm 5mm rgba(29,51,39,.18)}
+.feat.rev .ph{border-radius:3mm 3mm 41mm 41mm}
+.feat .ph img,.grid2 .ph img{width:100%;height:100%;object-fit:cover;display:block}
+.feat + .feat{border-top:.25mm solid rgba(29,51,39,.1)}
+.name{font-family:var(--display);font-weight:600;font-size:15.5pt;letter-spacing:.06em;text-transform:uppercase;line-height:1.08}
+.alt{font-family:var(--display);font-weight:500;font-size:10pt;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-top:1.4mm;line-height:1.25}
+.rule{width:12mm;height:.3mm;background:var(--ink3);opacity:.6;margin:3mm 0 2.6mm}
+.d{font-size:9.4pt;line-height:1.35}
+.dhu{font-size:9pt;line-height:1.35;color:var(--ink2);font-style:italic;margin-top:1.4mm}
+.chips{display:flex;gap:1.6mm;flex-wrap:wrap;margin-top:2.6mm}
+.chips span{font-family:var(--label);font-size:5.6pt;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--ink2);border:.25mm solid rgba(29,51,39,.3);border-radius:5mm;padding:.9mm 2.2mm}
+.chips span.new{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.pr{display:flex;justify-content:flex-end;align-items:baseline;gap:3mm;margin-top:3.4mm;font-variant-numeric:lining-nums}
+.pr .w{font-family:var(--body);font-size:9pt;color:var(--ink2)}
+.pr .bar{width:.25mm;height:4.5mm;background:var(--ink3);align-self:center}
+.pr .p{font-family:var(--display);font-weight:600;font-size:19pt;color:var(--ink)}
+.pr .p small{font-size:10pt;margin-left:1mm;color:var(--gold);letter-spacing:.06em}
+.pr .h{font-family:var(--body);font-size:8.5pt;color:var(--ink2);font-style:italic;margin-right:auto}
+
+/* ---------- two-up grid ---------- */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:9mm;padding:2.5mm 0}
+.grid2 .ph{height:45mm;border-radius:3mm;overflow:hidden;box-shadow:0 1.6mm 4mm rgba(29,51,39,.16);margin-bottom:3mm}
+.grid2 .name{font-size:12.5pt}
+.grid2 .alt{font-size:8.6pt}
+.grid2 .d{font-size:8.8pt;margin-top:2mm}
+.grid2 .pr{margin-top:2.4mm}
+.grid2 .pr .p{font-size:16pt}
+
+/* ---------- text list ---------- */
+.lst{padding:2.4mm 0;display:flex;align-items:baseline;gap:3mm;break-inside:avoid}
+.lst .lt{min-width:0}
+.lst .name{font-size:11pt;letter-spacing:.05em}
+.lst .alt{font-size:7.8pt;margin-top:.8mm}
+.lst .d{font-size:8.6pt;color:var(--ink2);margin-top:.8mm}
+.lst .dots{flex:1;border-bottom:.35mm dotted rgba(29,51,39,.35);transform:translateY(-1.2mm);min-width:8mm}
+.lst .w{font-size:8.6pt;color:var(--ink2);white-space:nowrap}
+.lst .p{font-family:var(--display);font-weight:600;font-size:13.5pt;white-space:nowrap}
+.lst .p small{font-size:8pt;color:var(--gold);margin-left:.8mm}
+.cols{column-count:2;column-gap:10mm}
+.sub-h{font-family:var(--label);font-size:7pt;letter-spacing:.34em;text-transform:uppercase;color:var(--gold);margin:5mm 0 1.5mm;break-after:avoid}
+
+/* ---------- cover / intro / back ---------- */
+.cover .content{align-items:center;justify-content:center;text-align:center}
+.cover .logo{width:84mm}
+.cover .since{font-family:var(--label);font-size:7.5pt;letter-spacing:.5em;text-transform:uppercase;color:var(--ink2);margin-top:8mm}
+.cover h1{font-family:var(--display);font-weight:500;font-size:50pt;letter-spacing:.22em;margin-top:12mm;line-height:1}
+.cover .langs{font-family:var(--display);font-size:16pt;letter-spacing:.42em;text-transform:uppercase;color:var(--gold);margin-top:5mm}
+.cover .arch{width:120mm;height:92mm;border-radius:60mm 60mm 3mm 3mm;overflow:hidden;margin-top:14mm;box-shadow:0 3mm 8mm rgba(29,51,39,.22)}
+.cover .arch img{width:100%;height:100%;object-fit:cover}
+.intro .content{justify-content:center;text-align:center;align-items:center}
+.intro .poem{font-family:var(--display);font-style:italic;font-size:16pt;line-height:1.5;max-width:150mm}
+.intro .poem.hu{font-size:12pt;color:var(--ink2);margin-top:7mm;max-width:140mm}
+.info{display:grid;grid-template-columns:1fr 1fr;gap:8mm 12mm;margin-top:14mm;max-width:160mm;text-align:left}
+.info b{display:block;font-family:var(--label);font-size:6.5pt;letter-spacing:.32em;text-transform:uppercase;color:var(--gold);margin-bottom:1.6mm;font-weight:600}
+.info p{font-size:9.6pt;line-height:1.45}
+.back .content{justify-content:center;align-items:center;text-align:center}
+.back .logo{width:60mm}
+.back h2{font-family:var(--display);font-style:italic;font-weight:500;font-size:30pt;margin-top:10mm}
+.back .qr{width:34mm;height:34mm;margin-top:12mm;background:#fff;padding:2.4mm;border-radius:2mm}
+.back .qcap{font-family:var(--label);font-size:6.5pt;letter-spacing:.3em;text-transform:uppercase;color:var(--ink2);margin-top:3mm}
+.back .fine{font-size:8.4pt;color:var(--ink2);max-width:150mm;margin-top:12mm;line-height:1.5}
+</style>
+</head>
+<body>
+<div id="book"></div>
+<script src="../data.js"></script>
+<script>
+if (/[?&]trim/.test(location.search)) document.documentElement.classList.add("trimmed");
+document.fonts.ready.then(() => {
+"use strict";
+const CATS = window.LYRA_CATS, ITEMS = window.LYRA_ITEMS, INFO = window.LYRA_INFO;
+const IMG = n => `img/${n}.jpg`;
+const book = document.getElementById("book");
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const fmt = p => typeof p === "number" ? (Number.isInteger(p) ? String(p) : p.toFixed(2).replace(".", ",")) : esc(p);
+const imgName = it => (it.img === 1 ? it.id : it.img);
+
+// how each category is laid out: big alternating features, two-up grid, or text list
+const FEATURE = new Set(["noutati", "platouri", "specialitati", "smoker", "porc", "ardeal", "pui", "peste", "paste", "desert", "precomanda"]);
+const TAGS = { new: "Nou · Új", chef: "Rețeta casei", smoker: "Smoker", charcoal: "Cuptor pe cărbune", home: "Home made", spicy: "Picant · Csípős", veg: "Vegetarian", post: "De post", share: "De împărțit" };
+const tags = it => (it.f || "").split(" ").filter(t => TAGS[t]).slice(0, 3).map(t => `<span class="${t}">${TAGS[t]}</span>`).join("");
+const alt = it => { const [ro, en, hu] = it.n; const xs = [hu, en].filter(x => x && x !== ro); return [...new Set(xs)].join(" · "); };
+const price = it => `${it.w ? `<span class="w">${esc(it.w)}</span><span class="bar"></span>` : ""}<span class="p">${fmt(it.p)}<small>lei</small></span>`;
+const extra = it => it.half ? `Porție medie ${fmt(it.half[0])} lei` : it.glass ? `Pahar 100 ml ${fmt(it.glass)} lei` : it.big ? `${esc(it.big[1])} ${fmt(it.big[0])} lei` : "";
+
+/* hand-drawn style sprig: leaves placed along a curved stem */
+function sprig(len, leaves, seed) {
+  const r = n => { const x = Math.sin(seed * 91.3 + n * 47.7) * 43758.5; return x - Math.floor(x); };
+  let d = `M0 0 C ${len * .25} ${-len * .05}, ${len * .6} ${len * .08}, ${len} 0`;
+  for (let i = 1; i <= leaves; i++) {
+    const t = i / (leaves + 1), x = len * t, y = Math.sin(t * Math.PI) * len * .02, s = (1 - t * .55) * len * .11 * (.8 + r(i) * .4), side = i % 2 ? -1 : 1;
+    const a = side * (40 + r(i + 9) * 18) * Math.PI / 180, tx = x + Math.cos(a) * s * 1.6, ty = y + Math.sin(a) * s * 1.6;
+    const nx = -Math.sin(a) * s * .38, ny = Math.cos(a) * s * .38;
+    d += ` M${x.toFixed(1)} ${y.toFixed(1)} Q ${((x + tx) / 2 + nx).toFixed(1)} ${((y + ty) / 2 + ny).toFixed(1)} ${tx.toFixed(1)} ${ty.toFixed(1)} Q ${((x + tx) / 2 - nx).toFixed(1)} ${((y + ty) / 2 - ny).toFixed(1)} ${x.toFixed(1)} ${y.toFixed(1)}`;
+    d += ` M${x.toFixed(1)} ${y.toFixed(1)} L ${((x + tx) / 2).toFixed(1)} ${((y + ty) / 2).toFixed(1)}`;
+  }
+  return `<svg viewBox="${-10} ${-len * .3} ${len + 20} ${len * .6}"><path d="${d}"/></svg>`;
+}
+const leafOrn = `<svg viewBox="0 0 24 24"><path d="M3 20 C 9 18, 16 13, 21 4 C 13 6, 6 11, 3 20 Z M3 20 L 13 11"/></svg>`;
+const sprigAt = (css, len, n, seed, rot) => `<div class="sprig" style="${css};transform:rotate(${rot}deg)">${sprig(len, n, seed)}</div>`;
+
+/* ---------- sheets ---------- */
+let pageNo = 0;
+function sheet(cls, run) {
+  const s = document.createElement("section"); s.className = "sheet " + (cls || "");
+  pageNo++;
+  s.innerHTML = `<div class="trim">${run ? `<div class="content"><div class="run">${run}</div></div>` : `<div class="content"></div>`}
+    <div class="foot"><span>Lyra · Pensiune Restaurant</span><span class="pg">${pageNo}</span><span>Tradiții din 1999</span></div></div>`;
+  book.appendChild(s); return s;
+}
+const contentOf = s => s.querySelector(".content");
+const overflows = el => el.scrollHeight > el.clientHeight + 1;
+
+/* flow blocks into sheets; a block that does not fit moves to a fresh sheet */
+function flow(blocks, runLabel, firstSheet) {
+  let s = firstSheet || sheet("", runLabel), c = contentOf(s);
+  for (const html of blocks) {
+    const tmp = document.createElement("div"); tmp.innerHTML = html; const el = tmp.firstElementChild;
+    c.appendChild(el);
+    if (overflows(c) && c.children.length > 1 + (c.querySelector(".run") ? 1 : 0)) {
+      el.remove();
+      // never leave a category title (or sub-heading) alone at the bottom of a sheet
+      const prev = c.lastElementChild, keep = prev && prev.matches(".head,.sub-h") ? prev : null;
+      if (keep) keep.remove();
+      s = sheet("", runLabel); c = contentOf(s);
+      if (keep) { keep.classList.remove("joined"); c.appendChild(keep); }
+      c.appendChild(el);
+    }
+  }
+}
+
+/* ---------- cover ---------- */
+{
+  const s = sheet("cover"); s.querySelector(".foot").remove();
+  contentOf(s).innerHTML = `<img class="logo" src="../img/logo.webp" alt="Lyra"><div class="since">Pensiune · Restaurant · Tradiții din 1999</div>
+    <h1>MENIU</h1><div class="langs">Étlap · Menu</div><div class="arch"><img src="${IMG("ciolan-varza-rosie")}" alt=""></div>`;
+  s.querySelector(".trim").insertAdjacentHTML("beforeend", sprigAt("left:-6mm;top:16mm;width:70mm", 200, 9, 3, -28) + sprigAt("right:-8mm;bottom:22mm;width:76mm", 200, 10, 7, 152));
+}
+/* ---------- welcome / info ---------- */
+{
+  const s = sheet("intro");
+  contentOf(s).innerHTML = `<div class="orn"><i></i>${leafOrn}<i></i></div>
+    <p class="poem">Călătorule grăbit într-o lume fără timp, poposește la noi pentru a te ospăta din preparatele noastre tradiționale, rânduite și servite cu drag și pricepere de oameni harnici, faini la chip și suflet!</p>
+    <p class="poem hu">Fie că alegi mâncărurile afumate lent în smoker, preparatele frăgezite în cuptorul pe cărbune, ori ciorbele tradiționale drese cu ou, smântână și mirodenii, e musai să încerci și deserturile ardelenești sau cele cu iz unguresc. Te poftim să te bucuri de gusturi cum numai în Ardeal găsești!</p>
+    <div class="orn"><i></i>${leafOrn}<i></i></div>
+    <div class="info">
+      <div><b>Program · Nyitvatartás</b><p>Luni – Duminică · 07:00 – 22:00<br>Comenzile se pot face până la 20 de minute înainte de închidere, iar plata cel târziu cu 10 minute înainte.</p></div>
+      <div><b>Părerea dumneavoastră</b><p>Feedback: ${INFO.phone}<br>sau o recenzie pe Google.<br>${INFO.web}</p></div>
+      <div><b>Plata</b><p>Cardurile de vacanță se acceptă doar pentru pachete turistice care includ masa și minim o noapte de cazare.</p></div>
+      <div><b>Factură · Alergeni</b><p>La cerere, factura se emite doar în ziua comenzii. Pentru informații despre alergeni (Reg. UE 1169/2011) vă rugăm să întrebați personalul.</p></div>
+    </div>`;
+}
+
+/* ---------- categories ---------- */
+const usedImg = new Set();
+CATS.forEach((c, ci) => {
+  const list = ITEMS[c.id] || [];
+  const [ro, en, hu] = c.n;
+  const trs = [...new Set([hu, en].filter(x => x !== ro))].join(" · ");
+  const head = `<div class="head"><div class="no">${String(ci + 1).padStart(2, "0")}</div><h1>${esc(ro)}</h1>
+    <div class="orn"><i></i>${leafOrn}<i></i></div>${trs ? `<div class="tr">${esc(trs)}</div>` : ""}${c.note ? `<div class="note">${esc(c.note[0])}</div>` : ""}</div>`;
+  const photo = [], rows = [];
+  list.forEach(it => { const n = it.img && imgName(it); if (n && !usedImg.has(n)) { usedImg.add(n); photo.push(it); } else rows.push(it); });
+  const blocks = [head];
+  if (FEATURE.has(c.id)) {
+    photo.forEach((it, k) => blocks.push(`<div class="feat ${k % 2 ? "rev" : ""}"><div class="ph"><img src="${IMG(imgName(it))}" alt=""></div><div>
+      <div class="name">${esc(it.n[0])}</div>${alt(it) ? `<div class="alt">${esc(alt(it))}</div>` : ""}<div class="rule"></div>
+      ${it.d ? `<div class="d">${esc(it.d[0])}</div><div class="dhu">${esc(it.d[2])}</div>` : ""}
+      ${tags(it) ? `<div class="chips">${tags(it)}</div>` : ""}
+      <div class="pr">${extra(it) ? `<span class="h">${extra(it)}</span>` : ""}${price(it)}</div></div></div>`));
+  } else {
+    for (let k = 0; k < photo.length; k += 2) blocks.push(`<div class="grid2">${photo.slice(k, k + 2).map(it => `<div><div class="ph"><img src="${IMG(imgName(it))}" alt=""></div>
+      <div class="name">${esc(it.n[0])}</div>${alt(it) ? `<div class="alt">${esc(alt(it))}</div>` : ""}${it.d ? `<div class="d">${esc(it.d[0])}</div>` : ""}
+      <div class="pr">${extra(it) ? `<span class="h">${extra(it)}</span>` : ""}${price(it)}</div></div>`).join("")}</div>`);
+  }
+  if (rows.length) {
+    if (photo.length) blocks.push(`<div class="sub-h">Mai multe · Továbbiak</div>`);
+    rows.forEach(it => blocks.push(`<div class="lst"><div class="lt"><div class="name">${esc(it.n[0])}</div>${alt(it) ? `<div class="alt">${esc(alt(it))}</div>` : ""}${it.d ? `<div class="d">${esc(it.d[0])}${extra(it) ? " · " + extra(it) : ""}</div>` : extra(it) ? `<div class="d">${extra(it)}</div>` : ""}</div>
+      <div class="dots"></div>${it.w ? `<span class="w">${esc(it.w)}</span>` : ""}<span class="p">${fmt(it.p)}<small>lei</small></span></div>`));
+  }
+  const prev = book.lastElementChild, pc = prev && !prev.matches(".cover,.intro") && contentOf(prev);
+  const free = pc ? pc.clientHeight - [...pc.children].reduce((h, el) => h + el.getBoundingClientRect().height, 0) : 0;
+  if (pc && free > pc.clientHeight * .45) {
+    blocks[0] = blocks[0].replace('class="head"', 'class="head joined"');
+    return flow(blocks, `${esc(ro)} · ${esc(hu)}`, prev);
+  }
+  const s = sheet("");
+  s.querySelector(".trim").insertAdjacentHTML("beforeend", sprigAt(`${ci % 2 ? "right:-10mm" : "left:-10mm"};top:6mm;width:52mm;opacity:.75`, 200, 8, ci + 2, ci % 2 ? 200 : -20));
+  flow(blocks, `${esc(ro)} · ${esc(hu)}`, s);
+});
+
+/* ---------- back cover ---------- */
+{
+  const s = sheet("back"); s.querySelector(".foot").remove();
+  contentOf(s).innerHTML = `<img class="logo" src="../img/logo.webp" alt="Lyra"><h2>Poftă bună! · Jó étvágyat!</h2>
+    <div class="orn"><i></i>${leafOrn}<i></i></div>
+    <img class="qr" src="../../qr/meniu-lyra-qr.png" alt="QR"><div class="qcap">Meniul digital · RO · HU · EN</div>
+    <p class="fine">${INFO.web} · Comenzi ${INFO.orders} · Feedback ${INFO.phone}<br>Prețurile sunt exprimate în lei. Gramajele sunt pentru produsul finit.</p>`;
+  s.querySelector(".trim").insertAdjacentHTML("beforeend", sprigAt("left:-4mm;bottom:30mm;width:70mm", 200, 9, 11, -12) + sprigAt("right:-6mm;top:24mm;width:64mm", 200, 8, 5, 196));
+}
+document.querySelectorAll(".sheet:not(.cover):not(.intro):not(.back) .content").forEach(c => {
+  const used = [...c.children].reduce((h, el) => h + el.getBoundingClientRect().height, 0);
+  if (used > c.clientHeight * .72) c.classList.add("spread");
+});
+window.LYRA_PAGES = pageNo;
+});
+</script>
+</body>
+</html>
