@@ -488,6 +488,16 @@
   .c-input:focus-visible { box-shadow: 0 0 0 3px color-mix(in srgb, var(--k-gold) 35%, transparent); }
   .c-wa { color: var(--k-pine); border: 1px solid color-mix(in srgb, var(--k-pine) 35%, transparent); transition: border-color .3s ease, background-color .3s ease; }
   .c-wa:hover { border-color: var(--k-pine); background: color-mix(in srgb, var(--k-pine) 6%, transparent); }
+  /* arrival */
+  .ar-ticket { background: #fbf7ee; box-shadow: 0 40px 90px -40px rgba(0,0,0,.65), 0 0 0 1px rgba(255,255,255,.4) inset; }
+  .ar-perf::before, .ar-perf::after { content: ''; position: absolute; top: -13px; width: 24px; height: 24px; border-radius: 50%; background: var(--k-deep); }
+  .ar-perf::before { left: -12px; } .ar-perf::after { right: -12px; }
+  .ar-mode { color: var(--k-pine); transition: background-color .25s ease, color .25s ease; }
+  .ar-mode:hover { background: color-mix(in srgb, var(--k-pine) 7%, transparent); }
+  .ar-mode.is-on { background: var(--k-pine); color: var(--k-cream); }
+  .ar-road.is-ok { background: color-mix(in srgb, #8fd6a3 22%, transparent); color: #bfeccb; }
+  .ar-road.is-toll { background: color-mix(in srgb, var(--k-gold-light) 18%, transparent); color: var(--k-gold-light); }
+  .ar-road.is-closed { background: color-mix(in srgb, #e2735a 22%, transparent); color: #f3b3a3; }
   /* ski areas */
   .sk-split-0 { background: #3b7bd1; } .sk-split-1 { background: #d2453b; } .sk-split-2 { background: #1d1f1e; }
   .sk-pick { color: var(--k-cream); border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.04); transition: background-color .25s ease, border-color .25s ease, color .25s ease; }

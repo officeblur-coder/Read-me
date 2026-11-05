@@ -7,6 +7,7 @@ import { COPY, type Lang } from './content/hero';
 import { activateSiteLang, baseLang, prepareSiteLang, saveSiteLang, siteLang, startSiteLang, type SiteLang } from './lib/i18n';
 import { Header } from './components/Header';
 import { SkiPage } from './components/ski/SkiPage';
+import { ArrivalPage } from './components/arrival/ArrivalPage';
 import { MobileMenu } from './components/MobileMenu';
 import { Hero } from './components/Hero';
 import { RoomsSection } from './components/rooms/RoomsSection';
@@ -61,7 +62,7 @@ export default function App() {
   // dedicated pages: #activities-summer / #activities-winter (live site: /activities/summer|winter)
   // preview routing by hash: #pension, #activities-summer|winter (live site: /pension/, /activities/summer|winter)
   // #room-<key> → room pages (live: /rooms/<slug>/); #pension-rooms → pension page at the room section
-  type Route = 'home' | 'ski' | 'pension' | 'chalet' | 'all-rooms' | 'restaurant' | 'groups' | 'contact' | 'mountain' | Season | `room-${RoomKey}`;
+  type Route = 'home' | 'ski' | 'arrival' | 'pension' | 'chalet' | 'all-rooms' | 'restaurant' | 'groups' | 'contact' | 'mountain' | Season | `room-${RoomKey}`;
   const routeOf = (): Route => {
     const h = window.location.hash.slice(1);
     if (h === 'pension' || h === 'pension-rooms') return 'pension';
@@ -70,6 +71,7 @@ export default function App() {
     if (h === 'restaurant') return 'restaurant';
     if (h === 'groups' || h === 'groups-plan') return 'groups';
     if (h === 'ski' || h === 'ski-passes') return 'ski';
+    if (h === 'arrival') return 'arrival';
     if (h === 'contact') return 'contact';
     if (h === 'mountain' || h.startsWith('mountain-')) return 'mountain';
     if (h === 'activities-summer') return 'summer';
@@ -139,12 +141,14 @@ export default function App() {
     <>
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-ivory focus:px-4 focus:py-2 focus:text-forest">{copy.skip}</a>
       <WeatherBand lang={lang} reduced={reduced} />
-      <Header lang={lang} copy={copy} compact={compact} fine={fine && !reduced} menuOpen={menu} site={site} onLang={setLang} onMenu={() => setMenu(true)} showSeason={page === 'ski' || page === 'pension' || page === 'chalet' || page === 'contact' || page === 'mountain' || page === 'summer' || page === 'winter' || page === 'all-rooms' || page.startsWith('room-')} />
+      <Header lang={lang} copy={copy} compact={compact} fine={fine && !reduced} menuOpen={menu} site={site} onLang={setLang} onMenu={() => setMenu(true)} showSeason={page === 'ski' || page === 'arrival' || page === 'pension' || page === 'chalet' || page === 'contact' || page === 'mountain' || page === 'summer' || page === 'winter' || page === 'all-rooms' || page.startsWith('room-')} />
       <MobileMenu open={menu} lang={lang} copy={copy} reduced={reduced} site={site} onClose={() => setMenu(false)} onLang={setLang} onBook={onBook} />
       {page === 'mountain' ? (
         <main id="main"><MountainPage lang={lang} /></main>
       ) : page === 'contact' ? (
         <main id="main"><ContactPage lang={lang} /></main>
+      ) : page === 'arrival' ? (
+        <main id="main"><ArrivalPage lang={lang} /></main>
       ) : page === 'ski' ? (
         <main id="main"><SkiPage lang={lang} /></main>
       ) : page === 'groups' ? (

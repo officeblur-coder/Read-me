@@ -162,6 +162,7 @@ export function ContactPage({ lang }: { lang: Lang }) {
             </ul>
             <div className="mt-6 flex flex-col gap-3">
               <a href={CONTACT.route} target="_blank" rel="noopener noreferrer" className="ph-primary inline-flex min-h-[52px] items-center justify-center gap-3 rounded-full px-6 text-[15px] font-semibold"><Icon d={ICO.route} size={18} w={1.6} />{t.route}</a>
+              <a href="#arrival" className="ph-secondary inline-flex min-h-[52px] items-center justify-center gap-2.5 rounded-full px-6 text-[15px] font-semibold">{lang === 'de' ? 'Anreise & Mobilität' : 'Arrival & mobility'}</a>
               <a href={BOOKING_ENGINE} target="_blank" rel="noopener noreferrer" className="ph-secondary inline-flex min-h-[52px] items-center justify-center gap-3 rounded-full px-6 text-[15px] font-semibold"><Icon d={ICO.cal} size={18} w={1.6} />{t.book}</a>
             </div>
             <a href={CONTACT.facebook} target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="mt-auto inline-flex items-center gap-2 self-start pt-6 text-[13px] font-semibold text-cream/75 hover:text-cream"><Icon d={ICO.fb} size={18} w={1.5} />Facebook</a>
