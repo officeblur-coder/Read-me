@@ -25,3 +25,23 @@ export const EXPLORE_COPY = {
   de: { all: 'Alles entdecken', overview: 'Übersicht', featured: 'Empfohlen', eyebrow: 'Entdecken · Hollersbach im Pinzgau', title: ['Alles rund um', 'Ihren Aufenthalt.'], sub: 'Erlebnisse, Touren, Skigebiete, Orte und Anreise – jede Rubrik mit offiziellen Quellen und dem Weg ab der Pension.', open: 'Öffnen' },
   en: { all: 'Explore everything', overview: 'Overview', featured: 'Featured', eyebrow: 'Explore · Hollersbach im Pinzgau', title: ['Everything around', 'your stay.'], sub: 'Experiences, tours, ski areas, places and arrival – every section with official sources and the way from the pension.', open: 'Open' },
 };
+
+export const EXPLORE_MAP_COPY = {
+  de: { eyebrow: 'Die Karte', title: 'Alles auf einer Karte.', layers: 'Ebenen', layer: { exp: 'Erlebnisse', tour: 'Tourenstarts', place: 'Orte' }, fromHouse: 'ab KitzAlpen', details: 'Details', route: 'Route', loading: 'Karte wird geladen …', error: 'Die Karte konnte nicht geladen werden.', note: { winter: 'Erlebnisse der Wintersaison · Karte © OpenFreeMap, OpenMapTiles, OpenStreetMap-Mitwirkende', summer: 'Erlebnisse der Sommersaison · Karte © OpenFreeMap, OpenMapTiles, OpenStreetMap-Mitwirkende' } as Record<Season, string> },
+  en: { eyebrow: 'The map', title: 'Everything on one map.', layers: 'Layers', layer: { exp: 'Experiences', tour: 'Tour starts', place: 'Places' }, fromHouse: 'from KitzAlpen', details: 'Details', route: 'Route', loading: 'Loading the map …', error: 'The map could not be loaded.', note: { winter: 'Winter-season experiences · map © OpenFreeMap, OpenMapTiles, OpenStreetMap contributors', summer: 'Summer-season experiences · map © OpenFreeMap, OpenMapTiles, OpenStreetMap contributors' } as Record<Season, string> },
+};
+
+export const PLAN_COPY = {
+  de: {
+    eyebrow: 'Urlaubsplaner', title: 'Ihr Urlaub, Tag für Tag.', sub: 'Tage und Interessen wählen – der Planer stellt aus unseren geprüften Top-Erlebnissen einen Vorschlag zusammen, mit einem passenden Ziel in der Nähe für jeden Tag.',
+    days: 'Wie viele Tage?', interests: 'Was interessiert Sie?', kids: 'Mit Kindern unterwegs', day: (n: number) => `Tag ${n}`, near: 'Dazu passt', official: 'Offizielle Seite', route: 'Route',
+    min: (m: number) => `ca. ${m} Min.`, rain: 'Bei Schlechtwetter', share: 'Plan teilen', copied: 'Plan kopiert', rooms: 'Zimmer ansehen', shareTitle: (d: number) => `Mein KitzAlpen-Plan · ${d} ${d === 1 ? 'Tag' : 'Tage'}`,
+    note: 'Ein Vorschlag aus den Erlebnissen dieser Saison – bitte Öffnungszeiten und Wetter vor Ort prüfen.',
+  },
+  en: {
+    eyebrow: 'Holiday planner', title: 'Your holiday, day by day.', sub: 'Choose days and interests – the planner builds a suggestion from our verified top experiences, with a matching nearby stop for each day.',
+    days: 'How many days?', interests: 'What are you into?', kids: 'Travelling with children', day: (n: number) => `Day ${n}`, near: 'Pairs well with', official: 'Official website', route: 'Route',
+    min: (m: number) => `approx. ${m} min`, rain: 'If the weather turns', share: 'Share plan', copied: 'Plan copied', rooms: 'See the rooms', shareTitle: (d: number) => `My KitzAlpen plan · ${d} ${d === 1 ? 'day' : 'days'}`,
+    note: 'A suggestion from this season’s experiences – please check opening times and weather locally.',
+  },
+};

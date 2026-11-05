@@ -7,6 +7,7 @@ import { EXPLORE, EXPLORE_COPY } from '../content/explore';
 import { useReducedMotion } from '../lib/hooks';
 import { useSeason } from '../lib/season';
 import { Icon, I } from './pension/PensionRooms';
+import { ExploreMap, TripPlanner } from './ExploreMap';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 const BASE = import.meta.env.BASE_URL;
@@ -29,7 +30,7 @@ export function ExplorePage({ lang }: { lang: Lang }) {
   const span = ['md:col-span-2 md:row-span-2', '', '', 'md:col-span-2', '', '', 'md:col-span-2'];
   return (
     <div ref={root} className="bg-deep text-cream">
-      <section id="top" aria-labelledby="ex-title" className="px-5 pb-[calc(110px+env(safe-area-inset-bottom,0px))] pt-52 sm:px-6 md:px-10 md:pb-24 md:pt-60 lg:px-14">
+      <section id="top" aria-labelledby="ex-title" className="px-5 pb-20 pt-52 sm:px-6 md:px-10 md:pb-24 md:pt-60 lg:px-14">
         <div className="mx-auto max-w-[1440px]">
           <p className="js-ex-in text-[11.5px] font-semibold uppercase tracking-[.34em] text-cream/85 md:text-[13px]">{t.eyebrow}</p>
           <h1 id="ex-title" className="mt-4 font-display font-normal leading-[1.02] md:mt-6" style={{ fontSize: 'clamp(42px, 5.8vw, 92px)' }}>
@@ -53,6 +54,8 @@ export function ExplorePage({ lang }: { lang: Lang }) {
           </ul>
         </div>
       </section>
+      <ExploreMap lang={lang} />
+      <TripPlanner lang={lang} />
     </div>
   );
 }

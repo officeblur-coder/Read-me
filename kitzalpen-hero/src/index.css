@@ -488,6 +488,22 @@
   .c-input:focus-visible { box-shadow: 0 0 0 3px color-mix(in srgb, var(--k-gold) 35%, transparent); }
   .c-wa { color: var(--k-pine); border: 1px solid color-mix(in srgb, var(--k-pine) 35%, transparent); transition: border-color .3s ease, background-color .3s ease; }
   .c-wa:hover { border-color: var(--k-pine); background: color-mix(in srgb, var(--k-pine) 6%, transparent); }
+  /* explore map */
+  .xm-home { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px 6px 6px; border-radius: 999px; background: var(--k-pine); color: var(--k-cream); font: 600 12px/1 Manrope, sans-serif; box-shadow: 0 8px 20px -8px rgba(0,0,0,.5); }
+  .xm-home span { width: 10px; height: 10px; border-radius: 50%; background: var(--k-gold-light); }
+  .xm-dot { width: 16px; height: 16px; border-radius: 50%; border: 2.5px solid #fff; box-shadow: 0 3px 10px -2px rgba(0,0,0,.45); cursor: pointer; transition: transform .2s ease; }
+  .xm-dot:hover, .xm-dot:focus-visible { transform: scale(1.35); outline: none; }
+  .xm-dot.is-exp, .xm-key.is-exp { background: var(--k-goldink); }
+  .xm-dot.is-tour, .xm-key.is-tour { background: #2f7d5b; }
+  .xm-dot.is-place, .xm-key.is-place { background: var(--k-pine); }
+  .xm-key { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+  .xm-chip { color: var(--k-ink); border: 1px solid color-mix(in srgb, var(--k-pine) 18%, transparent); background: #fff; opacity: .6; transition: opacity .2s ease, border-color .2s ease; }
+  .xm-chip.is-on { opacity: 1; border-color: var(--k-pine); }
+  .maplibregl-popup-content { border-radius: 14px !important; padding: 12px 14px !important; font-family: Manrope, sans-serif; }
+  .xm-sub { font-size: 10.5px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--k-goldink); }
+  .xm-name { margin-top: 3px; font: italic 500 19px/1.15 'Cormorant Garamond', serif; color: var(--k-pine); }
+  .xm-km { margin-top: 3px; font-size: 12.5px; color: rgba(0,0,0,.55); }
+  .xm-links { margin-top: 8px; display: flex; gap: 12px; font-size: 13px; font-weight: 700; } .xm-links a { color: var(--k-pine); }
   /* tours & places */
   .to-tile { color: var(--k-cream); outline: 2px solid transparent; outline-offset: 3px; transition: outline-color .3s ease, transform .4s cubic-bezier(.2,.8,.2,1); }
   .to-tile:hover { transform: translateY(-3px); }
