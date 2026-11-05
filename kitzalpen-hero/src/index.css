@@ -488,6 +488,11 @@
   .c-input:focus-visible { box-shadow: 0 0 0 3px color-mix(in srgb, var(--k-gold) 35%, transparent); }
   .c-wa { color: var(--k-pine); border: 1px solid color-mix(in srgb, var(--k-pine) 35%, transparent); transition: border-color .3s ease, background-color .3s ease; }
   .c-wa:hover { border-color: var(--k-pine); background: color-mix(in srgb, var(--k-pine) 6%, transparent); }
+  /* mobile tab bar */
+  .qa-tabs { background: color-mix(in srgb, var(--k-deep) 94%, transparent); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-top: 1px solid rgba(255,255,255,.08); box-shadow: 0 -12px 30px -18px rgba(0,0,0,.5); }
+  .qa-tab { color: color-mix(in srgb, var(--k-cream) 82%, transparent); transition: color .2s ease, background-color .2s ease; }
+  .qa-tab:active, .qa-tab:hover { color: var(--k-cream); background: rgba(255,255,255,.06); }
+  .qa-tab.is-book { color: var(--k-deep); background: linear-gradient(180deg, var(--k-gold-light), var(--k-gold)); }
   /* left shortcut rail */
   .side-rail { display: flex; align-items: center; }
   .sr-list { background: color-mix(in srgb, var(--k-deep) 88%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); box-shadow: 0 20px 50px -24px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.08) inset; }

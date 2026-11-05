@@ -3,6 +3,7 @@ import gsap from 'gsap';
 import type { Lang } from '../content/hero';
 import { QUICK_ACTIONS } from '../content/amenities';
 import { useSeason } from '../lib/season';
+import { ITEMS, Ico, P } from './SideRail';
 
 const IMG = `${import.meta.env.BASE_URL}images/`;
 
@@ -87,11 +88,10 @@ export function QuickActions({ lang, reduced }: { lang: Lang; reduced: boolean }
       ref={root}
       role="navigation"
       aria-label={t.nav}
-      className="qa-root invisible fixed bottom-0 left-1/2 z-40 w-[min(100%-24px,420px)] -translate-x-1/2 lg:left-auto lg:right-6 lg:w-auto lg:translate-x-0"
-      style={{ marginBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))' }}
+      className="qa-root invisible fixed bottom-0 left-0 right-0 z-40 lg:left-auto lg:right-6 lg:mb-3 lg:w-auto"
     >
       {/* panel / sheet */}
-      <div ref={panel} id="qa-panel" role="dialog" aria-label={mode === 'wa' ? t.waTitle : t.title} className="qa-panel absolute bottom-[calc(100%+10px)] left-0 right-0 hidden rounded-[22px] p-3 lg:left-auto lg:w-[380px]">
+      <div ref={panel} id="qa-panel" role="dialog" aria-label={mode === 'wa' ? t.waTitle : t.title} className="qa-panel absolute bottom-[calc(100%+10px)] left-3 right-3 hidden rounded-[22px] p-3 lg:left-auto lg:right-0 lg:w-[380px]">
         <div className="flex items-center justify-between px-2 pb-2 pt-1">
           <p className="font-display text-[22px] italic text-cream">{mode === 'wa' ? t.waTitle : t.title}</p>
           <button type="button" onClick={() => setOpen(false)} aria-label={t.close} className="grid h-10 w-10 place-items-center rounded-full text-cream/70 hover:bg-cream/10 hover:text-cream focus-visible:outline focus-visible:outline-2 focus-visible:outline-gold">
@@ -136,7 +136,22 @@ export function QuickActions({ lang, reduced }: { lang: Lang; reduced: boolean }
       </div>
 
       {/* the capsule */}
-      <div className={`qa-capsule flex items-center gap-1.5 rounded-full p-1.5 transition-[padding] duration-300 ${slim ? 'lg:p-1' : ''}`}>
+      {/* mobile: tab bar (shortcuts + WhatsApp + book) */}
+      <ul className="qa-tabs grid grid-cols-6 lg:hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+        {ITEMS[season].slice(0, 4).map((x) => (
+          <li key={x.k}><a href={x.href} {...(x.ext ? { target: '_blank', rel: 'noopener noreferrer' } : {})} onClick={() => setMode(null)} className="qa-tab relative flex h-[62px] flex-col items-center justify-center gap-1">
+            <Ico d={P[x.k]} />{x.live && <span aria-hidden className="live-dot absolute right-3 top-2" />}
+            <span className="max-w-full truncate px-0.5 text-[10.5px] font-semibold uppercase tracking-[.04em]">{(x.short ?? x.label)[lang]}</span>
+          </a></li>
+        ))}
+        <li><button type="button" onClick={() => setMode((m) => (m === 'wa' ? null : 'wa'))} aria-expanded={mode === 'wa'} aria-controls="qa-panel" className="qa-tab flex h-[62px] w-full flex-col items-center justify-center gap-1">
+          <span className="text-[#5ec27a]">{WA}</span><span className="text-[10.5px] font-semibold uppercase tracking-[.04em]">WhatsApp</span>
+        </button></li>
+        <li><button type="button" onClick={() => setMode((m) => (m === 'book' ? null : 'book'))} aria-expanded={mode === 'book'} aria-controls="qa-panel" className="qa-tab is-book flex h-[62px] w-full flex-col items-center justify-center gap-1">
+          <Cal /><span className="text-[10.5px] font-bold uppercase tracking-[.04em]">{t.book}</span>
+        </button></li>
+      </ul>
+      <div className={`qa-capsule hidden items-center gap-1.5 rounded-full p-1.5 transition-[padding] duration-300 lg:flex ${slim ? 'lg:p-1' : ''}`}>
         <button type="button" onClick={() => setMode((m) => (m === 'wa' ? null : 'wa'))} aria-label={t.wa} aria-expanded={mode === 'wa'} aria-controls="qa-panel" title="WhatsApp · +40 748 192 821"
           className={`qa-wa grid shrink-0 place-items-center rounded-full transition-[width,height] duration-300 ${slim ? 'h-11 w-11' : 'h-12 w-12'}`}>
           {WA}

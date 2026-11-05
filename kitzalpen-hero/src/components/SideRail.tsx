@@ -3,7 +3,7 @@ import type { Lang, Season } from '../content/hero';
 import { useSeason } from '../lib/season';
 
 /** Left-hand shortcut rail (season-aware): the things guests look up most, one tap away. */
-const P = {
+export const P = {
   lift: ['M3 6l18-3', 'M12 4.5V10', 'M8 10h8v6a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2Z', 'M8 13h8'],
   weather: ['M7 18h10a4 4 0 0 0 .5-7.97A6 6 0 0 0 6 10.5 3.75 3.75 0 0 0 7 18Z', 'M12 2v2M4.2 4.2l1.4 1.4M2 12h2'],
   cam: ['M12 14a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z', 'M12 11a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z', 'M8 21h8M12 14v7'],
@@ -14,18 +14,18 @@ const P = {
   star: ['M12 3.5l2.6 5.3 5.9.9-4.2 4.1 1 5.8-5.3-2.8-5.3 2.8 1-5.8-4.2-4.1 5.9-.9Z'],
   grid: ['M4 4h7v7H4ZM13 4h7v7h-7ZM4 13h7v7H4ZM13 13h7v7h-7Z'],
 };
-interface Item { k: keyof typeof P; href: string; ext?: boolean; live?: boolean; label: Record<Lang, string> }
-const ITEMS: Record<Season, Item[]> = {
+export interface Item { k: keyof typeof P; href: string; ext?: boolean; live?: boolean; label: Record<Lang, string>; short?: Record<Lang, string> }
+export const ITEMS: Record<Season, Item[]> = {
   winter: [
-    { k: 'lift', href: 'https://www.panoramabahn.at/de/liftstatus.html', ext: true, live: true, label: { de: 'Lifte & Pisten', en: 'Lifts & slopes' } },
-    { k: 'weather', href: '#mountain-dash', label: { de: 'Bergwetter', en: 'Mountain weather' } },
+    { k: 'lift', href: 'https://www.panoramabahn.at/de/liftstatus.html', ext: true, live: true, label: { de: 'Lifte & Pisten', en: 'Lifts & slopes' }, short: { de: 'Lifte', en: 'Lifts' } },
+    { k: 'weather', href: '#mountain-dash', label: { de: 'Bergwetter', en: 'Mountain weather' }, short: { de: 'Wetter', en: 'Weather' } },
     { k: 'cam', href: '#mountain-cams', label: { de: 'Webcams', en: 'Webcams' } },
     { k: 'ticket', href: '#ski-passes', label: { de: 'Skipass', en: 'Ski pass' } },
     { k: 'map', href: '#explore-map', label: { de: 'Karte', en: 'Map' } },
     { k: 'route', href: '#arrival', label: { de: 'Anreise', en: 'Arrival' } },
   ],
   summer: [
-    { k: 'weather', href: '#mountain-dash', label: { de: 'Bergwetter', en: 'Mountain weather' } },
+    { k: 'weather', href: '#mountain-dash', label: { de: 'Bergwetter', en: 'Mountain weather' }, short: { de: 'Wetter', en: 'Weather' } },
     { k: 'cam', href: '#mountain-cams', label: { de: 'Webcams', en: 'Webcams' } },
     { k: 'tours', href: '#tours', label: { de: 'Touren', en: 'Tours' } },
     { k: 'star', href: '#experiences', label: { de: 'Top 15', en: 'Top 15' } },
@@ -33,7 +33,7 @@ const ITEMS: Record<Season, Item[]> = {
     { k: 'route', href: '#arrival', label: { de: 'Anreise', en: 'Arrival' } },
   ],
 };
-const Ico = ({ d }: { d: string[] }) => (
+export const Ico = ({ d }: { d: string[] }) => (
   <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>{d.map((x) => <path key={x} d={x} />)}</svg>
 );
 
@@ -44,7 +44,7 @@ export function SideRail({ lang, hidden = false }: { lang: Lang; hidden?: boolea
   const label = lang === 'de' ? 'Schnellzugriff' : 'Shortcuts';
   if (hidden) return null;
   return (
-    <nav aria-label={label} className={`side-rail fixed left-0 top-1/2 z-30 -translate-y-1/2 ${open ? 'is-open' : ''}`}>
+    <nav aria-label={label} className={`side-rail fixed left-0 top-1/2 z-30 hidden -translate-y-1/2 lg:flex ${open ? 'is-open' : ''}`}>
       <button type="button" aria-expanded={open} aria-controls="side-rail-list" onClick={() => setOpen((o) => !o)} className="sr-tab grid h-14 w-7 place-items-center rounded-r-[12px] lg:hidden" aria-label={label}>
         <Ico d={P.grid} />
       </button>
