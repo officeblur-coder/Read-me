@@ -1,0 +1,784 @@
+<title>Atelierul lui Bubu</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&display=swap">
+<style>
+/* Layout: one screen at a time (who plays → which game → play → celebrate). Play screens: compact owl guide on top, a big stage in the middle (coloring page or meadow with basket), tools at the bottom. Single bright "morning sky" look, chosen on purpose. */
+:root{
+  color-scheme: light;
+  --sky:#d9efff; --sky-top:#bfe3ff; --paper:#ffffff; --ink:#22305a; --ink-soft:#56628a;
+  --sun:#ffc23d; --leaf:#2fa865; --berry:#e5486a; --plum:#7a59c9; --ocean:#2b8be0; --orange:#ff8a2a;
+  --line:#b9d6f0; --grass:#9fdc7c; --grass-deep:#6fc35a; --wicker:#d9954a; --wicker-deep:#a8662a;
+  --display:"Baloo 2", "Comic Sans MS", "Segoe UI", system-ui, sans-serif;
+  --body:"Nunito", "Segoe UI", system-ui, sans-serif;
+}
+html,body{height:100%}
+body{background:linear-gradient(var(--sky-top),var(--sky) 60%,#e9f7e9);color:var(--ink);font-family:var(--body);font-size:18px;overflow:hidden}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible{outline:4px solid var(--ocean);outline-offset:4px}
+.app{height:100%;display:flex;flex-direction:column;max-width:1200px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px;box-sizing:border-box}
+.screen{flex:1;display:flex;flex-direction:column;gap:12px;min-height:0}
+h1,h2{font-family:var(--display);margin:0;text-wrap:balance;line-height:1.05}
+h1{font-size:clamp(34px,5vw,56px)}
+h2{font-size:clamp(26px,3.6vw,40px)}
+
+.bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.bar .grow{flex:1;min-width:0}
+.pill{display:inline-flex;align-items:center;gap:8px;background:var(--paper);border-radius:999px;padding:8px 16px;font-weight:800;box-shadow:0 3px 0 var(--line)}
+.round{width:52px;height:52px;border-radius:50%;background:var(--paper);display:grid;place-items:center;font-size:26px;box-shadow:0 4px 0 var(--line);flex:none}
+.round:active{transform:translateY(3px);box-shadow:0 1px 0 var(--line)}
+.dots{display:flex;gap:6px;flex-wrap:wrap}
+.dots i{width:15px;height:15px;border-radius:50%;background:#fff;border:2px solid var(--line)}
+.dots i.ok{background:var(--sun);border-color:#e0a21c}
+.dots i.miss{background:#c9d6e6;border-color:#c9d6e6}
+.dots i.now{border-color:var(--ocean);transform:scale(1.25)}
+
+.guide{display:flex;align-items:center;gap:14px}
+.owl{width:clamp(84px,11vw,124px);flex:none;cursor:pointer}
+.guide.compact .owl{width:clamp(64px,7vw,84px)}
+.owl svg{width:100%;height:auto;display:block}
+.owl.talk svg{animation:bob .45s ease-in-out infinite alternate}
+.owl.talk .beak{animation:beak .22s infinite alternate}
+@keyframes bob{to{transform:translateY(-6px) rotate(-2deg)}}
+@keyframes beak{to{transform:scaleY(.6)}}
+.beak{transform-origin:60px 62px}
+.bubble{position:relative;background:var(--paper);border-radius:24px;padding:12px 20px;font-family:var(--display);font-weight:800;font-size:clamp(22px,2.7vw,32px);line-height:1.15;box-shadow:0 4px 0 var(--line);min-width:0;flex:1}
+.bubble:before{content:"";position:absolute;left:-12px;top:50%;margin-top:-12px;border:12px solid transparent;border-right-color:var(--paper);border-left:0}
+.chip{display:inline-block;width:.9em;height:.9em;border-radius:50%;vertical-align:-.1em;margin:0 .15em;border:3px solid var(--ink);box-sizing:border-box}
+.cw{padding:0 .25em;border-radius:10px;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.25)}
+
+/* home + menu */
+.kids{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}
+.kid{background:var(--paper);border-radius:28px;padding:22px;display:flex;flex-direction:column;align-items:center;gap:8px;box-shadow:0 8px 0 var(--line);transition:transform .15s}
+.kid:hover{transform:translateY(-4px)}
+.kid .face{font-size:84px;line-height:1}
+.kid .nm{font-family:var(--display);font-size:46px;font-weight:800;line-height:1}
+.kid .meta{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;color:var(--ink-soft);font-weight:800}
+.kid .meta span{background:var(--sky);border-radius:999px;padding:4px 12px}
+.kid.liza .nm{color:var(--berry)} .kid.mate .nm{color:var(--ocean)}
+.warn{background:#fff4d6;border:3px solid var(--sun);border-radius:20px;padding:14px 18px;font-size:17px;line-height:1.45}
+.warn b{font-family:var(--display);font-size:22px}
+.warn ol{margin:6px 0 0;padding-left:22px}
+.games{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px}
+.game{border-radius:26px;padding:20px;color:#fff;text-align:left;display:flex;flex-direction:column;gap:6px;box-shadow:0 8px 0 rgba(0,0,0,.18);min-height:170px;position:relative;overflow:hidden;transition:transform .15s}
+.game:hover{transform:translateY(-4px) rotate(-1deg)}
+.game .ic{font-size:58px;line-height:1}
+.game .t{font-family:var(--display);font-size:32px;font-weight:800;line-height:1}
+.game .d{font-weight:700;opacity:.95}
+.g1{background:var(--ocean)} .g2{background:var(--leaf)} .g3{background:var(--orange)}
+
+/* coloring */
+.stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;position:relative}
+svg.scene{width:100%;height:100%;display:block;background:#fff;border-radius:26px;box-shadow:0 8px 0 var(--line)}
+.scene [data-r]{stroke:var(--ink);stroke-width:4;stroke-linejoin:round;transition:fill .25s}
+.scene .deco{pointer-events:none}
+.scene [data-r].hint{animation:hintS .6s infinite alternate}
+@keyframes hintS{from{stroke:var(--ink);stroke-width:4}to{stroke:#ff9f00;stroke-width:10}}
+.palette{display:flex;gap:clamp(8px,1.4vw,16px);justify-content:center;flex-wrap:wrap;padding-bottom:6px}
+.pot{width:clamp(48px,5.6vw,66px);aspect-ratio:1;border-radius:50%;background:var(--c);border:5px solid #fff;box-shadow:inset -6px -8px 0 rgba(0,0,0,.16),0 6px 0 rgba(0,0,0,.18);transition:transform .15s;position:relative}
+.pot:hover{transform:translateY(-5px)}
+.pot[aria-pressed="true"]{transform:translateY(-12px) scale(1.15);border-color:var(--ink)}
+.pot[aria-pressed="true"]:after{content:"🖌️";position:absolute;right:-14px;top:-16px;font-size:26px}
+.pot.hint{animation:glow .6s infinite alternate}
+.overlay{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+.overlay .card2{pointer-events:auto;background:rgba(255,255,255,.94);border-radius:26px;padding:18px 24px;display:flex;flex-direction:column;align-items:center;gap:12px;box-shadow:0 10px 0 var(--line);animation:pop .5s;max-width:92%;text-align:center}
+.overlay .card2 h2{font-size:clamp(28px,3.4vw,40px)}
+.tag{position:absolute;left:14px;bottom:14px;background:var(--paper);border-radius:999px;padding:6px 14px;font-weight:800;box-shadow:0 3px 0 var(--line)}
+
+/* alive scene */
+.alive .spin{animation:spin 12s linear infinite;transform-box:fill-box;transform-origin:center}
+.alive .float{animation:floatY 2.4s ease-in-out infinite alternate}
+.alive .drift{animation:drift 6s ease-in-out infinite alternate}
+.alive .swim1{animation:swim1 3.6s ease-in-out infinite alternate}
+.alive .swim2{animation:swim2 2.8s ease-in-out infinite alternate}
+.alive .bobo{animation:floatY 1.6s ease-in-out infinite alternate}
+.alive .walk{animation:walk 2s ease-in-out infinite alternate}
+.alive .sway{animation:sway 2.2s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:50% 100%}
+.alive .wiggle{animation:sway 1.2s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:50% 100%}
+.puff,.rise{opacity:0}
+.alive .puff{animation:puff 2.4s ease-out infinite}
+.alive .rise{animation:rise 3s ease-in infinite}
+.alive .puff:nth-child(2),.alive .rise:nth-child(2){animation-delay:.8s}
+.alive .puff:nth-child(3),.alive .rise:nth-child(3){animation-delay:1.6s}
+.alive .rise:nth-child(4){animation-delay:2.2s}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes floatY{to{transform:translateY(-16px)}}
+@keyframes drift{to{transform:translateX(70px)}}
+@keyframes swim1{to{transform:translateX(60px) translateY(-10px)}}
+@keyframes swim2{to{transform:translateX(-70px) translateY(12px)}}
+@keyframes walk{to{transform:translateX(40px)}}
+@keyframes sway{from{transform:rotate(-5deg)}to{transform:rotate(5deg)}}
+@keyframes puff{0%{opacity:.85;transform:translateY(0) scale(.6)}100%{opacity:0;transform:translateY(-70px) scale(1.6)}}
+@keyframes rise{0%{opacity:.9;transform:translateY(0)}100%{opacity:0;transform:translateY(-180px)}}
+
+/* basket game */
+.field{flex:1;min-height:0;position:relative;border-radius:26px;overflow:hidden;background:linear-gradient(#c9ecff 0,#e6f7ff 22%,var(--grass) 22.2%,var(--grass-deep) 100%);box-shadow:0 8px 0 var(--line);touch-action:none;user-select:none}
+.field:before{content:"";position:absolute;left:0;right:0;top:22%;height:14px;background:radial-gradient(circle at 10px -2px,var(--grass) 9px,transparent 10px) 0 0/22px 14px repeat-x}
+.item{position:absolute;transform:translate(-50%,-50%);font-size:clamp(46px,6.2vw,78px);line-height:1;cursor:grab;filter:drop-shadow(0 6px 0 rgba(0,0,0,.14));animation:idle 2.6s ease-in-out infinite alternate;z-index:2;touch-action:none}
+.item:hover{filter:drop-shadow(0 10px 0 rgba(0,0,0,.14));}
+.item.drag{cursor:grabbing;animation:none;z-index:9;transform:translate(-50%,-50%) scale(1.25) rotate(-6deg);filter:drop-shadow(0 16px 4px rgba(0,0,0,.2))}
+.item.nope{animation:shake .45s}
+@keyframes idle{from{margin-top:0}to{margin-top:-6px}}
+.basket{position:absolute;left:50%;bottom:3%;width:clamp(190px,22vw,270px);aspect-ratio:240/180;transform:translateX(-50%);z-index:3}
+.basket svg{position:absolute;inset:0;width:100%;height:100%}
+.basket .inside{position:absolute;left:12%;right:12%;top:8%;height:46%;display:flex;flex-wrap:wrap-reverse;align-content:flex-start;justify-content:center;overflow:visible}
+.basket .inside span{font-size:clamp(28px,3vw,40px);margin:0 -5px -16px;line-height:1;animation:drop .35s ease-out}
+.basket.hop{animation:hop .45s}
+.basket.no{animation:shake .45s}
+.basket.over svg.front{filter:brightness(1.12)}
+.badge{position:absolute;left:50%;top:-34%;transform:translateX(-50%);background:var(--paper);border-radius:999px;padding:4px 16px;font-family:var(--display);font-weight:800;font-size:clamp(22px,2.4vw,30px);white-space:nowrap;box-shadow:0 4px 0 rgba(0,0,0,.15);font-variant-numeric:tabular-nums}
+.badge:empty{display:none}
+@keyframes hop{30%{transform:translateX(-50%) translateY(-18px) scale(1.05,.95)}60%{transform:translateX(-50%) translateY(0) scale(.95,1.05)}}
+@keyframes drop{from{transform:translateY(-40px);opacity:0}}
+.flyer{position:absolute;font-size:clamp(46px,6.2vw,78px);line-height:1;transform:translate(-50%,-50%);z-index:10;pointer-events:none}
+.spark{position:absolute;z-index:11;pointer-events:none;font-size:22px;transform:translate(-50%,-50%)}
+
+/* shared bits */
+@keyframes shake{20%,60%{translate:-12px 0}40%,80%{translate:12px 0}}
+@keyframes pop{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+@keyframes glow{to{transform:translateY(-8px) scale(1.12)}}
+.finish{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center}
+.bigstars{font-size:clamp(40px,6vw,64px);letter-spacing:4px}
+.actions{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.btn{font-family:var(--display);font-weight:800;font-size:24px;padding:12px 24px;border-radius:20px;background:var(--sun);color:var(--ink);box-shadow:0 6px 0 #d99a14}
+.btn.alt{background:var(--paper);box-shadow:0 6px 0 var(--line)}
+.btn:active{transform:translateY(4px)}
+.panel{position:fixed;inset:0;background:rgba(34,48,90,.45);display:grid;place-items:center;padding:16px;z-index:20}
+.card{background:var(--paper);border-radius:24px;padding:22px;width:min(560px,100%);max-height:90vh;overflow:auto;display:flex;flex-direction:column;gap:16px;box-sizing:border-box}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.row label{font-weight:800;min-width:70px}
+.seg{display:inline-flex;background:var(--sky);border-radius:14px;padding:4px}
+.seg button{padding:8px 14px;border-radius:10px;font-weight:800}
+.seg button[aria-pressed="true"]{background:var(--ocean);color:#fff}
+select{font:inherit;padding:8px;border-radius:10px;border:2px solid var(--line);min-width:0;flex:1;max-width:100%}
+.small{font-size:15px;color:var(--ink-soft);line-height:1.4}
+.confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:15}
+.confetti span{position:absolute;top:-30px;font-size:28px;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(540deg)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (max-width:560px){.bubble:before{display:none}}
+</style>
+
+<div class="app" id="app"></div>
+<div class="confetti" id="confetti" aria-hidden="true"></div>
+
+<template id="owlTpl">
+<svg viewBox="0 0 120 130" aria-hidden="true">
+  <ellipse cx="60" cy="122" rx="34" ry="6" fill="#000" opacity=".08"/>
+  <path d="M22 40 L30 14 L46 30 Z" fill="#8a5a32"/><path d="M98 40 L90 14 L74 30 Z" fill="#8a5a32"/>
+  <ellipse cx="60" cy="72" rx="44" ry="48" fill="#a4703f"/>
+  <ellipse cx="60" cy="88" rx="28" ry="30" fill="#f3d9a8"/>
+  <path d="M44 84 q4 4 8 0 M56 92 q4 4 8 0 M68 84 q4 4 8 0 M50 102 q4 4 8 0 M62 102 q4 4 8 0" stroke="#d8b47a" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <circle cx="40" cy="50" r="19" fill="#fff"/><circle cx="80" cy="50" r="19" fill="#fff"/>
+  <circle cx="42" cy="52" r="9" fill="#22305a"/><circle cx="78" cy="52" r="9" fill="#22305a"/>
+  <circle cx="45" cy="49" r="3" fill="#fff"/><circle cx="81" cy="49" r="3" fill="#fff"/>
+  <path class="beak" d="M53 60 L67 60 L60 72 Z" fill="#ffb02e"/>
+  <path d="M16 74 q-6 22 10 34" stroke="#8a5a32" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <path d="M104 74 q6 22 -10 34" stroke="#8a5a32" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <path d="M26 30 Q60 -6 94 30 Z" fill="#ff8a2a"/><circle cx="60" cy="9" r="6" fill="#e5486a"/>
+</svg>
+</template>
+
+<script>
+(function(){
+'use strict';
+const NS='http://www.w3.org/2000/svg';
+
+/* ================= culori ================= */
+const COLORS={
+  rosu:{n:'roșu',hex:'#ef3e4a'}, galben:{n:'galben',hex:'#ffd23f'}, albastru:{n:'albastru',hex:'#3d8bf2'},
+  verde:{n:'verde',hex:'#3dbb5c'}, portocaliu:{n:'portocaliu',hex:'#ff8a1f'}, roz:{n:'roz',hex:'#ff86c0'},
+  mov:{n:'mov',hex:'#9b5de5'}, maro:{n:'maro',hex:'#a0632f'}, gri:{n:'gri',hex:'#9aa4b1'}, negru:{n:'negru',hex:'#3a3a46'}
+};
+const PAL={mic:['rosu','galben','albastru','verde','portocaliu','roz'],mare:['rosu','galben','albastru','verde','portocaliu','roz','mov','maro','gri','negru']};
+function tint(hex,a){const n=parseInt(hex.slice(1),16);const r=n>>16,g=n>>8&255,b=n&255;const m=c=>Math.round(c+(255-c)*a);return 'rgb('+m(r)+','+m(g)+','+m(b)+')';}
+
+/* ================= scene de colorat ================= */
+const SCENES={
+casa:{name:'Căsuța',svg:`
+<rect data-r="cer" x="0" y="0" width="800" height="420"/>
+<g class="drift deco"><path d="M118 104 A26 26 0 0 1 134 58 A36 36 0 0 1 204 50 A28 28 0 0 1 242 104 Z" fill="#fff" stroke="#22305a" stroke-width="4"/></g>
+<g class="spin"><g class="deco" stroke="#22305a" stroke-width="5" stroke-linecap="round"><line x1="690" y1="18" x2="690" y2="2"/><line x1="690" y1="152" x2="690" y2="168"/><line x1="623" y1="85" x2="607" y2="85"/><line x1="757" y1="85" x2="773" y2="85"/><line x1="643" y1="38" x2="631" y2="26"/><line x1="737" y1="132" x2="749" y2="144"/><line x1="737" y1="38" x2="749" y2="26"/><line x1="643" y1="132" x2="631" y2="144"/></g>
+<circle data-r="soare" cx="690" cy="85" r="46"/></g>
+<g class="deco" fill="#fff" stroke="#22305a" stroke-width="3"><g class="puff-wrap"><circle class="puff" cx="485" cy="100" r="12"/><circle class="puff" cx="490" cy="100" r="14"/><circle class="puff" cx="482" cy="100" r="10"/></g></g>
+<path data-r="iarba" d="M0 340 Q200 300 400 335 T800 325 V480 H0 Z"/>
+<rect data-r="trunchi" x="112" y="240" width="34" height="135" rx="6"/>
+<g class="wiggle"><circle data-r="coroana" cx="88" cy="236" r="42"/><circle data-r="coroana" cx="170" cy="238" r="42"/><circle data-r="coroana" cx="129" cy="196" r="56"/></g>
+<rect data-r="horn" x="470" y="118" width="30" height="72"/>
+<rect data-r="perete" x="300" y="200" width="230" height="175"/>
+<polygon data-r="acoperis" points="278,206 415,104 552,206"/>
+<rect data-r="usa" x="390" y="288" width="56" height="87" rx="6"/>
+<circle class="deco" cx="434" cy="334" r="5" fill="#22305a"/>
+<rect data-r="fereastra" x="324" y="236" width="54" height="54" rx="4"/>
+<path class="deco" d="M351 236 V290 M324 263 H378" stroke="#22305a" stroke-width="4"/>
+<g class="float"><path class="deco" d="M632 256 q-10 20 4 40 q12 20 0 44" fill="none" stroke="#22305a" stroke-width="3"/>
+<ellipse data-r="balon" cx="632" cy="212" rx="32" ry="42"/><polygon class="deco" points="626,256 638,256 632,248" fill="#22305a"/></g>
+<line class="deco" x1="712" y1="402" x2="712" y2="466" stroke="#22305a" stroke-width="5"/>
+<g class="wiggle"><circle data-r="petale" cx="712" cy="372" r="17"/><circle data-r="petale" cx="733" cy="387" r="17"/><circle data-r="petale" cx="725" cy="412" r="17"/><circle data-r="petale" cx="699" cy="412" r="17"/><circle data-r="petale" cx="691" cy="387" r="17"/>
+<circle data-r="mijloc" cx="712" cy="394" r="13"/></g>`,
+regs:{
+ cer:{n:'cerul',fix:'albastru',tint:.5},
+ soare:{n:'soarele',fix:'galben',mic:1},
+ iarba:{n:'iarba',fix:'verde',mic:1},
+ coroana:{n:'coroana copacului',fix:'verde'},
+ trunchi:{n:'trunchiul copacului',fix:'maro'},
+ horn:{n:'hornul',any:['gri','rosu','maro','negru']},
+ perete:{n:'peretele casei',any:['galben','roz','portocaliu','albastru','mov'],mic:1},
+ acoperis:{n:'acoperișul',any:['rosu','albastru','verde','maro','mov'],mic:1},
+ usa:{n:'ușa',any:['maro','albastru','verde','rosu','mov'],mic:1},
+ fereastra:{n:'fereastra',any:['albastru','galben'],tint:.35},
+ balon:{n:'balonul',any:['rosu','mov','portocaliu','roz','albastru'],mic:1},
+ petale:{n:'petalele florii',any:['roz','mov','rosu','portocaliu'],mic:1},
+ mijloc:{n:'mijlocul florii',fix:'galben'}
+}},
+mare:{name:'Sub mare',svg:`
+<rect data-r="apa" x="0" y="0" width="800" height="470"/>
+<g class="deco" fill="#fff" fill-opacity=".7" stroke="#22305a" stroke-width="3"><circle cx="380" cy="150" r="8"/><circle cx="395" cy="120" r="5"/><circle cx="660" cy="250" r="9"/><circle cx="150" cy="120" r="6"/></g>
+<g class="deco" fill="#fff" fill-opacity=".8" stroke="#22305a" stroke-width="3"><circle class="rise" cx="250" cy="300" r="9"/><circle class="rise" cx="520" cy="330" r="7"/><circle class="rise" cx="700" cy="300" r="10"/><circle class="rise" cx="420" cy="360" r="6"/></g>
+<path data-r="nisip" d="M0 405 Q200 378 400 402 T800 396 V480 H0 Z"/>
+<g class="sway"><path data-r="alge" d="M70 430 C40 380 100 360 70 310 C40 260 100 240 80 200 L96 200 C116 245 60 265 92 310 C122 360 62 380 98 430 Z"/></g>
+<g class="sway"><path data-r="alge" transform="translate(655,10)" d="M70 430 C40 380 100 360 70 310 C40 260 100 240 80 200 L96 200 C116 245 60 265 92 310 C122 360 62 380 98 430 Z"/></g>
+<g class="swim1"><polygon data-r="peste1" points="222,182 160,138 166,226"/><ellipse data-r="peste1" cx="292" cy="182" rx="80" ry="50"/>
+<path class="deco" d="M262 140 q14 -28 40 -6" fill="none" stroke="#22305a" stroke-width="4"/><path class="deco" d="M250 160 q-12 22 0 44" fill="none" stroke="#22305a" stroke-width="4"/>
+<circle class="deco" cx="338" cy="168" r="11" fill="#fff" stroke="#22305a" stroke-width="3"/><circle class="deco" cx="341" cy="168" r="5" fill="#22305a"/><path class="deco" d="M352 196 q8 4 14 -2" fill="none" stroke="#22305a" stroke-width="3"/></g>
+<g class="swim2"><polygon data-r="peste2" points="596,112 640,88 640,136"/><ellipse data-r="peste2" cx="560" cy="112" rx="44" ry="27"/>
+<circle class="deco" cx="538" cy="106" r="7" fill="#fff" stroke="#22305a" stroke-width="3"/><circle class="deco" cx="536" cy="106" r="3" fill="#22305a"/></g>
+<g class="bobo"><ellipse data-r="caracatita" cx="420" cy="330" rx="10" ry="38" transform="rotate(18 420 330)"/><ellipse data-r="caracatita" cx="443" cy="338" rx="10" ry="38" transform="rotate(6 443 338)"/><ellipse data-r="caracatita" cx="467" cy="338" rx="10" ry="38" transform="rotate(-6 467 338)"/><ellipse data-r="caracatita" cx="490" cy="330" rx="10" ry="38" transform="rotate(-18 490 330)"/>
+<circle data-r="caracatita" cx="455" cy="282" r="48"/>
+<circle class="deco" cx="440" cy="278" r="9" fill="#fff" stroke="#22305a" stroke-width="3"/><circle class="deco" cx="470" cy="278" r="9" fill="#fff" stroke="#22305a" stroke-width="3"/><circle class="deco" cx="441" cy="280" r="4" fill="#22305a"/><circle class="deco" cx="471" cy="280" r="4" fill="#22305a"/><path class="deco" d="M444 300 q11 10 22 0" fill="none" stroke="#22305a" stroke-width="3"/></g>
+<g class="walk"><g class="deco" stroke="#22305a" stroke-width="4" stroke-linecap="round"><line x1="178" y1="446" x2="160" y2="466"/><line x1="186" y1="452" x2="172" y2="472"/><line x1="242" y1="446" x2="260" y2="466"/><line x1="234" y1="452" x2="248" y2="472"/><line x1="196" y1="420" x2="192" y2="400"/><line x1="224" y1="420" x2="228" y2="400"/></g>
+<circle data-r="crab" cx="160" cy="412" r="15"/><circle data-r="crab" cx="260" cy="412" r="15"/><ellipse data-r="crab" cx="210" cy="440" rx="42" ry="26"/>
+<circle class="deco" cx="192" cy="396" r="7" fill="#fff" stroke="#22305a" stroke-width="3"/><circle class="deco" cx="228" cy="396" r="7" fill="#fff" stroke="#22305a" stroke-width="3"/><path class="deco" d="M198 446 q12 8 24 0" fill="none" stroke="#22305a" stroke-width="3"/></g>
+<path data-r="scoica" d="M342 458 A38 38 0 0 1 418 458 Z"/><path class="deco" d="M380 458 V424 M380 458 L358 430 M380 458 L402 430" stroke="#22305a" stroke-width="3"/>
+<g class="spin"><polygon data-r="stea" points="620,404 628.8,427.9 652.3,429.5 634.3,444.6 640,467.5 620,455 600,467.5 605.7,444.6 587.7,429.5 611.2,427.9"/></g>`,
+regs:{
+ apa:{n:'apa',fix:'albastru',tint:.45,mic:1},
+ nisip:{n:'nisipul',fix:'galben',tint:.3},
+ alge:{n:'algele',fix:'verde',mic:1},
+ peste1:{n:'peștele mare',any:['portocaliu','rosu','galben','mov','roz','verde'],mic:1},
+ peste2:{n:'peștele mic',any:['portocaliu','rosu','galben','mov','roz','verde'],mic:1},
+ caracatita:{n:'caracatița',any:['mov','roz','rosu','portocaliu']},
+ crab:{n:'crabul',fix:'rosu',mic:1},
+ scoica:{n:'scoica',any:['roz','mov','portocaliu']},
+ stea:{n:'steaua de mare',any:['rosu','roz','portocaliu','galben','mov'],mic:1}
+}}
+};
+
+/* ================= obiecte pentru coș ================= */
+const ITEMS=[
+ {k:'mar',e:'🍎',s:'măr',p:'mere',a:'mărul',g:'n',c:'fruct',col:'rosu'},
+ {k:'banana',e:'🍌',s:'banană',p:'banane',a:'banana',g:'f',c:'fruct',col:'galben'},
+ {k:'para',e:'🍐',s:'pară',p:'pere',a:'para',g:'f',c:'fruct',col:'verde'},
+ {k:'portocala',e:'🍊',s:'portocală',p:'portocale',a:'portocala',g:'f',c:'fruct',col:'portocaliu'},
+ {k:'struguri',e:'🍇',s:'strugure',p:'struguri',a:'strugurele',g:'m',c:'fruct',col:'mov'},
+ {k:'capsuna',e:'🍓',s:'căpșună',p:'căpșuni',a:'căpșuna',g:'f',c:'fruct',col:'rosu'},
+ {k:'lamaie',e:'🍋',s:'lămâie',p:'lămâi',a:'lămâia',g:'f',c:'fruct',col:'galben'},
+ {k:'morcov',e:'🥕',s:'morcov',p:'morcovi',a:'morcovul',g:'m',c:'leguma',col:'portocaliu'},
+ {k:'rosie',e:'🍅',s:'roșie',p:'roșii',a:'roșia',g:'f',c:'leguma',col:'rosu'},
+ {k:'castravete',e:'🥒',s:'castravete',p:'castraveți',a:'castravetele',g:'m',c:'leguma',col:'verde'},
+ {k:'porumb',e:'🌽',s:'porumb',p:'porumbi',a:'porumbul',g:'m',c:'leguma',col:'galben'},
+ {k:'vanata',e:'🍆',s:'vânătă',p:'vinete',a:'vânăta',g:'f',c:'leguma',col:'mov'},
+ {k:'ursulet',e:'🧸',s:'ursuleț',p:'ursuleți',a:'ursulețul',g:'m',c:'jucarie',col:'maro'},
+ {k:'minge',e:'⚽',s:'minge',p:'mingi',a:'mingea',g:'f',c:'jucarie',col:null},
+ {k:'balon',e:'🎈',s:'balon',p:'baloane',a:'balonul',g:'n',c:'jucarie',col:'rosu'},
+ {k:'masinuta',e:'🚗',s:'mașinuță',p:'mașinuțe',a:'mașinuța',g:'f',c:'jucarie',col:'rosu'},
+ {k:'pisica',e:'🐱',s:'pisică',p:'pisici',a:'pisica',g:'f',c:'animal',col:null},
+ {k:'catel',e:'🐶',s:'cățel',p:'căței',a:'cățelul',g:'m',c:'animal',col:null},
+ {k:'iepuras',e:'🐰',s:'iepuraș',p:'iepurași',a:'iepurașul',g:'m',c:'animal',col:null},
+ {k:'puisor',e:'🐥',s:'puișor',p:'puișori',a:'puișorul',g:'m',c:'animal',col:'galben'},
+ {k:'broscuta',e:'🐸',s:'broscuță',p:'broscuțe',a:'broscuța',g:'f',c:'animal',col:'verde'},
+ {k:'buburuza',e:'🐞',s:'buburuză',p:'buburuze',a:'buburuza',g:'f',c:'animal',col:'rosu'}
+];
+const CATS={fruct:{pl:'fructele',s:'fruct',ic:'🍎🍌'},leguma:{pl:'legumele',s:'legumă',ic:'🥕🥒'},animal:{pl:'animalele',s:'animal',ic:'🐱🐶'},jucarie:{pl:'jucăriile',s:'jucărie',ic:'🧸⚽'}};
+const COLPL={rosu:'roșii',galben:'galbene',verde:'verzi',portocaliu:'portocalii',mov:'mov'};
+const NUMW=['zero','unu','doi','trei','patru','cinci','șase','șapte','opt','nouă','zece'];
+function num(n,g){if(n===1)return g==='f'?'o':'un';if(n===2)return g==='m'?'doi':'două';return NUMW[n];}
+function qty(n,it){return num(n,it.g)+' '+(n===1?it.s:it.p);}
+const ROUND_BASKET=6;
+
+/* ================= salvare ================= */
+const KEY='bubu-atelier-v1';
+let save={kids:{liza:{name:'Liza',fem:true,level:'mic',stars:0},mate:{name:'Mate',fem:false,level:'mic',stars:0}},rate:0.9,voice:''};
+try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s&&s.kids)save=Object.assign(save,s);}catch(e){}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(save));}catch(e){}}
+
+/* ================= voce ================= */
+const synth=window.speechSynthesis||null;
+let voices=[],voice=null,voicesChecked=false,speechId=0,owlEl=null;
+function score(v){let s=0;if(/natural|online|neural/i.test(v.name))s+=10;if(/alina/i.test(v.name))s+=2;if(/google/i.test(v.name))s+=5;return s;}
+function loadVoices(){if(!synth)return;voices=synth.getVoices().filter(v=>/^ro/i.test(v.lang)).sort((a,b)=>score(b)-score(a));voice=voices.find(v=>v.voiceURI===save.voice)||voices[0]||null;}
+if(synth){loadVoices();synth.onvoiceschanged=()=>{loadVoices();if(view==='home')render();};}
+setTimeout(()=>{voicesChecked=true;loadVoices();if(view==='home')render();},1600);
+let pend=null;
+function speak(text,done){
+  if(pend){const p=pend;pend=null;p.cancelled=true;if(p.done)setTimeout(p.done,0);}
+  const me={done,cancelled:false};pend=me;
+  const fin=()=>{if(me.cancelled||pend!==me)return;pend=null;owlEl&&owlEl.classList.remove('talk');done&&done();};
+  if(!synth){setTimeout(fin,500+text.length*40);return;}
+  synth.cancel();
+  const u=new SpeechSynthesisUtterance(text);u.lang='ro-RO';if(voice)u.voice=voice;u.rate=save.rate;u.pitch=1.1;
+  u.onend=fin;u.onerror=fin;
+  owlEl&&owlEl.classList.add('talk');
+  setTimeout(()=>{if(pend===me)synth.speak(u);},60);
+  setTimeout(fin,2500+text.length*130);
+}
+function silence(){if(pend){pend.cancelled=true;pend=null;}synth&&synth.cancel();owlEl&&owlEl.classList.remove('talk');}
+
+/* ================= utilitare ================= */
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+const rint=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const el=(tag,cls,html)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e;};
+const app=document.getElementById('app');
+function starsWord(n){return n===1?'o steluță':n<20?n+' steluțe':n+' de steluțe';}
+function praise(k){return rnd(['Bravo, '+k.name+'!','Super!','Foarte bine!','Ești '+(k.fem?'grozavă':'grozav')+'!','Excelent!','Minunat!']);}
+function owlNode(){const d=el('div','owl');d.appendChild(document.getElementById('owlTpl').content.cloneNode(true));owlEl=d;d.onclick=()=>game&&game.say&&speak(game.say);return d;}
+function cw(key){return '<span class="cw" style="background:'+COLORS[key].hex+'">'+COLORS[key].n+'</span>';}
+
+let view='home',kidId=null,game=null;
+const kid=()=>save.kids[kidId];
+function render(){silence();app.innerHTML='';game=null;({home,menu}[view]||home)();}
+
+/* ================= start ================= */
+function home(){
+  const s=el('div','screen');
+  const bar=el('div','bar');bar.appendChild(el('h1','grow','Atelierul lui Bubu'));
+  const gear=el('button','round','⚙️');gear.setAttribute('aria-label','Setări pentru părinți');gear.onclick=parents;bar.appendChild(gear);s.appendChild(bar);
+  const g=el('div','guide');g.appendChild(owlNode());g.appendChild(el('div','bubble','Bine ați venit în atelier! Cine se joacă?'));s.appendChild(g);
+  if(!synth||(voicesChecked&&!voices.length)){
+    s.appendChild(el('div','warn','<b>Nu găsesc o voce în limba română 🔇</b><br>Jocul merge și fără, dar Bubu nu poate vorbi.<ol><li>Deschide jocul în <b style="font-size:inherit">Microsoft Edge</b>. Are voci românești: Alina și Emil.</li><li>Sau în Windows: <i>Setări → Oră și limbă → Vorbire → Adăugare voci → Română</i>, apoi repornește browserul.</li></ol>'));
+  }
+  const kids=el('div','kids');
+  [['liza','👧'],['mate','👦']].forEach(([id,face])=>{
+    const k=save.kids[id];
+    const b=el('button','kid '+id,'<div class="face">'+face+'</div><div class="nm">'+k.name+'</div><div class="meta"><span>⭐ '+k.stars+'</span><span>'+(k.level==='mic'?'5–6 ani':'7–8 ani')+'</span></div>');
+    b.onclick=()=>{kidId=id;view='menu';render();speak('Bună, '+k.name+'! Ce facem azi? Pictăm sau umplem coșul?');};
+    kids.appendChild(b);
+  });
+  s.appendChild(kids);app.appendChild(s);
+}
+
+function menu(){
+  const k=kid();const s=el('div','screen');
+  const bar=el('div','bar');
+  const back=el('button','round','🏠');back.setAttribute('aria-label','Înapoi la început');back.onclick=()=>{view='home';render();};
+  bar.appendChild(back);bar.appendChild(el('h2','grow','Salut, '+k.name+'!'));bar.appendChild(el('span','pill','⭐ '+k.stars));s.appendChild(bar);
+  const g=el('div','guide');g.appendChild(owlNode());g.appendChild(el('div','bubble','Alege un joc!'));s.appendChild(g);
+  const gs=el('div','games');
+  [['g1','🏡','Colorează căsuța','Ascultă ce culoare îți spune Bubu',()=>startColor('casa')],
+   ['g1','🐠','Colorează marea','Pești, crab și caracatiță',()=>startColor('mare')],
+   ['g2','🧺','Pune în coș','Trage obiectele cu mouse-ul în coș',startBasket]
+  ].forEach(([c,ic,t,d,fn],i)=>{
+    const b=el('button','game '+(i===1?'g3':c),'<span class="ic">'+ic+'</span><span class="t">'+t+'</span><span class="d">'+d+'</span>');
+    b.onclick=fn;gs.appendChild(b);
+  });
+  s.appendChild(gs);app.appendChild(s);
+}
+
+function playShell(nDots){
+  const s=el('div','screen');
+  const bar=el('div','bar');
+  const back=el('button','round','⬅️');back.setAttribute('aria-label','Înapoi la jocuri');back.onclick=()=>{view='menu';render();};
+  bar.appendChild(back);
+  const dots=el('div','dots grow');dots.id='dots';bar.appendChild(dots);
+  bar.appendChild(el('span','pill','⭐ <span id="st">0</span>'));
+  const rep=el('button','round','🔊');rep.setAttribute('aria-label','Ascultă din nou');rep.onclick=()=>game&&game.say&&speak(game.say);bar.appendChild(rep);
+  s.appendChild(bar);
+  const g=el('div','guide compact');g.appendChild(owlNode());const bub=el('div','bubble','');bub.id='bubble';g.appendChild(bub);s.appendChild(g);
+  return s;
+}
+function setPrompt(html,say){const b=document.getElementById('bubble');if(b)b.innerHTML=html;game.say=say;speak(say);}
+function drawDots(){
+  const d=document.getElementById('dots');if(!d||!game)return;d.innerHTML='';
+  for(let i=0;i<game.total;i++){const r=game.results[i];d.appendChild(el('i',r===true?'ok':r===false?'miss':i===game.q?'now':''));}
+  const st=document.getElementById('st');if(st)st.textContent=game.stars;
+}
+function mark(ok){game.results[game.q]=ok;if(ok)game.stars++;drawDots();}
+
+/* ================= JOC: COLOREAZĂ ================= */
+function startColor(sceneId){
+  silence();app.innerHTML='';
+  const k=kid();const lvl=k.level;const sc=SCENES[sceneId];
+  const pal=PAL[lvl];
+  const keys=Object.keys(sc.regs);
+  const task=[];const preset={};
+  keys.forEach(r=>{
+    const R=sc.regs[r];
+    const opts=R.fix?[R.fix]:R.any.filter(c=>pal.includes(c));
+    const color=rnd(opts.length?opts:R.any);
+    if(lvl==='mare'||R.mic)task.push({r,color});else preset[r]=color;
+  });
+  const order=shuffle(task);
+  // cerul / apa mai întâi, ca scena să prindă culoare repede
+  order.sort((a,b)=>(/cer|apa/.test(b.r)?1:0)-(/cer|apa/.test(a.r)?1:0));
+  game={type:'color',sceneId,order,total:order.length,q:0,results:[],stars:0,mist:0,brush:null,free:false,say:''};
+  const s=playShell();
+  const stage=el('div','stage');
+  const svg=document.createElementNS(NS,'svg');svg.setAttribute('viewBox','0 0 800 480');svg.setAttribute('class','scene');svg.setAttribute('preserveAspectRatio','xMidYMid meet');
+  svg.innerHTML='<defs></defs>'+sc.svg+'<g id="fx"></g>';
+  stage.appendChild(svg);stage.appendChild(el('div','tag',sc.name));
+  s.appendChild(stage);
+  const palette=el('div','palette');
+  pal.forEach(c=>{
+    const b=el('button','pot');b.style.setProperty('--c',COLORS[c].hex);b.dataset.c=c;b.setAttribute('aria-label',COLORS[c].n);b.setAttribute('aria-pressed','false');
+    b.onclick=()=>pickBrush(c);palette.appendChild(b);
+  });
+  s.appendChild(palette);
+  app.appendChild(s);
+  svg.querySelectorAll('[data-r]').forEach(n=>{const c=preset[n.dataset.r];const R=sc.regs[n.dataset.r];n.setAttribute('fill',c?(R.tint?tint(COLORS[c].hex,R.tint):COLORS[c].hex):'#fff');});
+  svg.addEventListener('click',e=>onSceneClick(e,svg));
+  game.svg=svg;game.palette=palette;game.sc=sc;
+  drawDots();
+  speak('Hai să colorăm! Ascultă ce îți spune Bubu.',()=>{if(game&&game.type==='color')colorStep();});
+}
+function regShapes(r){return [...game.svg.querySelectorAll('[data-r="'+r+'"]')];}
+function colorStep(){
+  if(!game)return;
+  if(game.q>=game.total){colorDone();return;}
+  game.mist=0;drawDots();
+  game.svg.querySelectorAll('.hint').forEach(h=>h.classList.remove('hint'));
+  game.palette.querySelectorAll('.hint').forEach(h=>h.classList.remove('hint'));
+  const t=game.order[game.q];const R=game.sc.regs[t.r];
+  setPrompt('Colorează <u>'+R.n+'</u> cu '+cw(t.color)+'!','Colorează '+R.n+' cu '+COLORS[t.color].n+'!');
+}
+function pickBrush(c){
+  if(!game)return;
+  game.brush=c;
+  game.palette.querySelectorAll('.pot').forEach(p=>p.setAttribute('aria-pressed',p.dataset.c===c));
+  const hex=COLORS[c].hex;
+  const cur='<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><path d="M24 4 L36 16 L20 24 L16 20 Z" fill="#c8894c" stroke="#22305a" stroke-width="2"/><path d="M16 20 L20 24 C18 34 8 38 3 37 C5 32 6 22 16 20 Z" fill="'+hex+'" stroke="#22305a" stroke-width="2"/></svg>';
+  game.svg.style.cursor='url("data:image/svg+xml,'+encodeURIComponent(cur)+'") 3 37, pointer';
+  speak(COLORS[c].n.charAt(0).toUpperCase()+COLORS[c].n.slice(1)+'!');
+}
+function onSceneClick(e,svg){
+  if(!game||game.type!=='color'||game.busy)return;
+  const shape=e.target.closest('[data-r]');if(!shape)return;
+  const r=shape.dataset.r;const R=game.sc.regs[r];
+  if(game.free){
+    if(!game.brush){speak('Alege o culoare de jos!');return;}
+    paint(r,game.brush,e);return;
+  }
+  const t=game.order[game.q];if(!t)return;
+  if(r!==t.r){
+    game.mist++;
+    speak('Acesta este '+R.n+'. Caută '+game.sc.regs[t.r].n+'!');
+    if(game.mist>=2)regShapes(t.r).forEach(s=>s.classList.add('hint'));
+    return;
+  }
+  if(!game.brush){speak('Alege întâi culoarea '+COLORS[t.color].n+', de jos!');pulsePot(t.color);return;}
+  if(game.brush!==t.color){
+    game.mist++;
+    speak('Aceasta este culoarea '+COLORS[game.brush].n+'. Noi avem nevoie de '+COLORS[t.color].n+'!');
+    if(game.mist>=2)pulsePot(t.color);
+    return;
+  }
+  game.busy=true;
+  regShapes(r).forEach(s=>s.classList.remove('hint'));
+  const g=game;
+  paint(r,t.color,e,()=>{
+    mark(g.mist<=1);
+    speak(praise(kid()),()=>{if(game===g){g.busy=false;g.q++;colorStep();}});
+  });
+}
+function pulsePot(c){const p=game.palette.querySelector('[data-c="'+c+'"]');p&&p.classList.add('hint');}
+
+let cpN=0;
+function paint(r,color,evt,done){
+  const shapes=regShapes(r);const R=game.sc.regs[r];
+  const hex=R.tint?tint(COLORS[color].hex,R.tint):COLORS[color].hex;
+  const parent=shapes[0].parentNode;const last=shapes[shapes.length-1];
+  const inv=parent.getScreenCTM().inverse();
+  const P=x=>new DOMPoint(x[0],x[1]).matrixTransform(inv);
+  const pt=P([evt.clientX,evt.clientY]);
+  let R2=0;
+  shapes.forEach(s=>{const b=s.getBoundingClientRect();[[b.left,b.top],[b.right,b.top],[b.left,b.bottom],[b.right,b.bottom]].forEach(c=>{const q=P(c);R2=Math.max(R2,Math.hypot(q.x-pt.x,q.y-pt.y));});});
+  const defs=game.svg.querySelector('defs');const id='cp'+(++cpN);
+  const cp=document.createElementNS(NS,'clipPath');cp.id=id;
+  shapes.forEach(s=>{const c=s.cloneNode(false);c.removeAttribute('data-r');c.removeAttribute('class');cp.appendChild(c);});
+  defs.appendChild(cp);
+  const circ=document.createElementNS(NS,'circle');
+  circ.setAttribute('cx',pt.x);circ.setAttribute('cy',pt.y);circ.setAttribute('r',0);circ.setAttribute('fill',hex);circ.setAttribute('clip-path','url(#'+id+')');circ.style.pointerEvents='none';
+  last.after(circ);
+  splash(evt,COLORS[color].hex);
+  const t0=performance.now();const dur=Math.min(900,350+R2*1.6);
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function step(now){
+    const k=reduce?1:Math.min(1,(now-t0)/dur);const ek=1-Math.pow(1-k,3);
+    circ.setAttribute('r',R2*ek+2);
+    if(k<1)requestAnimationFrame(step);
+    else{shapes.forEach(s=>s.setAttribute('fill',hex));circ.remove();cp.remove();done&&done();}
+  }
+  requestAnimationFrame(step);
+}
+function splash(evt,hex){
+  const fx=game.svg.querySelector('#fx');const inv=game.svg.getScreenCTM().inverse();
+  const p=new DOMPoint(evt.clientX,evt.clientY).matrixTransform(inv);
+  const parts=[];
+  for(let i=0;i<10;i++){const c=document.createElementNS(NS,'circle');c.setAttribute('fill',hex);c.setAttribute('stroke','#22305a');c.setAttribute('stroke-width','2');fx.appendChild(c);const a=Math.random()*Math.PI*2,v=40+Math.random()*60;parts.push({c,dx:Math.cos(a)*v,dy:Math.sin(a)*v,r:4+Math.random()*6});}
+  const t0=performance.now();
+  (function f(now){const k=Math.min(1,(now-t0)/600);parts.forEach(o=>{o.c.setAttribute('cx',p.x+o.dx*k);o.c.setAttribute('cy',p.y+o.dy*k+60*k*k);o.c.setAttribute('r',Math.max(0,o.r*(1-k)));});if(k<1)requestAnimationFrame(f);else parts.forEach(o=>o.c.remove());})(t0);
+}
+function colorDone(){
+  const k=kid();const g=game;
+  k.stars+=g.stars;persist();drawDots();
+  g.svg.classList.add('alive');
+  confetti();
+  const stage=g.svg.parentNode;
+  const ov=el('div','overlay');const c=el('div','card2');
+  c.appendChild(el('h2','','Ce frumos, '+k.name+'! 🎨'));
+  c.appendChild(el('div','bigstars',g.stars?'⭐'.repeat(Math.min(g.stars,12)):'🌟'));
+  const a=el('div','actions');
+  const free=el('button','btn','🖌️ Colorează cum vrei');free.onclick=()=>{g.free=true;ov.remove();g.say='Alege orice culoare și colorează ce vrei!';speak(g.say);document.getElementById('bubble').innerHTML='Colorează cum vrei tu! 🌈';};
+  const again=el('button','btn alt','🔁 Din nou');again.onclick=()=>startColor(g.sceneId);
+  const other=el('button','btn alt','🎮 Alt joc');other.onclick=()=>{view='menu';render();};
+  a.appendChild(free);a.appendChild(again);a.appendChild(other);c.appendChild(a);ov.appendChild(c);stage.appendChild(ov);
+  document.getElementById('bubble').innerHTML='Uite! Desenul a prins viață! ✨';
+  speak('Uau! Uite, desenul a prins viață! Bravo, '+k.name+'! '+(g.stars?'Ai câștigat '+starsWord(g.stars)+'!':''));
+}
+
+/* ================= JOC: PUNE ÎN COȘ ================= */
+function startBasket(){
+  silence();app.innerHTML='';
+  game={type:'basket',total:ROUND_BASKET,q:0,results:[],stars:0,say:''};
+  const s=playShell();
+  const field=el('div','field');field.id='field';
+  field.innerHTML='<div class="basket" id="basket"><div class="badge" id="badge"></div>'+
+   '<svg viewBox="0 0 240 180" aria-hidden="true"><path d="M44 92 C40 6 200 6 196 92" fill="none" stroke="#a8662a" stroke-width="14" stroke-linecap="round"/><path d="M44 92 C40 6 200 6 196 92" fill="none" stroke="#d9954a" stroke-width="7" stroke-linecap="round"/><ellipse cx="120" cy="92" rx="104" ry="18" fill="#7a4a1e"/></svg>'+
+   '<div class="inside" id="inside"></div>'+
+   '<svg class="front" viewBox="0 0 240 180" aria-hidden="true"><path d="M14 90 H226 L198 174 H42 Z" fill="#d9954a" stroke="#22305a" stroke-width="4" stroke-linejoin="round"/>'+
+   '<g stroke="#a8662a" stroke-width="4" fill="none"><path d="M24 116 H216"/><path d="M32 142 H208"/><path d="M60 92 L66 172 M95 92 L98 172 M130 92 L130 172 M165 92 L162 172 M198 92 L190 160"/></g>'+
+   '<rect x="8" y="80" width="224" height="20" rx="10" fill="#e8a965" stroke="#22305a" stroke-width="4"/></svg></div>';
+  s.appendChild(field);app.appendChild(s);
+  drawDots();
+  speak('Hai să umplem coșul! Ascultă bine ce îți cere Bubu.',()=>{if(game&&game.type==='basket')basketTask();});
+}
+
+function makeTask(lvl){
+  const kinds=lvl==='mic'?['count','count','cat','color','cat','color']:['count','combo','cat','catcol','color','count'];
+  const kind=kinds[game.q%kinds.length];
+  const pickN=(arr,n)=>Array.from({length:n},()=>rnd(arr));
+  let t={kind,items:[]};
+  if(kind==='count'){
+    const T=rnd(ITEMS);const n=lvl==='mic'?rint(1,5):rint(3,8);
+    const extra=rint(1,2);
+    t.need={[T.k]:n};t.targets=[T];
+    t.items=pickN([T],n+extra).concat(pickN(ITEMS.filter(i=>i.k!==T.k),lvl==='mic'?3:Math.max(2,11-n-extra)));
+    t.html='Pune <b>'+n+'</b> '+(n===1?T.s:T.p)+' '+T.e+' în coș!';
+    t.say='Pune '+qty(n,T)+' în coș!';
+    t.end='Ai pus '+qty(n,T)+'!';
+  }else if(kind==='combo'){
+    const [A,B]=shuffle(ITEMS).slice(0,2);const na=rint(1,4),nb=rint(1,4);
+    t.need={[A.k]:na,[B.k]:nb};t.targets=[A,B];
+    t.items=pickN([A],na+1).concat(pickN([B],nb+1),pickN(ITEMS.filter(i=>i.k!==A.k&&i.k!==B.k),3));
+    t.html='Pune <b>'+na+'</b> '+A.e+' și <b>'+nb+'</b> '+B.e+' în coș!';
+    t.say='Pune '+qty(na,A)+' și '+qty(nb,B)+' în coș!';
+    t.end='Ai pus '+qty(na,A)+' și '+qty(nb,B)+'!';
+  }else if(kind==='cat'){
+    const cats=lvl==='mic'?['fruct','animal','jucarie']:['fruct','leguma','animal','jucarie'];
+    const c=rnd(cats);const ok=ITEMS.filter(i=>i.c===c);const m=rint(3,4);
+    t.match=i=>i.c===c;t.total=m;
+    t.items=pickN(ok,m).concat(pickN(ITEMS.filter(i=>i.c!==c),lvl==='mic'?4:5));
+    t.html='Pune în coș toate <b>'+CATS[c].pl+'</b> '+CATS[c].ic+'!';
+    t.say='Pune în coș toate '+CATS[c].pl+'!';
+    t.end='Toate '+CATS[c].pl+' sunt în coș!';
+    t.wrong=i=>'Ups! '+cap(i.a)+' nu este '+CATS[c].s+'.';
+  }else if(kind==='color'){
+    const col=rnd(['rosu','galben','verde','portocaliu']);const ok=ITEMS.filter(i=>i.col===col);const m=rint(3,4);
+    t.match=i=>i.col===col;t.total=m;
+    t.items=pickN(ok,m).concat(pickN(ITEMS.filter(i=>i.col!==col),lvl==='mic'?4:5));
+    t.html='Pune în coș tot ce este '+cw(col)+'!';
+    t.say='Pune în coș tot ce este '+COLORS[col].n+'!';
+    t.end='Tot ce e '+COLORS[col].n+' e în coș!';
+    t.wrong=i=>'Ups! '+cap(i.a)+' are altă culoare.';
+  }else{ // catcol
+    const combos=[];Object.keys(CATS).forEach(c=>Object.keys(COLPL).forEach(col=>{const ok=ITEMS.filter(i=>i.c===c&&i.col===col);if(ok.length)combos.push({c,col,ok});}));
+    const X=rnd(combos);const m=rint(2,3);
+    t.match=i=>i.c===X.c&&i.col===X.col;t.total=m;
+    const sameCat=ITEMS.filter(i=>i.c===X.c&&i.col!==X.col),sameCol=ITEMS.filter(i=>i.col===X.col&&i.c!==X.c);
+    t.items=pickN(X.ok,m).concat(sameCat.length?pickN(sameCat,3):[],sameCol.length?pickN(sameCol,3):[],pickN(ITEMS.filter(i=>!t.match(i)),1));
+    t.html='Pune în coș doar <b>'+CATS[X.c].pl+' '+COLPL[X.col]+'</b>!';
+    t.say='Pune în coș doar '+CATS[X.c].pl+' '+COLPL[X.col]+'!';
+    t.end='Bravo! Toate '+CATS[X.c].pl+' '+COLPL[X.col]+' sunt în coș!';
+    t.wrong=i=>i.c!==X.c?'Ups! '+cap(i.a)+' nu este '+CATS[X.c].s+'.':'Ups! '+cap(i.a)+' are altă culoare.';
+  }
+  t.items=shuffle(t.items).slice(0,12);
+  t.have={};t.in=0;
+  return t;
+}
+const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+
+function basketTask(){
+  if(!game)return;
+  if(game.q>=game.total){finishScreen();return;}
+  const field=document.getElementById('field');
+  field.querySelectorAll('.item,.flyer').forEach(n=>n.remove());
+  document.getElementById('inside').innerHTML='';
+  const t=makeTask(kid().level);game.task=t;game.mist=0;game.lock=false;
+  drawDots();updBadge();
+  // așezare pe grilă, cu puțin joc
+  const W=field.clientWidth,H=field.clientHeight;
+  const cols=W>700?6:W>480?4:3;const rows=Math.ceil(t.items.length/cols);
+  const slots=[];for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)slots.push([c,r]);
+  const top=0.13,bottom=rows>2?0.58:0.52;
+  t.items.forEach((it,i)=>{
+    const [c,r]=slots[i];
+    let x=(c+0.5)/cols*100+(Math.random()*6-3);
+    let y=(top+(rows===1?0.15:(r/(rows-1))*(bottom-top)))*100+(Math.random()*6-3);
+    // ocolește coșul de jos-mijloc
+    const d=el('div','item',it.e);d.style.left=x+'%';d.style.top=y+'%';d.style.animationDelay=(-Math.random()*2.6)+'s';
+    d.dataset.hx=x;d.dataset.hy=y;d._it=it;d.setAttribute('role','button');d.setAttribute('aria-label',it.s);d.tabIndex=0;
+    d.style.opacity='0';d.style.scale='.3';
+    setTimeout(()=>{d.style.transition='opacity .3s, scale .35s cubic-bezier(.3,1.6,.5,1)';d.style.opacity='1';d.style.scale='1';},60+i*55);
+    setTimeout(()=>{d.style.transition='';},800+i*55);
+    bindDrag(d);d.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();tryPut(d);}};
+    field.appendChild(d);
+  });
+  setPrompt(t.html,t.say);
+}
+function updBadge(){
+  const t=game.task;const b=document.getElementById('badge');if(!b||!t)return;
+  if(t.need)b.innerHTML=t.targets.map(T=>T.e+' '+(t.have[T.k]||0)+'/'+t.need[T.k]).join(' &nbsp; ');
+  else b.textContent=t.in+' / '+t.total;
+}
+function bindDrag(d){
+  let sx,sy,moved=false,drag=false,ox,oy;
+  d.addEventListener('pointerdown',e=>{
+    if(!game||game.lock)return;
+    e.preventDefault();d.setPointerCapture(e.pointerId);
+    sx=e.clientX;sy=e.clientY;moved=false;drag=true;
+    const fr=d.parentNode.getBoundingClientRect();const r=d.getBoundingClientRect();
+    ox=e.clientX-(r.left+r.width/2);oy=e.clientY-(r.top+r.height/2);
+    d._fr=fr;
+  });
+  d.addEventListener('pointermove',e=>{
+    if(!drag)return;
+    if(!moved&&Math.hypot(e.clientX-sx,e.clientY-sy)>6){moved=true;d.classList.add('drag');}
+    if(moved){const fr=d._fr;d.style.left=((e.clientX-ox-fr.left)/fr.width*100)+'%';d.style.top=((e.clientY-oy-fr.top)/fr.height*100)+'%';
+      document.getElementById('basket').classList.toggle('over',overBasket(e));}
+  });
+  const end=e=>{
+    if(!drag)return;drag=false;d.classList.remove('drag');
+    document.getElementById('basket').classList.remove('over');
+    if(!moved){tryPut(d);return;}
+    if(overBasket(e))tryPut(d);else goHome(d);
+  };
+  d.addEventListener('pointerup',end);d.addEventListener('pointercancel',end);
+}
+function overBasket(e){const r=document.getElementById('basket').getBoundingClientRect();return e.clientX>r.left-30&&e.clientX<r.right+30&&e.clientY>r.top-60&&e.clientY<r.bottom+20;}
+function goHome(d){d.style.transition='left .35s cubic-bezier(.3,1.4,.5,1), top .35s cubic-bezier(.3,1.4,.5,1)';d.style.left=d.dataset.hx+'%';d.style.top=d.dataset.hy+'%';setTimeout(()=>d.style.transition='',400);}
+
+function tryPut(d){
+  if(!game||game.lock||!game.task)return;
+  const t=game.task;const it=d._it;
+  let ok=false,reason='';
+  if(t.need){
+    if(t.need[it.k]==null){const T=t.targets.length===1?t.targets[0]:null;reason='Ups! Acesta este '+num(1,it.g)+' '+it.s+'. '+(T?'Căutăm '+T.p+'.':'Mai uită-te o dată.');}
+    else if((t.have[it.k]||0)>=t.need[it.k])reason='Ai pus destule '+(it.p)+'! Ajunge.';
+    else ok=true;
+  }else{
+    if(t.match(it))ok=true;else reason=t.wrong(it);
+  }
+  const basket=document.getElementById('basket');
+  if(!ok){
+    game.mist++;
+    d.classList.remove('nope');void d.offsetWidth;d.classList.add('nope');
+    basket.classList.remove('no');void basket.offsetWidth;basket.classList.add('no');
+    goHome(d);speak(reason);
+    return;
+  }
+  // zboară în coș
+  const field=document.getElementById('field');const fr=field.getBoundingClientRect();const br=basket.getBoundingClientRect();const r=d.getBoundingClientRect();
+  const x0=r.left+r.width/2-fr.left,y0=r.top+r.height/2-fr.top;
+  const x1=br.left+br.width/2-fr.left+rint(-30,30),y1=br.top+br.height*0.35-fr.top;
+  d.remove();
+  const f=el('div','flyer',it.e);f.style.left=x0+'px';f.style.top=y0+'px';field.appendChild(f);
+  const peak=Math.min(y0,y1)-80;
+  const anim=f.animate([
+    {left:x0+'px',top:y0+'px',transform:'translate(-50%,-50%) scale(1) rotate(0)'},
+    {left:(x0+x1)/2+'px',top:peak+'px',transform:'translate(-50%,-50%) scale(1.15) rotate(-20deg)',offset:.45},
+    {left:x1+'px',top:y1+'px',transform:'translate(-50%,-50%) scale(.6) rotate(10deg)'}
+  ],{duration:matchMedia('(prefers-reduced-motion: reduce)').matches?1:520,easing:'ease-in'});
+  if(t.need)t.have[it.k]=(t.have[it.k]||0)+1;
+  t.in++;
+  const countNow=t.need?t.have[it.k]:t.in;
+  anim.onfinish=()=>{
+    f.remove();
+    const sp=el('span','',it.e);sp.style.rotate=rint(-25,25)+'deg';document.getElementById('inside').appendChild(sp);
+    basket.classList.remove('hop');void basket.offsetWidth;basket.classList.add('hop');
+    sparks(field,x1,y1);
+    updBadge();
+    const done=t.need?Object.keys(t.need).every(k=>(t.have[k]||0)>=t.need[k]):t.in>=t.total;
+    if(done){
+      game.lock=true;const g=game;
+      mark(game.mist<=1);
+      speak(cap(NUMW[countNow])+'! '+praise(kid())+' '+t.end,()=>{if(game===g){g.q++;setTimeout(basketTask,400);}});
+      celebrateBasket();
+    }else speak(cap(NUMW[countNow])+'!');
+  };
+}
+function sparks(field,x,y){
+  for(let i=0;i<7;i++){const s=el('span','spark',rnd(['✨','⭐','💫']));s.style.left=x+'px';s.style.top=y+'px';field.appendChild(s);
+    const a=Math.random()*Math.PI*2,v=50+Math.random()*50;
+    s.animate([{transform:'translate(-50%,-50%) scale(.5)',opacity:1},{transform:'translate(calc(-50% + '+Math.cos(a)*v+'px),calc(-50% + '+(Math.sin(a)*v-30)+'px)) scale(1.2)',opacity:0}],{duration:700,easing:'ease-out'}).onfinish=()=>s.remove();}
+}
+function celebrateBasket(){
+  const field=document.getElementById('field');
+  field.querySelectorAll('.item').forEach((d,i)=>{d.animate([{opacity:1},{opacity:0,transform:'translate(-50%,-50%) scale(.2)'}],{duration:400,delay:i*40,fill:'forwards'});});
+}
+
+/* ================= final ================= */
+function finishScreen(){
+  const k=kid();const n=game.stars;
+  k.stars+=n;persist();
+  silence();app.innerHTML='';
+  const s=el('div','finish');
+  s.appendChild(owlNode());
+  s.appendChild(el('h1','','Bravo, '+k.name+'!'));
+  s.appendChild(el('div','bigstars',n?'⭐'.repeat(n):'🌟'));
+  s.appendChild(el('div','pill',(n?'Ai câștigat '+starsWord(n):'Ai terminat jocul')+' · în total ⭐ '+k.stars));
+  const a=el('div','actions');
+  const again=el('button','btn','🔁 Încă o dată');again.onclick=startBasket;
+  const other=el('button','btn alt','🎮 Alt joc');other.onclick=()=>{view='menu';render();};
+  a.appendChild(again);a.appendChild(other);s.appendChild(a);app.appendChild(s);
+  game=null;
+  confetti();
+  speak('Felicitări, '+k.name+'! '+(n?'Ai câștigat '+starsWord(n)+'!':'Ai terminat jocul!'));
+}
+function confetti(){
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  const c=document.getElementById('confetti');c.innerHTML='';
+  for(let i=0;i<40;i++){const sp=el('span','',rnd(['⭐','🎉','🌟','🎈','✨','🎨']));sp.style.left=Math.random()*100+'%';sp.style.animationDuration=(2+Math.random()*2.5)+'s';sp.style.animationDelay=(Math.random()*.8)+'s';c.appendChild(sp);}
+  setTimeout(()=>c.innerHTML='',5500);
+}
+
+/* ================= părinți ================= */
+function parents(){
+  const p=el('div','panel');const c=el('div','card');p.appendChild(c);
+  c.appendChild(el('h2','','Pentru părinți'));
+  ['liza','mate'].forEach(id=>{
+    const k=save.kids[id];const r=el('div','row');r.appendChild(el('label','',k.name));
+    const seg=el('div','seg');
+    [['mic','5–6 ani'],['mare','7–8 ani']].forEach(([v,t])=>{const b=el('button','',t);b.setAttribute('aria-pressed',k.level===v);b.onclick=()=>{k.level=v;persist();seg.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));};seg.appendChild(b);});
+    r.appendChild(seg);c.appendChild(r);
+  });
+  c.appendChild(el('div','small','<b>5–6 ani:</b> 6 culori de bază, mai puține zone de colorat, numărat până la 5, sortare după fel și culoare.<br><b>7–8 ani:</b> 10 culori, toată scena de colorat, numărat până la 8, două obiecte deodată („2 mere și 3 pere”), sortare după fel <i>și</i> culoare.'));
+  const vr=el('div','row');vr.appendChild(el('label','','Voce'));
+  if(voices.length){const sel=el('select');sel.id='voiceSel';voices.forEach(v=>{const o=el('option','',v.name);o.value=v.voiceURI;if(voice&&v.voiceURI===voice.voiceURI)o.selected=true;sel.appendChild(o);});
+    sel.onchange=()=>{voice=voices.find(v=>v.voiceURI===sel.value)||voice;save.voice=voice.voiceURI;persist();speak('Bună! Eu sunt Bubu.');};vr.appendChild(sel);}
+  else vr.appendChild(el('span','small','Nicio voce românească pe acest browser. Folosește Microsoft Edge.'));
+  c.appendChild(vr);
+  const rr=el('div','row');rr.appendChild(el('label','','Viteză'));
+  const rg=el('input');rg.type='range';rg.id='rate';rg.min='0.6';rg.max='1.2';rg.step='0.05';rg.value=save.rate;rg.onchange=()=>{save.rate=+rg.value;persist();speak('Așa vorbesc acum.');};
+  rr.appendChild(rg);c.appendChild(rr);
+  const a=el('div','actions');
+  const test=el('button','btn alt','🔊 Testează vocea');test.onclick=()=>speak('Bună, Liza! Bună, Mate! Eu sunt bufnița Bubu.');
+  const reset=el('button','btn alt','Șterge steluțele');reset.onclick=()=>{if(reset.dataset.sure){save.kids.liza.stars=0;save.kids.mate.stars=0;persist();reset.textContent='Gata, șterse';}else{reset.dataset.sure='1';reset.textContent='Sigur? Apasă din nou';}};
+  const close=el('button','btn','Gata');close.onclick=()=>{p.remove();render();};
+  a.appendChild(test);a.appendChild(reset);a.appendChild(close);c.appendChild(a);
+  p.onclick=e=>{if(e.target===p){p.remove();render();}};
+  document.body.appendChild(p);
+}
+
+render();
+})();
+</script>

@@ -209,19 +209,20 @@ if(synth){loadVoices();synth.onvoiceschanged=()=>{loadVoices();if(current==='hom
 setTimeout(()=>{voicesChecked=true;loadVoices();if(current==='home')render();},1600);
 
 let owlEl=null;
+let pend=null;
 function speak(text,done){
-  const id=++speechId;
-  const fin=()=>{if(id!==speechId)return;speechId++;owlEl&&owlEl.classList.remove('talk');done&&done();};
+  if(pend){const p=pend;pend=null;p.cancelled=true;if(p.done)setTimeout(p.done,0);}
+  const me={done,cancelled:false};pend=me;
+  const fin=()=>{if(me.cancelled||pend!==me)return;pend=null;owlEl&&owlEl.classList.remove('talk');done&&done();};
   if(!synth){setTimeout(fin,500+text.length*40);return;}
   synth.cancel();
-  const u=new SpeechSynthesisUtterance(text);
-  u.lang='ro-RO';if(voice)u.voice=voice;u.rate=save.rate;u.pitch=1.1;
+  const u=new SpeechSynthesisUtterance(text);u.lang='ro-RO';if(voice)u.voice=voice;u.rate=save.rate;u.pitch=1.1;
   u.onend=fin;u.onerror=fin;
   owlEl&&owlEl.classList.add('talk');
-  setTimeout(()=>{if(id===speechId){synth.speak(u);}},60);
+  setTimeout(()=>{if(pend===me)synth.speak(u);},60);
   setTimeout(fin,2500+text.length*130);
 }
-function silence(){speechId++;synth&&synth.cancel();owlEl&&owlEl.classList.remove('talk');}
+function silence(){if(pend){pend.cancelled=true;pend=null;}synth&&synth.cancel();owlEl&&owlEl.classList.remove('talk');}
 
 /* ---------- utilitare ---------- */
 const rnd=a=>a[Math.floor(Math.random()*a.length)];
