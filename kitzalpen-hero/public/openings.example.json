@@ -1,0 +1,18 @@
+{
+  "_hint": "Rename to openings.json to override the season-start bar. Dates YYYY-MM-DD. Only 'planned' dates from official operator sites.",
+  "verifiedAt": "2026-11-05",
+  "season": "2026/27",
+  "items": [
+    {
+      "id": "resterkogel",
+      "name": "KitzSki Resterkogel",
+      "start": "2026-11-06",
+      "note": {
+        "de": "Mo–Fr Training, Sa–So öffentlich",
+        "en": "Mon–Fri training, Sat–Sun public"
+      },
+      "url": "https://www.kitzski.at/en/ski-area-tirol/timetables-operating-times.html",
+      "live": "https://www.kitzski.at/en/current-info/kitz-lift-status.html"
+    }
+  ]
+}

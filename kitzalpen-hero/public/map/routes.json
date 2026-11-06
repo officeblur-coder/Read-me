@@ -1,0 +1,66 @@
+{
+ "panoramabahn-w": {
+  "km": 2.2,
+  "min": 5
+ },
+ "wildkogel-w": {
+  "km": 12.3,
+  "min": 12
+ },
+ "zillertal": {
+  "km": 35.6,
+  "min": 40
+ },
+ "schmitten": {
+  "km": 34.1,
+  "min": 37
+ },
+ "kitzsteinhorn": {
+  "km": 34.4,
+  "min": 35
+ },
+ "rodel": {
+  "km": 7.5,
+  "min": 9
+ },
+ "npz-w": {
+  "km": 4.4,
+  "min": 5
+ },
+ "badesee": {
+  "km": 1.1,
+  "min": 5
+ },
+ "hintersee": {
+  "km": 15.9,
+  "min": 21
+ },
+ "krimml": {
+  "km": 23.6,
+  "min": 25
+ },
+ "npz-s": {
+  "km": 4.4,
+  "min": 5
+ },
+ "panoramabahn-s": {
+  "km": 2.2,
+  "min": 5
+ },
+ "resterkogel": {
+  "km": 2.2,
+  "min": 5
+ },
+ "weisssee": {
+  "km": 29.1,
+  "min": 54
+ },
+ "stauseen": {
+  "km": 36.1,
+  "min": 38
+ },
+ "wildkogel-s": {
+  "km": 7.5,
+  "min": 9
+ }
+}

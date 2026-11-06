@@ -1,0 +1,76 @@
+# KitzAlpen – www.kitzalpen.at (Apache / cPanel)
+# Every page and language is a static file (/chalet/index.html, /en/rooms/double/index.html …),
+# so Apache serves the pages directly. The rules below only handle HTTPS, www and the old addresses.
+
+DirectoryIndex index.html
+Options -Indexes
+AddDefaultCharset UTF-8
+
+<IfModule mod_mime.c>
+  AddType image/avif .avif
+  AddType image/webp .webp
+  AddType font/woff2 .woff2
+  AddType font/woff .woff
+  AddType application/json .json
+</IfModule>
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # 1. one address: https://www.kitzalpen.at (needs the free SSL certificate active in cPanel)
+  RewriteCond %{HTTPS} !=on
+  RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+  RewriteRule ^ https://www.kitzalpen.at%{REQUEST_URI} [R=301,L,NE]
+  RewriteCond %{HTTP_HOST} ^kitzalpen\.at$ [NC]
+  RewriteRule ^ https://www.kitzalpen.at%{REQUEST_URI} [R=301,L,NE]
+
+  # page folders always end in "/" (/chalet -> /chalet/), straight to https
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteCond %{REQUEST_URI} !/$
+  RewriteRule ^(.*)$ https://www.kitzalpen.at/$1/ [R=301,L]
+
+  # 2. addresses of the previous site whose name changed (301). Unchanged ones (/chalet/, /restaurant/,
+  #    /rooms/<room>/, /en/group-activities/, /en/contact/ …) are real pages now and need no rule.
+  #    /tour/, /virtualtour/ and /menu/ stay untouched.
+  RewriteRule ^rooms/?$ https://www.kitzalpen.at/zimmer/ [R=301,L]
+  RewriteRule ^contact/?$ https://www.kitzalpen.at/kontakt/ [R=301,L]
+  RewriteRule ^activities/?$ https://www.kitzalpen.at/entdecken/ [R=301,L]
+  RewriteRule ^(en|nl|ro|hu|cs|pl|sv)/activities/?$ https://www.kitzalpen.at/$1/explore/ [R=301,L]
+  RewriteRule ^ski/?$ https://www.kitzalpen.at/entdecken/skigebiete/ [R=301,L]
+  RewriteRule ^(en|nl|ro|hu|cs|pl|sv)/ski/?$ https://www.kitzalpen.at/$1/explore/ski-areas/ [R=301,L]
+  RewriteRule ^de/?$ https://www.kitzalpen.at/ [R=301,L]
+  RewriteRule ^de/(.+)$ https://www.kitzalpen.at/$1 [R=301,L]
+</IfModule>
+
+# unknown address: the site's 404 page (shows the start page, status 404, not indexed)
+ErrorDocument 404 /404.html
+
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  # index.html is always checked again, so a new upload is seen at once
+  <FilesMatch "^(index\.html|weather\.json|openings\.json)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>
+
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType text/html "access plus 0 seconds"
+  ExpiresByType application/json "access plus 0 seconds"
+  ExpiresByType text/css "access plus 1 year"
+  ExpiresByType application/javascript "access plus 1 year"
+  ExpiresByType text/javascript "access plus 1 year"
+  ExpiresByType font/woff2 "access plus 1 year"
+  ExpiresByType image/webp "access plus 1 month"
+  ExpiresByType image/avif "access plus 1 month"
+  ExpiresByType image/jpeg "access plus 1 month"
+  ExpiresByType image/png "access plus 1 month"
+  ExpiresByType image/svg+xml "access plus 1 month"
+</IfModule>
+
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/plain application/javascript text/javascript application/json image/svg+xml
+</IfModule>
