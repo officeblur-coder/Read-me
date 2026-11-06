@@ -56,6 +56,13 @@ function Icon({ kind }: { kind: AmenityKind }) {
         <path className="drop d2" d="M15.6 12.4v1.4" />
       </>
     ),
+    ski: (
+      <>
+        <path {...p} className="ic-draw ridge" d="M7 3.5 9.5 20.5" />
+        <path {...p} className="ic-draw ridge r2" d="M13 3.5 15.5 20.5" />
+        <path {...p} d="M5 14.5l7-1M11 13.5l7-1" />
+      </>
+    ),
     mountain: (
       <>
         <path {...p} className="ic-draw ridge" d="M2.5 19 9 8.6l3.8 6.1" />

@@ -90,6 +90,7 @@ export const SKI_AREAS: SkiArea[] = [
   },
   {
     id: 'skiwelt', name: 'SkiWelt Wilder Kaiser – Brixental', short: 'SkiWelt', region: { de: 'Brixen · Westendorf · Söll · Ellmau', en: 'Brixen · Westendorf · Söll · Ellmau' },
+    img: `${import.meta.env.BASE_URL}images/real/skiwelt.webp`, imgAlt: { de: 'Skifahrer auf frisch präparierter Piste vor schroffen Kalkgipfeln', en: 'Skier on a freshly groomed slope below jagged limestone peaks' },
     km: 275, lifts: 81,
     season: { start: '2026-12-05', end: '2027-03-29', note: { de: 'Ellmau bis 4. April · auf Ski auch über die KitzSkiWelt Tour erreichbar', en: 'Ellmau until 4 April · also reachable on skis via the KitzSkiWelt Tour' } },
     access: [{ name: { de: 'Gondelbahn Brixen im Thale (über Pass Thurn – Kitzbühel)', en: 'Brixen im Thale gondola (via Pass Thurn – Kitzbühel)' }, km: 46.4, min: 51 }],

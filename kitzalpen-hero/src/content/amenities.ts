@@ -1,6 +1,6 @@
 import type { Lang } from './hero';
 
-export type AmenityKind = 'wifi' | 'tv' | 'parking' | 'restaurant' | 'breakfast' | 'bathroom' | 'mountain' | 'card';
+export type AmenityKind = 'wifi' | 'tv' | 'ski' | 'parking' | 'restaurant' | 'breakfast' | 'bathroom' | 'mountain' | 'card';
 
 export interface Amenity {
   kind: AmenityKind;
@@ -23,7 +23,7 @@ export interface Amenity {
  */
 export const AMENITIES: Amenity[] = [
   { kind: 'wifi', label: { de: 'Kostenloses WLAN', en: 'Free Wi-Fi' }, photo: 'wifi', focus: '40% 40%' },
-  { kind: 'tv', label: { de: 'Flachbild-TV', en: 'Flat-screen TV' }, photo: 'tv', focus: '50% 40%' },
+  { kind: 'ski', label: { de: 'Skiraum', en: 'Ski room' }, detail: { de: 'Mit Schuhtrocknern', en: 'With boot dryers' }, photo: 'skiraum', focus: '55% 55%' },
   { kind: 'parking', label: { de: 'Kostenloser Parkplatz', en: 'Free parking' }, photo: 'parking', focus: '60% 70%' },
   { kind: 'restaurant', label: { de: 'Restaurant & Bar', en: 'Restaurant & Bar' }, detail: { de: 'Abendessen Di – So, 17 – 21 Uhr', en: 'Dinner Tue – Sun, 5 – 9 pm' }, photo: 'restaurant', focus: '45% 45%' },
   { kind: 'breakfast', label: { de: 'Frühstücksbuffet', en: 'Breakfast buffet' }, detail: { de: 'Täglich 08:00 – 10:00 Uhr', en: 'Daily 8 – 10 am' }, photo: 'breakfast', focus: '55% 50%' },

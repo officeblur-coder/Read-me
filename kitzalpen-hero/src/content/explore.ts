@@ -8,15 +8,15 @@ export const exploreFor = (s: Season) => EXPLORE.filter((x) => !x.only || x.only
 export const exploreText = (x: ExploreItem, s: Season, l: Lang) => (s === 'winter' && x.textWinter ? x.textWinter[l] : x.text[l]);
 
 export const EXPLORE: ExploreItem[] = [
-  { id: 'top', href: () => '#experiences', img: { winter: 'images/winter/ksh-3029.webp', summer: 'images/activities/krimml-waterfalls.webp' },
+  { id: 'top', href: () => '#experiences', img: { winter: 'images/real/kitzsteinhorn-aerial.webp', summer: 'images/activities/krimml-waterfalls.webp' },
     title: { de: 'Top 15 Erlebnisse', en: 'Top 15 experiences' }, text: { de: 'Die besten Erlebnisse der Saison im Umkreis von 70 km.', en: 'The season’s best experiences within 70 km.' } },
   { id: 'activities', href: (s) => `#activities-${s}`, img: { winter: 'images/winter/wildkogel-night.webp', summer: 'images/activities/wildkogel-mountain-biking.webp' },
     title: { de: 'Aktivitäten', en: 'Activities' }, text: { de: 'Winter- und Sommerziele rund um Hollersbach.', en: 'Winter and summer destinations around Hollersbach.' } },
-  { id: 'mountain', href: () => '#mountain', live: true, img: { winter: 'images/winter/ksh-platform.webp', summer: 'images/activities/kitzsteinhorn-kaprun.webp' },
+  { id: 'mountain', href: () => '#mountain', live: true, img: { winter: 'images/real/kitzski-gondola-couple.webp', summer: 'images/real/panoramabahn-summer.webp' },
     title: { de: 'Bergerlebnis live', en: 'Mountain live' }, text: { de: 'Bergwetter, Webcams und Ihr Skitag.', en: 'Mountain weather, webcams and your ski day.' } },
-  { id: 'ski', only: 'winter', href: () => '#ski', img: { winter: 'images/winter/kitzski-piste.webp', summer: 'images/winter/kitzski-piste.webp' },
+  { id: 'ski', only: 'winter', href: () => '#ski', img: { winter: 'images/real/ski-panorama.webp', summer: 'images/real/ski-panorama.webp' },
     title: { de: 'Skigebiete & Skipässe', en: 'Ski areas & passes' }, text: { de: 'Sechs Skigebiete, Fahrzeiten und der passende Skipass.', en: 'Six ski areas, drive times and the right pass.' } },
-  { id: 'tours', href: () => '#tours', img: { winter: 'images/winter/snowshoe.webp', summer: 'images/groups/tauern-radweg-cycling.webp' },
+  { id: 'tours', href: () => '#tours', img: { winter: 'images/real/winter-walk.webp', summer: 'images/groups/tauern-radweg-cycling.webp' },
     title: { de: 'Touren-Explorer', en: 'Tour explorer' }, text: { de: 'Rad, Mountainbike, Motorrad und Wandern – mit GPX.', en: 'Cycling, MTB, motorcycling and hiking – with GPX.' },
     textWinter: { de: 'Winterwandern, Langlauf, Rodeln und Schneeschuh.', en: 'Winter walks, cross-country, tobogganing and snowshoeing.' } },
   { id: 'places', href: () => '#places', img: { winter: 'images/winter/town-kitzbuehel.webp', summer: 'images/activities/zell-am-see.webp' },

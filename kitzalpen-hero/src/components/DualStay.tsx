@@ -17,8 +17,8 @@ const IMG = `${import.meta.env.BASE_URL}images/`;
  */
 const PHOTO: Record<'pension' | 'chalet', Record<Season, Record<Daypart, string>>> = {
   pension: {
-    winter: { day: `${IMG}evening/pension-winter-day.webp`, evening: `${IMG}evening/pension-winter.webp` },
-    summer: { day: `${IMG}hero/summer-d-1671.webp`, evening: `${IMG}restaurant/bar-1600.webp` },
+    winter: { day: `${IMG}hero/winter-d-1672.webp`, evening: `${IMG}evening/pension-winter.webp` },
+    summer: { day: `${IMG}hero/summer-d-1671.webp`, evening: `${IMG}real/terrace-evening.webp` },
   },
   chalet: {
     winter: { day: `${IMG}chalet/winter-1536.webp`, evening: `${IMG}chalet-page/exterior-03-1024.webp` },

@@ -5,13 +5,13 @@ export interface RestPhoto { id: string; w: number; h: number; label: Record<Lan
 /** Four real photos supplied by KitzAlpen (restaurant hall, bar, window corner, bar lounge). */
 export const REST_PHOTOS: RestPhoto[] = [
   { id: 'hall', w: 1600, h: 1066, label: { de: 'Gaststube', en: 'Dining room' },
-    alt: { de: 'Gaststube mit Holzdecke, karierten Tischläufern und türkisen Sitzbänken', en: 'Dining room with wooden ceiling, checked table runners and teal benches' } },
+    alt: { de: 'Die Gaststube am Abend mit Korblampen, karierten Tischläufern und türkisen Sitzbänken', en: 'The dining room in the evening with wicker lamps, checked table runners and teal benches' } },
   { id: 'bar', w: 1600, h: 1066, label: { de: 'Bar', en: 'Bar' },
-    alt: { de: 'Bar mit hängenden Gläsern, Holzwänden und Hockern mit Fell', en: 'Bar with hanging glasses, wooden walls and sheepskin stools' } },
+    alt: { de: 'Die Bar mit Kachelofen, hängenden Gläsern und Hockern mit Fell', en: 'The bar with tiled stove, hanging glasses and sheepskin stools' } },
   { id: 'corner', w: 1600, h: 1066, label: { de: 'Fensterecke', en: 'Window corner' },
-    alt: { de: 'Gedeckter Tisch in der Fensterecke mit karierten Vorhängen', en: 'Laid table in the window corner with checked curtains' } },
-  { id: 'lounge', w: 1600, h: 1066, label: { de: 'Stehbar', en: 'Bar counter' },
-    alt: { de: 'Schmale Theke aus Altholz mit Fellhockern und warmem Licht', en: 'Narrow reclaimed-wood counter with sheepskin stools and warm light' } },
+    alt: { de: 'Für das Abendessen gedeckter Ecktisch mit Weingläsern vor dem Bergsee-Bild', en: 'Corner table laid for dinner with wine glasses in front of the mountain-lake mural' } },
+  { id: 'lounge', w: 1600, h: 1066, label: { de: 'Barstube', en: 'Bar room' },
+    alt: { de: 'Die Barstube mit Holzbank, Kachelofen und Theke im warmen Licht', en: 'The bar room with wooden bench, tiled stove and counter in warm light' } },
 ];
 
 export type RestIcon = 'breakfast' | 'regional' | 'cosy' | 'bar';

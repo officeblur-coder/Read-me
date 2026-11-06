@@ -8,6 +8,7 @@ import type { WStop } from './winterPage';
  */
 const A = `${import.meta.env.BASE_URL}images/activities/`;
 const a = (n: string) => `${A}${n}.webp`;
+const r = (n: string) => `${import.meta.env.BASE_URL}images/real/${n}.webp`;
 export const S_HERO = `${import.meta.env.BASE_URL}images/experience/summer-1920.webp`;
 export const S_SIDE = a('hike-feature');
 export const S_GLIDE = a('paragliding');
@@ -18,7 +19,7 @@ export const S_STOPS: WStop[] = [
     tag: { de: 'Kitzbüheler Alpen', en: 'Kitzbühel Alps' },
     text: { de: 'Mit der Gondel hinauf in die Kitzbüheler Alpen – Startpunkt für Wanderungen und Sommer am Berg über Hollersbach.', en: 'Up into the Kitzbühel Alps by gondola – a starting point for hikes and summer on the mountain above Hollersbach.' },
     facts: { de: ['Talstation Hollersbach'], en: ['Valley station Hollersbach'] },
-    pics: [], // the only KitzSki photo we have is a winter shot – no summer photo yet
+    pics: [r('panoramabahn-summer')],
   },
   {
     id: 'wildkogel', km: 8, time: { de: '9 Min.', en: '9 min' }, bearing: 270, air: 6.4, dest: '47.27254,12.34061', name: 'Wildkogel · Habachtal',
@@ -32,7 +33,7 @@ export const S_STOPS: WStop[] = [
     tag: { de: 'Felbertal', en: 'Felber valley' },
     text: { de: 'Ein stiller Bergsee am Ende des Felbertals.', en: 'A quiet mountain lake at the end of the Felber valley.' },
     facts: { de: ['Bergsee'], en: ['Mountain lake'] },
-    pics: [],
+    pics: [r('hintersee')],
   },
   {
     id: 'krimml', km: 24, time: { de: '25 Min.', en: '25 min' }, bearing: 250, air: 20.6, dest: '47.21079,12.16819', name: 'Krimmler Wasserfälle',
@@ -46,7 +47,7 @@ export const S_STOPS: WStop[] = [
     tag: { de: 'Stubachtal · Uttendorf', en: 'Stubach valley · Uttendorf' },
     text: { de: 'Hochalpine Seen und Gletscherblick im Stubachtal – ab der Talstation Enzingerboden.', en: 'High-alpine lakes and glacier views in the Stubach valley – from the Enzingerboden valley station.' },
     facts: { de: ['Hochalpine Seen'], en: ['High-alpine lakes'] },
-    pics: [],
+    pics: [r('weisssee')],
   },
   {
     id: 'zell', km: 34, time: { de: '37 Min.', en: '37 min' }, bearing: 77, air: 26.8, dest: '47.32629,12.77236', name: 'Zell am See · Schmittenhöhe',
@@ -60,7 +61,7 @@ export const S_STOPS: WStop[] = [
     tag: { de: 'Mooserboden', en: 'Mooserboden' },
     text: { de: 'Die Stauseen am Mooserboden – die letzte Strecke geht es ab dem Kesselfall Alpenhaus mit dem Bus hinauf.', en: 'The Mooserboden reservoirs – the last stretch from the Kesselfall Alpenhaus is by bus.' },
     facts: { de: ['Busstart Kesselfall'], en: ['Bus from Kesselfall'] },
-    pics: [],
+    pics: [r('mooserboden')],
   },
 ];
 

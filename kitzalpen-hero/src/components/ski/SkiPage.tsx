@@ -89,7 +89,7 @@ export function SkiPage({ lang }: { lang: Lang }) {
       {/* hero */}
       <section id="top" aria-labelledby="sk-title" className="relative isolate flex min-h-[94svh] items-end overflow-hidden bg-deep text-cream md:min-h-[100svh]">
         <div className="absolute inset-0 -z-10 overflow-hidden">
-          <div className="js-sk-par absolute inset-0"><img src={`${IMG}winter/kitzski-piste.webp`} alt="" className="js-sk-hero h-full w-full object-cover object-[60%_50%]" /></div>
+          <div className="js-sk-par absolute inset-0"><img src={`${IMG}real/ski-panorama.webp`} alt="" className="js-sk-hero h-full w-full object-cover object-[60%_50%]" /></div>
           <div aria-hidden className="absolute inset-0 bg-[linear-gradient(0deg,color-mix(in_srgb,var(--k-deep)_92%,transparent)_0%,color-mix(in_srgb,var(--k-deep)_62%,transparent)_45%,color-mix(in_srgb,var(--k-deep)_10%,transparent)_78%)] md:bg-[linear-gradient(90deg,color-mix(in_srgb,var(--k-deep)_82%,transparent)_0%,color-mix(in_srgb,var(--k-deep)_45%,transparent)_45%,transparent_72%)]" />
           <div aria-hidden className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[color-mix(in_srgb,var(--k-deep)_50%,transparent)] to-transparent" />
         </div>

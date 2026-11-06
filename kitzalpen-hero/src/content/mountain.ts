@@ -40,7 +40,7 @@ export const RESORTS: Resort[] = [
       summer: { name: { de: 'Talstation Panoramabahn, Hollersbach', en: 'Panoramabahn valley station, Hollersbach' }, lat: 47.28068, lon: 12.40538, mapId: 'panoramabahn-s', km: 2.2, min: 5 },
     },
     weather: { lat: 47.30743, lon: 12.38245 },
-    img: { winter: `${IMG}activities/kitzski-kitzbuheler-alpen.webp`, summer: `${IMG}experience/summer-1920.webp` },
+    img: { winter: `${IMG}activities/kitzski-kitzbuheler-alpen.webp`, summer: `${IMG}real/panoramabahn-summer.webp` },
     facts: {
       winter: { de: ['Rund 2 km bis zur Panoramabahn', 'Direkter Einstieg ins Skigebiet KitzSki', 'Snow Park Kitzbühel im Skigebiet'], en: ['About 2 km to the Panoramabahn', 'Direct access to the KitzSki area', 'Snow Park Kitzbühel in the ski area'] },
       summer: { de: ['Gondel ab Hollersbach', 'Startpunkt für Wanderungen am Resterkogel', 'Kitzbüheler Alpen'], en: ['Gondola from Hollersbach', 'Starting point for hikes on the Resterkogel', 'Kitzbühel Alps'] },

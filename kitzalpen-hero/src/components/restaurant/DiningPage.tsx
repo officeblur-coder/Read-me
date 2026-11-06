@@ -1,9 +1,9 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
 import type { Lang } from '../../content/hero';
-import { DINING, DISHES, dimg, rimg } from '../../content/diningPage';
+import { DINING, DISHES, MEALS, MEALS_COPY, dimg, rimg } from '../../content/diningPage';
 import { MENU_PDF, REST_COPY, REST_PHOTOS } from '../../content/restaurant';
 import { useFinePointer, useReducedMotion } from '../../lib/hooks';
 import { RestaurantHighlights } from './RestaurantHighlights';
@@ -45,8 +45,8 @@ export function DiningPage({ lang }: { lang: Lang }) {
 
   const moments = [
     { ...t.moments[0], img: `${AMEN}breakfast.webp` },
-    { ...t.moments[1], img: dimg('hall-clean') },
-    { ...t.moments[2], img: rimg('bar', 800) },
+    { ...t.moments[1], img: dimg('dn-corner') },
+    { ...t.moments[2], img: rimg('bar', 1600) },
   ];
   const head = (eyebrow: string, title: string, id: string, center = false) => (
     <header className={`js-d-rev max-w-[760px] ${center ? 'mx-auto text-center' : ''}`}>
@@ -146,6 +146,9 @@ export function DiningPage({ lang }: { lang: Lang }) {
         <p className="mx-auto mt-8 max-w-[1360px] px-5 text-[13px] text-ink/50 sm:px-6 md:px-10 lg:px-14">{t.kitchenNote}</p>
       </section>
 
+      {/* breakfast & dinner */}
+      <MealGallery lang={lang} />
+
       {/* the rooms */}
       <section aria-labelledby="d-rooms" className="px-5 pb-24 sm:px-6 md:px-10 md:pb-32 lg:px-14">
         <div className="mx-auto max-w-[1360px]">
@@ -166,5 +169,37 @@ export function DiningPage({ lang }: { lang: Lang }) {
 
       <PensionFinalCTA lang={lang} />
     </div>
+  );
+}
+
+/** Breakfast / dinner switch with the owner's photos of both meals. */
+function MealGallery({ lang }: { lang: Lang }) {
+  const [meal, setMeal] = useState<'breakfast' | 'dinner'>('breakfast');
+  const c = MEALS_COPY[lang];
+  const list = MEALS[meal];
+  return (
+    <section aria-labelledby="d-meals" className="px-5 pb-24 sm:px-6 md:px-10 md:pb-32 lg:px-14">
+      <div className="mx-auto max-w-[1360px]">
+        <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+          <header className="max-w-[760px]">
+            <p className="flex items-center gap-4 text-[12px] font-semibold uppercase tracking-[.36em] text-ink/75 md:text-[13px]"><span aria-hidden className="h-px w-8 bg-ink/40 md:w-12" />{c.eyebrow}</p>
+            <h2 id="d-meals" className="mt-4 font-display font-medium italic leading-[1.02] text-pine" style={{ fontSize: 'clamp(34px, 4.2vw, 64px)' }}>{c.title}</h2>
+          </header>
+          <div className="inline-flex self-start rounded-full border border-pine/15 bg-white p-1.5 md:self-auto" role="tablist" aria-label={c.eyebrow}>
+            {(['breakfast', 'dinner'] as const).map((m) => (
+              <button key={m} type="button" role="tab" aria-selected={meal === m} onClick={() => setMeal(m)} className={`min-h-11 rounded-full px-5 text-[14.5px] font-semibold transition-colors ${meal === m ? 'bg-pine text-cream' : 'text-pine hover:bg-pine/5'}`}>{c.tabs[m]}</button>
+            ))}
+          </div>
+        </div>
+        <p className="mt-4 text-[14px] font-semibold text-goldink">{c.hours[meal]}</p>
+        <ul key={meal} className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
+          {list.map((p, i) => (
+            <li key={p.id} className={`meal-pic overflow-hidden rounded-[18px] ${i === 0 ? 'col-span-2 row-span-2 md:col-span-2' : ''}`} style={{ animationDelay: `${i * 60}ms` }}>
+              <img src={dimg(p.id)} alt={p.alt[lang]} loading="lazy" className={`h-full w-full object-cover ${i === 0 ? 'aspect-[3/2]' : 'aspect-[4/3]'}`} />
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
   );
 }

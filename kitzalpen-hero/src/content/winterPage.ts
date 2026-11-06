@@ -24,6 +24,7 @@ export interface WStop {
 
 export const W_IMG = `${import.meta.env.BASE_URL}images/winter/`;
 const w = (n: string) => `${W_IMG}${n}.webp`;
+const r = (n: string) => `${import.meta.env.BASE_URL}images/real/${n}.webp`;
 export const HOME_LL = '47.27268,12.42573';
 
 export const STOPS: WStop[] = [
@@ -32,7 +33,7 @@ export const STOPS: WStop[] = [
     tag: { de: 'Skigebiet · Panoramabahn Kitzbüheler Alpen', en: 'Ski area · Panoramabahn Kitzbüheler Alpen' },
     text: { de: 'Nur 2 km bis zur Panoramabahn – der direkte Einstieg ins Skigebiet KitzSki. Mit dabei: der Snow Park Kitzbühel für Freestyler.', en: 'Just 2 km to the Panoramabahn – your direct way into the KitzSki ski area. Including the Snow Park Kitzbühel for freestylers.' },
     facts: { de: ['230 km Pisten (geprüft)', 'Snow Park Kitzbühel'], en: ['230 km of slopes (verified)', 'Snow Park Kitzbühel'] },
-    pics: [w('kitzski-gondola'), w('kitzski-piste'), w('park-jump'), w('park-rail'), w('kitzski-kid')], site: 'https://www.kitzski.at',
+    pics: [r('kitzski-gondola-couple'), r('ski-panorama'), r('snowpark-jump'), w('park-jump'), r('ski-kid')], site: 'https://www.kitzski.at',
   },
   {
     id: 'wildkogel', km: 21, time: { de: '39 Min.', en: '39 min' }, bearing: 259, air: 11.1, dest: '47.25438,12.28077', name: 'Wildkogel-Arena',
@@ -67,7 +68,7 @@ export const STOPS: WStop[] = [
     tag: { de: 'Gletscher · Gipfelwelt 3000', en: 'Glacier · Gipfelwelt 3000' },
     text: { de: 'Das komplette Programm der Alpen – vom Wintersport über Aussichten bis zum Sightseeing in der Gipfelwelt 3000. An 365 Tagen im Jahr.', en: 'The complete programme of the Alps – from winter sports and views to sightseeing at Gipfelwelt 3000. 365 days a year.' },
     facts: { de: ['3.029 m · Top of Salzburg', '365 Tage im Jahr'], en: ['3,029 m · Top of Salzburg', '365 days a year'] },
-    pics: [w('ksh-skier'), w('ksh-3029'), w('ksh-platform')],
+    pics: [r('kitzsteinhorn-aerial'), w('ksh-skier'), w('ksh-powder')],
   },
   {
     id: 'glockner', km: 73, time: { de: '1 Std. 20 Min.', en: '1 h 20 min' }, bearing: 137, air: 29.9, dest: '47.0745464,12.6938826', name: 'Großglockner',
