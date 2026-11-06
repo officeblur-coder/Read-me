@@ -18,7 +18,7 @@ export const S_STOPS: WStop[] = [
     tag: { de: 'Kitzbüheler Alpen', en: 'Kitzbühel Alps' },
     text: { de: 'Mit der Gondel hinauf in die Kitzbüheler Alpen – Startpunkt für Wanderungen und Sommer am Berg über Hollersbach.', en: 'Up into the Kitzbühel Alps by gondola – a starting point for hikes and summer on the mountain above Hollersbach.' },
     facts: { de: ['Talstation Hollersbach'], en: ['Valley station Hollersbach'] },
-    pics: [a('kitzski-kitzbuheler-alpen')],
+    pics: [], // the only KitzSki photo we have is a winter shot – no summer photo yet
   },
   {
     id: 'wildkogel', km: 8, time: { de: '9 Min.', en: '9 min' }, bearing: 270, air: 6.4, dest: '47.27254,12.34061', name: 'Wildkogel · Habachtal',
