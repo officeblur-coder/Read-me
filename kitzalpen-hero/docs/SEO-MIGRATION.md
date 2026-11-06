@@ -1,7 +1,6 @@
 # KitzAlpen – SEO & migrare pe kitzalpen.at
 
-Stare: noiembrie 2026. Previzualizarea folosește rute cu `#` (de ex. `#ski`), are `noindex` și nu este indexată.
-La mutarea pe **kitzalpen.at** paginile primesc adrese reale, iar pașii de mai jos se fac în această ordine.
+Stare: noiembrie 2026. **Implementat**: build-ul de producție (`npm run build`) are adrese reale, pre-randare, canonical, hreflang, sitemap și 301. Vezi `docs/DEPLOY-CPANEL.md`. Previzualizarea (`build:preview`) rămâne cu `#` și `noindex`.
 
 ## 1. Adrese noi (o adresă reală pentru fiecare pagină și limbă)
 

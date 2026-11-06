@@ -39,15 +39,15 @@ import { MountainPage } from './components/mountain/MountainPage';
 import { MountainTeaser } from './components/mountain/MountainTeaser';
 import { DualStay } from './components/DualStay';
 import { SummerPage, WinterPage } from './components/activities/WinterPage';
-import { ROOM_KEYS, type RoomKey } from './content/pensionPage';
+import { PR_COPY, type RoomKey } from './content/pensionPage';
 import { AlpineExperienceSection } from './components/experience/AlpineExperienceSection';
 import { AlpineMapSection } from './components/map/AlpineMapSection';
 import { GuestStoriesSection } from './components/stories/GuestStoriesSection';
 import { FinalBookingCTA } from './components/retreat/FinalBookingCTA';
 import { SiteFooter } from './components/SiteFooter';
-import type { Season } from './content/hero';
 import type { BookingBarHandle, BookingRequest } from './components/BookingBar';
 import { useFinePointer, useReducedMotion } from './lib/hooks';
+import { LANGS, PATHS, SITE, currentRoute, go, pathFor, pathLang, relinkPages, switchPathLang, type Route } from './lib/routes';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -56,7 +56,8 @@ export default function App() {
   const lang: Lang = baseLang(site);
   const setLang = useCallback((l: SiteLang) => {
     saveSiteLang(l);
-    prepareSiteLang(l).catch(() => undefined).then(() => { activateSiteLang(l); flushSync(() => setSite(l)); startSiteLang(); });
+    switchPathLang(l);
+    prepareSiteLang(l).catch(() => undefined).then(() => { activateSiteLang(l); flushSync(() => setSite(l)); startSiteLang(); relinkPages(); });
   }, []);
   const [compact, setCompact] = useState(false);
   const [menu, setMenu] = useState(false);
@@ -68,27 +69,7 @@ export default function App() {
   // dedicated pages: #activities-summer / #activities-winter (live site: /activities/summer|winter)
   // preview routing by hash: #pension, #activities-summer|winter (live site: /pension/, /activities/summer|winter)
   // #room-<key> → room pages (live: /rooms/<slug>/); #pension-rooms → pension page at the room section
-  type Route = 'home' | 'explore' | 'ski' | 'arrival' | 'experiences' | 'tours' | 'places' | 'pension' | 'chalet' | 'all-rooms' | 'restaurant' | 'groups' | 'contact' | 'mountain' | Season | `room-${RoomKey}`;
-  const routeOf = (): Route => {
-    const h = window.location.hash.slice(1);
-    if (h === 'pension' || h === 'pension-rooms') return 'pension';
-    if (h === 'chalet') return 'chalet';
-    if (h === 'all-rooms') return 'all-rooms';
-    if (h === 'restaurant') return 'restaurant';
-    if (h === 'groups' || h === 'groups-plan') return 'groups';
-    if (h === 'ski' || h === 'ski-passes') return 'ski';
-    if (h === 'arrival') return 'arrival';
-    if (h === 'experiences') return 'experiences';
-    if (h === 'tours') return 'tours';
-    if (h === 'explore' || h === 'explore-map') return 'explore';
-    if (h === 'places') return 'places';
-    if (h === 'contact') return 'contact';
-    if (h === 'mountain' || h.startsWith('mountain-')) return 'mountain';
-    if (h === 'activities-summer') return 'summer';
-    if (h === 'activities-winter') return 'winter';
-    if (h.startsWith('room-') && ROOM_KEYS.includes(h.slice(5) as RoomKey)) return h as Route;
-    return 'home';
-  };
+  const routeOf = currentRoute;
   const [page, setPage] = useState<Route>(routeOf);
   useEffect(() => {
     const toRooms = () => {
@@ -98,6 +79,8 @@ export default function App() {
     const on = () => {
       document.documentElement.style.overflow = '';
       const r = routeOf();
+      const pl = pathLang();
+      if (pl && pl !== siteLang()) setLang(pl);
       setPage((prev) => { if (prev !== r) window.setTimeout(() => window.scrollTo(0, 0), 0); return r; });
       toRooms();
     };
@@ -117,10 +100,30 @@ export default function App() {
     };
     const cut = title.lastIndexOf(' · KitzAlpen');
     document.title = cut > 0 ? tr(title.slice(0, cut)) + title.slice(cut) : tr(title);
-    set('meta[name="description"]', 'content', tr(desc));
+    let description = tr(desc);
+    if (page.startsWith('room-')) {
+      // each room page has its own title and description
+      const r = PR_COPY[lang].rooms[page.slice(5) as RoomKey];
+      document.title = `${tr(r.label)}${title.slice(cut)}`;
+      description = `${tr(r.text)} ${description}`;
+    }
+    set('meta[name="description"]', 'content', description);
     set('meta[property="og:title"]', 'content', document.title);
-    set('meta[property="og:description"]', 'content', tr(desc));
+    set('meta[property="og:description"]', 'content', description);
     set('meta[property="og:locale"]', 'content', locale(lang).replace('-', '_'));
+    if (PATHS) {
+      // canonical + the same page in every language (hreflang), so each address is indexed in its own language
+      const url = SITE + pathFor(page, site);
+      set('meta[property="og:url"]', 'content', url);
+      let c = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+      if (!c) { c = document.createElement('link'); c.rel = 'canonical'; document.head.appendChild(c); }
+      c.href = url;
+      document.head.querySelectorAll('link[rel="alternate"][hreflang]').forEach((n) => n.remove());
+      for (const l of [...LANGS, 'x-default' as const]) {
+        const a = document.createElement('link'); a.rel = 'alternate'; a.hreflang = l;
+        a.href = SITE + pathFor(page, l === 'x-default' ? 'de' : l); document.head.appendChild(a);
+      }
+    }
   }, [page, site, lang]);
   // activities: the shared Sommer/Winter switch also switches between the two activity pages
   const { season, setSeason } = useSeason();
@@ -128,7 +131,7 @@ export default function App() {
   useEffect(() => { if ((page === 'summer' || page === 'winter') && page !== season) setSeason(page); }, [page]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!seasonMounted.current) { seasonMounted.current = true; return; }
-    if ((page === 'summer' || page === 'winter') && page !== season) window.location.hash = `#activities-${season}`;
+    if ((page === 'summer' || page === 'winter') && page !== season) go(`#activities-${season}`, site);
   }, [season]); // eslint-disable-line react-hooks/exhaustive-deps
   // switching language must never leave header items hidden (they start hidden until the intro reveals them)
   const langMounted = useRef(false);
