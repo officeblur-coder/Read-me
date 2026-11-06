@@ -8,8 +8,8 @@ import { useSeason } from '../lib/season';
 import { locale } from '../lib/i18n';
 import { Icon, I } from './pension/PensionRooms';
 
-const MAPLIBRE_JS = 'https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js';
-const MAPLIBRE_CSS = 'https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css';
+const MAPLIBRE_JS = `${import.meta.env.BASE_URL}vendor/maplibre-gl-4.7.1/maplibre-gl.js`;
+const MAPLIBRE_CSS = `${import.meta.env.BASE_URL}vendor/maplibre-gl-4.7.1/maplibre-gl.css`;
 const STYLE = 'https://tiles.openfreemap.org/styles/positron';
 const HOME: [number, number] = [47.27268, 12.42573];
 type MLGlobal = typeof import('maplibre-gl');

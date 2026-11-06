@@ -1,0 +1,91 @@
+# KitzAlpen – www.kitzalpen.at (Apache / cPanel)
+# The site is a static single page: every page lives at "/" and is chosen with "#" (e.g. /#chalet),
+# so no rewrite is needed to move between pages. The rules below only handle HTTPS, www and the old addresses.
+
+DirectoryIndex index.html
+Options -Indexes
+AddDefaultCharset UTF-8
+
+<IfModule mod_mime.c>
+  AddType image/avif .avif
+  AddType image/webp .webp
+  AddType font/woff2 .woff2
+  AddType font/woff .woff
+  AddType application/json .json
+</IfModule>
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # 1. one address: https://www.kitzalpen.at (needs the free SSL certificate active in cPanel)
+  RewriteCond %{HTTPS} !=on
+  RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+  RewriteRule ^ https://www.kitzalpen.at%{REQUEST_URI} [R=301,L,NE]
+  RewriteCond %{HTTP_HOST} ^kitzalpen\.at$ [NC]
+  RewriteRule ^ https://www.kitzalpen.at%{REQUEST_URI} [R=301,L,NE]
+
+  # 2. old addresses of the previous site -> the same page on the new site (301, also for /en/, /ro/ ...)
+  #    /tour/, /virtualtour/ and /menu/kitzalpen-menu.pdf are still used and stay untouched.
+  RewriteRule ^pension/?$ https://www.kitzalpen.at/#pension [R=301,NE,L]
+  RewriteRule ^(en|nl|ro|hu|cs|pl|sv)/pension/?$ https://www.kitzalpen.at/?lang=$1#pension [R=301,NE,L]
+  RewriteRule ^zimmer/?$ https://www.kitzalpen.at/#all-rooms [R=301,NE,L]
+  RewriteRule ^(en|nl|ro|hu|cs|pl|sv)/zimmer/?$ https://www.kitzalpen.at/?lang=$1#all-rooms [R=301,NE,L]
+  RewriteRule ^rooms/?$ https://www.kitzalpen.at/#all-rooms [R=301,NE,L]
+  RewriteRule ^(en|nl|ro|hu|cs|pl|sv)/rooms/?$ https://www.kitzalpen.at/?lang=$1#all-rooms [R=301,NE,L]
+  RewriteRule ^rooms/(double|triple|family|quad)/?$ https://www.kitzalpen.at/#room-$1 [R=301,NE,L]
+  RewriteRule ^(en|nl|ro|hu|cs|pl|sv)/rooms/(double|triple|family|quad)/?$ https://www.kitzalpen.at/?lang=$1#room-$2 [R=301,NE,L]
+  RewriteRule ^chalet/?$ https://www.kitzalpen.at/#chalet [R=301,NE,L]
+  RewriteRule ^(en|nl|ro|hu|cs|pl|sv)/chalet/?$ https://www.kitzalpen.at/?lang=$1#chalet [R=301,NE,L]
+  RewriteRule ^restaurant/?$ https://www.kitzalpen.at/#restaurant [R=301,NE,L]
+  RewriteRule ^(en|nl|ro|hu|cs|pl|sv)/restaurant/?$ https://www.kitzalpen.at/?lang=$1#restaurant [R=301,NE,L]
+  RewriteRule ^group-activities/?$ https://www.kitzalpen.at/#groups [R=301,NE,L]
+  RewriteRule ^(en|nl|ro|hu|cs|pl|sv)/group-activities/?$ https://www.kitzalpen.at/?lang=$1#groups [R=301,NE,L]
+  RewriteRule ^contact/?$ https://www.kitzalpen.at/#contact [R=301,NE,L]
+  RewriteRule ^(en|nl|ro|hu|cs|pl|sv)/contact/?$ https://www.kitzalpen.at/?lang=$1#contact [R=301,NE,L]
+  RewriteRule ^kontakt/?$ https://www.kitzalpen.at/#contact [R=301,NE,L]
+  RewriteRule ^(en|nl|ro|hu|cs|pl|sv)/kontakt/?$ https://www.kitzalpen.at/?lang=$1#contact [R=301,NE,L]
+  RewriteRule ^activities/?$ https://www.kitzalpen.at/#explore [R=301,NE,L]
+  RewriteRule ^(en|nl|ro|hu|cs|pl|sv)/activities/?$ https://www.kitzalpen.at/?lang=$1#explore [R=301,NE,L]
+  RewriteRule ^ski/?$ https://www.kitzalpen.at/#ski [R=301,NE,L]
+  RewriteRule ^(en|nl|ro|hu|cs|pl|sv)/ski/?$ https://www.kitzalpen.at/?lang=$1#ski [R=301,NE,L]
+  RewriteRule ^entdecken/?$ https://www.kitzalpen.at/#explore [R=301,NE,L]
+  RewriteRule ^(en|nl|ro|hu|cs|pl|sv)/entdecken/?$ https://www.kitzalpen.at/?lang=$1#explore [R=301,NE,L]
+  RewriteRule ^anreise/?$ https://www.kitzalpen.at/#arrival [R=301,NE,L]
+  RewriteRule ^(en|nl|ro|hu|cs|pl|sv)/anreise/?$ https://www.kitzalpen.at/?lang=$1#arrival [R=301,NE,L]
+  RewriteRule ^bergerlebnis/?$ https://www.kitzalpen.at/#mountain [R=301,NE,L]
+  RewriteRule ^(en|nl|ro|hu|cs|pl|sv)/bergerlebnis/?$ https://www.kitzalpen.at/?lang=$1#mountain [R=301,NE,L]
+  RewriteRule ^(en|nl|ro|hu|cs|pl|sv)/?$ https://www.kitzalpen.at/?lang=$1 [R=301,L]
+</IfModule>
+
+# unknown address: show the site (status stays 404, so search engines drop it)
+ErrorDocument 404 /index.html
+
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  # index.html is always checked again, so a new upload is seen at once
+  <FilesMatch "^(index\.html|weather\.json|openings\.json)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>
+
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType text/html "access plus 0 seconds"
+  ExpiresByType application/json "access plus 0 seconds"
+  ExpiresByType text/css "access plus 1 year"
+  ExpiresByType application/javascript "access plus 1 year"
+  ExpiresByType text/javascript "access plus 1 year"
+  ExpiresByType font/woff2 "access plus 1 year"
+  ExpiresByType image/webp "access plus 1 month"
+  ExpiresByType image/avif "access plus 1 month"
+  ExpiresByType image/jpeg "access plus 1 month"
+  ExpiresByType image/png "access plus 1 month"
+  ExpiresByType image/svg+xml "access plus 1 month"
+</IfModule>
+
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/plain application/javascript text/javascript application/json image/svg+xml
+</IfModule>

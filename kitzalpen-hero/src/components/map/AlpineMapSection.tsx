@@ -14,7 +14,7 @@ gsap.registerPlugin(ScrollTrigger, useGSAP);
 const BASE = `${import.meta.env.BASE_URL}`;
 const abs = (p: string) => new URL(BASE + p, window.location.href).href;
 /** MapLibre GL JS – open source, no API key. Loaded only when the section approaches. */
-const MAPLIBRE_JS = 'https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js';
+const MAPLIBRE_JS = `${import.meta.env.BASE_URL}vendor/maplibre-gl-4.7.1/maplibre-gl.js`;
 type MLGlobal = typeof import('maplibre-gl');
 
 let mlPromise: Promise<MLGlobal> | null = null;
@@ -24,7 +24,7 @@ function loadMapLibre(): Promise<MLGlobal> {
   if (w.maplibregl) return Promise.resolve(w.maplibregl);
   mlPromise ??= new Promise((res, rej) => {
     const s = document.createElement('script');
-    s.src = MAPLIBRE_JS; s.async = true; s.crossOrigin = 'anonymous';
+    s.src = MAPLIBRE_JS; s.async = true;
     s.onload = () => (w.maplibregl ? res(w.maplibregl) : rej(new Error('maplibre missing')));
     s.onerror = () => rej(new Error('maplibre failed'));
     document.head.appendChild(s);
