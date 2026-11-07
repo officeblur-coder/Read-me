@@ -24,7 +24,7 @@ const PRESETS: [string, () => [Date, Date]][] = [
 const pct = (a: number, b: number) => (b ? Math.round((a / b) * 100) : 0);
 const hm = (s: string) => new Date(s).toLocaleTimeString("ro-RO", { hour: "2-digit", minute: "2-digit" });
 const dd = (s: string) => new Date(s).toLocaleDateString("ro-RO", { day: "numeric", month: "short" });
-const SRC: Record<string, string> = { newsletter: "Newsletter (email)", facebook: "Facebook", instagram: "Instagram", google: "Google", qr: "Cod QR", tiktok: "TikTok", whatsapp: "WhatsApp", flyer: "Flyer", direct: "Direct (link scris / salvat)" };
+const SRC: Record<string, string> = { app: "Aplicația de pe ecran", newsletter: "Newsletter (email)", facebook: "Facebook", instagram: "Instagram", google: "Google", qr: "Cod QR", tiktok: "TikTok", whatsapp: "WhatsApp", flyer: "Flyer", direct: "Direct (link scris / salvat)" };
 const STEP: Record<string, [string, string]> = {
   visit: ["🏠", "a intrat"], view_item: ["👀", "a deschis"], add_cart: ["🛒", "a pus în coș"], search: ["🔍", "a căutat"],
   checkout: ["💳", "a ajuns la Livrare și plată"], order: ["✅", "a trimis comanda"], account: ["👤", "a deschis Contul"], signup: ["🎉", "a intrat în cont"],

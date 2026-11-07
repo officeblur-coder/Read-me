@@ -36,7 +36,7 @@ const demo = (): Plugin => ({
     return code;
   },
   transformIndexHtml(html) {
-    return html.replace("/img/logo-lyra.jpg", "./img/logo-demo.svg").replace(/Lyra's Delivery/g, "Savoro Delivery").replace(/Lyra/g, "Savoro").replace("specialități la tigaie fierbinte, burgeri pe cărbune", "burgeri, pizza, sushi și brunch");
+    return html.replace(/\s*<link rel="(manifest|apple-touch-icon)"[^>]*>/g, "").replace(/<link rel="icon" href="\/icons\/[^"]*"[^>]*>/, '<link rel="icon" href="./img/logo-demo.svg" />').replace("/img/logo-lyra.jpg", "./img/logo-demo.svg").replace(/Lyra's Delivery/g, "Savoro Delivery").replace(/Lyra/g, "Savoro").replace("specialități la tigaie fierbinte, burgeri pe cărbune", "burgeri, pizza, sushi și brunch");
   },
   generateBundle() {
     for (const f of readdirSync(here("./src/demo/img")))

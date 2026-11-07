@@ -10,6 +10,7 @@ import { LOCALITIES, geocodeAddress, useZones, zoneFor, type LatLng } from "../l
 import { hoursLabel, isOpenNow, slotDays, whenLabel } from "../lib/schedule";
 import { cut, useDiscounts } from "../lib/discounts";
 import { track } from "../lib/track";
+import { InstallSheet, shouldAutoShow, useInstall } from "../components/InstallApp";
 import Icon from "../components/Icon";
 import BottomNav from "../components/BottomNav";
 import SiteFooter from "../components/SiteFooter";
@@ -74,7 +75,16 @@ export default function Menu({ source }: { source?: string }) {
   const [cartOpen, setCartOpen] = useState(false);
   const [step, setStep] = useState<"cart" | "details">("cart");
   const [popup, setPopup] = useState<Promo | null>(null);
-  const [joinPop, setJoinPop] = useState(false);              // invite new visitors to Lyra Rewards
+  const [joinPop, setJoinPop] = useState(false);
+  // „Pune Lyra pe ecran”: pe telefon, la o secundă după deschidere (o dată la câteva zile)
+  const inst = useInstall();
+  const [installOpen, setInstallOpen] = useState(false);
+  const installShown = useRef(false);
+  useEffect(() => {
+    if (!shouldAutoShow()) return;
+    const t = setTimeout(() => { installShown.current = true; setInstallOpen(true); }, 1000);
+    return () => clearTimeout(t);
+  }, []);              // invite new visitors to Lyra Rewards
   const [form, setForm] = useState<Form>(loadForm);
   const [orderNote, setOrderNote] = useState("");
   const [pay, setPay] = useState<"card" | "cash">("card");
@@ -595,6 +605,7 @@ export default function Menu({ source }: { source?: string }) {
           <button onClick={() => { setDrawer(false); window.scrollTo({ top: 0, behavior: "smooth" }); }}><Icon name="cutlery" size={19} />{t.menu}</button>
           <Link to="/cont" onClick={() => setDrawer(false)}><Icon name="star" size={19} />{customer ? `Lyra Rewards · ${customer.points} puncte` : "Lyra Rewards · intră în cont"}</Link>
           <Link to="/cont" onClick={() => setDrawer(false)}><Icon name="orders" size={19} />Comenzile mele</Link>
+          {inst.can && <button className="dr-install" onClick={() => { setDrawer(false); setInstallOpen(true); }}><img src="/icons/icon-192.png" alt="" />Pune Lyra pe ecran<small>aplicația, cu o atingere</small></button>}
           <div className="dr-row"><button onClick={toggleTheme}><Icon name={dark ? "sun" : "moon"} size={19} />{dark ? "Temă deschisă" : "Temă întunecată"}</button>
             <button onClick={() => setLang(lang === "ro" ? "hu" : "ro")}><b className="dr-lang">{lang === "ro" ? "HU" : "RO"}</b>{lang === "ro" ? "Magyarul" : "Românește"}</button></div>
           <div className="dr-legal"><Link to="/termeni">Termeni și condiții</Link><Link to="/confidentialitate">Confidențialitate</Link></div>
@@ -759,7 +770,8 @@ export default function Menu({ source }: { source?: string }) {
       })()}
 
       {/* ---------- promo popup ---------- */}
-      {joinPop && !popup && !customer && !cartOpen && !sheet && <div className="pop" role="dialog" aria-modal="true" aria-label="Lyra Rewards" onClick={e => e.target === e.currentTarget && closeJoin()}>
+      {installOpen && !cartOpen && !sheet && <InstallSheet hasAccount={!!customer} onClose={() => setInstallOpen(false)} />}
+      {joinPop && !installOpen && !installShown.current && !popup && !customer && !cartOpen && !sheet && <div className="pop" role="dialog" aria-modal="true" aria-label="Lyra Rewards" onClick={e => e.target === e.currentTarget && closeJoin()}>
         <div className="pop-card join-pop">
           <button className="x-btn" onClick={closeJoin} aria-label="Închide">×</button>
           {settings?.welcome_on && Number(settings.welcome_lei) > 0
@@ -781,7 +793,7 @@ export default function Menu({ source }: { source?: string }) {
           <button className="later" onClick={closeJoin}>Mai târziu</button>
         </div>
       </div>}
-      {popup && (() => {
+      {popup && !installOpen && (() => {
         const it = popup.item_id ? byId[popup.item_id] : undefined;
         const old = it ? it.price + popup.extras.reduce((s, k) => s + (byId[k]?.price || 0), 0) : 0;
         const close = () => { setPopup(null); try { sessionStorage.setItem("lyra-popup", "1"); } catch { /* ignore */ } };

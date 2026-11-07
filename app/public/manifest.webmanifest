@@ -1,0 +1,23 @@
+{
+  "name": "Lyra's Delivery",
+  "short_name": "Lyra",
+  "description": "Comandă online de la Restaurant Lyra: livrare în Târgu Mureș și împrejurimi sau ridicare.",
+  "lang": "ro",
+  "id": "/",
+  "start_url": "/?s=app",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b0806",
+  "theme_color": "#0b0806",
+  "categories": ["food", "shopping"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Meniu", "url": "/?s=app", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Contul meu", "url": "/cont", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}
