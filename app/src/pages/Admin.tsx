@@ -8,6 +8,7 @@ import { ZonesTab } from "./AdminZones";
 import { HoursTab } from "./AdminHours";
 import { DiscountsTab } from "./AdminDiscounts";
 import { TrafficTab } from "./AdminTraffic";
+import { NewsletterTab } from "./AdminNewsletter";
 import { ReportsTab } from "./AdminReports";
 import { uploadImage } from "../lib/upload";
 import { ALLERGENS, MEAT, TAGS, imgUrl, lei } from "../lib/format";
@@ -49,9 +50,9 @@ export default function Admin() {
   return <AdminPanel email={session.user.email || ""} />;
 }
 
-type Tab = "menu" | "banners" | "promos" | "codes" | "rewards" | "discounts" | "zones" | "hours" | "traffic" | "reports" | "team";
+type Tab = "menu" | "banners" | "promos" | "codes" | "rewards" | "discounts" | "zones" | "hours" | "traffic" | "newsletter" | "reports" | "team";
 function AdminPanel({ email }: { email: string }) {
-  const [tab, setTab] = useState<Tab>(() => (["menu", "banners", "promos", "codes", "discounts", "rewards", "zones", "hours", "traffic", "reports", "team"].includes(location.hash.slice(1)) ? location.hash.slice(1) as Tab : "menu"));
+  const [tab, setTab] = useState<Tab>(() => (["menu", "banners", "promos", "codes", "discounts", "rewards", "zones", "hours", "traffic", "newsletter", "reports", "team"].includes(location.hash.slice(1)) ? location.hash.slice(1) as Tab : "menu"));
   const go = (t: Tab) => { setTab(t); history.replaceState(null, "", "#" + t); };
   const [cats, setCats] = useState<Category[]>([]);
   const [items, setItems] = useState<Item[]>([]);
@@ -104,7 +105,7 @@ function AdminPanel({ email }: { email: string }) {
         <Wordmark small />
         <div className="adm-title"><b>Administrare meniu</b><small>{email}</small></div>
         <nav className="adm-tabs" aria-label="Secțiuni">
-          {([["menu", "Meniu"], ["banners", "Bannere"], ["promos", "Promoții & popup"], ["codes", "Coduri reducere"], ["discounts", "Reduceri %"], ["rewards", "Lyra Rewards"], ["zones", "Zone livrare"], ["hours", "Program"], ["traffic", "Vizite"], ["reports", "Rapoarte"], ["team", "Echipa"]] as const).map(([k, l]) =>
+          {([["menu", "Meniu"], ["banners", "Bannere"], ["promos", "Promoții & popup"], ["codes", "Coduri reducere"], ["discounts", "Reduceri %"], ["rewards", "Lyra Rewards"], ["zones", "Zone livrare"], ["hours", "Program"], ["traffic", "Vizite"], ["newsletter", "Newsletter"], ["reports", "Rapoarte"], ["team", "Echipa"]] as const).map(([k, l]) =>
             <button key={k} aria-current={tab === k} onClick={() => go(k)}>{l}</button>)}
         </nav>
         <nav>
@@ -121,6 +122,7 @@ function AdminPanel({ email }: { email: string }) {
       {tab === "zones" && <ZonesTab flash={flash} />}
       {tab === "hours" && <HoursTab flash={flash} />}
       {tab === "traffic" && <TrafficTab />}
+      {tab === "newsletter" && <NewsletterTab items={items} cats={cats} flash={flash} />}
       {tab === "discounts" && <DiscountsTab items={items} cats={cats} flash={flash} />}
       {tab === "reports" && <ReportsTab />}
       {tab === "team" && <TeamTab flash={flash} />}

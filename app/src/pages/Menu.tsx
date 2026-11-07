@@ -258,6 +258,12 @@ export default function Menu({ source }: { source?: string }) {
     haptic(); flyToCart(from || null);
   }
   const openItem = (it: Item) => { setSheet({ id: it.id, qty: 1, vi: 0, extras: [], note: "" }); track("view_item", it.id); };
+  // ?p=<produs> (din newsletter) deschide direct produsul
+  const wantItem = useRef(new URLSearchParams(rloc.search).get("p"));
+  useEffect(() => {
+    const id = wantItem.current; if (!id || !byId[id]) return;
+    wantItem.current = null; openItem(byId[id]);
+  }, [byId]);
   function quickAdd(it: Item, e?: React.MouseEvent) {
     if (it.variants?.length) { openItem(it); return; }
     const card = (e?.currentTarget as HTMLElement | undefined)?.closest("[data-card]");
