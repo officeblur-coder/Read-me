@@ -6,16 +6,27 @@ import "./styles.css";
 // dark "Lyra Night" theme by default; the visitor can switch to light (remembered on this device)
 try { document.documentElement.dataset.theme = localStorage.getItem("lyra-theme") === "light" ? "light" : "dark"; } catch { document.documentElement.dataset.theme = "dark"; }
 import Menu from "./pages/Menu";
-import Track from "./pages/Track";
-// staff screens load on demand, so customers download only the menu
+import DemoBar from "./demo/DemoBar";
+// Only the menu is in the first download; every other screen loads when it is opened.
+const Track = lazy(() => import("./pages/Track"));
+const Account = lazy(() => import("./pages/Account"));
+const Privacy = lazy(() => import("./pages/Legal").then(m => ({ default: m.Privacy })));
+const Terms = lazy(() => import("./pages/Legal").then(m => ({ default: m.Terms })));
+const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
+const NewsletterLink = lazy(() => import("./pages/Link"));
 const Reception = lazy(() => import("./pages/Reception"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Courier = lazy(() => import("./pages/Courier"));
-import Account from "./pages/Account";
-import { Privacy, Terms } from "./pages/Legal";
-import Unsubscribe from "./pages/Unsubscribe";
-import NewsletterLink from "./pages/Link";
-import DemoBar from "./demo/DemoBar";
+
+// A tab left open across a new release asks for screen files that no longer exist: reload once to get the new version.
+window.addEventListener("vite:preloadError", e => {
+  e.preventDefault();
+  try {
+    if (sessionStorage.getItem("lyra-reloaded") === location.pathname) return;
+    sessionStorage.setItem("lyra-reloaded", location.pathname);
+  } catch { /* no storage: reload anyway */ }
+  location.reload();
+});
 
 // The showcase build (mode demo) runs from a plain folder: hash URLs, and the staff screens only when asked for screenshots.
 const DEMO = !!import.meta.env.VITE_DEMO;

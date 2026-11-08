@@ -46,4 +46,18 @@ const demo = (): Plugin => ({
 
 export default defineConfig(({ mode }) => mode === "demo"
   ? { plugins: [demo(), react()], base: "./", publicDir: false, build: { outDir: "dist-demo" } }
-  : { plugins: [react()] });
+  : {
+      plugins: [react()],
+      // libraries change rarely: in their own files they stay cached in the phone between releases of the app
+      build: {
+        rollupOptions: {
+          output: {
+            manualChunks(id) {
+              if (!id.includes("node_modules")) return;
+              if (id.includes("@supabase")) return "supabase";
+              if (/node_modules\/(react|react-dom|react-router|react-router-dom|scheduler|@remix-run)\//.test(id)) return "react";
+            },
+          },
+        },
+      },
+    });
