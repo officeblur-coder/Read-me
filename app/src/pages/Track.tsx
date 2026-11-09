@@ -23,14 +23,6 @@ export default function Track() {
   const [notif, setNotif] = useState<string>(() => { try { return notifState() === "granted" ? localStorage.getItem(NK) || "" : ""; } catch { return ""; } });
   const [notifMsg, setNotifMsg] = useState("");
   const last = useRef<PublicOrder | null>(null);
-  const [payBusy, setPayBusy] = useState(false);
-  const [payErr, setPayErr] = useState("");
-  async function payNow() {
-    setPayBusy(true); setPayErr("");
-    const { startPayment } = await import("../lib/pay");
-    const err = await startPayment(token!);
-    setPayBusy(false); if (err) setPayErr(err);
-  }
   async function turnOn() {
     const r = await enableNotifications(sub => Promise.resolve(supabase.rpc("push_subscribe", { p_token: token, p_sub: sub })));
     if (!r.ok) { setNotifMsg(r.msg || ""); return; }
@@ -51,7 +43,6 @@ export default function Track() {
     if (t && localStorage.getItem(NK) !== "push") localNotify(t, m, url, "order-" + token);
   }
   const loc = useLocation();
-  const backFromPay = new URLSearchParams(loc.search).get("plata");
   useEffect(() => { if ((loc.state as { fresh?: boolean } | null)?.fresh) { setTimeout(confetti, 250); history.replaceState({}, ""); } }, []);
 
   async function load() {
@@ -95,7 +86,6 @@ export default function Track() {
   const frac = o.eta_min ? Math.max(0, Math.min(1, rem / (o.eta_min * 60000))) : 0;
 
   let ring = null, title = "", sub: React.ReactNode = "", offer: React.ReactNode = null;
-  const refundNote = o.pay_status === "refunding" || o.pay_status === "refunded";
   const sched = o.scheduled_for ? whenLabel(o.scheduled_for) : "";
   const later = !!o.scheduled_for && new Date(o.scheduled_for).getTime() - now > 60 * 60000;
   if (o.status === "new" && sched) {
@@ -104,15 +94,6 @@ export default function Track() {
   } else if ((o.status === "prep") && later) {
     ring = <div className="ring"><svg viewBox="0 0 184 184"><circle cx="92" cy="92" r={R} style={{ stroke: "var(--ok)" }} strokeWidth="10" fill="none" /></svg><div className="c"><b className="num" style={{ fontSize: 34 }}>{sched.split(" la ")[1]}</b><small>{sched.split(" la ")[0]}</small></div></div>;
     title = "Precomandă confirmată"; sub = <>{pick ? "Comanda e gata de ridicat" : "Comanda ajunge"} <b>{sched}</b>{!pick && o.address ? ` · ${o.address}` : ""}</>;
-  } else if (o.status === "new" && o.pay_status === "pending") {
-    ring = <div className="ring wait"><svg viewBox="0 0 184 184"><circle cx="92" cy="92" r={R} style={{ stroke: "var(--surface-3)" }} strokeWidth="10" fill="none" /><circle cx="92" cy="92" r={R} style={{ stroke: "var(--gold)" }} strokeWidth="10" fill="none" strokeLinecap="round" strokeDasharray={`${CIRC * 0.22} ${CIRC}`} /></svg><div className="c"><b style={{ fontSize: 32 }}>#{o.number}</b><small>plată</small></div></div>;
-    if (backFromPay === "ok") { title = "Se confirmă plata…"; sub = "Durează câteva secunde. Comanda ajunge apoi la restaurant."; }
-    else {
-      title = "Comanda așteaptă plata"; sub = "Restaurantul primește comanda după plata cu cardul. Ai 30 de minute, apoi comanda se anulează.";
-      offer = <div className="pay-box">{backFromPay === "anulat" && <p>Plata a fost întreruptă. Poți încerca din nou.</p>}
-        <button className="big" disabled={payBusy} onClick={payNow}>{payBusy ? "Se deschide plata…" : `Plătește ${lei(o.total)} cu cardul`}</button>
-        {payErr && <p className="err">{payErr}</p>}</div>;
-    }
   } else if (o.status === "new" && o.offered_at && o.offer_eta) {
     const sNow = now + skew;
     const left = new Date(o.offered_at).getTime() + (o.offer_window || 5) * 60000 - sNow;
@@ -139,9 +120,9 @@ export default function Track() {
   } else if (o.status === "refunded") {
     title = "Comanda a fost rambursată"; sub = "Suma ți-a fost returnată. Punctele folosite au revenit în contul tău Lyra Rewards.";
   } else if (o.status === "rejected" && o.cancelled_by === "client") {
-    title = "Ai anulat comanda"; sub = `${refundNote ? "" : "Nu ți-a fost reținută nicio sumă, iar p"}${refundNote ? "P" : ""}unctele sau bonusul folosite au revenit în cont. Te așteptăm altă dată!`;
+    title = "Ai anulat comanda"; sub = "Nu ți-a fost reținută nicio sumă, iar punctele sau bonusul folosite au revenit în cont. Te așteptăm altă dată!";
   } else if (o.status === "rejected") {
-    title = "Comanda nu a putut fi preluată"; sub = <>{o.reject_reason ? o.reject_reason + ". " : ""}{refundNote ? "" : "Nu ți-a fost reținută nicio sumă. "}Ne poți suna pentru detalii.</>;
+    title = "Comanda nu a putut fi preluată"; sub = <>{o.reject_reason ? o.reject_reason + ". " : ""}Nu ți-a fost reținută nicio sumă. Ne poți suna pentru detalii.</>;
   } else if (o.status === "done") {
     ring = <div className="ring"><svg viewBox="0 0 184 184"><circle cx="92" cy="92" r={R} style={{ stroke: "var(--ok)" }} strokeWidth="10" fill="none" /></svg><div className="c" style={{ color: "var(--ok)" }}><Icon name="check" size={64} /><small>{pick ? "ridicată" : "livrată"}</small></div></div>;
     title = "Poftă bună!"; sub = "Mulțumim că ai comandat de la Lyra's Delivery.";
@@ -158,8 +139,6 @@ export default function Track() {
         {ring}
         <h1 className="t-title">{title}</h1>
         <p className="t-sub">{sub}</p>
-        {o.pay_status === "paid" && o.status !== "rejected" && <span className="paid-tag"><Icon name="check" size={14} />Plătită online cu cardul</span>}
-        {(o.pay_status === "refunding" || o.pay_status === "refunded") && <p className="t-sub"><b>{o.pay_status === "refunded" ? "Plata ți-a fost returnată pe card" : "Plata îți va fi returnată pe card"}</b> (de obicei în 3–5 zile lucrătoare).</p>}
         {offer}
         {o.status !== "rejected" && o.status !== "refunded" && <div className="steps">{labels.map((l, i) => <div key={l} className={i < si || o.status === "done" ? "done" : i === si ? "now" : ""}><i />{l}</div>)}</div>}
         {["new", "prep", "road"].includes(o.status) && !notif && notifState() !== "unsupported" && notifState() !== "denied" && (

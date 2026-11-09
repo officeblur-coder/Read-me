@@ -1490,7 +1490,3 @@ h1,h2,h3,h4{margin:0;font-weight:700;text-wrap:balance}
 .invite-stats{display:flex;flex-wrap:wrap;gap:18px;margin-top:12px;font-size:13px;color:var(--muted)}
 .invite-stats b{color:var(--text);font-size:16px;margin-right:4px}
 .invite-msg{margin:8px 0;padding:10px 12px;border-radius:var(--r-sm);background:var(--ok-bg);color:var(--ok);font-weight:700;font-size:13px}
-.paygrid:has(> button:nth-child(3)){grid-template-columns:repeat(3,1fr)}
-.pay-box{display:grid;gap:10px;width:100%;max-width:420px;margin:16px auto 0;padding:14px;border-radius:var(--r);border:1px solid var(--gold);background:var(--surface-2);text-align:center}
-.pay-box p{margin:0;font-size:13px}
-.paid-tag{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:6px 12px;border-radius:999px;background:var(--ok-bg);color:var(--ok);font-weight:700;font-size:12.5px}
