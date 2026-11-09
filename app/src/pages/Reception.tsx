@@ -35,7 +35,32 @@ async function keepAwake() {
   try { wakeLock = await (navigator as unknown as { wakeLock: { request: (t: string) => Promise<{ release: () => Promise<void> }> } }).wakeLock.request("screen"); } catch { /* not supported */ }
 }
 
+// Consola stă deschisă zile întregi: când publicăm o versiune nouă a site-ului, se reîncarcă singură
+// (verifică la 2 minute și când ecranul revine în față; nu întrerupe o comandă care se preia).
+let rxBusy = false;
+function useAutoUpdate() {
+  useEffect(() => {
+    if (!import.meta.env.PROD || import.meta.env.MODE === "demo") return;
+    const mine = document.querySelector<HTMLScriptElement>('script[type="module"][src*="/assets/index-"]')?.src.split("/assets/")[1];
+    if (!mine) return;
+    let fresh = false;
+    const check = async () => {
+      try {
+        const html = await (await fetch("/receptie", { cache: "no-store" })).text();
+        const live = html.match(/\/assets\/(index-[^"']+\.js)/)?.[1];
+        if (live && live !== mine) fresh = true;
+      } catch { /* fără internet: încercăm data viitoare */ }
+      if (fresh && !rxBusy) location.reload();
+    };
+    const t = setInterval(check, 2 * 60000);
+    const vis = () => { if (document.visibilityState === "visible") check(); };
+    document.addEventListener("visibilitychange", vis);
+    return () => { clearInterval(t); document.removeEventListener("visibilitychange", vis); };
+  }, []);
+}
+
 export default function Reception() {
+  useAutoUpdate();
   const [session, setSession] = useState<Session | null>(null);
   const [ready, setReady] = useState(false);
   const [isStaff, setIsStaff] = useState<boolean | null>(null);
@@ -193,6 +218,7 @@ function Console({ email }: { email: string }) {
   }, [loadOrders, loadMenu]);
 
   const incoming = orders.filter(o => o.status === "new" && !o.offered_at);
+  rxBusy = incoming.length > 0 || !!drawer || rejecting || !!customEta;
   const waiting = orders.filter(o => o.status === "new" && !!o.offered_at);
   const confirmEta = settings?.confirm_eta !== false;
   // precomenzi acceptate, cu ora la mai mult de o oră: stau deoparte până se apropie ora lor
