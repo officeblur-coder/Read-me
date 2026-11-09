@@ -1,4 +1,4 @@
--- Lyra: actualizare noiembrie 2026 (clientul confirmă timpul, notificări, invită un prieten). Nu atinge meniul, comenzile sau clienții.
+-- Lyra: actualizare noiembrie 2026 (clientul confirmă timpul de livrare, notificări cu oferte din admin). Nu atinge meniul, comenzile sau clienții.
 -- Supabase → SQL Editor → New query → lipiți tot fișierul → Run. Se poate rula de mai multe ori.
 
 -- =====================================================================
@@ -308,15 +308,10 @@ end $$;
 
 
 -- =====================================================================
--- Notificări pe telefon (Web Push)
--- Clientul: „Restaurantul propune 40 min”, „Curierul e pe drum”, „Comanda e gata”…, chiar cu browserul închis.
--- Recepția: comandă nouă, client care a anulat.
+-- Notificări cu oferte pe telefon (Web Push), trimise din admin → Newsletter
+-- Le primesc doar cei care au acceptat: „Vreau oferte prin notificări” (din cont sau din aplicația de pe ecran).
 -- Trimiterea o face funcția Edge `push` (supabase/functions/push), apelată prin pg_net.
--- Configurare (o singură dată): vezi supabase/functions/push/README.md
---   select vault.create_secret('https://<proiect>.supabase.co/functions/v1/push', 'push_url');
---   select vault.create_secret('<un șir lung, aleator>', 'push_secret');
---   update public.settings set push_public_key = '<cheia VAPID publică>';
--- Fără configurare, site-ul arată notificări doar cât pagina e deschisă (fără server).
+-- Configurare o singură dată: supabase/functions/push/README.md
 -- =====================================================================
 
 alter table public.settings add column if not exists push_public_key text;   -- cheia VAPID publică (nu e secretă)
@@ -326,277 +321,123 @@ create table if not exists public.push_subs (
   endpoint    text not null unique,
   p256dh      text not null,
   auth        text not null,
-  order_id    uuid references public.orders(id) on delete cascade,   -- abonamentul unui client pentru o comandă
-  staff_user  uuid,                                                   -- sau al unui membru al recepției
-  created_at  timestamptz not null default now(),
-  check ((order_id is null) <> (staff_user is null))
+  created_at  timestamptz not null default now()
 );
-create index if not exists push_subs_order_idx on public.push_subs(order_id);
+alter table public.push_subs add column if not exists customer_id uuid references public.customers(id) on delete set null;
 alter table public.push_subs enable row level security;   -- fără politici: doar funcțiile de mai jos ating tabela
 
--- abonare client, pe baza linkului secret al comenzii
-create or replace function public.push_subscribe(p_token uuid, p_sub jsonb) returns void
+-- curățare după versiunea de test (notificări pe comenzi, „Invită un prieten”): nu mai sunt folosite
+alter table public.push_subs drop constraint if exists push_subs_check;
+do $$ begin
+  execute 'delete from public.push_subs where order_id is not null or staff_user is not null';
+exception when undefined_column then null; end $$;
+drop trigger if exists orders_push on public.orders;
+drop function if exists public.orders_push();
+drop function if exists public.push_subscribe(uuid, jsonb);
+drop function if exists public.push_subscribe_staff(jsonb);
+drop function if exists public.push_send(uuid, text, text, text, text);
+drop function if exists public.push_cleanup();
+drop trigger if exists orders_referral on public.orders;
+drop function if exists public.orders_referral();
+drop function if exists public.referral_credit(uuid, numeric, public.orders, text);
+drop function if exists public.claim_referral(text);
+drop function if exists public.referral_info(text);
+drop function if exists public.my_referral();
+drop function if exists public.referral_code(uuid);
+drop function if exists public.admin_referral_stats();
+do $$ begin
+  begin perform cron.unschedule('lyra-push-cleanup'); exception when others then null; end;
+end $$;
+
+create table if not exists public.push_campaigns (
+  id         bigint generated always as identity primary key,
+  title      text not null,
+  body       text not null,
+  url        text not null default '/',
+  sent_to    int not null default 0,
+  test       boolean not null default false,
+  created_by text,
+  created_at timestamptz not null default now()
+);
+alter table public.push_campaigns enable row level security;
+
+-- abonare: telefonul acceptă oferte prin notificări (cu sau fără cont)
+create or replace function public.push_subscribe_offers(p_sub jsonb) returns void
 language plpgsql security definer set search_path = public as $$
-declare oid uuid;
+declare cid uuid := (select id from public.customers where id = auth.uid());
 begin
-  select id into oid from public.orders where token = p_token;
-  if oid is null then raise exception 'Comanda nu a fost găsită.' using errcode = 'P0001'; end if;
   if coalesce(p_sub->>'endpoint', '') !~ '^https://' or p_sub#>>'{keys,p256dh}' is null or p_sub#>>'{keys,auth}' is null then
     raise exception 'Abonament invalid.' using errcode = 'P0001';
   end if;
-  insert into public.push_subs(endpoint, p256dh, auth, order_id)
-  values (p_sub->>'endpoint', p_sub#>>'{keys,p256dh}', p_sub#>>'{keys,auth}', oid)
-  on conflict (endpoint) do update set p256dh = excluded.p256dh, auth = excluded.auth, order_id = excluded.order_id, staff_user = null, created_at = now();
-end $$;
-
--- abonare recepție (toate comenzile noi)
-create or replace function public.push_subscribe_staff(p_sub jsonb) returns void
-language plpgsql security definer set search_path = public as $$
-begin
-  if not public.is_staff() then raise exception 'Doar echipa.' using errcode = 'P0001'; end if;
-  if coalesce(p_sub->>'endpoint', '') !~ '^https://' then raise exception 'Abonament invalid.' using errcode = 'P0001'; end if;
-  insert into public.push_subs(endpoint, p256dh, auth, staff_user)
-  values (p_sub->>'endpoint', p_sub#>>'{keys,p256dh}', p_sub#>>'{keys,auth}', auth.uid())
-  on conflict (endpoint) do update set p256dh = excluded.p256dh, auth = excluded.auth, staff_user = excluded.staff_user, order_id = null, created_at = now();
+  insert into public.push_subs(endpoint, p256dh, auth, customer_id)
+  values (p_sub->>'endpoint', p_sub#>>'{keys,p256dh}', p_sub#>>'{keys,auth}', cid)
+  on conflict (endpoint) do update set p256dh = excluded.p256dh, auth = excluded.auth, customer_id = coalesce(excluded.customer_id, push_subs.customer_id);
 end $$;
 
 create or replace function public.push_unsubscribe(p_endpoint text) returns void
 language sql security definer set search_path = public as $$
   delete from public.push_subs where endpoint = p_endpoint;
 $$;
-grant execute on function public.push_subscribe(uuid, jsonb), public.push_unsubscribe(text) to anon, authenticated;
-grant execute on function public.push_subscribe_staff(jsonb) to authenticated;
+grant execute on function public.push_subscribe_offers(jsonb), public.push_unsubscribe(text) to anon, authenticated;
 
--- trimite o notificare către abonații unei comenzi (p_order) sau ai recepției (p_order null)
-create or replace function public.push_send(p_order uuid, p_title text, p_body text, p_url text, p_tag text default null) returns boolean
+-- intern: trimite către o listă de abonamente, în loturi de 500 (o cerere pg_net pe lot)
+create or replace function public.push_deliver(p_ids bigint[], p_title text, p_body text, p_url text, p_tag text) returns int
 language plpgsql security definer set search_path = public as $$
-declare url text; secret text; subs jsonb;
+declare url text; secret text; subs jsonb; n int := 0; i int := 0; total int := coalesce(array_length(p_ids, 1), 0);
 begin
-  select coalesce(jsonb_agg(jsonb_build_object('endpoint', endpoint, 'p256dh', p256dh, 'auth', auth)), '[]') into subs
-    from public.push_subs where (p_order is not null and order_id = p_order) or (p_order is null and staff_user is not null);
-  if jsonb_array_length(subs) = 0 then return false; end if;
   begin
     select decrypted_secret into url from vault.decrypted_secrets where name = 'push_url' limit 1;
     select decrypted_secret into secret from vault.decrypted_secrets where name = 'push_secret' limit 1;
   exception when others then url := null; end;
-  if url is null or secret is null then return false; end if;
-  perform net.http_post(url := url,
-    body := jsonb_build_object('subs', subs, 'title', p_title, 'body', p_body, 'url', p_url, 'tag', coalesce(p_tag, p_url)),
-    headers := jsonb_build_object('Content-Type', 'application/json', 'x-push-secret', secret));
-  return true;
-exception when others then
-  raise warning 'Notificarea nu a putut fi trimisă: %', sqlerrm;
-  return false;
-end $$;
-revoke execute on function public.push_send(uuid, text, text, text, text) from public, anon, authenticated;
-
--- ce se trimite la fiecare schimbare a comenzii
-create or replace function public.orders_push() returns trigger
-language plpgsql security definer set search_path = public as $$
-declare s public.settings; link text; pick boolean; at text;
-begin
-  select * into s from public.settings where id = 1;
-  link := '/comanda/' || new.token;
-  pick := new.mode = 'ridicare';
-  if tg_op = 'INSERT' then
-    perform public.push_send(null, format('Comandă nouă #%s', new.number),
-      format('%s · %s · %s lei%s', new.name, new.mode, to_char(new.total, 'FM999990.00'),
-             case when new.scheduled_for is not null then ' · precomandă ' || to_char(new.scheduled_for at time zone s.tz, 'DD.MM HH24:MI') else '' end),
-      '/receptie', 'new-' || new.id);
-    return new;
+  if url is null or secret is null then
+    raise exception 'Notificările nu sunt configurate încă (lipsesc push_url / push_secret). Pașii: supabase/functions/push/README.md' using errcode = 'P0001';
   end if;
-  -- recepția a propus timpul
-  if new.status = 'new' and new.offered_at is distinct from old.offered_at and new.offered_at is not null then
-    at := to_char((new.offered_at + make_interval(mins => new.offer_eta)) at time zone s.tz, 'HH24:MI');
-    perform public.push_send(new.id, format('Restaurantul propune %s minute', new.offer_eta),
-      format('Comanda #%s %s la ~%s. Apasă ca să confirmi sau să anulezi.', new.number, case when pick then 'e gata' else 'ajunge' end, at), link, 'order-' || new.id);
-  end if;
-  if new.status is distinct from old.status then
-    at := to_char((coalesce(new.accepted_at, now()) + make_interval(mins => coalesce(new.eta_min, 0))) at time zone s.tz, 'HH24:MI');
-    if new.status = 'prep' and coalesce(new.offer_answer, '') <> 'accepted' then
-      perform public.push_send(new.id, format('Comanda #%s a fost acceptată', new.number),
-        case when new.scheduled_for is not null then format('Programată %s.', to_char(new.scheduled_for at time zone s.tz, 'DD.MM la HH24:MI'))
-             else format('Se gătește acum. %s la ~%s.', case when pick then 'Gata de ridicare' else 'Sosește' end, at) end, link, 'order-' || new.id);
-    elsif new.status = 'road' then
-      perform public.push_send(new.id, case when pick then 'Comanda ta e gata!' else 'Curierul e pe drum' end,
-        case when pick then format('Comanda #%s te așteaptă la restaurant.', new.number)
-             else format('Comanda #%s pleacă spre tine%s.', new.number, coalesce(' cu ' || nullif(new.courier_name, ''), '')) end, link, 'order-' || new.id);
-    elsif new.status = 'done' then
-      perform public.push_send(new.id, 'Poftă bună!', format('Cum a fost comanda #%s? Apasă și dă o notă.', new.number), link, 'order-' || new.id);
-    elsif new.status = 'rejected' and new.cancelled_by is null then
-      perform public.push_send(new.id, format('Comanda #%s nu a putut fi preluată', new.number),
-        coalesce(new.reject_reason || '. ', '') || 'Nu ți-a fost reținută nicio sumă.', link, 'order-' || new.id);
-    elsif new.status = 'rejected' and new.cancelled_by = 'client' and old.offered_at is not null then
-      perform public.push_send(null, format('#%s anulată de client', new.number), format('%s · timpul propus nu i-a convenit.', new.name), '/receptie', 'cancel-' || new.id);
+  while i < total loop
+    select jsonb_agg(jsonb_build_object('endpoint', endpoint, 'p256dh', p256dh, 'auth', auth)) into subs
+      from public.push_subs where id = any(p_ids[i + 1 : i + 500]);
+    if subs is not null then
+      perform net.http_post(url := url,
+        body := jsonb_build_object('subs', subs, 'title', p_title, 'body', p_body, 'url', p_url, 'tag', p_tag),
+        headers := jsonb_build_object('Content-Type', 'application/json', 'x-push-secret', secret),
+        timeout_milliseconds := 30000);
+      n := n + jsonb_array_length(subs);
     end if;
-  elsif new.status in ('prep', 'road') and new.eta_min is distinct from old.eta_min and old.eta_min is not null then
-    at := to_char((new.accepted_at + make_interval(mins => new.eta_min)) at time zone s.tz, 'HH24:MI');
-    perform public.push_send(new.id, format('Ora nouă pentru comanda #%s', new.number), format('%s la ~%s.', case when pick then 'Gata de ridicare' else 'Sosește' end, at), link, 'order-' || new.id);
-  end if;
-  return new;
-end $$;
-drop trigger if exists orders_push on public.orders;
-create trigger orders_push after insert or update on public.orders for each row execute function public.orders_push();
-
--- abonamentele clienților se șterg după 2 zile (comanda s-a încheiat de mult)
-create or replace function public.push_cleanup() returns void
-language sql security definer set search_path = public as $$
-  delete from public.push_subs where order_id is not null and created_at < now() - interval '2 days';
-$$;
-do $$ begin
-  begin perform cron.unschedule('lyra-push-cleanup'); exception when others then null; end;
-  begin perform cron.schedule('lyra-push-cleanup', '17 4 * * *', 'select public.push_cleanup()');
-  exception when others then null; end;
-end $$;
-
-
--- =====================================================================
--- Recomandă un prieten
--- Fiecare client cu cont are un cod (link lyrasdelivery.ro/r/COD). Prietenul își face cont din link.
--- Când prima lui comandă (de minim referral_min lei) e livrată, amândoi primesc referral_lei lei în puncte
--- Lyra Rewards (1 punct = 0,01 lei la acest lot). Punctele se folosesc ca restul (max. 20% din comandă).
--- =====================================================================
-
-alter table public.settings add column if not exists referral_on boolean not null default true;
-alter table public.settings add column if not exists referral_lei numeric(8,2) not null default 20 check (referral_lei >= 0);
-alter table public.settings add column if not exists referral_min numeric(8,2) not null default 60 check (referral_min >= 0);
-
-alter table public.customers add column if not exists ref_code text unique;
-alter table public.customers add column if not exists referred_by uuid references public.customers(id) on delete set null;
-alter table public.customers add column if not exists referred_at timestamptz;
-alter table public.customers add column if not exists referral_paid_at timestamptz;   -- bonusul pentru această recomandare a fost dat
-
--- punctele din recomandare au sursa / tipul lor
-alter table public.point_lots drop constraint if exists point_lots_source_check;
-alter table public.point_lots add constraint point_lots_source_check check (source in ('order','adjust','migration','referral'));
-alter table public.point_ledger drop constraint if exists point_ledger_kind_check;
-alter table public.point_ledger add constraint point_ledger_kind_check check (kind in ('earn','redeem','redeem_return','reverse','expire','adjust','migration','referral'));
-
--- cod scurt, ușor de dictat: primele litere din prenume + 4 cifre (ex. ANA4821); fără litere confuzabile
-create or replace function public.referral_code(p_cust uuid) returns text
-language plpgsql security definer set search_path = public as $$
-declare c public.customers; base text; code text; i int := 0;
-begin
-  select * into c from public.customers where id = p_cust for update;
-  if c.ref_code is not null then return c.ref_code; end if;
-  base := upper(left(regexp_replace(translate(coalesce(nullif(split_part(trim(c.name), ' ', 1), ''), split_part(c.email, '@', 1), 'LYRA'),
-          'ăâîșşțţĂÂÎȘŞȚŢ', 'aaisstAAISSTT'), '[^A-Za-z]', '', 'g'), 5));
-  if length(base) < 2 then base := 'LYRA'; end if;
-  loop
-    code := base || lpad((floor(random() * 10000))::int::text, 4, '0');
-    exit when not exists (select 1 from public.customers where ref_code = code);
-    i := i + 1; if i > 20 then base := base || 'X'; end if;
+    i := i + 500;
   end loop;
-  update public.customers set ref_code = code where id = p_cust;
-  return code;
+  return n;
 end $$;
-revoke execute on function public.referral_code(uuid) from public, anon, authenticated;
+revoke execute on function public.push_deliver(bigint[], text, text, text, text) from public, anon, authenticated;
 
--- pagina „Invită un prieten” din cont
-create or replace function public.my_referral() returns jsonb
+-- admin: trimite notificarea tuturor (sau doar pe telefoanele proprii, ca test)
+create or replace function public.admin_push_send(p_title text, p_body text, p_url text default '/', p_test boolean default false) returns jsonb
 language plpgsql security definer set search_path = public as $$
-declare s public.settings; me uuid := auth.uid(); code text; ref public.customers;
+declare ids bigint[]; n int; who text; link text := coalesce(nullif(trim(p_url), ''), '/');
 begin
-  if me is null or not exists (select 1 from public.customers where id = me) then raise exception 'Intră în cont.' using errcode = 'P0001'; end if;
-  select * into s from public.settings where id = 1;
-  code := public.referral_code(me);
-  select r.* into ref from public.customers c join public.customers r on r.id = c.referred_by where c.id = me;
-  return jsonb_build_object(
-    'on', s.referral_on, 'lei', s.referral_lei, 'min', s.referral_min, 'code', code,
-    'link', rtrim(s.site_url, '/') || '/r/' || code,
-    'invited', (select count(*) from public.customers where referred_by = me),
-    'rewarded', (select count(*) from public.customers where referred_by = me and referral_paid_at is not null),
-    'earned', (select coalesce(sum(value), 0) from public.point_ledger where customer_id = me and kind = 'referral'),
-    'referred_by', case when ref.id is null then null else split_part(trim(coalesce(ref.name, 'un prieten')), ' ', 1) end,
-    'my_bonus_paid', (select referral_paid_at is not null from public.customers where id = me));
-end $$;
-grant execute on function public.my_referral() to authenticated;
-
--- cine invită (pentru mesajul de pe site, înainte de cont): doar prenumele
-create or replace function public.referral_info(p_code text) returns jsonb
-language sql stable security definer set search_path = public as $$
-  select jsonb_build_object('name', split_part(trim(coalesce(c.name, 'Un prieten')), ' ', 1), 'lei', s.referral_lei, 'min', s.referral_min)
-  from public.customers c, public.settings s where s.id = 1 and s.referral_on and c.ref_code = upper(trim(p_code));
-$$;
-grant execute on function public.referral_info(text) to anon, authenticated;
-
--- prietenul (cont nou, fără comenzi) se leagă de cel care l-a invitat
-create or replace function public.claim_referral(p_code text) returns jsonb
-language plpgsql security definer set search_path = public as $$
-declare me public.customers; r public.customers; s public.settings;
-begin
-  select * into s from public.settings where id = 1;
-  if not s.referral_on then raise exception 'Recomandările nu sunt active acum.' using errcode = 'P0001'; end if;
-  select * into me from public.customers where id = auth.uid() for update;
-  if not found then raise exception 'Intră în cont.' using errcode = 'P0001'; end if;
-  select * into r from public.customers where ref_code = upper(trim(p_code));
-  if not found then raise exception 'Codul de invitație nu există.' using errcode = 'P0001'; end if;
-  if r.id = me.id then raise exception 'Nu te poți invita singur.' using errcode = 'P0001'; end if;
-  if me.referred_by is not null then
-    if me.referred_by = r.id then return jsonb_build_object('name', split_part(trim(coalesce(r.name, 'un prieten')), ' ', 1), 'already', true); end if;
-    raise exception 'Contul tău e deja legat de o invitație.' using errcode = 'P0001';
+  if not public.is_admin() then raise exception 'Doar administratorul trimite notificări.' using errcode = 'P0001'; end if;
+  if coalesce(trim(p_title), '') = '' or coalesce(trim(p_body), '') = '' then raise exception 'Scrie titlul și textul notificării.' using errcode = 'P0001'; end if;
+  if length(p_title) > 60 or length(p_body) > 180 then raise exception 'Titlul are maxim 60 de caractere, textul maxim 180.' using errcode = 'P0001'; end if;
+  if link !~ '^/' then raise exception 'Linkul trebuie să fie o pagină de pe site (începe cu /).' using errcode = 'P0001'; end if;
+  link := link || case when link like '%?%' then '&' else '?' end || 's=push';   -- apare în Vizite cu sursa „push”
+  select array_agg(id order by id) into ids from public.push_subs where not p_test or customer_id = auth.uid();
+  if ids is null then
+    raise exception '%', case when p_test then 'Pe telefonul tău nu sunt pornite notificările. Intră în cont pe telefon și pornește „Vreau oferte prin notificări”.'
+      else 'Nimeni nu are încă notificările pornite.' end using errcode = 'P0001';
   end if;
-  if r.referred_by = me.id then raise exception 'Te-a invitat deja această persoană.' using errcode = 'P0001'; end if;
-  if exists (select 1 from public.orders where customer_id = me.id and status not in ('rejected')) or me.created_at < now() - interval '30 days' then
-    raise exception 'Invitațiile sunt pentru conturile noi, înainte de prima comandă.' using errcode = 'P0001';
-  end if;
-  update public.customers set referred_by = r.id, referred_at = now() where id = me.id;
-  return jsonb_build_object('name', split_part(trim(coalesce(r.name, 'un prieten')), ' ', 1), 'lei', s.referral_lei, 'min', s.referral_min);
+  n := public.push_deliver(ids, trim(p_title), trim(p_body), link, 'oferta-' || extract(epoch from now())::bigint);
+  select email into who from auth.users where id = auth.uid();
+  insert into public.push_campaigns(title, body, url, sent_to, test, created_by) values (trim(p_title), trim(p_body), link, n, p_test, who);
+  return jsonb_build_object('sent_to', n);
 end $$;
-grant execute on function public.claim_referral(text) to authenticated;
 
--- intern: puncte de recomandare (lot cu valoare fixă: 1 punct = 0,01 lei)
-create or replace function public.referral_credit(p_cust uuid, p_lei numeric, p_order public.orders, p_note text) returns void
-language plpgsql security definer set search_path = public as $$
-declare pts int := round(p_lei * 100); t smallint;
-begin
-  if pts <= 0 then return; end if;
-  select tier into t from public.customers where id = p_cust;
-  insert into public.point_lots(customer_id, order_id, source, points, remaining, vpp, tier) values (p_cust, null, 'referral', pts, pts, 0.01, coalesce(t, 1));
-  insert into public.point_ledger(customer_id, order_id, order_no, kind, points, value, tier, note, actor)
-    values (p_cust, p_order.id, p_order.number, 'referral', pts, round(pts * 0.01, 2), t, p_note, 'sistem');
-  update public.customers set last_activity_at = now() where id = p_cust;
-  perform public.rewards_sync(p_cust);
-  perform public.rewards_notify(p_cust, 'referral', format('+%s lei de la Lyra', to_char(p_lei, 'FM999990.##')), p_note);
-end $$;
-revoke execute on function public.referral_credit(uuid, numeric, public.orders, text) from public, anon, authenticated;
-
--- prima comandă livrată a prietenului: bonus pentru amândoi
-create or replace function public.orders_referral() returns trigger
-language plpgsql security definer set search_path = public as $$
-declare s public.settings; friend public.customers; inviter public.customers; fname text; iname text;
-begin
-  if new.status <> 'done' or old.status = 'done' or new.customer_id is null then return new; end if;
-  select * into s from public.settings where id = 1;
-  if not s.referral_on or s.referral_lei <= 0 then return new; end if;
-  select * into friend from public.customers where id = new.customer_id for update;
-  if friend.referred_by is null or friend.referral_paid_at is not null then return new; end if;
-  if new.subtotal < s.referral_min then return new; end if;
-  select * into inviter from public.customers where id = friend.referred_by;
-  if not found then return new; end if;
-  -- același telefon ca al celui care invită: nu e un prieten nou
-  if regexp_replace(coalesce(inviter.phone, ''), '\D', '', 'g') <> '' and regexp_replace(coalesce(inviter.phone, ''), '\D', '', 'g') = regexp_replace(coalesce(new.phone, ''), '\D', '', 'g') then return new; end if;
-  update public.customers set referral_paid_at = now() where id = friend.id;
-  fname := split_part(trim(coalesce(friend.name, new.name, 'prietenul tău')), ' ', 1);
-  iname := split_part(trim(coalesce(inviter.name, 'prietenul tău')), ' ', 1);
-  perform public.referral_credit(inviter.id, s.referral_lei, new, format('%s a comandat prima dată din invitația ta. Mulțumim!', fname));
-  perform public.referral_credit(friend.id, s.referral_lei, new, format('Bonus pentru prima comandă din invitația lui %s.', iname));
-  return new;
-end $$;
-drop trigger if exists orders_referral on public.orders;
-create trigger orders_referral after update of status on public.orders for each row execute function public.orders_referral();
-
--- admin: setări
-create or replace function public.admin_referral_stats() returns jsonb
+create or replace function public.admin_push_overview() returns jsonb
 language sql stable security definer set search_path = public as $$
   select case when public.is_admin() then jsonb_build_object(
-    'invited', (select count(*) from public.customers where referred_by is not null),
-    'rewarded', (select count(*) from public.customers where referral_paid_at is not null),
-    'cost', (select coalesce(sum(value), 0) from public.point_ledger where kind = 'referral'),
-    'top', (select coalesce(jsonb_agg(x), '[]') from (
-        select coalesce(r.name, r.email) as name, count(*) as invited, count(c.referral_paid_at) as rewarded
-        from public.customers c join public.customers r on r.id = c.referred_by group by r.id, r.name, r.email order by count(c.referral_paid_at) desc, count(*) desc limit 10) x))
+    'subscribers', (select count(*) from public.push_subs),
+    'with_account', (select count(*) from public.push_subs where customer_id is not null),
+    'configured', exists (select 1 from public.settings where id = 1 and push_public_key is not null),
+    'recent', (select coalesce(jsonb_agg(x order by x.created_at desc), '[]') from
+      (select title, body, url, sent_to, test, created_at from public.push_campaigns order by created_at desc limit 10) x))
   end;
 $$;
-grant execute on function public.admin_referral_stats() to authenticated;
+grant execute on function public.admin_push_send(text, text, text, boolean), public.admin_push_overview() to authenticated;
 

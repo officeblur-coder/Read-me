@@ -9,6 +9,7 @@ import type { Order } from "../lib/types";
 import { ALLERGENS, imgUrl, lei } from "../lib/format";
 import Icon from "../components/Icon";
 import Wordmark from "../components/Wordmark";
+import { currentSub, disableOffers, enableOffers, publicKey, pushSupported } from "../lib/notify";
 import BottomNav from "../components/BottomNav";
 import SiteFooter from "../components/SiteFooter";
 
@@ -147,11 +148,32 @@ function Member({ c, refresh }: { c: Customer; refresh: () => void }) {
         <p className="cp-lbl">Alergii <i style={{ textTransform: "none", letterSpacing: 0, fontWeight: 500 }}>(bucătăria vede alerta pe bon)</i></p>
         <div className="chips">{Object.keys(ALLERGENS).map(a => <button key={a} className="chip" aria-pressed={profile.allergies.includes(a)} onClick={() => setProfile({ ...profile, allergies: profile.allergies.includes(a) ? profile.allergies.filter(x => x !== a) : [...profile.allergies, a] })}><Icon name={a} size={13} /> {ALLERGENS[a][0]}</button>)}</div>
         <label className="adm-sw" style={{ marginTop: 16 }}><button className="switch" role="switch" aria-checked={profile.marketing_ok} onClick={() => setProfile({ ...profile, marketing_ok: !profile.marketing_ok })} /><span>Vreau să primesc oferte pe email</span></label>
+        <PushOffers />
         <div className="row-btw" style={{ marginTop: 16 }}><span className="muted">{saved}</span><button className="cta" style={{ width: "auto", padding: "13px 26px" }} onClick={saveProfile}>Salvează</button></div>
         <p className="fine" style={{ textAlign: "left" }}>Cont: {c.email}. Pentru ștergerea contului scrie-ne și o facem în 24 de ore.</p>
       </section>
     </main>
   );
+}
+
+/** „Vreau oferte prin notificări pe acest telefon” (se salvează pe loc, pentru telefonul curent) */
+function PushOffers() {
+  const [on, setOn] = useState<boolean | null>(null);
+  const [msg, setMsg] = useState("");
+  const [busy, setBusy] = useState(false);
+  useEffect(() => { publicKey().then(async k => setOn(k ? !!(await currentSub()) : null)); }, []);
+  if (on === null) return null;
+  async function toggle() {
+    setBusy(true); setMsg("");
+    if (on) { await disableOffers(); setOn(false); }
+    else { const err = await enableOffers(); if (err) setMsg(err); else setOn(true); }
+    setBusy(false);
+  }
+  return <>
+    <label className="adm-sw" style={{ marginTop: 10 }}><button className="switch" role="switch" aria-checked={on} disabled={busy} onClick={toggle} /><span>Vreau oferte prin notificări pe acest telefon</span></label>
+    {msg && <p className="err">{msg}</p>}
+    {!pushSupported() && !msg && <p className="muted" style={{ fontSize: 12, margin: "4px 0 0" }}>Pe iPhone notificările merg după ce pui Lyra pe ecran și o deschizi de acolo.</p>}
+  </>;
 }
 
 const fmtDate = (d: string) => new Date(d).toLocaleDateString("ro-RO", { day: "numeric", month: "short", year: "numeric" });

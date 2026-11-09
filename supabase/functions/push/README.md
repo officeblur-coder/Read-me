@@ -1,25 +1,29 @@
-# Notificări pe telefon (Web Push) — configurare o singură dată
+# Notificări cu oferte pe telefon — configurare o singură dată
 
-Fără acești pași site-ul funcționează normal. Notificările apar doar cât pagina comenzii sau recepția sunt deschise.
+Fără acești pași, butonul „Vreau oferte prin notificări” nu apare pe site, iar în admin vezi un avertisment.
 
-1. **Cheile VAPID** (pe calculator, o singură dată):
+1. **Cheile VAPID** (pe un calculator cu Node.js, o singură dată):
    `npx web-push generate-vapid-keys`
-   Rezultă o cheie publică și una privată. Cea privată nu se pune niciodată în site sau în git.
+   Rezultă o cheie *Public Key* și una *Private Key*. Cheia privată nu se pune niciodată în site sau în git.
 
-2. **Secretele funcției** (Supabase → Edge Functions → Secrets, sau din terminal):
-   ```
-   supabase secrets set VAPID_PUBLIC_KEY=<publică> VAPID_PRIVATE_KEY=<privată> VAPID_SUBJECT=mailto:comenzi@lyrasdelivery.ro PUSH_SECRET=<un șir lung, aleator>
-   ```
+2. **Funcția `push`** (Supabase → Edge Functions → Deploy a new function → Via Editor):
+   - nume: `push`
+   - conținut: tot fișierul `supabase/functions/push/index.ts`
+   - după creare: Details → dezactivează **Verify JWT** (sau din terminal: `supabase functions deploy push --no-verify-jwt`)
 
-3. **Publicarea funcției** (din folderul repo-ului):
-   `supabase functions deploy push --no-verify-jwt`
+3. **Secretele funcției** (Supabase → Edge Functions → Secrets → Add):
+   - `VAPID_PUBLIC_KEY` = cheia publică
+   - `VAPID_PRIVATE_KEY` = cheia privată
+   - `VAPID_SUBJECT` = `mailto:comenzi@lyrasdelivery.ro`
+   - `PUSH_SECRET` = un șir lung inventat de tine (ex. 40 de litere și cifre)
 
-4. **În baza de date** (Supabase → SQL Editor):
+4. **În baza de date** (Supabase → SQL Editor), cu valorile tale:
    ```sql
-   select vault.create_secret('https://<proiect>.supabase.co/functions/v1/push', 'push_url');
-   select vault.create_secret('<același PUSH_SECRET de la pasul 2>', 'push_secret');
+   select vault.create_secret('https://mowvnabteszjkavdidgb.supabase.co/functions/v1/push', 'push_url');
+   select vault.create_secret('<același PUSH_SECRET de la pasul 3>', 'push_secret');
    update public.settings set push_public_key = '<cheia VAPID publică>' where id = 1;
    ```
 
-Gata. Pe pagina comenzii clientul vede „Anunță-mă pe telefon”. La recepție apare butonul „Notificări”.
-Pe iPhone notificările merg doar după „Adaugă pe ecranul principal” (iOS 16.4 sau mai nou). Site-ul arată pașii.
+Gata. În cont apare „Vreau oferte prin notificări pe acest telefon”, iar cine deschide Lyra de pe ecranul telefonului
+este întrebat o singură dată dacă vrea oferte. Trimiți din **admin → Email & notificări**: întâi „Trimite-mi un test”, apoi „Trimite tuturor”.
+Pe iPhone notificările merg doar pentru Lyra pusă pe ecran (iOS 16.4 sau mai nou).

@@ -26,6 +26,50 @@ const toLocal = (d: Date) => { const x = new Date(d); x.setMinutes(x.getMinutes(
 const newBlock = (t: Block["t"]): Block => (t === "heading" ? { t, text: "Titlu nou" } : t === "text" ? { t, text: "" } : t === "image" ? { t, src: "" }
   : t === "button" ? { t, label: "Comandă acum", href: "/?s=newsletter" } : t === "products" ? { t, ids: [], cta: "Comandă acum" } : t === "coupon" ? { t, code: "", note: "" } : { t } as Block);
 
+type PushOv = { subscribers: number; with_account: number; configured: boolean; recent: { title: string; body: string; url: string; sent_to: number; test: boolean; created_at: string }[] };
+
+/** Notificare pe telefon către toți cei care au acceptat oferte prin notificări. */
+function PushPanel({ items, flash }: { items: Item[]; flash: (m: string) => void }) {
+  const [ov, setOv] = useState<PushOv | null>(null);
+  const [f, setF] = useState({ title: "", body: "", url: "/" });
+  const [busy, setBusy] = useState(false);
+  const [sure, setSure] = useState(false);
+  const load = useCallback(() => { supabase.rpc("admin_push_overview").then(({ data }) => data && setOv(data as PushOv)); }, []);
+  useEffect(load, [load]);
+  if (!ov) return null;
+  async function send(test: boolean) {
+    setBusy(true);
+    const { data, error } = await supabase.rpc("admin_push_send", { p_title: f.title, p_body: f.body, p_url: f.url, p_test: test });
+    setBusy(false); setSure(false);
+    if (error) { flash(error.message); return; }
+    flash(test ? "Test trimis pe telefonul tău." : `Notificarea a plecat către ${(data as { sent_to: number }).sent_to} telefoane.`);
+    if (!test) setF({ title: "", body: "", url: "/" });
+    load();
+  }
+  const menu = items.filter(i => i.active).sort((a, b) => a.name_ro.localeCompare(b.name_ro, "ro"));
+  return (
+    <section className="push-panel">
+      <div className="adm-bar"><h1>Notificare pe telefon</h1><span className="muted">{ov.subscribers} telefoane acceptă oferte prin notificări{ov.with_account ? ` (${ov.with_account} cu cont)` : ""}</span></div>
+      <p className="muted adm-help">Ajunge pe ecranul telefonului, ca un mesaj, chiar dacă aplicația e închisă. O primesc doar cei care au pornit „Vreau oferte prin notificări”. Folosește-le rar (1–2 pe săptămână), altfel oamenii le opresc.</p>
+      {!ov.configured && <p className="tr-tip">⚠️ Notificările nu sunt configurate încă în Supabase (pașii sunt în supabase/functions/push/README.md). Până atunci nimeni nu se poate abona.</p>}
+      <div className="push-form">
+        <label className="fl"><span>Titlu ({f.title.length}/60)</span><input maxLength={60} value={f.title} placeholder="Smash Week: -20% la burgeri" onChange={e => setF({ ...f, title: e.target.value })} /></label>
+        <label className="fl"><span>Text ({f.body.length}/180)</span><textarea maxLength={180} rows={2} value={f.body} placeholder="Până duminică, toți burgerii smash au 20% reducere. Comandă acum!" onChange={e => setF({ ...f, body: e.target.value })} /></label>
+        <label className="fl"><span>La apăsare deschide</span><select value={f.url} onChange={e => setF({ ...f, url: e.target.value })}>
+          <option value="/">Meniul</option><option value="/cont">Contul / Lyra Rewards</option>
+          <optgroup label="Un preparat">{menu.map(i => <option key={i.id} value={`/?p=${i.id}`}>{i.name_ro}</option>)}</optgroup></select></label>
+        <div className="push-prev" aria-label="Previzualizare"><img src="/icons/icon-192.png" alt="" /><div><small>Lyra Delivery · acum</small><b>{f.title || "Titlul notificării"}</b><span>{f.body || "Textul notificării apare aici."}</span></div></div>
+        <div className="push-acts">
+          <button className="mini" disabled={busy || !f.title.trim() || !f.body.trim()} onClick={() => send(true)}>Trimite-mi un test</button>
+          {sure ? <><button className="addbtn" disabled={busy} onClick={() => send(false)}>Da, trimite la {ov.subscribers}</button><button className="mini" onClick={() => setSure(false)}>Renunță</button></>
+            : <button className="addbtn" disabled={busy || !f.title.trim() || !f.body.trim() || !ov.subscribers} onClick={() => setSure(true)}>Trimite tuturor</button>}
+        </div>
+      </div>
+      {ov.recent.length > 0 && <div className="push-recent"><small>Trimise recent</small>{ov.recent.map((r, i) => <div key={i}><b>{r.title}</b> · {r.test ? "test" : `${r.sent_to} telefoane`} · {fmt(r.created_at)}</div>)}</div>}
+    </section>
+  );
+}
+
 /** Emails to everyone who accepted offers: block newsletter, simple message or own HTML; test, schedule, send, stats. */
 export function NewsletterTab({ items, cats, flash }: { items: Item[]; cats: Category[]; flash: (m: string) => void }) {
   const [ov, setOv] = useState<Overview | null>(null);
@@ -77,7 +121,8 @@ export function NewsletterTab({ items, cats, flash }: { items: Item[]; cats: Cat
 
   return (
     <div className="adm-page">
-      <div className="adm-bar"><h1>Newsletter</h1><button className="addbtn" onClick={() => setPicking(true)}><span>+</span>Campanie nouă</button></div>
+      <PushPanel items={items} flash={flash} />
+      <div className="adm-bar"><h1>Email · newsletter</h1><button className="addbtn" onClick={() => setPicking(true)}><span>+</span>Campanie nouă</button></div>
       <p className="muted adm-help">Trimiți emailuri doar clienților care au bifat că acceptă oferte. Fiecare email are automat linkul de dezabonare, iar cine se dezabonează nu mai primește nimic. Poți construi un newsletter din blocuri (titluri, poze, produse din meniu cu prețul actual, butoane, cod de reducere), poți scrie un mesaj simplu sau poți lipi HTML-ul tău. Folosește {"{{prenume}}"} ca să te adresezi fiecăruia pe nume.</p>
       {err && <p className="err">{err.includes("admin_newsletters") ? "Rulează întâi actualizare_schema.sql în Supabase." : err}</p>}
       {ov && <>

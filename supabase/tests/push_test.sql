@@ -1,8 +1,7 @@
--- Teste notificări (pe o copie; se anulează). Necesită pg_net (net.http_request_queue). psql -v ON_ERROR_STOP=1 -f supabase/tests/push_test.sql
+-- Teste notificări cu oferte (pe o copie; se anulează). Necesită pg_net (net.http_request_queue). psql -v ON_ERROR_STOP=1 -f supabase/tests/push_test.sql
 begin;
-update public.settings set open_time = '00:00', close_time = '23:59:59', accepting_orders = true, min_order = 0, confirm_eta = true, offer_window_min = 5 where id = 1;
-delete from public.delivery_zones;
 delete from vault.decrypted_secrets where name in ('push_url', 'push_secret');
+delete from public.push_subs;
 create function pg_temp.ok(cond boolean, msg text) returns void language plpgsql as $$
 begin if cond is distinct from true then raise exception 'TEST EȘUAT: %', msg; end if; raise notice 'ok  %', msg; end $$;
 create function pg_temp.err(sql text) returns text language plpgsql as $$
@@ -12,74 +11,65 @@ create function pg_temp.sent() returns jsonb language sql as $$
 $$;
 
 do $$
-declare rec uuid := gen_random_uuid(); r jsonb; o1 uuid; t1 uuid; n0 int; e text; sub jsonb;
+declare adm uuid := gen_random_uuid(); cli uuid := gen_random_uuid(); rec uuid := gen_random_uuid(); r jsonb; e text; i int;
 begin
-  insert into auth.users(id, email) values (rec, 'marco@push.ro');
-  insert into public.staff(user_id, name, role) values (rec, 'Marco', 'reception');
-  perform set_config('request.jwt.claim.sub', '', true);
-  -- fără configurare nu se trimite nimic și comanda merge normal
-  r := public.place_order('{"name":"Ana","phone":"0745111222","mode":"livrare","address":"Str. X 1","payment":"cash","items":[{"id":"smash","qty":1}]}');
-  perform pg_temp.ok(jsonb_array_length(pg_temp.sent()) = 0, 'fără push_url/push_secret: nicio trimitere, comanda se plasează');
+  insert into auth.users(id, email) values (adm, 'admin@push.ro'), (cli, 'ana@push.ro'), (rec, 'marco@push.ro');
+  insert into public.staff(user_id, name, role) values (adm, 'Admin', 'admin'), (rec, 'Marco', 'reception');
 
+  -- abonări: vizitator fără cont, client cu cont, adminul pe telefonul lui
+  perform set_config('request.jwt.claim.sub', '', true);
+  e := pg_temp.err($q$select public.push_subscribe_offers('{"endpoint":"http://x","keys":{"p256dh":"k","auth":"a"}}')$q$);
+  perform pg_temp.ok(e = 'Abonament invalid.', 'abonament invalid: refuzat');
+  perform public.push_subscribe_offers('{"endpoint":"https://fcm.googleapis.com/v1","keys":{"p256dh":"k1","auth":"a1"}}');
+  perform set_config('request.jwt.claim.sub', cli::text, true);
+  perform public.push_subscribe_offers('{"endpoint":"https://fcm.googleapis.com/c1","keys":{"p256dh":"k2","auth":"a2"}}');
+  perform public.push_subscribe_offers('{"endpoint":"https://fcm.googleapis.com/c1","keys":{"p256dh":"k2","auth":"a2"}}');
+  perform set_config('request.jwt.claim.sub', adm::text, true);
+  perform public.push_subscribe_offers('{"endpoint":"https://web.push.apple.com/adm","keys":{"p256dh":"k3","auth":"a3"}}');
+  perform pg_temp.ok((select count(*) from public.push_subs) = 3 and (select customer_id from public.push_subs where endpoint like '%/c1') = cli, '3 telefoane abonate, fără dubluri, legate de cont');
+
+  -- doar adminul trimite; fără configurare: mesaj clar
+  perform set_config('request.jwt.claim.sub', rec::text, true);
+  e := pg_temp.err($q$select public.admin_push_send('Ofertă', 'Text', '/')$q$);
+  perform pg_temp.ok(e like 'Doar administratorul%', 'recepția nu poate trimite');
+  perform set_config('request.jwt.claim.sub', adm::text, true);
+  e := pg_temp.err($q$select public.admin_push_send('Ofertă', 'Text', '/')$q$);
+  perform pg_temp.ok(e like 'Notificările nu sunt configurate%', 'fără push_url/push_secret: explică ce lipsește');
   insert into vault.decrypted_secrets(name, decrypted_secret) values ('push_url', 'https://x.supabase.co/functions/v1/push'), ('push_secret', 's3cret');
-  -- abonamente
-  e := pg_temp.err(format('select public.push_subscribe(%L, %L)', gen_random_uuid(), '{"endpoint":"https://fcm.googleapis.com/a","keys":{"p256dh":"k","auth":"a"}}'));
-  perform pg_temp.ok(e like 'Comanda nu a fost găsită%', 'abonare cu link greșit: refuzată');
-  e := pg_temp.err(format('select public.push_subscribe_staff(%L)', '{"endpoint":"https://fcm.googleapis.com/s","keys":{"p256dh":"k","auth":"a"}}'));
-  perform pg_temp.ok(e like 'Doar echipa%', 'anonimul nu se poate abona ca recepție');
-  perform set_config('request.jwt.claim.sub', rec::text, true);
-  perform public.push_subscribe_staff('{"endpoint":"https://fcm.googleapis.com/staff1","keys":{"p256dh":"ks","auth":"as"}}');
-  perform set_config('request.jwt.claim.sub', '', true);
+  e := pg_temp.err($q$select public.admin_push_send('', 'Text', '/')$q$);
+  perform pg_temp.ok(e like 'Scrie titlul%', 'titlu gol: refuzat');
+  e := pg_temp.err($q$select public.admin_push_send('Ofertă', 'Text', 'https://alt-site.ro')$q$);
+  perform pg_temp.ok(e like 'Linkul trebuie%', 'link spre alt site: refuzat');
 
-  -- comandă nouă: recepția e anunțată
-  n0 := jsonb_array_length(pg_temp.sent());
-  r := public.place_order('{"name":"Bogdan","phone":"0745111222","mode":"livrare","address":"Str. Y 2","payment":"cash","items":[{"id":"smash","qty":1}]}');
-  o1 := (r->>'id')::uuid; select token into t1 from public.orders where id = o1;
+  -- test: doar pe telefonul adminului
+  r := public.admin_push_send('Test', 'Doar pentru mine', '/', true);
+  perform pg_temp.ok((r->>'sent_to')::int = 1 and jsonb_array_length(pg_temp.sent()->-1->'subs') = 1
+    and pg_temp.sent()->-1->'subs'->0->>'endpoint' = 'https://web.push.apple.com/adm', 'testul ajunge doar pe telefonul adminului');
+
+  -- către toți
+  r := public.admin_push_send('Smash Week -20%', 'Burgerii smash au 20% reducere până duminică.', '/?p=smash');
+  perform pg_temp.ok((r->>'sent_to')::int = 3, 'notificarea pleacă spre toți cei 3');
   r := pg_temp.sent()->-1;
-  perform pg_temp.ok(jsonb_array_length(pg_temp.sent()) = n0 + 1 and r->>'title' like 'Comandă nouă #%' and r->>'body' like 'Bogdan · livrare%'
-    and r->'subs'->0->>'endpoint' = 'https://fcm.googleapis.com/staff1', 'comandă nouă: notificare la recepție');
+  perform pg_temp.ok(r->>'title' = 'Smash Week -20%' and r->>'url' = '/?p=smash&s=push', 'titlu și link cu sursa push');
   perform pg_temp.ok((select headers->>'x-push-secret' from net.http_request_queue order by id desc limit 1) = 's3cret', 'cererea poartă secretul');
+  perform pg_temp.ok((public.admin_push_overview()->>'subscribers')::int = 3 and jsonb_array_length(public.admin_push_overview()->'recent') = 2, 'istoric: 2 trimiteri');
 
-  -- clientul se abonează; recepția propune timpul
-  sub := '{"endpoint":"https://fcm.googleapis.com/client1","keys":{"p256dh":"kc","auth":"ac"}}';
-  perform public.push_subscribe(t1, sub);
-  perform public.push_subscribe(t1, sub);   -- de două ori: un singur abonament
-  perform pg_temp.ok((select count(*) from public.push_subs where order_id = o1) = 1, 'abonarea repetată nu dublează');
-  perform set_config('request.jwt.claim.sub', rec::text, true);
-  perform public.offer_eta(o1, 40);
-  r := pg_temp.sent()->-1;
-  perform pg_temp.ok(r->>'title' = 'Restaurantul propune 40 minute' and r->>'url' = '/comanda/' || t1 and r->'subs'->0->>'endpoint' = 'https://fcm.googleapis.com/client1'
-    and jsonb_array_length(r->'subs') = 1, 'oferta de timp ajunge doar la client');
+  -- 1200 de abonați: 3 loturi
+  insert into public.push_subs(endpoint, p256dh, auth) select 'https://fcm.googleapis.com/m' || g, 'k', 'a' from generate_series(1, 1197) g;
+  i := jsonb_array_length(pg_temp.sent());
+  r := public.admin_push_send('Mulți', 'Text', '/');
+  perform pg_temp.ok((r->>'sent_to')::int = 1200 and jsonb_array_length(pg_temp.sent()) = i + 3, '1200 de telefoane: 3 cereri de câte maxim 500');
 
-  -- clientul acceptă: fără notificare dublă („a fost acceptată”); pe drum: notificare
+  -- dezabonare
+  perform public.push_unsubscribe('https://fcm.googleapis.com/c1');
+  perform pg_temp.ok(not exists (select 1 from public.push_subs where endpoint = 'https://fcm.googleapis.com/c1'), 'dezabonare');
+
+  -- comenzile nu mai trimit notificări
+  i := jsonb_array_length(pg_temp.sent());
+  update public.settings set open_time = '00:00', close_time = '23:59:59', accepting_orders = true, min_order = 0 where id = 1;
+  delete from public.delivery_zones;
   perform set_config('request.jwt.claim.sub', '', true);
-  n0 := jsonb_array_length(pg_temp.sent());
-  perform public.answer_offer(t1, true);
-  perform pg_temp.ok(jsonb_array_length(pg_temp.sent()) = n0, 'clientul a acceptat singur: nu primește încă o notificare');
-  perform set_config('request.jwt.claim.sub', rec::text, true);
-  update public.orders set eta_min = 50 where id = o1;
-  perform pg_temp.ok((pg_temp.sent()->-1->>'title') like 'Ora nouă pentru comanda%', 'amânarea anunță clientul');
-  update public.orders set status = 'road', courier_name = 'Vlad' where id = o1;
-  r := pg_temp.sent()->-1;
-  perform pg_temp.ok(r->>'title' = 'Curierul e pe drum' and r->>'body' like '%cu Vlad%', 'pe drum: notificare cu numele curierului');
-  update public.orders set status = 'done' where id = o1;
-  perform pg_temp.ok((pg_temp.sent()->-1->>'title') = 'Poftă bună!', 'livrată: cerere de notă');
-  n0 := jsonb_array_length(pg_temp.sent());
-  update public.orders set rating = 5 where id = o1;
-  perform pg_temp.ok(jsonb_array_length(pg_temp.sent()) = n0, 'alte modificări nu trimit nimic');
-
-  -- anulare de către client: recepția e anunțată
-  perform set_config('request.jwt.claim.sub', '', true);
-  r := public.place_order('{"name":"Carmen","phone":"0745111222","mode":"ridicare","payment":"cash","items":[{"id":"smash","qty":1}]}');
-  o1 := (r->>'id')::uuid; select token into t1 from public.orders where id = o1;
-  perform set_config('request.jwt.claim.sub', rec::text, true);
-  perform public.offer_eta(o1, 90);
-  perform set_config('request.jwt.claim.sub', '', true);
-  perform public.answer_offer(t1, false);
-  r := pg_temp.sent()->-1;
-  perform pg_temp.ok(r->>'title' like '#% anulată de client' and r->'subs'->0->>'endpoint' = 'https://fcm.googleapis.com/staff1', 'anularea clientului: notificare la recepție');
-
-  perform public.push_unsubscribe('https://fcm.googleapis.com/staff1');
-  perform pg_temp.ok(not exists (select 1 from public.push_subs where staff_user is not null), 'dezabonare');
+  perform public.place_order('{"name":"A","phone":"0745111222","mode":"ridicare","payment":"cash","items":[{"id":"smash","qty":1}]}');
+  perform pg_temp.ok(jsonb_array_length(pg_temp.sent()) = i, 'comanda nouă nu trimite notificări');
 end $$;
 rollback;

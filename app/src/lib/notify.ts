@@ -1,53 +1,40 @@
-// Notificări pe telefon/calculator.
-// 1) Web Push (cu serverul configurat: settings.push_public_key): vin și cu browserul închis.
-// 2) Fără server: notificări locale, cât pagina e deschisă (și în fundal), din schimbările observate la reîmprospătare.
+// Notificări cu oferte (Web Push). Le primesc doar telefoanele care au acceptat; adminul le trimite din Newsletter.
 import { supabase } from "./supabase";
 
-export const notifSupported = () => typeof window !== "undefined" && "Notification" in window && "serviceWorker" in navigator;
-export const pushSupported = () => notifSupported() && "PushManager" in window;
-export const notifState = (): NotificationPermission | "unsupported" => notifSupported() ? Notification.permission : "unsupported";
-/** iPhone fără „Adaugă pe ecranul principal”: Safari nu permite notificări */
+export const pushSupported = () => typeof window !== "undefined" && "Notification" in window && "serviceWorker" in navigator && "PushManager" in window;
+/** iPhone în Safari (nu de pe ecran): Apple permite notificări doar aplicației puse pe ecran */
 export const iosNeedsInstall = () => /iPhone|iPad|iPod/i.test(navigator.userAgent) && !(navigator as Navigator & { standalone?: boolean }).standalone && !matchMedia("(display-mode: standalone)").matches;
 
-let pushKey: Promise<string | null> | null = null;
-export const publicKey = () => pushKey ??= Promise.resolve(supabase.from("settings").select("push_public_key").eq("id", 1).maybeSingle())
+let keyP: Promise<string | null> | null = null;
+/** cheia publică VAPID din setări; null = notificările nu sunt configurate pe server */
+export const publicKey = () => keyP ??= Promise.resolve(supabase.from("settings").select("push_public_key").eq("id", 1).maybeSingle())
   .then(({ data }) => (data?.push_public_key as string | null) || null, () => null);
 
-function b64ToBytes(b64: string) {
-  const s = atob((b64 + "=".repeat((4 - b64.length % 4) % 4)).replace(/-/g, "+").replace(/_/g, "/"));
-  return Uint8Array.from(s, c => c.charCodeAt(0));
-}
-async function registration() {
-  return (await navigator.serviceWorker.getRegistration()) || navigator.serviceWorker.register("/sw.js");
+const b64 = (s: string) => Uint8Array.from(atob((s + "=".repeat((4 - s.length % 4) % 4)).replace(/-/g, "+").replace(/_/g, "/")), c => c.charCodeAt(0));
+async function reg() { return (await navigator.serviceWorker.getRegistration()) || navigator.serviceWorker.register("/sw.js"); }
+
+/** abonamentul existent pe acest telefon (null = nu primește oferte) */
+export async function currentSub() {
+  if (!pushSupported() || Notification.permission !== "granted") return null;
+  try { return await (await reg()).pushManager.getSubscription(); } catch { return null; }
 }
 
-/** Cere voie și, dacă serverul e configurat, abonează telefonul. Întoarce true dacă abonarea push a reușit. */
-export async function enableNotifications(save: (sub: PushSubscriptionJSON) => Promise<{ error: unknown }>): Promise<{ ok: boolean; push: boolean; msg?: string }> {
-  if (!notifSupported()) return { ok: false, push: false, msg: "Browserul acesta nu are notificări." };
-  const perm = await Notification.requestPermission();
-  if (perm !== "granted") return { ok: false, push: false, msg: "Notificările sunt blocate. Le poți porni din setările browserului, la acest site." };
-  const key = pushSupported() ? await publicKey() : null;
-  if (!key) return { ok: true, push: false };
+export async function enableOffers(): Promise<string> {
+  if (!pushSupported()) return iosNeedsInstall() ? "Pe iPhone, pune întâi Lyra pe ecran (Distribuie → Adaugă pe ecranul principal) și deschide-o de acolo." : "Telefonul sau browserul acesta nu are notificări.";
+  const key = await publicKey();
+  if (!key) return "Notificările nu sunt pornite încă de restaurant.";
+  if (await Notification.requestPermission() !== "granted") return "Notificările sunt blocate. Le poți porni din setările telefonului, la acest site.";
   try {
-    const reg = await registration();
-    await navigator.serviceWorker.ready;
-    const sub = (await reg.pushManager.getSubscription()) || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToBytes(key) });
-    const { error } = await save(sub.toJSON());
-    return { ok: true, push: !error };
-  } catch {
-    return { ok: true, push: false };
-  }
+    const r = await reg(); await navigator.serviceWorker.ready;
+    const sub = (await r.pushManager.getSubscription()) || await r.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64(key) });
+    const { error } = await supabase.rpc("push_subscribe_offers", { p_sub: sub.toJSON() });
+    return error ? error.message : "";
+  } catch { return "Nu am putut porni notificările. Încearcă din nou."; }
 }
 
-/** notificare locală (când nu există push), doar dacă pagina nu e în prim-plan */
-export async function localNotify(title: string, body: string, url: string, tag?: string) {
-  if (notifState() !== "granted" || document.visibilityState === "visible") return;
-  try {
-    const reg = await navigator.serviceWorker.getRegistration();
-    const opts = { body, tag, icon: "/icons/icon-192.png", badge: "/icons/favicon-48.png", data: { url } } as NotificationOptions;
-    if (reg) await reg.showNotification(title, opts); else new Notification(title, opts);
-  } catch { /* ignore */ }
+export async function disableOffers() {
+  const sub = await currentSub();
+  if (!sub) return;
+  await supabase.rpc("push_unsubscribe", { p_endpoint: sub.endpoint });
+  await sub.unsubscribe().catch(() => {});
 }
-
-/** semnal când pagina e deschisă: vibrație (telefon) */
-export const buzz = () => { try { navigator.vibrate?.([200, 100, 200]); } catch { /* ignore */ } };

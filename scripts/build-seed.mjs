@@ -47,8 +47,8 @@ fs.writeFileSync(path.join(root, "supabase/actualizare_meniu.sql"),
 fs.writeFileSync(path.join(root, "supabase/actualizare_schema.sql"),
   "-- Lyra: actualizare schemă (Lyra Rewards, zone de livrare). Nu modifică meniul. Supabase → SQL Editor → New query → lipiți tot → Run.\n\n" + schema + "\n");
 console.log("categorii", ctx.CATS.length, "preparate", ctx.M.length);
-// Actualizarea din noiembrie 2026 pe baza care rulează deja (doar ce s-a schimbat): confirmarea timpului, notificări, invită un prieten
+// Actualizarea din noiembrie 2026 pe baza care rulează deja (doar ce s-a schimbat): confirmarea timpului, notificări cu oferte
 fs.writeFileSync(path.join(root, "supabase/actualizare_2026-11.sql"),
-  "-- Lyra: actualizare noiembrie 2026 (clientul confirmă timpul, notificări, invită un prieten). Nu atinge meniul, comenzile sau clienții.\n" +
+  "-- Lyra: actualizare noiembrie 2026 (clientul confirmă timpul de livrare, notificări cu oferte din admin). Nu atinge meniul, comenzile sau clienții.\n" +
   "-- Supabase → SQL Editor → New query → lipiți tot fișierul → Run. Se poate rula de mai multe ori.\n\n" +
-  ["05_reports.sql", "10_eta_confirm.sql", "11_push.sql", "12_referral.sql"].map(f => fs.readFileSync(path.join(root, "supabase", f), "utf8")).join("\n\n") + "\n");
+  ["05_reports.sql", "10_eta_confirm.sql", "11_push.sql"].map(f => fs.readFileSync(path.join(root, "supabase", f), "utf8")).join("\n\n") + "\n");

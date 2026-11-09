@@ -64,7 +64,7 @@ export function InstallSheet({ onClose, hasAccount }: { onClose: () => void; has
         {done ? <div className="ia-done"><img src="/icons/icon-192.png" alt="" /><b>Gata! Lyra e pe ecranul tău 🎉</b><span>O găsești printre aplicații, cu logo-ul Lyra.</span></div> : <>
           <div className="ia-top">
             <div className="ia-home" aria-hidden="true">
-              <i /><i /><span className="ia-app"><img src="/icons/icon-192.png" alt="" /><small>Lyra</small></span><i /><i />
+              <i /><i /><span className="ia-app"><img src="/icons/icon-192.png" alt="" /><small>Lyra Delivery</small></span><i /><i />
             </div>
             <div className="ia-txt">
               <b>{hasAccount ? "Ți-ai făcut cont? Pune Lyra pe ecran" : "Pune Lyra pe ecranul telefonului"}</b>
@@ -86,6 +86,34 @@ export function InstallSheet({ onClose, hasAccount }: { onClose: () => void; has
           {!native && !ios && !steps && !inApp && null}
           <button className="ia-later" onClick={() => close()}>Nu acum</button>
         </>}
+      </div>
+    </div>
+  );
+}
+
+/** Deschisă de pe ecran (aplicația instalată): o singură dată, întreabă dacă vrea oferte prin notificări. */
+export function OffersAsk() {
+  const [show, setShow] = useState(false);
+  const [msg, setMsg] = useState("");
+  useEffect(() => {
+    let asked = false; try { asked = !!localStorage.getItem("lyra-offers-ask"); } catch { /* ignore */ }
+    if (asked || !isStandalone() || !("Notification" in window) || Notification.permission !== "default") return;
+    let alive = true;
+    const t = setTimeout(() => import("../lib/notify").then(n => n.publicKey()).then(k => { if (alive && k) setShow(true); }), 3000);
+    return () => { alive = false; clearTimeout(t); };
+  }, []);
+  if (!show) return null;
+  const done = () => { try { localStorage.setItem("lyra-offers-ask", String(Date.now())); } catch { /* ignore */ } setShow(false); };
+  async function yes() {
+    const err = await (await import("../lib/notify")).enableOffers();
+    if (err) setMsg(err); else done();
+  }
+  return (
+    <div className="offers-ask" role="dialog" aria-label="Oferte prin notificări">
+      <img src="/icons/icon-192.png" alt="" />
+      <div><b>Vrei să afli primul de oferte?</b><span>Îți trimitem notificări doar cu ofertele Lyra. Le poți opri oricând din cont.</span>
+        {msg && <span className="err">{msg}</span>}
+        <div className="oa-btns"><button className="cta" onClick={yes}>Da, vreau</button><button className="ia-later" onClick={done}>Nu, mulțumesc</button></div>
       </div>
     </div>
   );

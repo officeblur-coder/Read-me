@@ -10,7 +10,7 @@ import { LOCALITIES, geocodeAddress, useZones, zoneFor, type LatLng } from "../l
 import { hoursLabel, isOpenNow, slotDays, whenLabel } from "../lib/schedule";
 import { cut, useDiscounts } from "../lib/discounts";
 import { track } from "../lib/track";
-import { InstallSheet, shouldAutoShow, useInstall } from "../components/InstallApp";
+import { InstallSheet, OffersAsk, shouldAutoShow, useInstall } from "../components/InstallApp";
 import Icon from "../components/Icon";
 import BottomNav from "../components/BottomNav";
 import SiteFooter from "../components/SiteFooter";
@@ -770,6 +770,7 @@ export default function Menu({ source }: { source?: string }) {
       })()}
 
       {/* ---------- promo popup ---------- */}
+      {!cartOpen && !sheet && !popup && <OffersAsk />}
       {installOpen && !cartOpen && !sheet && <InstallSheet hasAccount={!!customer} onClose={() => setInstallOpen(false)} />}
       {joinPop && !installOpen && !installShown.current && !popup && !customer && !cartOpen && !sheet && <div className="pop" role="dialog" aria-modal="true" aria-label="Lyra Rewards" onClick={e => e.target === e.currentTarget && closeJoin()}>
         <div className="pop-card join-pop">

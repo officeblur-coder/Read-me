@@ -334,6 +334,8 @@ function rpc(fn: string, args: Row = {}): Promise<{ data: any; error: any }> {
           db.order_messages.push({ id: uid(), order_id: o.id, body: `Putem ${o.mode === "livrare" ? "livra" : "pregăti"} comanda în ${args.p_eta} de minute. Confirmă timpul sau anulează comanda.`, created_at: iso() });
           save(); emit("orders", "UPDATE", o); return res({ data: null, error: null });
         }
+        case "admin_push_overview": return res({ data: { subscribers: 214, with_account: 87, configured: true, recent: [{ title: "Smash Week: -20% la burgeri", body: "", url: "/", sent_to: 209, test: false, created_at: iso(Date.now() - 2 * 864e5) }] }, error: null });
+        case "admin_push_send": return res({ data: { sent_to: args.p_test ? 1 : 214 }, error: null });
         case "confirm_offer_phone": { const o = db.orders.find(x => x.id === args.p_id); if (o && o.status === "new" && o.offered_at) { closeOffer(o, "phone"); save(); } return res({ data: null, error: null }); }
         case "rate_order": { const o = db.orders.find(x => x.token === args.p_token); if (o) o.rating = args.p_rating; save(); return res({ data: null, error: null }); }
         case "list_staff": return res({ data: structuredClone(db.staff), error: null });

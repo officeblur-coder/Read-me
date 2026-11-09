@@ -105,7 +105,7 @@ function AdminPanel({ email }: { email: string }) {
         <Wordmark small />
         <div className="adm-title"><b>Administrare meniu</b><small>{email}</small></div>
         <nav className="adm-tabs" aria-label="Secțiuni">
-          {([["menu", "Meniu"], ["banners", "Bannere"], ["promos", "Promoții & popup"], ["codes", "Coduri reducere"], ["discounts", "Reduceri %"], ["rewards", "Lyra Rewards"], ["zones", "Zone livrare"], ["hours", "Program"], ["traffic", "Vizite"], ["newsletter", "Newsletter"], ["reports", "Rapoarte"], ["team", "Echipa"]] as const).map(([k, l]) =>
+          {([["menu", "Meniu"], ["banners", "Bannere"], ["promos", "Promoții & popup"], ["codes", "Coduri reducere"], ["discounts", "Reduceri %"], ["rewards", "Lyra Rewards"], ["zones", "Zone livrare"], ["hours", "Program"], ["traffic", "Vizite"], ["newsletter", "Email & notificări"], ["reports", "Rapoarte"], ["team", "Echipa"]] as const).map(([k, l]) =>
             <button key={k} aria-current={tab === k} onClick={() => go(k)}>{l}</button>)}
         </nav>
         <nav>
