@@ -48,6 +48,7 @@ import { SiteFooter } from './components/SiteFooter';
 import type { BookingBarHandle, BookingRequest } from './components/BookingBar';
 import { useFinePointer, useReducedMotion } from './lib/hooks';
 import { LANGS, PATHS, SITE, currentRoute, go, pathFor, pathLang, relinkPages, switchPathLang, type Route } from './lib/routes';
+import { pageSchema, shareImage } from './lib/schema';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -123,6 +124,13 @@ export default function App() {
         const a = document.createElement('link'); a.rel = 'alternate'; a.hreflang = l;
         a.href = SITE + pathFor(page, l === 'x-default' ? 'de' : l); document.head.appendChild(a);
       }
+      set('meta[property="og:image"]', 'content', shareImage(page));
+      // structured data for this page: WebPage, breadcrumb, room / chalet / restaurant details
+      const plain = (r: Route) => { const t0 = SEO[seoKey(r)][lang][0]; const k = t0.lastIndexOf(' · KitzAlpen'); return tr(k > 0 ? t0.slice(0, k) : t0); };
+      const name = document.title.replace(/ · KitzAlpen.*$/, '');
+      let ld = document.getElementById('ld-page');
+      if (!ld) { ld = document.createElement('script'); ld.id = 'ld-page'; ld.setAttribute('type', 'application/ld+json'); document.head.appendChild(ld); }
+      ld.textContent = JSON.stringify(pageSchema(page, site, name, description, plain));
     }
   }, [page, site, lang]);
   // activities: the shared Sommer/Winter switch also switches between the two activity pages

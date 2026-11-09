@@ -1,0 +1,37 @@
+# KitzAlpen – Kitzbühel Alpen Pension & Chalet
+
+> Guesthouse with restaurant and a self-contained chalet in Hollersbach im Pinzgau (Salzburg, Austria), about 2 km from the Panoramabahn gondola into the KitzSki ski area and inside the Hohe Tauern National Park region. Website in German (root) and English, Dutch, Romanian, Hungarian, Czech, Polish and Swedish.
+
+## Facts
+- Address: Reitlehen 42, 5731 Hollersbach im Pinzgau, Salzburg, Austria (47.27268, 12.42573)
+- Phone / WhatsApp: +43 664 2376571 · Email: kitzbuhelalpenpension@gmail.com
+- Guesthouse: 17 rooms in 4 categories, each with a private bathroom with shower
+  - Double room (8 rooms, 15–21 m², up to 2 guests)
+  - Triple room (3 rooms, 17–24 m², up to 3 guests)
+  - Family room with connecting door (4 rooms, 19–31 m², up to 4 guests; connected up to 8)
+  - Four-bed room (2 rooms, 19–31 m², up to 4 guests)
+- Chalet: self-contained house for up to 4 guests, 2 bedrooms, fully equipped kitchen, bathroom with WC
+- Restaurant & bar: breakfast buffet daily 8–10 am; dinner buffet Tuesday–Sunday 5–9 pm
+- Free Wi-Fi, free parking, ski room with boot dryers, mountain view
+- Guests receive the M+ Guest Card and the Guest Mobility Ticket (free buses and trains in the province of Salzburg)
+- Booking (rooms): https://kitzbuhel.pynbooking.direct · Booking (chalet): https://chalet-kitzalpen.pynbooking.direct/
+
+## Pages (German / English)
+- [Home](https://www.kitzalpen.at/) · [English](https://www.kitzalpen.at/en/)
+- [Pension](https://www.kitzalpen.at/pension/) · [All rooms](https://www.kitzalpen.at/en/rooms/)
+- [Chalet](https://www.kitzalpen.at/en/chalet/)
+- [Restaurant](https://www.kitzalpen.at/en/restaurant/)
+- [Groups](https://www.kitzalpen.at/en/group-activities/)
+- [Contact](https://www.kitzalpen.at/en/contact/)
+- [Mountain live: weather, webcams, ski day](https://www.kitzalpen.at/en/mountain/)
+
+## Region guides (official sources, distances from the house)
+- [Top 15 experiences](https://www.kitzalpen.at/en/explore/top-15/)
+- [Ski areas & ski passes](https://www.kitzalpen.at/en/explore/ski-areas/)
+- [Tour explorer: hiking, cycling, winter walks, cross-country](https://www.kitzalpen.at/en/explore/tours/)
+- [Places guide: Hollersbach, Mittersill, Krimml, Kitzbühel and more](https://www.kitzalpen.at/en/explore/places/)
+- [Arrival & mobility](https://www.kitzalpen.at/en/arrival/)
+- [Winter activities](https://www.kitzalpen.at/en/activities/winter/) · [Summer activities](https://www.kitzalpen.at/en/activities/summer/)
+
+## Optional
+- [Sitemap (all pages in all languages)](https://www.kitzalpen.at/sitemap.xml)
