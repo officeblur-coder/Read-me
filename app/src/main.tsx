@@ -17,6 +17,7 @@ const NewsletterLink = lazy(() => import("./pages/Link"));
 const Reception = lazy(() => import("./pages/Reception"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Courier = lazy(() => import("./pages/Courier"));
+const RefLanding = lazy(() => import("./components/Referral").then(m => ({ default: m.RefLanding })));
 
 // A tab left open across a new release asks for screen files that no longer exist: reload once to get the new version.
 window.addEventListener("vite:preloadError", e => {
@@ -56,6 +57,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         <Route path="/termeni" element={<Terms />} />
         <Route path="/dezabonare" element={<Unsubscribe />} />
         <Route path="/l" element={<NewsletterLink />} />
+        <Route path="/r/:code" element={<RefLanding />} />
         <Route path="/:src" element={<SourceMenu />} />
       </Routes>
       </Suspense>

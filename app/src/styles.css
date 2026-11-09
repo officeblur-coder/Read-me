@@ -1476,3 +1476,17 @@ h1,h2,h3,h4{margin:0;font-weight:700;text-wrap:balance}
 .notif-ask{display:grid;justify-items:center;gap:8px;width:100%;max-width:420px;margin:14px auto 0;padding:14px;border-radius:var(--r);background:var(--surface-2);text-align:center;color:var(--gold-2)}
 .notif-ask p{margin:0;color:var(--text);font-size:13px}
 .notif-on{display:flex;justify-content:center;align-items:center;gap:6px;margin:10px 0 0;font-size:12px;color:var(--muted)}
+/* invită un prieten */
+.invite-note{position:fixed;left:12px;right:12px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:60;max-width:520px;margin:0 auto;display:grid;grid-template-columns:auto 1fr;gap:10px 12px;align-items:center;padding:16px 40px 16px 16px;border-radius:var(--r-lg);background:var(--surface);border:1px solid var(--gold);box-shadow:var(--shadow)}
+.invite-note p{margin:0;font-size:13.5px;color:var(--text)}
+.invite-note .big{grid-column:1 / -1}
+.invite-note .x{position:absolute;top:8px;right:10px;width:30px;height:30px;font-size:22px;line-height:1;color:var(--muted)}
+.invite .invite-code{display:flex;align-items:baseline;gap:10px;margin:12px 0;padding:12px 16px;border-radius:var(--r-sm);border:1px dashed var(--gold);background:var(--surface-2)}
+.invite .invite-code small{color:var(--muted);font-size:12px}
+.invite .invite-code b{font-size:24px;letter-spacing:.08em;color:var(--gold-2)}
+.invite-acts{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px}
+.invite-acts .big{padding:13px 10px;font-size:14px}
+@media (max-width:520px){.invite-acts{grid-template-columns:1fr 1fr}.invite-acts .big:first-child{grid-column:1 / -1}}
+.invite-stats{display:flex;flex-wrap:wrap;gap:18px;margin-top:12px;font-size:13px;color:var(--muted)}
+.invite-stats b{color:var(--text);font-size:16px;margin-right:4px}
+.invite-msg{margin:8px 0;padding:10px 12px;border-radius:var(--r-sm);background:var(--ok-bg);color:var(--ok);font-weight:700;font-size:13px}
