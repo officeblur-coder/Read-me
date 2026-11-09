@@ -1472,3 +1472,7 @@ h1,h2,h3,h4{margin:0;font-weight:700;text-wrap:balance}
 .wt .acts .ok{border-color:var(--ok);color:var(--ok)}
 .wt .acts .no{border-color:var(--bad);color:var(--bad)}
 .toast.bad{background:var(--bad);color:#fff}
+/* notificări */
+.notif-ask{display:grid;justify-items:center;gap:8px;width:100%;max-width:420px;margin:14px auto 0;padding:14px;border-radius:var(--r);background:var(--surface-2);text-align:center;color:var(--gold-2)}
+.notif-ask p{margin:0;color:var(--text);font-size:13px}
+.notif-on{display:flex;justify-content:center;align-items:center;gap:6px;margin:10px 0 0;font-size:12px;color:var(--muted)}

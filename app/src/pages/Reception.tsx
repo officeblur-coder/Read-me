@@ -3,6 +3,7 @@ import type { Session } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
 import type { Item, Order, OrderStatus, Promo, Settings } from "../lib/types";
 import { ALLERGENS, hm, imgUrl, lei, mmss } from "../lib/format";
+import { enableNotifications, localNotify, notifState } from "../lib/notify";
 import Icon from "../components/Icon";
 import Wordmark from "../components/Wordmark";
 import { whenLabel } from "../lib/schedule";
@@ -123,6 +124,15 @@ function Console({ email }: { email: string }) {
   const seen = useRef<Set<string> | null>(null);
   const soundRef = useRef(sound); soundRef.current = sound;
   const flashRef = useRef<(m: string, bad?: boolean) => void>(() => {});
+  const [notif, setNotif] = useState(() => { try { return notifState() === "granted" ? localStorage.getItem("lyra-rx-notif") || "" : ""; } catch { return ""; } });
+  const notifRef = useRef(notif); notifRef.current = notif;
+  async function turnOnNotif() {
+    const r = await enableNotifications(sub => Promise.resolve(supabase.rpc("push_subscribe_staff", { p_sub: sub })));
+    if (!r.ok) { flash(r.msg || "Notificările nu au pornit.", true); return; }
+    const v = r.push ? "push" : "local"; setNotif(v); try { localStorage.setItem("lyra-rx-notif", v); } catch { /* ignore */ }
+    flash(r.push ? "Notificări pornite: vin și cu ecranul închis." : "Notificări pornite cât consola e deschisă.");
+  }
+  const note = (t: string, b: string, tag: string) => { if (notifRef.current === "local") localNotify(t, b, "/receptie", tag); };
   const [showStart, setShowStart] = useState(true);
   const started = useRef(false);
   // working session for the admin report: opened with the console, a heartbeat every minute, closed on "Ieși"
@@ -159,10 +169,12 @@ function Console({ email }: { email: string }) {
       const was = prev.current.get(o.id);
       if (!was || was.status !== "new" || !was.offered_at || o.status === "new") continue;
       if (o.status === "prep") flashRef.current(`#${o.number} ${o.name}: ${o.offer_answer === "accepted" ? "clientul a acceptat" : o.offer_answer === "phone" ? "confirmat telefonic" : "confirmată automat"} · ${o.eta_min} min`);
-      else if (o.status === "rejected") { flashRef.current(`#${o.number} ${o.name}: ${o.cancelled_by === "client" ? "clientul a ANULAT comanda (timpul nu convine)" : "anulată, clientul nu a răspuns"}`, true); if (soundRef.current) chime(); }
+      else if (o.status === "rejected") { flashRef.current(`#${o.number} ${o.name}: ${o.cancelled_by === "client" ? "clientul a ANULAT comanda (timpul nu convine)" : "anulată, clientul nu a răspuns"}`, true); if (soundRef.current) chime(); note(`#${o.number} anulată`, o.cancelled_by === "client" ? "Clientul a anulat: timpul nu i-a convenit." : "Clientul nu a răspuns.", "cancel-" + o.id); }
     }
     prev.current = new Map(list.map(o => [o.id, o]));
-    if (seen.current && fresh.some(id => !seen.current!.has(id)) && soundRef.current) chime();
+    const newOnes = seen.current ? list.filter(o => fresh.includes(o.id) && !seen.current!.has(o.id)) : [];
+    if (newOnes.length && soundRef.current) chime();
+    newOnes.forEach(o => note(`Comandă nouă #${o.number}`, `${o.name} · ${o.mode} · ${lei(Number(o.total))}`, "new-" + o.id));
     seen.current = new Set(list.map(o => o.id));
     setOrders(list);
   }, []);
@@ -270,6 +282,7 @@ function Console({ email }: { email: string }) {
         <div className="rx-top">
           <h2>{tab === "orders" ? "Comenzi" : tab === "menu" ? "Meniu & stoc" : "Promoții"}</h2>
           <span className="clock num">{new Date(now).toLocaleTimeString("ro-RO")}</span>
+          {notifState() !== "unsupported" && <button className={`rbtn ${notif ? "on" : ""}`} onClick={turnOnNotif} title="Notificări pe acest dispozitiv"><Icon name="bell" size={16} />{notif ? "Notificări pornite" : "Pornește notificările"}</button>}
           <button className={`rbtn ${sound ? "on" : ""}`} onClick={() => { unlockAudio(); if (!sound) chime(); setSound(!sound); }}><Icon name={sound ? "sound" : "mute"} size={16} />{sound ? "Sunet pornit" : "Sunet oprit"}</button>
         </div>
 

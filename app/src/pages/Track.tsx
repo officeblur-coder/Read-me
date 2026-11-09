@@ -1,5 +1,6 @@
 import { whenLabel } from "../lib/schedule";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { buzz, enableNotifications, iosNeedsInstall, localNotify, notifState } from "../lib/notify";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { confetti } from "../lib/fx";
 import { supabase } from "../lib/supabase";
@@ -18,6 +19,29 @@ export default function Track() {
   const [skew, setSkew] = useState(0);               // ceasul telefonului față de server
   const [answering, setAnswering] = useState<"" | "confirm-cancel" | "busy">("");
   const [answerErr, setAnswerErr] = useState("");
+  const NK = "lyra-notif-" + token;
+  const [notif, setNotif] = useState<string>(() => { try { return notifState() === "granted" ? localStorage.getItem(NK) || "" : ""; } catch { return ""; } });
+  const [notifMsg, setNotifMsg] = useState("");
+  const last = useRef<PublicOrder | null>(null);
+  async function turnOn() {
+    const r = await enableNotifications(sub => Promise.resolve(supabase.rpc("push_subscribe", { p_token: token, p_sub: sub })));
+    if (!r.ok) { setNotifMsg(r.msg || ""); return; }
+    const v = r.push ? "push" : "local";
+    setNotif(v); setNotifMsg(""); try { localStorage.setItem(NK, v); } catch { /* ignore */ }
+  }
+  // schimbările văzute la reîmprospătare: vibrație și, fără push, notificare locală
+  function changed(a: PublicOrder, b: PublicOrder) {
+    const url = "/comanda/" + token, pick = b.mode === "ridicare";
+    let t = "", m = "";
+    if (b.status === "new" && b.offered_at && b.offered_at !== a.offered_at) { t = `Restaurantul propune ${b.offer_eta} minute`; m = "Apasă ca să confirmi sau să anulezi."; buzz(); }
+    else if (a.status !== b.status) {
+      if (b.status === "prep" && b.offer_answer !== "accepted") { t = `Comanda #${b.number} a fost acceptată`; m = "Se gătește acum."; }
+      else if (b.status === "road") { t = pick ? "Comanda ta e gata!" : "Curierul e pe drum"; m = `Comanda #${b.number}`; buzz(); }
+      else if (b.status === "done") { t = "Poftă bună!"; m = "Cum a fost? Dă o notă."; }
+      else if (b.status === "rejected" && !b.cancelled_by) { t = `Comanda #${b.number} nu a putut fi preluată`; m = b.reject_reason || ""; buzz(); }
+    }
+    if (t && localStorage.getItem(NK) !== "push") localNotify(t, m, url, "order-" + token);
+  }
   const loc = useLocation();
   useEffect(() => { if ((loc.state as { fresh?: boolean } | null)?.fresh) { setTimeout(confetti, 250); history.replaceState({}, ""); } }, []);
 
@@ -26,6 +50,8 @@ export default function Track() {
     if (error || !data) { setMissing(true); return; }
     const d = data as PublicOrder;
     if (d.server_now) setSkew(new Date(d.server_now).getTime() - Date.now());
+    if (last.current) try { changed(last.current, d); } catch { /* ignore */ }
+    last.current = d;
     setO(d);
   }
   useEffect(() => {
@@ -115,6 +141,17 @@ export default function Track() {
         <p className="t-sub">{sub}</p>
         {offer}
         {o.status !== "rejected" && o.status !== "refunded" && <div className="steps">{labels.map((l, i) => <div key={l} className={i < si || o.status === "done" ? "done" : i === si ? "now" : ""}><i />{l}</div>)}</div>}
+        {["new", "prep", "road"].includes(o.status) && !notif && notifState() !== "unsupported" && notifState() !== "denied" && (
+          <div className="notif-ask">
+            <Icon name="bell" size={20} />
+            {iosNeedsInstall()
+              ? <p>Pe iPhone, notificările merg după ce pui Lyra pe ecran: <b>Distribuie</b> → <b>Adaugă pe ecranul principal</b>.</p>
+              : <><p>Te anunțăm pe telefon când restaurantul propune timpul și când comanda pleacă spre tine.</p>
+                 <button className="big ghost" onClick={turnOn}>Anunță-mă pe telefon</button></>}
+            {notifMsg && <p className="err">{notifMsg}</p>}
+          </div>
+        )}
+        {notif && ["new", "prep", "road"].includes(o.status) && <p className="notif-on"><Icon name="bell" size={14} /> {notif === "push" ? "Te anunțăm pe telefon, chiar dacă închizi pagina." : "Te anunțăm cât pagina rămâne deschisă."}</p>}
         {o.status === "done" && <>
           <div className="stars" role="group" aria-label="Evaluează comanda">{[1, 2, 3, 4, 5].map(n => <button key={n} className={(o.rating || 0) >= n ? "on" : ""} onClick={() => rate(n)} aria-label={`${n} stele`}><Icon name="star" size={32} fill /></button>)}</div>
           {!o.rating && <p className="t-sub">Cum a fost? Apasă pe stele. Evaluarea ajunge direct la bucătar.</p>}
