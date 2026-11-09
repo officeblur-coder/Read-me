@@ -61,7 +61,8 @@ begin
            reject_reason = case when p_answer = 'cancelled' then 'Anulată de client: timpul de livrare nu convine'
                                 else 'Anulată: clientul nu a confirmat timpul' end
      where id = p_id returning * into o;
-    msg := case when p_answer = 'cancelled' then 'Ai anulat comanda. Nu ți-a fost reținută nicio sumă.'
+    msg := case when p_answer = 'cancelled' and o.pay_status in ('paid', 'refunding') then 'Ai anulat comanda.'
+                when p_answer = 'cancelled' then 'Ai anulat comanda. Nu ți-a fost reținută nicio sumă.'
                 else 'Comanda a fost anulată pentru că timpul nu a fost confirmat.' end;
   end if;
   insert into public.order_messages(order_id, body) values (o.id, msg);
@@ -131,7 +132,7 @@ begin
     select o.number, o.status, o.mode, o.address, o.items, o.subtotal, o.discount, o.discount_label,
            o.points_value, o.delivery_fee, o.packaging, o.total, o.points_earned, o.eta_min, o.created_at,
            o.accepted_at, o.road_at, o.done_at, o.reject_reason, o.rating, o.scheduled_for, o.welcome_value,
-           o.offered_at, o.offer_eta, o.offer_answer, o.cancelled_by, s.offer_window_min as offer_window, s.offer_timeout, now() as server_now,
+           o.offered_at, o.offer_eta, o.offer_answer, o.cancelled_by, o.payment, o.pay_status, s.offer_window_min as offer_window, s.offer_timeout, now() as server_now,
            coalesce((select jsonb_agg(jsonb_build_object('body', m.body, 'at', m.created_at) order by m.created_at)
                      from public.order_messages m where m.order_id = o.id), '[]') as messages
     from public.orders o where o.id = oid

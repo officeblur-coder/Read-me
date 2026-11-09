@@ -88,7 +88,7 @@ export default function Menu({ source }: { source?: string }) {
   }, []);              // invite new visitors to Lyra Rewards
   const [form, setForm] = useState<Form>(loadForm);
   const [orderNote, setOrderNote] = useState("");
-  const [pay, setPay] = useState<"card" | "cash">("card");
+  const [pay, setPay] = useState<"card" | "cash" | "online">("card");
   const [redeemWant, setRedeemWant] = useState(0);              // Lyra Rewards points the customer chose to use
   const [voucherItem, setVoucherItem] = useState("");          // dessert picked for the free-dessert voucher
   const [codeInput, setCodeInput] = useState("");
@@ -371,7 +371,14 @@ export default function Menu({ source }: { source?: string }) {
       supabase.from("customers").update({ addresses: [form.address, ...(customer.addresses || [])].slice(0, 5), phone: customer.phone || form.phone, name: customer.name || form.name }).eq("id", customer.id).then(() => {});
     }
     setCart([]); setCartOpen(false); setStep("cart"); setOrderNote(""); setCode(null); setCodeInput(""); setCodeMsg(""); setRedeemWant(0); setVoucherItem(""); rw.reload(); if (welc > 0) refreshCustomer();
-    nav("/comanda/" + res.token, { state: { fresh: true } });
+    if (pay === "online") {   // pagina de plată Stripe; dacă nu pornește, clientul poate plăti din pagina comenzii
+      setSending(true);
+      const { startPayment } = await import("../lib/pay");
+      const err = await startPayment(res.token);
+      setSending(false);
+      if (!err) return;
+    }
+    nav("/comanda/" + res.token, { state: { fresh: pay !== "online" } });
   }
 
   // ---- category highlight while scrolling ----
@@ -547,7 +554,9 @@ export default function Menu({ source }: { source?: string }) {
         <div className="paygrid">
           <button aria-pressed={pay === "card"} onClick={() => setPay("card")}><b>Card</b><small>la livrare</small></button>
           <button aria-pressed={pay === "cash"} onClick={() => setPay("cash")}><b>Numerar</b><small>la livrare</small></button>
+          {settings?.online_pay_on && <button aria-pressed={pay === "online"} onClick={() => setPay("online")}><b>Card online</b><small>plătești acum</small></button>}
         </div>
+        {pay === "online" && <p className="muted" style={{ fontSize: 12, margin: "6px 2px 0" }}>După „Trimite comanda” te ducem pe pagina securizată de plată. Comanda ajunge la restaurant după plată.</p>}
         <div className="codebar">
           <input value={codeInput} onChange={e => setCodeInput(e.target.value)} placeholder="Cod promoțional" aria-label="Cod promoțional" />
           <button onClick={applyCode}>Aplică</button>

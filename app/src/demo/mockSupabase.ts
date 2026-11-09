@@ -352,6 +352,7 @@ export const supabase = {
   rpc,
   auth,
   channel: () => new Channel(),
+  functions: { invoke: async () => ({ data: null, error: { message: "Plata online nu e disponibilă în demo." } }) },
   removeChannel: (c: Channel) => { channels.delete(c); },
   storage: {
     from: () => ({

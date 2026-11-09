@@ -89,9 +89,10 @@ begin
   select * into s from public.settings where id = 1;
   link := '/comanda/' || new.token;
   pick := new.mode = 'ridicare';
-  if tg_op = 'INSERT' then
+  if tg_op = 'INSERT' and new.pay_status = 'pending' then return new; end if;   -- plata online: anunțăm după plată
+  if tg_op = 'INSERT' or (old.pay_status = 'pending' and new.pay_status = 'paid' and new.status = 'new') then
     perform public.push_send(null, format('Comandă nouă #%s', new.number),
-      format('%s · %s · %s lei%s', new.name, new.mode, to_char(new.total, 'FM999990.00'),
+      format('%s · %s · %s lei%s%s', new.name, new.mode, to_char(new.total, 'FM999990.00'), case when new.pay_status = 'paid' then ' · plătită online' else '' end,
              case when new.scheduled_for is not null then ' · precomandă ' || to_char(new.scheduled_for at time zone s.tz, 'DD.MM HH24:MI') else '' end),
       '/receptie', 'new-' || new.id);
     return new;
@@ -116,7 +117,7 @@ begin
       perform public.push_send(new.id, 'Poftă bună!', format('Cum a fost comanda #%s? Apasă și dă o notă.', new.number), link, 'order-' || new.id);
     elsif new.status = 'rejected' and new.cancelled_by is null then
       perform public.push_send(new.id, format('Comanda #%s nu a putut fi preluată', new.number),
-        coalesce(new.reject_reason || '. ', '') || 'Nu ți-a fost reținută nicio sumă.', link, 'order-' || new.id);
+        coalesce(new.reject_reason || '. ', '') || case when new.pay_status = 'paid' then 'Plata îți va fi returnată pe card.' else 'Nu ți-a fost reținută nicio sumă.' end, link, 'order-' || new.id);
     elsif new.status = 'rejected' and new.cancelled_by = 'client' and old.offered_at is not null then
       perform public.push_send(null, format('#%s anulată de client', new.number), format('%s · timpul propus nu i-a convenit.', new.name), '/receptie', 'cancel-' || new.id);
     end if;

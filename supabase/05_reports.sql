@@ -110,6 +110,8 @@ begin
       (x.status = 'new' and x.offered_at is null and x.created_at < now() - interval '10 minutes'
         and (x.scheduled_for is null or x.scheduled_for < now() + interval '30 minutes')) as unanswered   -- o precomandă e ratată abia aproape de ora ei
     from public.orders x where x.created_at >= p_from and x.created_at < p_to
+      and coalesce(x.pay_status, 'none') not in ('pending', 'failed')   -- plățile online neterminate nu sunt comenzi
+      and x.reject_reason is distinct from 'Plata online nu a fost finalizată'
   )
   select jsonb_build_object(
     'summary', (select jsonb_build_object(
