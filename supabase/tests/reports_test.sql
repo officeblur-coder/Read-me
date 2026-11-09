@@ -4,7 +4,7 @@ begin;
 update public.settings set open_time = '00:00', close_time = '23:59:59' where id = 1;
 create function pg_temp.ok(cond boolean, msg text) returns void language plpgsql as $$
 begin if cond is distinct from true then raise exception 'TEST EȘUAT: %', msg; end if; raise notice 'ok  %', msg; end $$;
-update public.settings set accepting_orders = true, min_order = 0 where id = 1;
+update public.settings set accepting_orders = true, min_order = 0, confirm_eta = false where id = 1;   -- aici recepția acceptă direct
 delete from public.delivery_zones;
 do $$
 declare adm uuid := gen_random_uuid(); rec uuid := gen_random_uuid(); sid uuid; o1 uuid; o2 uuid; o3 uuid; r jsonb; t0 timestamptz := now() - interval '1 hour';

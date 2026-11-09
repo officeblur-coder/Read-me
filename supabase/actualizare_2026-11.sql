@@ -205,9 +205,11 @@ begin
   select * into o from public.orders where id = p_id for update;
   if o.status <> 'new' or o.offered_at is null then return o; end if;
   if p_answer in ('accepted', 'auto_accepted', 'phone') then
+    perform set_config('lyra.offer_close', '1', true);   -- trecerea în bucătărie vine din răspuns, nu din recepție
     update public.orders set status = 'prep', accepted_at = now(), eta_min = o.offer_eta,
            offer_answer = p_answer, offer_answered_at = now()
      where id = p_id returning * into o;
+    perform set_config('lyra.offer_close', '', true);
     msg := format('%s Comanda e în bucătărie, %s la %s.',
       case p_answer when 'accepted' then 'Mulțumim, ai confirmat timpul.' when 'phone' then 'Timpul a fost confirmat telefonic.'
                     else 'Timpul a fost confirmat automat.' end,
@@ -305,6 +307,48 @@ do $$ begin
   begin perform cron.schedule('lyra-offers', '* * * * *', 'select public.settle_offers()');
   exception when others then raise notice 'pg_cron indisponibil: ofertele se închid când recepția sau clientul au pagina deschisă.'; end;
 end $$;
+
+-- Siguranță: orice „Acceptă” trimis direct (de exemplu de pe un ecran de recepție cu versiunea veche a site-ului)
+-- devine propunere către client cât timp confirmarea e pornită. Precomenzile se acceptă direct, ca înainte.
+-- Numele începe cu „orders_a_” ca să ruleze înaintea celorlalte triggere ale comenzii.
+create or replace function public.orders_a_offer() returns trigger
+language plpgsql security definer set search_path = public as $$
+declare s public.settings;
+begin
+  if old.status <> 'new' or new.status <> 'prep' or old.scheduled_for is not null then return new; end if;
+  if coalesce(current_setting('lyra.offer_close', true), '') = '1' then return new; end if;
+  select * into s from public.settings where id = 1;
+  if not s.confirm_eta then return new; end if;
+  new.status := 'new'; new.accepted_at := null; new.offer_answer := null; new.offer_answered_at := null;
+  new.offer_eta := greatest(5, least(240, coalesce(new.eta_min, old.offer_eta, 30)));
+  new.eta_min := new.offer_eta;
+  if old.offered_at is not null and old.offer_eta = new.offer_eta then
+    new.offered_at := old.offered_at;   -- același timp apăsat din nou: nu repornim numărătoarea și nu repetăm mesajul
+    return new;
+  end if;
+  new.offered_at := now();
+  new.accepted_by := coalesce(auth.uid(), old.accepted_by); new.accepted_by_name := coalesce(public.staff_name(), old.accepted_by_name);
+  insert into public.order_messages(order_id, body) values (new.id, format(
+    'Putem %s comanda în %s minute, la %s. Confirmă timpul sau anulează comanda în %s minute.',
+    case when new.mode = 'livrare' then 'livra' else 'pregăti' end, new.offer_eta,
+    to_char((now() + make_interval(mins => new.offer_eta)) at time zone s.tz, 'HH24:MI'), s.offer_window_min));
+  return new;
+end $$;
+drop trigger if exists orders_a_offer on public.orders;
+create trigger orders_a_offer before update of status on public.orders for each row execute function public.orders_a_offer();
+
+-- mesajul „Comanda a fost acceptată…” trimis de ecranul vechi nu ajunge la client cât timp așteptăm răspunsul lui
+create or replace function public.messages_skip_old_accept() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if new.body like 'Comanda a fost acceptată.%' and exists (select 1 from public.orders where id = new.order_id and status = 'new' and offered_at is not null) then
+    return null;
+  end if;
+  return new;
+end $$;
+drop trigger if exists messages_skip_old_accept on public.order_messages;
+create trigger messages_skip_old_accept before insert on public.order_messages for each row execute function public.messages_skip_old_accept();
+
 
 
 -- =====================================================================

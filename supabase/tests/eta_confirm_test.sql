@@ -86,6 +86,40 @@ begin
   select * into o from public.orders where id = o5;
   perform pg_temp.ok(o.status = 'rejected' and o.offer_answer = 'auto_cancelled' and o.cancelled_by = 'sistem', 'cu setarea „anulează”: comanda expirată se anulează');
 
+  -- siguranță: ecranul vechi acceptă direct → devine propunere, mesajul vechi nu ajunge la client
+  update public.settings set offer_timeout = 'accept' where id = 1;
+  perform set_config('request.jwt.claim.sub', '', true);
+  r := public.place_order('{"name":"Vechi","phone":"0745111222","mode":"livrare","address":"Str. Z 3","payment":"card","items":[{"id":"smash","qty":1}]}'); o1 := (r->>'id')::uuid;
+  select token into t1 from public.orders where id = o1;
+  perform set_config('request.jwt.claim.sub', rec::text, true);
+  update public.orders set status = 'prep', eta_min = 50, accepted_at = now() where id = o1;
+  insert into public.order_messages(order_id, body) values (o1, 'Comanda a fost acceptată. Estimăm livrarea în 50 minute, la 12:49.');
+  select * into o from public.orders where id = o1;
+  perform pg_temp.ok(o.status = 'new' and o.offer_eta = 50 and o.offered_at is not null and o.accepted_at is null, 'acceptare directă (ecran vechi): devine propunere de 50 min');
+  perform pg_temp.ok(not exists (select 1 from public.order_messages where order_id = o1 and body like 'Comanda a fost acceptată%')
+    and exists (select 1 from public.order_messages where order_id = o1 and body like 'Putem livra comanda în 50 minute%'), 'clientul primește întrebarea, nu mesajul vechi');
+  update public.orders set status = 'prep', eta_min = 50 where id = o1;
+  perform pg_temp.ok((select count(*) from public.order_messages where order_id = o1) = 1 and (select status from public.orders where id = o1) = 'new', 'apăsat din nou: fără mesaj dublu, tot în așteptare');
+  perform set_config('request.jwt.claim.sub', '', true);
+  perform public.answer_offer(t1, true);
+  perform pg_temp.ok((select status from public.orders where id = o1) = 'prep', 'clientul acceptă: în bucătărie');
+  -- precomanda se acceptă direct
+  perform set_config('request.jwt.claim.sub', rec::text, true);
+  perform set_config('request.jwt.claim.sub', '', true);
+  r := public.place_order('{"name":"Pre","phone":"0745111222","mode":"ridicare","payment":"card","items":[{"id":"smash","qty":1}]}'); o2 := (r->>'id')::uuid;
+  update public.orders set scheduled_for = now() + interval '3 hours' where id = o2;   -- precomandă (ora aleasă de client)
+  perform set_config('request.jwt.claim.sub', rec::text, true);
+  update public.orders set status = 'prep', eta_min = 180, accepted_at = now() where id = o2;
+  perform pg_temp.ok((select status from public.orders where id = o2) = 'prep', 'precomanda: acceptată direct, fără întrebare');
+  -- cu confirmarea oprită, acceptarea e directă
+  update public.settings set confirm_eta = false where id = 1;
+  perform set_config('request.jwt.claim.sub', '', true);
+  r := public.place_order('{"name":"Off","phone":"0745111222","mode":"ridicare","payment":"card","items":[{"id":"smash","qty":1}]}'); o1 := (r->>'id')::uuid;
+  perform set_config('request.jwt.claim.sub', rec::text, true);
+  update public.orders set status = 'prep', eta_min = 20, accepted_at = now() where id = o1;
+  perform pg_temp.ok((select status from public.orders where id = o1) = 'prep', 'confirmarea oprită din admin: acceptare directă');
+  update public.settings set confirm_eta = true where id = 1;
+
   -- raport: ofertele nu sunt „nepreluate”, anulările clientului se numără
   perform set_config('request.jwt.claim.sub', adm::text, true);
   r := public.admin_report(now() - interval '1 hour', now() + interval '1 minute');
