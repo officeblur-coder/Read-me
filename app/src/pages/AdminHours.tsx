@@ -9,10 +9,10 @@ const t5 = (t?: string) => (t || "").slice(0, 5);
 export function HoursTab({ flash }: { flash: (m: string) => void }) {
   const [h, setH] = useState<Hours | null>(null);
   const [busy, setBusy] = useState(false);
-  const [c, setC] = useState<{ confirm_eta: boolean; offer_window_min: number; offer_timeout: "accept" | "cancel" } | null>(null);
+  const [c, setC] = useState<{ confirm_eta: boolean; offer_window_min: number; offer_timeout: "accept" | "cancel"; online_pay_on: boolean } | null>(null);
   useEffect(() => {
-    supabase.from("settings").select("confirm_eta,offer_window_min,offer_timeout").eq("id", 1).single()
-      .then(({ data }) => data && setC({ confirm_eta: data.confirm_eta !== false, offer_window_min: data.offer_window_min ?? 5, offer_timeout: data.offer_timeout === "cancel" ? "cancel" : "accept" }));
+    supabase.from("settings").select("confirm_eta,offer_window_min,offer_timeout,online_pay_on").eq("id", 1).single()
+      .then(({ data }) => data && setC({ confirm_eta: data.confirm_eta !== false, offer_window_min: data.offer_window_min ?? 5, offer_timeout: data.offer_timeout === "cancel" ? "cancel" : "accept", online_pay_on: !!data.online_pay_on }));
     supabase.from("settings").select("open_time,close_time,open_days,preorder_on,preorder_from,preorder_days,preorder_lead_min,tz").eq("id", 1).single()
       .then(({ data }) => data && setH({ ...(data as Hours), open_time: t5(data.open_time), close_time: t5(data.close_time), preorder_from: t5(data.preorder_from) }));
   }, []);
@@ -27,7 +27,7 @@ export function HoursTab({ flash }: { flash: (m: string) => void }) {
     const { error } = await supabase.from("settings").update({
       open_time: h.open_time, close_time: h.close_time, open_days: [...days].sort(), preorder_on: h.preorder_on,
       preorder_from: h.preorder_from, preorder_days: Math.min(14, Math.max(0, Number(h.preorder_days) || 0)), preorder_lead_min: Math.min(600, Math.max(0, Number(h.preorder_lead_min) || 0)),
-      ...(c ? { confirm_eta: c.confirm_eta, offer_window_min: Math.min(30, Math.max(1, Number(c.offer_window_min) || 5)), offer_timeout: c.offer_timeout } : {}),
+      ...(c ? { confirm_eta: c.confirm_eta, offer_window_min: Math.min(30, Math.max(1, Number(c.offer_window_min) || 5)), offer_timeout: c.offer_timeout, online_pay_on: c.online_pay_on } : {}),
     }).eq("id", 1);
     setBusy(false);
     flash(error ? "Nu s-a salvat: " + error.message : "Programul a fost salvat.");
@@ -64,6 +64,9 @@ export function HoursTab({ flash }: { flash: (m: string) => void }) {
             <label className="fl"><span>Dacă nu răspunde</span><select value={c.offer_timeout} onChange={e => setC({ ...c, offer_timeout: e.target.value as "accept" | "cancel" })}>
               <option value="accept">comanda se confirmă</option><option value="cancel">comanda se anulează</option></select></label>
           </div>
+          <h3 style={{ marginTop: 18 }}>Plata online cu cardul</h3>
+          <label className="adm-sw"><button className="switch" role="switch" aria-checked={c.online_pay_on} onClick={() => setC({ ...c, online_pay_on: !c.online_pay_on })} /><span>{c.online_pay_on ? "Clienții pot plăti cu cardul pe site (Stripe)" : "Doar plata la livrare"}</span></label>
+          <p className="muted" style={{ fontSize: 13 }}>Pornește doar după configurarea Stripe (pașii sunt în supabase/functions/pay/README.md). Comenzile plătite online apar la recepție după plată; cele refuzate sau anulate se rambursează automat.</p>
           <p className="muted" style={{ fontSize: 13 }}>Clientul vede timpul pe pagina comenzii, cu butoanele „Accept” și „Anulez comanda”. Bucătăria pornește după confirmare. Precomenzile nu trec prin acest pas: ora e aleasă de client.</p>
         </section>}
       </div>

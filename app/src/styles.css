@@ -1495,3 +1495,8 @@ h1,h2,h3,h4{margin:0;font-weight:700;text-wrap:balance}
 @media (max-width:700px){.push-form{grid-template-columns:1fr}}
 /* aplicația de pe ecran (iPhone): bara cu ora rămâne opacă, conținutul nu mai trece pe sub ea la derulare */
 body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:1000;pointer-events:none}
+/* plata online */
+.paygrid:has(> button:nth-child(3)){grid-template-columns:repeat(3,1fr)}
+.pay-box{display:grid;gap:10px;width:100%;max-width:420px;margin:16px auto 0;padding:14px;border-radius:var(--r);border:1px solid var(--gold);background:var(--surface-2);text-align:center}
+.pay-box p{margin:0;font-size:13px}
+.paid-tag{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:6px 12px;border-radius:999px;background:var(--ok-bg);color:var(--ok);font-weight:700;font-size:12.5px}

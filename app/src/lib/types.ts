@@ -36,7 +36,8 @@ export type Item = {
 export type Settings = import("./schedule").Hours & {
   welcome_on?: boolean; welcome_lei?: number; welcome_min?: number;   // bonus de bun venit la cont nou
   accepting_orders: boolean;
-  confirm_eta?: boolean;                       // clientul confirmă timpul propus de recepție
+  confirm_eta?: boolean;
+  online_pay_on?: boolean;                     // plata online cu cardul (Stripe) e configurată și pornită                       // clientul confirmă timpul propus de recepție
   offer_window_min?: number;                   // minute pentru răspuns
   offer_timeout?: "accept" | "cancel";         // ce se întâmplă fără răspuns
   delivery_fee: number;
@@ -134,6 +135,7 @@ export type Order = {
   offer_eta?: number | null;
   offer_answer?: OfferAnswer | null;
   cancelled_by?: string | null;    // 'client' / 'sistem'
+  pay_status?: "none" | "pending" | "paid" | "failed" | "refunding" | "refunded";
 };
 
 export type OfferAnswer = "accepted" | "cancelled" | "auto_accepted" | "auto_cancelled" | "phone";
@@ -143,7 +145,7 @@ export type PublicOrder = Pick<
   | "number" | "status" | "mode" | "address" | "items" | "subtotal" | "discount" | "discount_label"
   | "points_value" | "delivery_fee" | "packaging" | "total" | "points_earned" | "eta_min" | "created_at"
   | "accepted_at" | "road_at" | "done_at" | "reject_reason" | "rating" | "scheduled_for" | "welcome_value"
-  | "offered_at" | "offer_eta" | "offer_answer" | "cancelled_by"
+  | "offered_at" | "offer_eta" | "offer_answer" | "cancelled_by" | "payment" | "pay_status"
 > & { messages: { body: string; at: string }[]; offer_window?: number; offer_timeout?: "accept" | "cancel"; server_now?: string };
 
 export type CartLine = {
