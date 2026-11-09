@@ -118,9 +118,11 @@ function Console({ email }: { email: string }) {
   const [customEta, setCustomEta] = useState("");
   const [rejecting, setRejecting] = useState(false);
   const [drawer, setDrawer] = useState<string | null>(null);
-  const [toast, setToast] = useState("");
+  const [toast, setToast] = useState<{ m: string; bad?: boolean }>({ m: "" });
+  const prev = useRef<Map<string, Order>>(new Map());
   const seen = useRef<Set<string> | null>(null);
   const soundRef = useRef(sound); soundRef.current = sound;
+  const flashRef = useRef<(m: string, bad?: boolean) => void>(() => {});
   const [showStart, setShowStart] = useState(true);
   const started = useRef(false);
   // working session for the admin report: opened with the console, a heartbeat every minute, closed on "Ieși"
@@ -143,13 +145,23 @@ function Console({ email }: { email: string }) {
     started.current = true; setShowStart(false);
   }
 
-  const flash = (m: string) => { setToast(m); setTimeout(() => setToast(""), 2500); };
+  const flash = (m: string, bad = false) => { setToast({ m, bad }); setTimeout(() => setToast({ m: "" }), bad ? 9000 : 2500); };
+  flashRef.current = flash;
 
   const loadOrders = useCallback(async () => {
+    await supabase.rpc("settle_offers");   // ofertele fără răspuns se închid după setare
     const { data } = await supabase.from("orders").select("*")
       .or(`status.in.(new,prep,road),created_at.gte.${startOfDay()}`).order("created_at");
     const list = (data || []) as Order[];
-    const fresh = list.filter(o => o.status === "new").map(o => o.id);
+    const fresh = list.filter(o => o.status === "new" && !o.offered_at).map(o => o.id);
+    // răspunsul clientului la timpul propus: anunț pe ecran (anularea rămâne mai mult și sună)
+    for (const o of list) {
+      const was = prev.current.get(o.id);
+      if (!was || was.status !== "new" || !was.offered_at || o.status === "new") continue;
+      if (o.status === "prep") flashRef.current(`#${o.number} ${o.name}: ${o.offer_answer === "accepted" ? "clientul a acceptat" : o.offer_answer === "phone" ? "confirmat telefonic" : "confirmată automat"} · ${o.eta_min} min`);
+      else if (o.status === "rejected") { flashRef.current(`#${o.number} ${o.name}: ${o.cancelled_by === "client" ? "clientul a ANULAT comanda (timpul nu convine)" : "anulată, clientul nu a răspuns"}`, true); if (soundRef.current) chime(); }
+    }
+    prev.current = new Map(list.map(o => [o.id, o]));
     if (seen.current && fresh.some(id => !seen.current!.has(id)) && soundRef.current) chime();
     seen.current = new Set(list.map(o => o.id));
     setOrders(list);
@@ -180,7 +192,9 @@ function Console({ email }: { email: string }) {
     return () => { supabase.removeChannel(ch); clearInterval(tick); clearInterval(poll); clearInterval(ring); document.removeEventListener("pointerdown", unlock); document.removeEventListener("visibilitychange", wake); wakeLock?.release().catch(() => {}); };
   }, [loadOrders, loadMenu]);
 
-  const incoming = orders.filter(o => o.status === "new");
+  const incoming = orders.filter(o => o.status === "new" && !o.offered_at);
+  const waiting = orders.filter(o => o.status === "new" && !!o.offered_at);
+  const confirmEta = settings?.confirm_eta !== false;
   // precomenzi acceptate, cu ora la mai mult de o oră: stau deoparte până se apropie ora lor
   const isLater = (o: Order) => o.status === "prep" && !!o.scheduled_for && new Date(o.scheduled_for).getTime() - now > 60 * 60000;
   const planned = orders.filter(isLater).sort((a, b) => (a.scheduled_for || "").localeCompare(b.scheduled_for || ""));
@@ -198,7 +212,16 @@ function Console({ email }: { email: string }) {
     return setStatus(o, "prep", { eta_min: m, accepted_at: new Date().toISOString() },
       `Precomanda a fost acceptată. ${o.mode === "livrare" ? "Livrarea" : "Ridicarea"} e programată ${whenLabel(o.scheduled_for!)}.`);
   };
-  const accept = (o: Order, m: number) =>
+  async function offer(o: Order, m: number) {
+    const { error } = await supabase.rpc("offer_eta", { p_id: o.id, p_eta: m });
+    if (error) { flash("Nu s-a trimis: " + error.message); return; }
+    flash(`Timpul de ${m} min a fost trimis clientului.`); loadOrders();
+  }
+  async function phoneOk(o: Order) {
+    const { error } = await supabase.rpc("confirm_offer_phone", { p_id: o.id });
+    if (error) flash("Nu s-a salvat: " + error.message); else loadOrders();
+  }
+  const accept = (o: Order, m: number) => confirmEta ? offer(o, m) :
     setStatus(o, "prep", { eta_min: m, accepted_at: new Date().toISOString() },
       `Comanda a fost acceptată. Estimăm ${o.mode === "livrare" ? "livrarea" : "ridicarea"} în ${m} minute, la ${hm(Date.now() + m * 60000)}.`);
   const advance = (o: Order) => o.status === "prep"
@@ -276,7 +299,7 @@ function Console({ email }: { email: string }) {
                     <input type="number" inputMode="numeric" min={5} max={480} step={5} placeholder="ex. 90" value={customEta}
                       onChange={e => { const v = e.target.value.replace(/\D/g, "").slice(0, 3); setCustomEta(v); setEta(v ? Math.min(480, Math.max(5, +v)) : null); }} />
                     <span>min{customEta && +customEta >= 5 ? ` · gata la ${hm(now + Math.min(480, +customEta) * 60000)}` : ""}</span></label></div>
-                <button className="accept" disabled={!!customEta && +customEta < 5} onClick={() => { accept(cur, chosen); setEta(null); setCustomEta(""); setSel(0); }}><Icon name="check" size={20} />Acceptă · {chosen} min</button>
+                <button className="accept" disabled={!!customEta && +customEta < 5} onClick={() => { accept(cur, chosen); setEta(null); setCustomEta(""); setSel(0); }}><Icon name={confirmEta ? "send" : "check"} size={20} />{confirmEta ? `Propune clientului · ${chosen} min` : `Acceptă · ${chosen} min`}</button>
                 </>}
                 {rejecting
                   ? <div className="rsn">{REASONS.map(r => <button key={r} onClick={() => { setStatus(cur, "rejected", { reject_reason: r }, `Ne pare rău, nu putem prelua comanda: ${r.toLowerCase()}.`); setRejecting(false); }}>{r}</button>)}<button onClick={() => setRejecting(false)} style={{ borderColor: "var(--line)", color: "var(--muted)" }}>Anulează</button></div>
@@ -285,6 +308,21 @@ function Console({ email }: { email: string }) {
             </section>
           )}
 
+          {waiting.length > 0 && <section className="waiting" aria-live="polite"><div className="col-h"><i style={{ background: "var(--gold)" }} />Așteaptă confirmarea clientului<span>{waiting.length}</span></div>
+            <div className="waiting-list">{waiting.map(o => {
+              const left = new Date(o.offered_at!).getTime() + (settings?.offer_window_min || 5) * 60000 - now;
+              return <div key={o.id} className="wt">
+                <div className="h"><b>#{o.number}</b><span className={`tag ${o.mode === "livrare" ? "" : "green"}`}>{o.mode}</span><span>{o.name}</span>
+                  <span className="tm num" title="timp rămas pentru răspuns">{left > 0 ? mmss(left) : "0:00"}</span></div>
+                <small className="muted">Propus: <b>{o.offer_eta} min</b> · {left > 0 ? (settings?.offer_timeout === "cancel" ? "fără răspuns se anulează" : "fără răspuns se confirmă singură") : "se închide…"}</small>
+                <div className="acts">
+                  <a href={`tel:${o.phone.replace(/\s/g, "")}`}><Icon name="phone" size={13} /> {o.phone}</a>
+                  <button className="ok" onClick={() => phoneOk(o)}>Confirmat la telefon</button>
+                  <button onClick={() => setDrawer(o.id)}>Detalii</button>
+                  <button className="no" onClick={() => setStatus(o, "rejected", { reject_reason: "Anulată la cererea clientului", cancelled_by: "client" }, "Comanda a fost anulată la cererea ta.")}>Clientul anulează</button>
+                </div>
+              </div>;
+            })}</div></section>}
           {planned.length > 0 && <div className="planned"><div className="col-h"><i style={{ background: "#5aa0ff" }} />Precomenzi programate<span>{planned.length}</span></div>
             <div className="planned-list">{planned.map(o => <button key={o.id} className="pl" onClick={() => setDrawer(o.id)}>
               <b className="num">{hm(o.scheduled_for!)}</b><small>{whenLabel(o.scheduled_for!, undefined, now).split(" la ")[0]}</small>
@@ -358,7 +396,7 @@ function Console({ email }: { email: string }) {
           {drawerOrder.status === "refunded" && <p className="tag red" style={{ justifySelf: "start" }}>Rambursată</p>}
         </aside>
       </>}
-      {toast && <div className="toast">{toast}</div>}
+      {toast.m && <div className={`toast ${toast.bad ? "bad" : ""}`} role="status">{toast.m}</div>}
       {showStart && (
         <div className="start-veil">
           <div className="start-card">
@@ -439,7 +477,7 @@ function OrderCard({ o, now, onOpen, onAdvance }: { o: Order; now: number; onOpe
   return (
     <div className="oc" role="button" tabIndex={0} onClick={onOpen} onKeyDown={e => e.key === "Enter" && onOpen()}>
       <div className="h"><b>#{o.number}</b><span className={`tag ${o.mode === "livrare" ? "" : "green"}`}>{o.mode}</span>
-        {o.status === "rejected" && <span className="tag red">refuzată</span>}
+        {o.status === "rejected" && <span className="tag red">{o.cancelled_by === "client" ? "anulată de client" : o.cancelled_by ? "anulată, fără răspuns" : "refuzată"}</span>}
         {o.status === "refunded" && <span className="tag red">rambursată</span>}
         {o.allergies.length > 0 && <span className="tag red">alergie</span>}
         {o.scheduled_for && <span className="tag blue">{hm(o.scheduled_for)}</span>}

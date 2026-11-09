@@ -9,7 +9,10 @@ const t5 = (t?: string) => (t || "").slice(0, 5);
 export function HoursTab({ flash }: { flash: (m: string) => void }) {
   const [h, setH] = useState<Hours | null>(null);
   const [busy, setBusy] = useState(false);
+  const [c, setC] = useState<{ confirm_eta: boolean; offer_window_min: number; offer_timeout: "accept" | "cancel" } | null>(null);
   useEffect(() => {
+    supabase.from("settings").select("confirm_eta,offer_window_min,offer_timeout").eq("id", 1).single()
+      .then(({ data }) => data && setC({ confirm_eta: data.confirm_eta !== false, offer_window_min: data.offer_window_min ?? 5, offer_timeout: data.offer_timeout === "cancel" ? "cancel" : "accept" }));
     supabase.from("settings").select("open_time,close_time,open_days,preorder_on,preorder_from,preorder_days,preorder_lead_min,tz").eq("id", 1).single()
       .then(({ data }) => data && setH({ ...(data as Hours), open_time: t5(data.open_time), close_time: t5(data.close_time), preorder_from: t5(data.preorder_from) }));
   }, []);
@@ -24,6 +27,7 @@ export function HoursTab({ flash }: { flash: (m: string) => void }) {
     const { error } = await supabase.from("settings").update({
       open_time: h.open_time, close_time: h.close_time, open_days: [...days].sort(), preorder_on: h.preorder_on,
       preorder_from: h.preorder_from, preorder_days: Math.min(14, Math.max(0, Number(h.preorder_days) || 0)), preorder_lead_min: Math.min(600, Math.max(0, Number(h.preorder_lead_min) || 0)),
+      ...(c ? { confirm_eta: c.confirm_eta, offer_window_min: Math.min(30, Math.max(1, Number(c.offer_window_min) || 5)), offer_timeout: c.offer_timeout } : {}),
     }).eq("id", 1);
     setBusy(false);
     flash(error ? "Nu s-a salvat: " + error.message : "Programul a fost salvat.");
@@ -52,6 +56,16 @@ export function HoursTab({ flash }: { flash: (m: string) => void }) {
           </div>
           <p className="muted" style={{ fontSize: 13 }}>{preview.length ? <>Acum clientul poate alege: {preview.map(d => `${d.label} ${d.slots[0].label}–${d.slots[d.slots.length - 1].label}`).join(" · ")}</> : "Acum nu se poate programa nicio comandă."}</p>
         </section>
+        {c && <section className="hours-card">
+          <h3>Clientul confirmă timpul</h3>
+          <label className="adm-sw"><button className="switch" role="switch" aria-checked={c.confirm_eta} onClick={() => setC({ ...c, confirm_eta: !c.confirm_eta })} /><span>{c.confirm_eta ? "Recepția propune timpul, clientul acceptă sau anulează" : "Recepția acceptă direct (fără confirmarea clientului)"}</span></label>
+          <div className="hours-row">
+            <label className="fl"><span>Minute pentru răspuns</span><input inputMode="numeric" value={String(c.offer_window_min || "")} onChange={e => setC({ ...c, offer_window_min: Number(e.target.value.replace(/\D/g, "").slice(0, 2)) })} /></label>
+            <label className="fl"><span>Dacă nu răspunde</span><select value={c.offer_timeout} onChange={e => setC({ ...c, offer_timeout: e.target.value as "accept" | "cancel" })}>
+              <option value="accept">comanda se confirmă</option><option value="cancel">comanda se anulează</option></select></label>
+          </div>
+          <p className="muted" style={{ fontSize: 13 }}>Clientul vede timpul pe pagina comenzii, cu butoanele „Accept” și „Anulez comanda”. Bucătăria pornește după confirmare. Precomenzile nu trec prin acest pas: ora e aleasă de client.</p>
+        </section>}
       </div>
     </div>
   );

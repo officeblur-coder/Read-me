@@ -54,7 +54,7 @@ begin
     new.eta_first := coalesce(old.eta_first, new.eta_min);
   end if;
   if new.status = 'rejected' and old.status <> 'rejected' then
-    new.rejected_by_name := coalesce(public.staff_name(), 'sistem');
+    new.rejected_by_name := coalesce(public.staff_name(), new.rejected_by_name, 'sistem');
   end if;
   return new;
 end $$;
@@ -104,10 +104,10 @@ begin
   if not public.is_admin() then raise exception 'Doar administratorul vede rapoartele.' using errcode = 'P0001'; end if;
   with o as (
     select x.*,
-      case when x.accepted_at >= x.created_at then extract(epoch from (x.accepted_at - x.created_at)) / 60.0 end as accept_min,
+      case when coalesce(x.offered_at, x.accepted_at) >= x.created_at then extract(epoch from (coalesce(x.offered_at, x.accepted_at) - x.created_at)) / 60.0 end as accept_min,   -- până la răspunsul recepției
       case when x.status = 'done' and x.done_at >= x.accepted_at then extract(epoch from (x.done_at - x.accepted_at)) / 60.0 end as actual_min,
       coalesce(x.eta_first, x.eta_min) as promised_min,
-      (x.status = 'new' and x.created_at < now() - interval '10 minutes'
+      (x.status = 'new' and x.offered_at is null and x.created_at < now() - interval '10 minutes'
         and (x.scheduled_for is null or x.scheduled_for < now() + interval '30 minutes')) as unanswered   -- o precomandă e ratată abia aproape de ora ei
     from public.orders x where x.created_at >= p_from and x.created_at < p_to
   )
@@ -120,6 +120,7 @@ begin
         'unanswered', count(*) filter (where unanswered),
         'slow_accept', count(*) filter (where accept_min > p_slow_min),
         'missed', count(*) filter (where status = 'rejected' or unanswered),
+        'client_cancelled', count(*) filter (where status = 'rejected' and cancelled_by is not null),
         'revenue', coalesce(sum(total) filter (where status = 'done'), 0),
         'lost_revenue', coalesce(sum(total) filter (where status = 'rejected' or unanswered), 0),
         'avg_accept_min', round(avg(accept_min)::numeric, 1),

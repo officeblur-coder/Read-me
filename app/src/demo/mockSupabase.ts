@@ -90,15 +90,35 @@ function advance(o: Row) {
   if (!o.demo_auto || o.status === "done" || o.status === "rejected") return;
   const t = Date.now() - new Date(o.created_at).getTime();
   const msg = (body: string, at: number) => db.order_messages.push({ id: uid(), order_id: o.id, body, created_at: iso(new Date(o.created_at).getTime() + at) });
-  if (o.status === "new" && t > 7000) {
-    o.status = "prep"; o.eta_min = 35; o.accepted_at = iso(new Date(o.created_at).getTime() + 7000);
-    msg("Am primit comanda ta și am pornit grătarul. Mulțumim!", 7000);
+  if (o.status === "new" && !o.offered_at && t > 7000) {
+    if (db.settings[0].confirm_eta === false) {
+      o.status = "prep"; o.eta_min = 35; o.accepted_at = iso(new Date(o.created_at).getTime() + 7000);
+      msg("Am primit comanda ta și am pornit grătarul. Mulțumim!", 7000);
+    } else {   // restaurantul propune timpul; clientul răspunde din pagina comenzii
+      o.offered_at = iso(new Date(o.created_at).getTime() + 7000); o.offer_eta = 35; o.eta_min = 35;
+      msg(`Putem ${o.mode === "livrare" ? "livra" : "pregăti"} comanda în 35 de minute. Confirmă timpul sau anulează comanda.`, 7000);
+    }
   }
-  if (o.status === "prep" && t > 30000 && o.mode === "livrare") {
+  if (o.status === "new" && o.offered_at && Date.now() - new Date(o.offered_at).getTime() > (db.settings[0].offer_window_min || 5) * 60000) closeOffer(o, "auto_accepted");
+  // după acceptare, restul pașilor curg de la ora acceptării
+  const ta = o.accepted_at ? Date.now() - new Date(o.accepted_at).getTime() + 7000 : t;
+  if (o.status === "prep" && ta > 30000 && o.mode === "livrare") {
     o.status = "road"; o.road_at = iso(); o.courier_name = "Vlad";
     msg("Vlad a preluat comanda și e pe drum spre tine.", 30000);
   }
-  if ((o.status === "road" || o.status === "prep") && t > 55000) setStatus(o, "done");
+  if ((o.status === "road" || o.status === "prep") && ta > 55000) setStatus(o, "done");
+}
+function closeOffer(o: Row, answer: string) {
+  const say = (body: string) => db.order_messages.push({ id: uid(), order_id: o.id, body, created_at: iso() });
+  o.offer_answer = answer; o.offer_answered_at = iso();
+  if (answer === "cancelled") {
+    o.status = "rejected"; o.cancelled_by = "client"; o.reject_reason = "Anulată de client: timpul de livrare nu convine";
+    say("Ai anulat comanda. Nu ți-a fost reținută nicio sumă.");
+  } else {
+    o.status = "prep"; o.accepted_at = iso(); o.eta_min = o.offer_eta;
+    say(answer === "accepted" ? "Mulțumim, ai confirmat timpul. Comanda e în bucătărie." : answer === "phone" ? "Timpul a fost confirmat telefonic." : "Timpul a fost confirmat automat.");
+  }
+  emit("orders", "UPDATE", o);
 }
 function setStatus(o: Row, status: string) {
   const was = o.status; o.status = status;
@@ -298,8 +318,23 @@ function rpc(fn: string, args: Row = {}): Promise<{ data: any; error: any }> {
           const o = db.orders.find(x => x.token === args.p_token);
           if (!o) return res({ data: null, error: { message: "Nu există" } });
           const messages = db.order_messages.filter(m => m.order_id === o.id).map(m => ({ body: m.body, at: m.created_at }));
-          return res({ data: structuredClone({ ...o, messages }), error: null });
+          const st = db.settings[0];
+          return res({ data: structuredClone({ ...o, messages, offer_window: st.offer_window_min || 5, offer_timeout: st.offer_timeout || "accept", server_now: iso() }), error: null });
         }
+        case "answer_offer": {
+          const o = db.orders.find(x => x.token === args.p_token);
+          if (!o || o.status !== "new" || !o.offered_at) return res({ data: null, error: { message: "Ai răspuns deja." } });
+          closeOffer(o, args.p_accept ? "accepted" : "cancelled"); save();
+          return res({ data: { status: o.status }, error: null });
+        }
+        case "offer_eta": {
+          const o = db.orders.find(x => x.id === args.p_id);
+          if (!o || o.status !== "new") return res({ data: null, error: { message: "Comanda a primit deja răspuns." } });
+          o.offered_at = iso(); o.offer_eta = args.p_eta; o.eta_min = args.p_eta;
+          db.order_messages.push({ id: uid(), order_id: o.id, body: `Putem ${o.mode === "livrare" ? "livra" : "pregăti"} comanda în ${args.p_eta} de minute. Confirmă timpul sau anulează comanda.`, created_at: iso() });
+          save(); emit("orders", "UPDATE", o); return res({ data: null, error: null });
+        }
+        case "confirm_offer_phone": { const o = db.orders.find(x => x.id === args.p_id); if (o && o.status === "new" && o.offered_at) { closeOffer(o, "phone"); save(); } return res({ data: null, error: null }); }
         case "rate_order": { const o = db.orders.find(x => x.token === args.p_token); if (o) o.rating = args.p_rating; save(); return res({ data: null, error: null }); }
         case "list_staff": return res({ data: structuredClone(db.staff), error: null });
         case "admin_set_staff": db.staff.push({ user_id: uid(), email: args.p_email, name: args.p_name, role: args.p_role }); save(); return res({ data: null, error: null });

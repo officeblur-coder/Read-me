@@ -26,7 +26,9 @@ select * from (values
   ('BBQ Pit Box Smoker', 'Afumat lent, ore întregi', null, 'Specialitățile casei', 'pitbox.jpg', 'specialitati', 20)
 ) v where not exists (select 1 from public.banners);`);
 out.push("commit;");
-const schema = fs.readFileSync(path.join(root, "supabase/01_schema.sql"), "utf8") + "\n\n" + fs.readFileSync(path.join(root, "supabase/03_rewards.sql"), "utf8") + "\n\n" + fs.readFileSync(path.join(root, "supabase/04_delivery_zones.sql"), "utf8") + "\n\n" + fs.readFileSync(path.join(root, "supabase/05_reports.sql"), "utf8") + "\n\n" + fs.readFileSync(path.join(root, "supabase/06_marketing.sql"), "utf8") + "\n\n" + fs.readFileSync(path.join(root, "supabase/07_discounts.sql"), "utf8") + "\n\n" + fs.readFileSync(path.join(root, "supabase/08_analytics.sql"), "utf8") + "\n\n" + fs.readFileSync(path.join(root, "supabase/09_newsletter.sql"), "utf8");
+// schema = toate fișierele numerotate (01_, 03_, 04_ …) în ordine, fără 02 (meniul, generat aici)
+const schema = fs.readdirSync(path.join(root, "supabase")).filter(f => /^\d\d_.*\.sql$/.test(f) && !f.startsWith("02_")).sort()
+  .map(f => fs.readFileSync(path.join(root, "supabase", f), "utf8")).join("\n\n");
 fs.writeFileSync(path.join(root, "supabase/02_seed_menu.sql"), out.join("\n") + "\n");
 fs.writeFileSync(path.join(root, "supabase/setup.sql"),
   "-- Lyra Comenzi: fișier unic de instalare. Supabase → SQL Editor → New query → lipiți tot → Run.\n\n" +

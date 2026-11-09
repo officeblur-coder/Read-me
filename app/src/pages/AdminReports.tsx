@@ -68,7 +68,7 @@ export function ReportsTab() {
       {rep && <>
         <div className="rw-stats">
           <div className="rw-stat"><small>Comenzi</small><b className="num">{n("orders")}</b><span>{n("done")} livrate · {lei(n("revenue"))}</span></div>
-          <div className={`rw-stat ${n("missed") ? "hot" : ""}`}><small>Ratate</small><b className="num">{n("missed")}</b><span>{n("rejected")} refuzate · {n("unanswered")} nepreluate · {lei(n("lost_revenue"))}</span></div>
+          <div className={`rw-stat ${n("missed") ? "hot" : ""}`}><small>Ratate</small><b className="num">{n("missed")}</b><span>{n("rejected")} refuzate{n("client_cancelled") ? ` (din care ${n("client_cancelled")} anulate de client)` : ""} · {n("unanswered")} nepreluate · {lei(n("lost_revenue"))}</span></div>
           <div className="rw-stat"><small>Timp până la acceptare</small><b className="num">{mins(s.avg_accept_min)}</b><span>{n("slow_accept")} acceptate după 5 min</span></div>
           <div className="rw-stat"><small>Timp promis</small><b className="num">{mins(s.avg_promised_min)}</b><span>media la comenzile livrate</span></div>
           <div className="rw-stat"><small>Livrare reală</small><b className="num">{mins(s.avg_actual_min)}</b><span>de la acceptare la livrat</span></div>

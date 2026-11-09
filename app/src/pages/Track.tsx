@@ -4,7 +4,7 @@ import { Link, useLocation, useParams } from "react-router-dom";
 import { confetti } from "../lib/fx";
 import { supabase } from "../lib/supabase";
 import type { PublicOrder } from "../lib/types";
-import { GOOGLE_REVIEW_URL, hm, lei } from "../lib/format";
+import { GOOGLE_REVIEW_URL, hm, lei, mmss } from "../lib/format";
 import Icon from "../components/Icon";
 import Wordmark from "../components/Wordmark";
 
@@ -15,13 +15,18 @@ export default function Track() {
   const [o, setO] = useState<PublicOrder | null>(null);
   const [missing, setMissing] = useState(false);
   const [now, setNow] = useState(Date.now());
+  const [skew, setSkew] = useState(0);               // ceasul telefonului față de server
+  const [answering, setAnswering] = useState<"" | "confirm-cancel" | "busy">("");
+  const [answerErr, setAnswerErr] = useState("");
   const loc = useLocation();
   useEffect(() => { if ((loc.state as { fresh?: boolean } | null)?.fresh) { setTimeout(confetti, 250); history.replaceState({}, ""); } }, []);
 
   async function load() {
     const { data, error } = await supabase.rpc("get_order", { p_token: token });
     if (error || !data) { setMissing(true); return; }
-    setO(data as PublicOrder);
+    const d = data as PublicOrder;
+    if (d.server_now) setSkew(new Date(d.server_now).getTime() - Date.now());
+    setO(d);
   }
   useEffect(() => {
     load();
@@ -29,6 +34,15 @@ export default function Track() {
     const tick = setInterval(() => setNow(Date.now()), 1000);
     return () => { clearInterval(poll); clearInterval(tick); };
   }, [token]);
+
+  async function answer(accept: boolean) {
+    setAnswering("busy"); setAnswerErr("");
+    const { error } = await supabase.rpc("answer_offer", { p_token: token, p_accept: accept });
+    if (error) setAnswerErr(error.message);
+    else if (accept) setTimeout(confetti, 150);
+    setAnswering("");
+    load();
+  }
 
   async function rate(n: number) {
     await supabase.rpc("rate_order", { p_token: token, p_rating: n });
@@ -45,7 +59,7 @@ export default function Track() {
   const rem = due - now;
   const frac = o.eta_min ? Math.max(0, Math.min(1, rem / (o.eta_min * 60000))) : 0;
 
-  let ring = null, title = "", sub: React.ReactNode = "";
+  let ring = null, title = "", sub: React.ReactNode = "", offer: React.ReactNode = null;
   const sched = o.scheduled_for ? whenLabel(o.scheduled_for) : "";
   const later = !!o.scheduled_for && new Date(o.scheduled_for).getTime() - now > 60 * 60000;
   if (o.status === "new" && sched) {
@@ -54,11 +68,33 @@ export default function Track() {
   } else if ((o.status === "prep") && later) {
     ring = <div className="ring"><svg viewBox="0 0 184 184"><circle cx="92" cy="92" r={R} style={{ stroke: "var(--ok)" }} strokeWidth="10" fill="none" /></svg><div className="c"><b className="num" style={{ fontSize: 34 }}>{sched.split(" la ")[1]}</b><small>{sched.split(" la ")[0]}</small></div></div>;
     title = "Precomandă confirmată"; sub = <>{pick ? "Comanda e gata de ridicat" : "Comanda ajunge"} <b>{sched}</b>{!pick && o.address ? ` · ${o.address}` : ""}</>;
+  } else if (o.status === "new" && o.offered_at && o.offer_eta) {
+    const sNow = now + skew;
+    const left = new Date(o.offered_at).getTime() + (o.offer_window || 5) * 60000 - sNow;
+    const at = hm(Date.now() + o.offer_eta * 60000);
+    ring = <div className="ring offer"><svg viewBox="0 0 184 184"><circle cx="92" cy="92" r={R} style={{ stroke: "var(--gold)" }} strokeWidth="10" fill="none" /></svg><div className="c"><b className="num">{o.offer_eta}</b><small>minute</small></div></div>;
+    title = `Restaurantul poate ${pick ? "pregăti" : "livra"} în ${o.offer_eta} minute`;
+    sub = <>{pick ? "Comanda e gata de ridicare" : "Comanda ajunge"} la ~<b>{at}</b>. Îți convine timpul?</>;
+    offer = (
+      <div className="offer-box" role="group" aria-label="Confirmă timpul de livrare">
+        <button className="big" disabled={answering === "busy"} onClick={() => answer(true)}><Icon name="check" size={20} />Accept · {pick ? "gata" : "ajunge"} la {at}</button>
+        {answering === "confirm-cancel"
+          ? <div className="offer-sure"><b>Sigur anulezi comanda?</b>
+              <div><button className="big danger" onClick={() => answer(false)}>Da, anulează</button><button className="big ghost" onClick={() => setAnswering("")}>Nu, o păstrez</button></div></div>
+          : <button className="big ghost danger-text" disabled={answering === "busy"} onClick={() => setAnswering("confirm-cancel")}>Nu îmi convine · anulez comanda</button>}
+        <p className="offer-left">{left > 0
+          ? <>Ai <b className="num">{mmss(left)}</b> să răspunzi. Apoi comanda {o.offer_timeout === "cancel" ? "se anulează" : "se confirmă"} automat.</>
+          : "Se confirmă…"}</p>
+        {answerErr && <p className="err">{answerErr}</p>}
+      </div>
+    );
   } else if (o.status === "new") {
     ring = <div className="ring wait"><svg viewBox="0 0 184 184"><circle cx="92" cy="92" r={R} style={{ stroke: "var(--surface-3)" }} strokeWidth="10" fill="none" /><circle cx="92" cy="92" r={R} style={{ stroke: "var(--brand)", transition: "stroke-dashoffset 1s linear" }} strokeWidth="10" fill="none" strokeLinecap="round" strokeDasharray={`${CIRC * 0.22} ${CIRC}`} /></svg><div className="c"><b style={{ fontSize: 32 }}>#{o.number}</b><small>trimisă</small></div></div>;
     title = "Restaurantul confirmă comanda"; sub = "De obicei durează sub un minut. Ora estimată apare aici.";
   } else if (o.status === "refunded") {
     title = "Comanda a fost rambursată"; sub = "Suma ți-a fost returnată. Punctele folosite au revenit în contul tău Lyra Rewards.";
+  } else if (o.status === "rejected" && o.cancelled_by === "client") {
+    title = "Ai anulat comanda"; sub = "Nu ți-a fost reținută nicio sumă, iar punctele sau bonusul folosite au revenit în cont. Te așteptăm altă dată!";
   } else if (o.status === "rejected") {
     title = "Comanda nu a putut fi preluată"; sub = <>{o.reject_reason ? o.reject_reason + ". " : ""}Nu ți-a fost reținută nicio sumă. Ne poți suna pentru detalii.</>;
   } else if (o.status === "done") {
@@ -77,6 +113,7 @@ export default function Track() {
         {ring}
         <h1 className="t-title">{title}</h1>
         <p className="t-sub">{sub}</p>
+        {offer}
         {o.status !== "rejected" && o.status !== "refunded" && <div className="steps">{labels.map((l, i) => <div key={l} className={i < si || o.status === "done" ? "done" : i === si ? "now" : ""}><i />{l}</div>)}</div>}
         {o.status === "done" && <>
           <div className="stars" role="group" aria-label="Evaluează comanda">{[1, 2, 3, 4, 5].map(n => <button key={n} className={(o.rating || 0) >= n ? "on" : ""} onClick={() => rate(n)} aria-label={`${n} stele`}><Icon name="star" size={32} fill /></button>)}</div>

@@ -36,6 +36,9 @@ export type Item = {
 export type Settings = import("./schedule").Hours & {
   welcome_on?: boolean; welcome_lei?: number; welcome_min?: number;   // bonus de bun venit la cont nou
   accepting_orders: boolean;
+  confirm_eta?: boolean;                       // clientul confirmă timpul propus de recepție
+  offer_window_min?: number;                   // minute pentru răspuns
+  offer_timeout?: "accept" | "cancel";         // ce se întâmplă fără răspuns
   delivery_fee: number;
   free_delivery_over: number;
   min_order: number;
@@ -127,14 +130,21 @@ export type Order = {
   zone_name?: string | null;
   scheduled_for?: string | null;   // precomandă: ora aleasă de client
   welcome_value?: number;          // bonus de bun venit folosit (lei)
+  offered_at?: string | null;      // recepția a propus timpul și așteaptă clientul
+  offer_eta?: number | null;
+  offer_answer?: OfferAnswer | null;
+  cancelled_by?: string | null;    // 'client' / 'sistem'
 };
+
+export type OfferAnswer = "accepted" | "cancelled" | "auto_accepted" | "auto_cancelled" | "phone";
 
 export type PublicOrder = Pick<
   Order,
   | "number" | "status" | "mode" | "address" | "items" | "subtotal" | "discount" | "discount_label"
   | "points_value" | "delivery_fee" | "packaging" | "total" | "points_earned" | "eta_min" | "created_at"
   | "accepted_at" | "road_at" | "done_at" | "reject_reason" | "rating" | "scheduled_for" | "welcome_value"
-> & { messages: { body: string; at: string }[] };
+  | "offered_at" | "offer_eta" | "offer_answer" | "cancelled_by"
+> & { messages: { body: string; at: string }[]; offer_window?: number; offer_timeout?: "accept" | "cancel"; server_now?: string };
 
 export type CartLine = {
   key: string;
