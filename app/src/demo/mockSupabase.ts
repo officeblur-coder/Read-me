@@ -334,9 +334,6 @@ function rpc(fn: string, args: Row = {}): Promise<{ data: any; error: any }> {
           db.order_messages.push({ id: uid(), order_id: o.id, body: `Putem ${o.mode === "livrare" ? "livra" : "pregăti"} comanda în ${args.p_eta} de minute. Confirmă timpul sau anulează comanda.`, created_at: iso() });
           save(); emit("orders", "UPDATE", o); return res({ data: null, error: null });
         }
-        case "referral_info": return res({ data: args.p_code ? { name: "Ana", lei: 20, min: 60 } : null, error: null });
-        case "claim_referral": return res({ data: { name: "Ana", lei: 20, min: 60 }, error: null });
-        case "my_referral": return res({ data: { on: true, lei: 20, min: 60, code: "DEMO4821", link: "https://savoro.ro/r/DEMO4821", invited: 3, rewarded: 2, earned: 40, referred_by: null, my_bonus_paid: false }, error: null });
         case "confirm_offer_phone": { const o = db.orders.find(x => x.id === args.p_id); if (o && o.status === "new" && o.offered_at) { closeOffer(o, "phone"); save(); } return res({ data: null, error: null }); }
         case "rate_order": { const o = db.orders.find(x => x.token === args.p_token); if (o) o.rating = args.p_rating; save(); return res({ data: null, error: null }); }
         case "list_staff": return res({ data: structuredClone(db.staff), error: null });

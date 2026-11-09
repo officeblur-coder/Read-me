@@ -9,7 +9,6 @@ import type { Order } from "../lib/types";
 import { ALLERGENS, imgUrl, lei } from "../lib/format";
 import Icon from "../components/Icon";
 import Wordmark from "../components/Wordmark";
-import { InviteCard, InviteNote } from "../components/Referral";
 import BottomNav from "../components/BottomNav";
 import SiteFooter from "../components/SiteFooter";
 
@@ -120,8 +119,6 @@ function Member({ c, refresh }: { c: Customer; refresh: () => void }) {
       {me ? <Rewards cfg={cfg} me={me} name={c.name || c.email || ""} since={c.created_at} onSeen={async () => { await supabase.rpc("rewards_mark_read"); reload(); }} />
         : <p className="muted">Se încarcă Lyra Rewards…</p>}
 
-      <InviteCard />
-
       <section className="acc-box" id="comenzi">
         <div className="row-btw"><h2>Comenzile tale</h2><Link to="/" className="mini">Comandă acum</Link></div>
         {orders.length === 0 && <p className="muted">Încă nu ai comenzi cu acest cont.</p>}
@@ -175,7 +172,6 @@ function JoinCard() {
   const w = useWelcomeCfg();
   return (
     <div className="join-card rw-join">
-      <InviteNote compact />
       {w?.on && w.lei > 0 && <div className="acc-welcome"><span className="wl-gift">🎁</span><div><b>{w.lei} lei cadou la cont nou</b>
         <small>Îi primești pe loc și îi folosești la prima comandă de minim {w.min} lei.</small></div></div>}
       <span className="rw-kicker">{cfg.program_name.toUpperCase()}</span>

@@ -87,5 +87,5 @@ export const redeemCap = (cfg: RewardsCfg, products: number) => Math.floor(Math.
 
 export const LEDGER_LABEL: Record<string, string> = {
   earn: "Câștigate", redeem: "Folosite", redeem_return: "Returnate", reverse: "Retrase (rambursare)",
-  expire: "Expirate", adjust: "Ajustare", migration: "Din Lyra Club", referral: "Invită un prieten",
+  expire: "Expirate", adjust: "Ajustare", migration: "Din Lyra Club",
 };

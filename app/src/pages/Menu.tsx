@@ -12,7 +12,6 @@ import { cut, useDiscounts } from "../lib/discounts";
 import { track } from "../lib/track";
 import { InstallSheet, shouldAutoShow, useInstall } from "../components/InstallApp";
 import Icon from "../components/Icon";
-import { InviteNote } from "../components/Referral";
 import BottomNav from "../components/BottomNav";
 import SiteFooter from "../components/SiteFooter";
 import { BURGER_CATS, CAT_ICON, EXTRA_IDS, MAIN_CATS, POPULAR, SEARCH_PH, UPSELL } from "../lib/menuConfig";
@@ -82,7 +81,7 @@ export default function Menu({ source }: { source?: string }) {
   const [installOpen, setInstallOpen] = useState(false);
   const installShown = useRef(false);
   useEffect(() => {
-    if (!shouldAutoShow() || location.href.includes("invitat=1")) return;   // cel invitat vede întâi invitația
+    if (!shouldAutoShow()) return;
     const t = setTimeout(() => { installShown.current = true; setInstallOpen(true); }, 1000);
     return () => clearTimeout(t);
   }, []);              // invite new visitors to Lyra Rewards
@@ -140,7 +139,7 @@ export default function Menu({ source }: { source?: string }) {
       let seen = false;
       try { seen = sessionStorage.getItem("lyra-popup") === "1"; } catch { /* ignore */ }
       const first = ps?.find(x => x.popup);
-      if (first && !seen && !location.href.includes("invitat=1")) setTimeout(() => setPopup(first), 1400);
+      if (first && !seen) setTimeout(() => setPopup(first), 1400);
     });
     const ch = supabase.channel("menu-live")
       .on("postgres_changes", { event: "*", schema: "public", table: "items" }, () => { load(); })
@@ -304,7 +303,7 @@ export default function Menu({ source }: { source?: string }) {
 
   // Lyra Rewards invitation: once every 14 days, only to visitors without an account, after they had a look
   useEffect(() => {
-    if (!authReady || customer || !(rw.cfg.enabled || settings?.welcome_on) || rloc.search.includes("invitat")) return;
+    if (!authReady || customer || !(rw.cfg.enabled || settings?.welcome_on)) return;
     let last = 0; try { last = Number(localStorage.getItem("lyra-join-pop") || 0); } catch { /* ignore */ }
     if (Date.now() - last < 14 * 864e5) return;
     const t = setTimeout(() => setJoinPop(true), 6000);
@@ -771,7 +770,6 @@ export default function Menu({ source }: { source?: string }) {
       })()}
 
       {/* ---------- promo popup ---------- */}
-      {!customer && rloc.search.includes("invitat") && !cartOpen && !sheet && <InviteNote />}
       {installOpen && !cartOpen && !sheet && <InstallSheet hasAccount={!!customer} onClose={() => setInstallOpen(false)} />}
       {joinPop && !installOpen && !installShown.current && !popup && !customer && !cartOpen && !sheet && <div className="pop" role="dialog" aria-modal="true" aria-label="Lyra Rewards" onClick={e => e.target === e.currentTarget && closeJoin()}>
         <div className="pop-card join-pop">

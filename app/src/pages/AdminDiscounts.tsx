@@ -56,44 +56,6 @@ function WelcomeCard({ flash }: { flash: (m: string) => void }) {
   );
 }
 
-/** „Invită un prieten”: bonusul pentru amândoi, comanda minimă a prietenului, cifre. */
-function ReferralCard({ flash }: { flash: (m: string) => void }) {
-  const [r, setR] = useState<{ on: boolean; lei: string; min: string } | null>(null);
-  const [st, setSt] = useState<{ invited: number; rewarded: number; cost: number; top: { name: string; invited: number; rewarded: number }[] } | null>(null);
-  const [busy, setBusy] = useState(false);
-  useEffect(() => {
-    supabase.from("settings").select("referral_on,referral_lei,referral_min").eq("id", 1).maybeSingle()
-      .then(({ data }) => data && setR({ on: data.referral_on !== false, lei: String(Number(data.referral_lei ?? 20)), min: String(Number(data.referral_min ?? 60)) }));
-    supabase.rpc("admin_referral_stats").then(({ data }) => data && setSt(data));
-  }, []);
-  if (!r) return null;
-  async function save() {
-    if (!r) return;
-    const l = Number(r.lei.replace(",", ".")), m = Number(r.min.replace(",", "."));
-    if (!(l >= 0 && l <= 500) || !(m >= 0 && m <= 5000)) { flash("Valori invalide."); return; }
-    setBusy(true);
-    const { error } = await supabase.from("settings").update({ referral_on: r.on, referral_lei: l, referral_min: m }).eq("id", 1);
-    setBusy(false);
-    flash(error ? "Nu s-a salvat: " + error.message : "Recomandările au fost salvate.");
-  }
-  return (
-    <section className="wl-admin">
-      <div className="wl-gift">🤝</div>
-      <div className="wl-admin-body">
-        <b>Invită un prieten</b>
-        <small>Fiecare client are în cont un link (lyrasdelivery.ro/r/COD). Prietenul își face cont din link; după prima lui comandă livrată, cu produse de minim valoarea aleasă, amândoi primesc suma în puncte Lyra Rewards (se folosesc ca restul punctelor). O singură dată pe prieten; nu se acordă dacă prietenul comandă cu telefonul celui care invită.</small>
-        <div className="wl-admin-row">
-          <label className="adm-sw"><button className="switch" role="switch" aria-checked={r.on} onClick={() => setR({ ...r, on: !r.on })} /><span>{r.on ? "Pornit" : "Oprit"}</span></label>
-          <label>Bonus pentru fiecare <input inputMode="decimal" value={r.lei} onChange={e => setR({ ...r, lei: e.target.value })} /> lei</label>
-          <label>Prima comandă minimă <input inputMode="decimal" value={r.min} onChange={e => setR({ ...r, min: e.target.value })} /> lei</label>
-          <button className="mini" onClick={save} disabled={busy}>{busy ? "…" : "Salvează"}</button>
-        </div>
-        {st && <small>{st.invited} conturi invitate · {st.rewarded} au comandat · {Number(st.cost).toFixed(2)} lei acordați în puncte{st.top.length ? " · top: " + st.top.slice(0, 3).map(t => `${t.name} (${t.rewarded}/${t.invited})`).join(", ") : ""}</small>}
-      </div>
-    </section>
-  );
-}
-
 /** Percentage discounts on chosen products: shown on the site with the old price struck through. */
 export function DiscountsTab({ items, cats, flash }: { items: Item[]; cats: Category[]; flash: (m: string) => void }) {
   const { list, reload } = useDiscounts(true);
@@ -150,7 +112,6 @@ export function DiscountsTab({ items, cats, flash }: { items: Item[]; cats: Cate
     <div className="adm-page">
       <div className="adm-bar"><h1>Reduceri pe produse</h1><button className="addbtn" onClick={startNew}><span>+</span>Reducere nouă</button></div>
       <WelcomeCard flash={flash} />
-      <ReferralCard flash={flash} />
       <p className="muted adm-help">Alegi procentul (5%, 10%, 25%, cât vrei) și produsele. Pe site apar prețul vechi tăiat, prețul nou și eticheta roșie de reducere, iar comanda se calculează cu prețul redus. Dacă un produs e în mai multe reduceri active, se aplică cea mai mare. Codurile de reducere nu se adaugă peste produsele deja reduse.</p>
       {!list.length && <div className="dsc-empty"><Icon name="tag" size={28} /><b>Nicio reducere încă</b><span>Apasă „Reducere nouă” ca să alegi produsele și procentul.</span></div>}
       <div className="dsc-list">{list.map(x => {
