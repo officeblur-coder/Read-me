@@ -545,8 +545,8 @@ export default function Menu({ source }: { source?: string }) {
         </div>}
         <p className="cp-lbl">Plata</p>
         <div className="paygrid">
-          <button aria-pressed={pay === "card"} onClick={() => setPay("card")}><b>Card</b><small>la livrare</small></button>
-          <button aria-pressed={pay === "cash"} onClick={() => setPay("cash")}><b>Numerar</b><small>la livrare</small></button>
+          <button aria-pressed={pay === "card"} onClick={() => setPay("card")}><b>Card</b><small>{mode === "livrare" ? "la livrare, POS la livrator" : "la ridicare"}</small></button>
+          <button aria-pressed={pay === "cash"} onClick={() => setPay("cash")}><b>Numerar</b><small>{mode === "livrare" ? "la livrare" : "la ridicare"}</small></button>
         </div>
         <div className="codebar">
           <input value={codeInput} onChange={e => setCodeInput(e.target.value)} placeholder="Cod promoțional" aria-label="Cod promoțional" />
