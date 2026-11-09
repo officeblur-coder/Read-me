@@ -57,7 +57,7 @@ export default function App() {
   const lang: Lang = baseLang(site);
   const setLang = useCallback((l: SiteLang) => {
     saveSiteLang(l);
-    switchPathLang(l);
+    if (switchPathLang(l)) return;
     prepareSiteLang(l).catch(() => undefined).then(() => { activateSiteLang(l); flushSync(() => setSite(l)); startSiteLang(); relinkPages(); });
   }, []);
   const [compact, setCompact] = useState(false);

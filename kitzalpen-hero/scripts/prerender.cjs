@@ -60,7 +60,9 @@ async function main() {
           const s = n.getAttribute('style').split(';').filter((d) => d.trim() && !/^\s*(opacity|visibility|transform|translate|scale|rotate)\s*:/.test(d)).join(';');
           if (s) n.setAttribute('style', s); else n.removeAttribute('style');
         });
-        return '<!doctype html>\n' + doc.outerHTML;
+        // the intro veil is only for the start animation; a saved page never starts covered
+        doc.querySelectorAll('.js-veil').forEach((n) => n.remove());
+        return '<!doctype html>\n' + doc.outerHTML.split(location.origin + '/').join('https://www.kitzalpen.at/');
       });
       const out = path.join(DIST, p, 'index.html');
       fs.mkdirSync(path.dirname(out), { recursive: true });

@@ -17,6 +17,21 @@ import './index.css';
 
 document.documentElement.classList.add('js');
 
+// Browser translation (Chrome / Google Translate) replaces text nodes with its own <font> elements. When React later
+// updates or removes such a node, the DOM call throws and the whole page goes blank. Skip only those impossible calls.
+if (typeof Node === 'function' && Node.prototype) {
+  const remove = Node.prototype.removeChild;
+  Node.prototype.removeChild = function <T extends Node>(this: Node, child: T): T {
+    if (child.parentNode !== this) return child;
+    return remove.call(this, child) as T;
+  };
+  const insert = Node.prototype.insertBefore;
+  Node.prototype.insertBefore = function <T extends Node>(this: Node, node: T, ref: Node | null): T {
+    if (ref && ref.parentNode !== this) return insert.call(this, node, null) as T;
+    return insert.call(this, node, ref) as T;
+  };
+}
+
 // load the visitor's language first, so a translated page never flashes English
 // live site: the address decides the language (/ = German, /en/ = English …); preview copies: saved choice / browser
 const first = pathLang() ?? initialSiteLang();

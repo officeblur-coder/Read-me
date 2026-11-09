@@ -139,9 +139,15 @@ export function startLinks(getLang: () => SiteLang) {
   relink = () => scan(document);
 }
 
-/** same page in another language (language switch) */
-export function switchPathLang(l: SiteLang) {
-  if (!PATHS) return;
+/**
+ * Same page in another language (language switch). Live site: loads the pre-rendered page of that language –
+ * a clean page, also when the browser has translated the current one (Chrome / Google Translate rewrites the text,
+ * and changing it in place breaks the page). Returns true when the page is being replaced.
+ */
+export function switchPathLang(l: SiteLang): boolean {
+  if (!PATHS) return false;
   const to = pathFor(currentRoute(), l) + window.location.hash;
-  if (to !== window.location.pathname + window.location.hash) window.history.replaceState(null, '', to);
+  if (to === window.location.pathname + window.location.hash) return false;
+  window.location.assign(to);
+  return true;
 }
