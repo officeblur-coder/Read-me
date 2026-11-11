@@ -1,4 +1,4 @@
-// Cardul cadou Lyra: un card mare, separat de restul meniului. Alegi valoarea, iar codul vine pe email după plată.
+// Cardul cadou Lyra (card fizic): un card mare, separat de restul meniului. Se livrează sau se ridică odată cu comanda.
 import { useState } from "react";
 import type { Item } from "../lib/types";
 import { imgUrl } from "../lib/format";
@@ -28,8 +28,8 @@ export default function GiftCard({ item, onAdd }: { item: Item; onAdd: (vi: numb
           <Icon name={added ? "check" : "bag"} size={18} />{added ? `Adăugat · mai adaugă unul` : `Adaugă cardul de ${v.p} lei`}
         </button>
         <ul className="gift-facts">
-          <li><Icon name="send" size={15} />Codul unic vine pe email, după plată</li>
-          <li><Icon name="clock" size={15} />Valabil 12 luni la Restaurant Lyra</li>
+          <li><Icon name="bike" size={15} />Card fizic: ți-l aducem odată cu comanda sau îl ridici din restaurant</li>
+          <li><Icon name="cutlery" size={15} />Se folosește la Restaurant Lyra</li>
           <li><Icon name="tag" size={15} />Valoare întreagă, fără reduceri aplicate</li>
         </ul>
       </div>

@@ -44,7 +44,7 @@ create index if not exists items_category_idx on public.items(category_id, sort)
 alter table public.items add column if not exists packaging numeric(6,2) not null default 2 check (packaging >= 0);
 -- garanția SGR (sticle, doze, PET): se adaugă la total, nu intră la reduceri
 alter table public.items add column if not exists sgr numeric(6,2) not null default 0 check (sgr >= 0);
--- tipul produsului: 'dish' = mâncare / băutură, 'gift' = voucher cadou (fără reduceri, ambalaj, puncte; se trimite pe email)
+-- tipul produsului: 'dish' = mâncare / băutură, 'gift' = card cadou fizic (fără reduceri, ambalaj, SGR, puncte)
 alter table public.items add column if not exists kind text not null default 'dish' check (kind in ('dish', 'gift'));
 
 -- ---------- Setări restaurant (un singur rând) ----------
@@ -318,7 +318,7 @@ declare
   sgr      numeric := 0;  -- garanție SGR, nu intră la reduceri
   lsgr     numeric;
   is_gc    boolean;       -- linia e un voucher cadou
-  gc_sum   numeric := 0;  -- valoarea voucherelor cadou din coș
+  gc_sum   numeric := 0;  -- valoarea cardurilor cadou din coș
   food     boolean := false;  -- există și mâncare / băuturi în comandă
   fsub     numeric;       -- produsele fără vouchere (pentru reduceri, livrare, puncte)
   cfg      record;          -- rewards_settings (tabelul e creat în 03_rewards.sql)
@@ -420,11 +420,9 @@ begin
   end loop;
   fsub := sub - gc_sum;
 
-  if v_mode = 'livrare' and food and coalesce(trim(p->>'address'),'') = '' then
+  if v_mode = 'livrare' and coalesce(trim(p->>'address'),'') = '' then
     raise exception 'Completează adresa de livrare.' using errcode = 'P0001'; end if;
-  -- voucherul cadou se emite pe email: emailul e obligatoriu
-  if gc_sum > 0 and coalesce(nullif(trim(p->>'email'),''), cust.email, '') !~ '^[^@\s]+@[^@\s]+\.[^@\s]+$' then
-    raise exception 'Adaugă adresa ta de email: voucherul cadou se trimite pe email.' using errcode = 'P0001'; end if;
+  -- cardul cadou (fizic) nu contează la comanda minimă; doar card cadou se poate comanda oricând
   if food and fsub < s.min_order then raise exception 'Comanda minimă este % lei.', s.min_order using errcode = 'P0001'; end if;
 
   -- cod promoțional
@@ -457,7 +455,7 @@ begin
   end if;
 
   -- livrare: zona de pe hartă (dacă există zone desenate), altfel taxa generală din setări
-  if v_mode = 'livrare' and food then   -- doar voucher cadou: nu se livrează nimic
+  if v_mode = 'livrare' then
     select exists (select 1 from public.delivery_zones where active) into has_zones;
     if has_zones then
       if v_lat is null or v_lng is null then
@@ -465,7 +463,7 @@ begin
       select * into zn from public.zone_for(v_lat, v_lng);
       if zn.id is null then
         raise exception 'Din păcate nu livrăm încă la această adresă. Poți alege ridicarea din restaurant.' using errcode = 'P0001'; end if;
-      if fsub < zn.min_order then
+      if food and fsub < zn.min_order then
         raise exception 'Comanda minimă pentru zona % este % lei.', zn.name, zn.min_order using errcode = 'P0001'; end if;
       if zn.free_over is null or fsub < zn.free_over then fee := zn.fee; end if;
       zone_nm := zn.name;
@@ -507,7 +505,7 @@ begin
     subtotal, discount, discount_label, points_used, points_value, delivery_fee, packaging, sgr, total, points_earned, source,
     reward_tier, reward_base, voucher_id, lat, lng, zone_name, scheduled_for, welcome_value)
   values (cust.id, left(trim(p->>'name'),80), left(trim(p->>'phone'),30), coalesce(nullif(trim(p->>'email'),''), cust.email),
-    case when not food then 'Voucher cadou · se trimite pe email' when v_mode = 'livrare' then left(trim(p->>'address'),200) else 'Ridicare din restaurant' end,
+    case when v_mode = 'livrare' then left(trim(p->>'address'),200) else 'Ridicare din restaurant' end,
     v_mode, coalesce(p->>'payment','card'), left(p->>'note',300), lines, allg,
     sub, disc, disc_lbl, pts_used, pts_val, fee, pack, sgr, total, earn, left(p->>'source',30),
     rtier, rbase, vo_id, case when v_mode = 'livrare' then v_lat end, case when v_mode = 'livrare' then v_lng end, zone_nm, v_sched, welc)

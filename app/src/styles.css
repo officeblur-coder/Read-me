@@ -1553,21 +1553,5 @@ body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area
 .gift-facts{list-style:none;margin:2px 0 0;padding:0;display:grid;gap:6px;font-size:12.5px;color:#cfc19c}
 .gift-facts li{display:flex;align-items:center;gap:8px}
 .gift-facts svg{color:#d9b45a;flex:none}
-@media (max-width:760px){.gift{grid-template-columns:1fr}.gift-art{align-self:stretch}.gift-body{padding:20px 16px 22px}.gift-opts button{font-size:15px;padding:11px 2px}}
+@media (max-width:760px){.gift{grid-template-columns:1fr}.gift-art{aspect-ratio:auto;align-self:auto}.gift-art img{position:relative;display:block;height:auto}.gift-body{padding:20px 16px 22px}.gift-opts button{font-size:15px;padding:11px 2px}}
 @media (prefers-reduced-motion:reduce){.gift::before{animation:none}}
-.gift-mail{margin:0;padding:10px 12px;border-radius:12px;background:rgba(217,180,90,.12);border:1px solid rgba(217,180,90,.45);font-size:13px}
-.gift-search{max-width:520px;margin:6px 0 16px}
-.gift-list{display:grid;gap:10px}
-.gift-row{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;padding:14px;border-radius:16px;background:var(--surface);border:1px solid var(--line)}
-.gift-row.dim{opacity:.65}
-.gift-val{min-width:84px;padding:10px;border-radius:12px;text-align:center;font-family:var(--f-display);font-size:28px;color:#1b2a14;background:linear-gradient(135deg,#f3d27a,#c99a3b)}
-.gift-val small{font-size:12px}
-.gift-info{display:grid;gap:3px}
-.gift-info b{font-size:16px;letter-spacing:.06em}
-@media (max-width:700px){.gift-row{grid-template-columns:auto 1fr}.gift-row .dsc-act{grid-column:1 / -1}}
-.gift-codes{display:grid;gap:8px;width:100%;max-width:420px;margin:16px auto 0;padding:16px;border-radius:var(--r);background:radial-gradient(120% 140% at 0% 0%,#1f4a2c,#0b1f12);border:1px solid rgba(217,180,90,.55);color:#f6ecd4;text-align:center}
-.gift-codes .gc{display:grid;gap:2px;padding:10px;border-radius:12px;background:#f6ecd4;color:#163020}
-.gift-codes .gc.dim{opacity:.6}
-.gift-codes .gc span{font-weight:800}
-.gift-codes code{font-size:22px;font-weight:800;letter-spacing:.12em}
-.gift-codes p{margin:0;font-size:12.5px;color:#d8cba9}

@@ -225,7 +225,7 @@ export default function Menu({ source }: { source?: string }) {
         ? validCart.filter(l => byId[l.id].category_id === code.category_id && l.promoPrice == null && !lineOff(l)).reduce((s, l) => s + unitOf(l) * l.qty, 0)
         : validCart.filter(l => !lineOff(l) && !isGift(l.id)).reduce((s, l) => s + unitOf(l) * l.qty, 0)) * code.percent) / 100
     : 0;
-  // voucherele cadou: fără livrare gratuită, puncte sau bonus pe ele; doar voucher = nu se livrează nimic (ca în place_order)
+  // cardul cadou (fizic): fără livrare gratuită, comandă minimă, puncte sau bonus pe el (ca în place_order)
   const gcSum = validCart.filter(l => isGift(l.id)).reduce((s, l) => s + unitOf(l) * l.qty, 0);
   const food = validCart.some(l => !isGift(l.id));
   const fsub = sub - gcSum;
@@ -243,7 +243,7 @@ export default function Menu({ source }: { source?: string }) {
   const feeKnown = !hasZones || !!zone;
   const freeOver = hasZones ? (zone?.free_over ?? Infinity) : (settings?.free_delivery_over ?? 100);
   const baseFee = hasZones ? (zone?.fee ?? 0) : (settings?.delivery_fee ?? 0);
-  const fee = mode === "livrare" && food && settings && fsub > 0 && fsub < freeOver ? baseFee : 0;
+  const fee = mode === "livrare" && settings && sub > 0 && fsub < freeOver ? baseFee : 0;
   // ---- Lyra Rewards (same rules as place_order: max % of products, oldest points first) ----
   const tierN = rw.me?.tier ?? customer?.tier ?? 1;
   const tierLabel = tierName(rw.cfg, tierN);
@@ -350,19 +350,16 @@ export default function Menu({ source }: { source?: string }) {
 
   async function placeOrder() {
     setSendErr("");
-    if (!form.name.trim() || !form.phone.trim() || (mode === "livrare" && food && !form.address.trim())) {
-      setSendErr(mode === "livrare" && food ? "Completează numele, telefonul și adresa." : "Completează numele și telefonul."); return;
+    if (!form.name.trim() || !form.phone.trim() || (mode === "livrare" && !form.address.trim())) {
+      setSendErr(mode === "livrare" ? "Completează numele, telefonul și adresa." : "Completează numele și telefonul."); return;
     }
-    if (gcSum > 0 && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test((form.email || customer?.email || "").trim())) {
-      setSendErr("Adaugă adresa ta de email: cardul cadou se trimite pe email."); return;
-    }
-    if (mode === "livrare" && food && hasZones) {
+    if (mode === "livrare" && hasZones) {
       let p = addrKey === geoFor ? geo : null;
       if (!p) { const r = await locate(); p = r ? { lat: r.lat, lng: r.lng } : null; }
       if (!p) { setSendErr("Nu găsim adresa pe hartă. Verifică numele străzii și localitatea."); return; }
       if (!zoneFor(p, zones)) { setSendErr("Ne pare rău, adresa nu este în zona noastră de livrare. Poți alege ridicarea din restaurant."); return; }
       const zn = zoneFor(p, zones)!;
-      if (sub < zn.min_order) { setSendErr(`Comanda minimă pentru zona ${zn.name} este ${lei(zn.min_order)}.`); return; }
+      if (food && fsub < zn.min_order) { setSendErr(`Comanda minimă pentru zona ${zn.name} este ${lei(zn.min_order)}.`); return; }
     }
     if (whenEff === "later" && !slot) { setSendErr("Alege ziua și ora la care vrei comanda."); return; }
     setSending(true);
@@ -521,24 +518,23 @@ export default function Menu({ source }: { source?: string }) {
         <div className="fields">
           <label className="fl"><span>Nume</span><input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} autoComplete="name" placeholder="Ioana Pop" /></label>
           <label className="fl"><span>Telefon</span><input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} inputMode="tel" autoComplete="tel" placeholder="07xx xxx xxx" /></label>
-          {mode === "livrare" && food && <label className="fl wide"><span>Adresa de livrare</span>
+          {mode === "livrare" && <label className="fl wide"><span>Adresa de livrare</span>
             {customer && customer.addresses?.length > 1
               ? <select value={form.address} onChange={e => setForm({ ...form, address: e.target.value })}>{customer.addresses.map(a => <option key={a}>{a}</option>)}<option value="">Altă adresă…</option></select>
               : null}
             {(!customer || (customer.addresses?.length || 0) < 2 || !form.address) && <input value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} autoComplete="street-address" placeholder="Strada, număr, bloc, apartament" />}
           </label>}
-          {mode === "livrare" && food && <label className="fl wide"><span>Localitatea</span>
+          {mode === "livrare" && <label className="fl wide"><span>Localitatea</span>
             <input list="lyra-localities" value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} autoComplete="address-level2" placeholder="Târgu Mureș" />
             <datalist id="lyra-localities">{LOCALITIES.map(l => <option key={l} value={l} />)}</datalist>
           </label>}
-          {mode === "livrare" && food && hasZones && form.address.trim().length >= 4 && <div className={`geo-zone wide ${geoBusy || addrKey !== geoFor ? "" : zone ? "ok" : "out"}`}>
+          {mode === "livrare" && hasZones && form.address.trim().length >= 4 && <div className={`geo-zone wide ${geoBusy || addrKey !== geoFor ? "" : zone ? "ok" : "out"}`}>
             {geoBusy || addrKey !== geoFor ? "Verificăm adresa…"
               : !geo ? <>Nu găsim adresa pe hartă. Scrie strada și numărul (ex.: Strada Gheorghe Doja 10) și alege localitatea corectă.</>
               : zone ? <><b>Livrăm la tine</b> · {zone.free_over != null && sub >= zone.free_over ? "livrare gratuită" : zone.fee ? `livrare ${lei(zone.fee)}` : "livrare gratuită"}{zone.free_over != null && sub < zone.free_over ? ` · gratuit peste ${lei(zone.free_over)}` : ""}{zone.min_order ? ` · minim ${lei(zone.min_order)}` : ""}{geoLabel && <small className="geo-found">Adresa găsită: {geoLabel}</small>}</>
               : <>{geoLabel && <small className="geo-found">Adresa găsită: {geoLabel}</small>}Ne pare rău, adresa nu este în zona noastră de livrare. Poți alege <button type="button" className="linkbtn" onClick={() => setMode("ridicare")}>ridicarea din restaurant</button>.</>}
           </div>}
-          {gcSum > 0 && <p className="gift-mail wide">🎁 {customer?.email && !form.email ? <>Cardul cadou se trimite pe <b>{customer.email}</b>.</> : <>Cardul cadou se trimite pe emailul de mai jos.</>}{!food && " Nu se livrează nimic: primești codul pe email după confirmarea plății."}</p>}
-          {!customer && <label className="fl wide"><span>Email <i>{gcSum > 0 ? "obligatoriu · aici primești cardul cadou" : "opțional · strângi puncte Lyra Rewards pe email"}</i></span><input value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} inputMode="email" autoComplete="email" placeholder="nume@email.com" /></label>}
+          {!customer && <label className="fl wide"><span>Email <i>opțional · strângi puncte Lyra Rewards pe email</i></span><input value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} inputMode="email" autoComplete="email" placeholder="nume@email.com" /></label>}
           <label className="fl wide"><span>Mențiuni <i>opțional</i></span><textarea rows={2} value={orderNote} onChange={e => setOrderNote(e.target.value)} placeholder="Interfon, etaj, fără tacâmuri…" /></label>
         </div>
         {wHas && <div className={`wl-box ${wOk ? "" : "dis"}`}>
