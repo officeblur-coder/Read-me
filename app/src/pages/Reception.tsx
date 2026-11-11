@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
 import type { Item, Order, OrderStatus, Promo, Settings } from "../lib/types";
@@ -6,6 +6,8 @@ import { ALLERGENS, hm, imgUrl, lei, mmss } from "../lib/format";
 import Icon from "../components/Icon";
 import Wordmark from "../components/Wordmark";
 import { whenLabel } from "../lib/schedule";
+import { ago, courierColor, type CourierInfo, type CourierLoc } from "../lib/couriers";
+const CourierMap = lazy(() => import("../components/CourierMap"));
 
 const ETAS = [20, 30, 40, 50, 60, 75];
 const REASONS = ["Produs epuizat", "Zonă în afara livrării", "Bucătăria e plină", "Restaurantul se închide"];
@@ -31,7 +33,7 @@ export function chime() {
   }));
 }
 let wakeLock: { release: () => Promise<void> } | null = null;
-async function keepAwake() {
+export async function keepAwake() {
   try { wakeLock = await (navigator as unknown as { wakeLock: { request: (t: string) => Promise<{ release: () => Promise<void> }> } }).wakeLock.request("screen"); } catch { /* not supported */ }
 }
 
@@ -103,7 +105,8 @@ export function Login({ title = "Recepție", users = [] }: { title?: string; use
       <form onSubmit={async e => {
         e.preventDefault(); setBusy(true); setErr(""); unlockAudio();
         // staff can type a short user name: "receptielyra" means receptielyra@lyrasdelivery.ro
-        const login = email.includes("@") ? email.trim() : email.trim().toLowerCase() + "@lyrasdelivery.ro";
+        // nume scurt: „Marco” = marco@lyrasdelivery.ro, „Livrator A” = livratora@lyrasdelivery.ro
+        const login = email.includes("@") ? email.trim() : email.trim().toLowerCase().replace(/\s+/g, "") + "@lyrasdelivery.ro";
         const { error } = await supabase.auth.signInWithPassword({ email: login, password });
         setBusy(false);
         if (!error && picked) try { localStorage.setItem("lyra-recv-user", picked); } catch {}
@@ -131,7 +134,10 @@ export function Login({ title = "Recepție", users = [] }: { title?: string; use
 function startOfDay() { const d = new Date(); d.setHours(0, 0, 0, 0); return d.toISOString(); }
 
 function Console({ email }: { email: string }) {
-  const [tab, setTab] = useState<"orders" | "menu" | "promos">("orders");
+  const [tab, setTab] = useState<"orders" | "couriers" | "menu" | "promos">("orders");
+  // livratorii: lista, poziția GPS, atribuirea comenzilor
+  const [couriers, setCouriers] = useState<CourierInfo[]>([]);
+  const [locs, setLocs] = useState<CourierLoc[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [promos, setPromos] = useState<Promo[]>([]);
@@ -182,6 +188,11 @@ function Console({ email }: { email: string }) {
     // răspunsul clientului la timpul propus: anunț pe ecran (anularea rămâne mai mult și sună)
     for (const o of list) {
       const was = prev.current.get(o.id);
+      if (was && was.courier_id && was.courier_id === o.courier_id) {
+        if (!was.courier_ack_at && o.courier_ack_at && o.status !== "done") flashRef.current(`${o.courier_name} a confirmat comanda #${o.number} ✓`);
+        if ((o.courier_late_count || 0) > (was.courier_late_count || 0)) { flashRef.current(`${o.courier_name} întârzie cu #${o.number} (${o.name})`, true); if (soundRef.current) chime(); }
+        if (was.status !== "done" && o.status === "done") flashRef.current(`${o.courier_name} a predat #${o.number} clientului`);
+      }
       if (!was || was.status !== "new" || !was.offered_at || o.status === "new") continue;
       if (o.status === "prep") flashRef.current(`#${o.number} ${o.name}: ${o.offer_answer === "accepted" ? "clientul a acceptat" : o.offer_answer === "phone" ? "confirmat telefonic" : "confirmată automat"} · ${o.eta_min} min`);
       else if (o.status === "rejected") { flashRef.current(`#${o.number} ${o.name}: ${o.cancelled_by === "client" ? "clientul a ANULAT comanda (timpul nu convine)" : "anulată, clientul nu a răspuns"}`, true); if (soundRef.current) chime(); }
@@ -200,6 +211,14 @@ function Console({ email }: { email: string }) {
     setItems((i.data || []) as Item[]); if (s.data) setSettings(s.data as Settings); setPromos((p.data || []) as Promo[]);
   }, []);
 
+  useEffect(() => {
+    supabase.rpc("couriers").then(({ data }) => data && setCouriers(data as CourierInfo[]));
+    const loadLocs = () => supabase.from("courier_locations").select("*").then(({ data }) => data && setLocs(data as CourierLoc[]));
+    loadLocs();
+    const lc = supabase.channel("courier-locs").on("postgres_changes", { event: "*", schema: "public", table: "courier_locations" }, () => loadLocs()).subscribe();
+    const lp = setInterval(loadLocs, 15000);
+    return () => { supabase.removeChannel(lc); clearInterval(lp); };
+  }, []);
   useEffect(() => {
     loadOrders(); loadMenu();
     const ch = supabase.channel("reception")
@@ -221,6 +240,16 @@ function Console({ email }: { email: string }) {
   rxBusy = incoming.length > 0 || !!drawer || rejecting || !!customEta;
   const waiting = orders.filter(o => o.status === "new" && !!o.offered_at);
   const confirmEta = settings?.confirm_eta !== false;
+  // livrări din bucătărie / de la pass fără livrator: cerere de atribuire
+  const unassigned = orders.filter(o => o.mode === "livrare" && (o.status === "prep" || o.status === "road") && !o.courier_id
+    && !(o.status === "prep" && !!o.scheduled_for && new Date(o.scheduled_for).getTime() - now > 60 * 60000));
+  const loadOf = (cid: string) => orders.filter(o => o.courier_id === cid && (o.status === "prep" || o.status === "road")).length;
+  const unSeen = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    const fresh = unassigned.filter(o => !unSeen.current.has(o.id));
+    if (fresh.length && unSeen.current.size + fresh.length > 0 && soundRef.current && started.current) chime();
+    unassigned.forEach(o => unSeen.current.add(o.id));
+  }, [unassigned.map(o => o.id).join(",")]);
   // precomenzi acceptate, cu ora la mai mult de o oră: stau deoparte până se apropie ora lor
   const isLater = (o: Order) => o.status === "prep" && !!o.scheduled_for && new Date(o.scheduled_for).getTime() - now > 60 * 60000;
   const planned = orders.filter(isLater).sort((a, b) => (a.scheduled_for || "").localeCompare(b.scheduled_for || ""));
@@ -243,6 +272,12 @@ function Console({ email }: { email: string }) {
     if (error) { flash("Nu s-a trimis: " + error.message); return; }
     flash(`Timpul de ${m} min a fost trimis clientului.`); loadOrders();
   }
+  async function assign(o: Order, cid: string | null) {
+    const { error } = await supabase.rpc("courier_assign", { p_order: o.id, p_courier: cid });
+    if (error) flash("Nu s-a atribuit: " + error.message);
+    else flash(cid ? `#${o.number} → ${couriers.find(c => c.id === cid)?.name}. Telefonul lui sună până confirmă.` : `#${o.number} nu mai are livrator.`);
+    loadOrders();
+  }
   async function phoneOk(o: Order) {
     const { error } = await supabase.rpc("confirm_offer_phone", { p_id: o.id });
     if (error) flash("Nu s-a salvat: " + error.message); else loadOrders();
@@ -251,7 +286,7 @@ function Console({ email }: { email: string }) {
     setStatus(o, "prep", { eta_min: m, accepted_at: new Date().toISOString() },
       `Comanda a fost acceptată. Estimăm ${o.mode === "livrare" ? "livrarea" : "ridicarea"} în ${m} minute, la ${hm(Date.now() + m * 60000)}.`);
   const advance = (o: Order) => o.status === "prep"
-    ? setStatus(o, "road", {}, o.mode === "livrare" ? "Curierul a preluat comanda și e pe drum spre tine." : "Comanda e gata. Te așteptăm la restaurant.")
+    ? setStatus(o, "road", {}, o.mode === "livrare" ? `${o.courier_name || "Curierul"} a preluat comanda și e pe drum spre tine.` : "Comanda e gata. Te așteptăm la restaurant.")
     : setStatus(o, "done", {}, "Poftă bună! Mulțumim că ai comandat de la Lyra's Delivery.");
   async function delay(o: Order, m: number) {
     const e = Math.max(5, (o.eta_min || 0) + m);
@@ -281,6 +316,7 @@ function Console({ email }: { email: string }) {
       <aside className="rx-side">
         <div className="rb"><Wordmark small /><small>Recepție</small></div>
         <button className="rnav" aria-current={tab === "orders"} onClick={() => setTab("orders")}><Icon name="orders" />Comenzi{incoming.length > 0 && <span className="n">{incoming.length}</span>}</button>
+        <button className="rnav" aria-current={tab === "couriers"} onClick={() => setTab("couriers")}><Icon name="bike" />Livratori{unassigned.length > 0 && <span className="n">{unassigned.length}</span>}</button>
         <button className="rnav" aria-current={tab === "menu"} onClick={() => setTab("menu")}><Icon name="dish" />Meniu & stoc</button>
         <button className="rnav" aria-current={tab === "promos"} onClick={() => setTab("promos")}><Icon name="send" />Promoții</button>
         <div className="openbox">
@@ -294,7 +330,7 @@ function Console({ email }: { email: string }) {
 
       <main className="rx-main">
         <div className="rx-top">
-          <h2>{tab === "orders" ? "Comenzi" : tab === "menu" ? "Meniu & stoc" : "Promoții"}</h2>
+          <h2>{tab === "orders" ? "Comenzi" : tab === "couriers" ? "Livratori" : tab === "menu" ? "Meniu & stoc" : "Promoții"}</h2>
           <span className="clock num">{new Date(now).toLocaleTimeString("ro-RO")}</span>
           <button className={`rbtn ${sound ? "on" : ""}`} onClick={() => { unlockAudio(); if (!sound) chime(); setSound(!sound); }}><Icon name={sound ? "sound" : "mute"} size={16} />{sound ? "Sunet pornit" : "Sunet oprit"}</button>
         </div>
@@ -334,6 +370,20 @@ function Console({ email }: { email: string }) {
             </section>
           )}
 
+          {unassigned.length > 0 && couriers.length > 0 && <section className="assign" aria-live="polite">
+            <div className="col-h"><i style={{ background: "var(--brand)" }} />Atribuie livratorului<span>{unassigned.length}</span></div>
+            <div className="assign-list">{unassigned.map(o => <div key={o.id} className="as-row">
+              <div><b>#{o.number}</b> <span className="muted">{o.status === "prep" ? "în bucătărie" : "la pass"}</span><small>{o.address}</small></div>
+              <div className="as-btns">{couriers.map((c, i) => <button key={c.id} style={{ borderColor: courierColor(i) }} onClick={() => assign(o, c.id)}>
+                <i style={{ background: courierColor(i) }} />{c.name}<small>{loadOf(c.id) ? `${loadOf(c.id)} în curs` : "liber"}</small></button>)}</div>
+            </div>)}</div>
+          </section>}
+          {couriers.length > 0 && <div className="cr-strip">{couriers.map((c, i) => {
+            const l = locs.find(x => x.courier_id === c.id), n = loadOf(c.id);
+            const pend = orders.filter(o => o.courier_id === c.id && (o.status === "prep" || o.status === "road") && !o.courier_ack_at).length;
+            return <button key={c.id} className="crs" onClick={() => setTab("couriers")}><i style={{ background: courierColor(i) }} /><b>{c.name}</b>
+              <small>{n ? `${n} comenzi` : "liber"}{pend ? ` · ${pend} neconfirmate` : ""} · {l ? `GPS ${ago(l.updated_at, now)}` : "fără GPS"}</small></button>;
+          })}</div>}
           {waiting.length > 0 && <section className="waiting" aria-live="polite"><div className="col-h"><i style={{ background: "var(--gold)" }} />Așteaptă confirmarea clientului<span>{waiting.length}</span></div>
             <div className="waiting-list">{waiting.map(o => {
               const left = new Date(o.offered_at!).getTime() + (settings?.offer_window_min || 5) * 60000 - now;
@@ -365,6 +415,24 @@ function Console({ email }: { email: string }) {
               );
             })}
           </div>
+        </div>}
+
+        {tab === "couriers" && <div className="rx-body">
+          {couriers.length === 0 && <p className="muted">Nu există încă livratori. Creează conturile livratora@lyrasdelivery.ro și livratorb@lyrasdelivery.ro în Supabase și rulează actualizarea bazei.</p>}
+          <div className="cm-wrap">
+            <Suspense fallback={<div className="cm-map" style={{ height: 520 }} />}><CourierMap couriers={couriers} locs={locs} orders={orders.filter(o => o.status === "prep" || o.status === "road")} /></Suspense>
+            <div className="cm-side">{couriers.map((c, i) => {
+              const l = locs.find(x => x.courier_id === c.id);
+              const mine = orders.filter(o => o.courier_id === c.id && (o.status === "prep" || o.status === "road"));
+              return <div key={c.id} className="cm-c">
+                <div className="row-btw"><b><i style={{ background: courierColor(i) }} />{c.name}</b><small className="muted">{l ? `GPS ${ago(l.updated_at, now)}${l.battery != null ? ` · ${Math.round(l.battery * 100)}%` : ""}` : "fără GPS"}</small></div>
+                {mine.length === 0 && <small className="muted">Liber</small>}
+                {mine.map(o => <button key={o.id} className="cm-o" onClick={() => setDrawer(o.id)}><b>#{o.number}</b> {o.address}
+                  <CourierChip o={o} now={now} /></button>)}
+              </div>;
+            })}</div>
+          </div>
+          {unassigned.length > 0 && <p className="muted" style={{ marginTop: 12 }}>{unassigned.length} livrări fără livrator: le atribui din „Comenzi”.</p>}
         </div>}
 
         {tab === "menu" && <div className="rx-body">
@@ -403,6 +471,12 @@ function Console({ email }: { email: string }) {
           <div className="row-btw"><h3>Comanda #{drawerOrder.number}</h3><button className="mini" onClick={() => setDrawer(null)} aria-label="Închide">×</button></div>
           <p className="muted">{drawerOrder.name} · {drawerOrder.phone}<br />{drawerOrder.address}</p>
           <Ticket o={drawerOrder} />
+          {["prep", "road"].includes(drawerOrder.status) && drawerOrder.mode === "livrare" && couriers.length > 0 && <>
+            <p className="lbl">Livrator {drawerOrder.courier_name && <CourierChip o={drawerOrder} now={now} />}</p>
+            <div className="as-btns">{couriers.map((c, i) => <button key={c.id} aria-pressed={drawerOrder.courier_id === c.id} style={{ borderColor: courierColor(i) }} onClick={() => assign(drawerOrder, c.id)}>
+              <i style={{ background: courierColor(i) }} />{c.name}<small>{loadOf(c.id) ? `${loadOf(c.id)} în curs` : "liber"}</small></button>)}
+              {drawerOrder.courier_id && <button onClick={() => assign(drawerOrder, null)}>Fără livrator</button>}</div>
+          </>}
           {["prep", "road"].includes(drawerOrder.status) && <>
             <p className="lbl">Ține clientul la curent</p>
             <div className="qr">
@@ -509,11 +583,20 @@ function OrderCard({ o, now, onOpen, onAdvance }: { o: Order; now: number; onOpe
         {o.allergies.length > 0 && <span className="tag red">alergie</span>}
         {o.scheduled_for && <span className="tag blue">{hm(o.scheduled_for)}</span>}
         {active && due ? <span className={`tm ${cls} num`}>{rem < 0 ? "întârziere " + mmss(rem) : mmss(rem)}</span> : o.done_at ? <span className="tm ok num">{hm(o.done_at)}</span> : null}</div>
-      <div style={{ fontWeight: 700, fontSize: 13 }}>{o.name}{o.courier_name && <span className="muted" style={{ fontWeight: 600 }}> · curier {o.courier_name}</span>}</div>
+      <div style={{ fontWeight: 700, fontSize: 13 }}>{o.name}{o.courier_name && <> <CourierChip o={o} now={now} /></>}</div>
       <div className="its">{o.items.map(l => `${l.qty}× ${l.name}`).join(" · ")}</div>
       {active && due > 0 && <div className="bar"><i style={{ width: `${Math.min(100, Math.max(2, frac * 100))}%`, background: `var(--${cls})` }} /></div>}
       <div className="ft"><b className="num" style={{ color: "var(--gold-2)" }}>{lei(Number(o.total))}</b>{o.rating && <span style={{ color: "var(--gold)" }}>{"★".repeat(o.rating)}</span>}
         {active && <button className="go" onClick={e => { e.stopPropagation(); onAdvance(); }}>{o.status === "prep" ? (o.mode === "livrare" ? "Predă curierului →" : "Gata de ridicare →") : (o.mode === "livrare" ? "Livrată ✓" : "Ridicată ✓")}</button>}</div>
     </div>
   );
+}
+
+/** livratorul unei comenzi și starea lui: neconfirmat / confirmat / întârzie */
+function CourierChip({ o, now }: { o: Order; now: number }) {
+  if (!o.courier_name) return null;
+  const late = !!o.courier_late_at && o.status !== "done";
+  const st = o.status === "done" ? ["predat", "ok"] : late ? ["întârzie", "bad"] : o.courier_ack_at ? ["confirmat ✓", "ok"] : ["neconfirmat", "wait"];
+  const since = !o.courier_ack_at && o.courier_assigned_at ? ` ${mmss(now - new Date(o.courier_assigned_at).getTime())}` : "";
+  return <span className={`crchip ${st[1]}`}>{o.courier_name} · {st[0]}{st[1] === "wait" ? since : ""}</span>;
 }

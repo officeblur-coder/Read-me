@@ -371,6 +371,8 @@ create table if not exists public.push_subs (
   created_at  timestamptz not null default now()
 );
 alter table public.push_subs add column if not exists customer_id uuid references public.customers(id) on delete set null;
+-- telefoanele livratorilor (15_couriers.sql) nu primesc ofertele
+alter table public.push_subs add column if not exists courier_id uuid references auth.users(id) on delete cascade;
 alter table public.push_subs enable row level security;   -- fără politici: doar funcțiile de mai jos ating tabela
 
 -- curățare după versiunea de test (notificări pe comenzi, „Invită un prieten”): nu mai sunt folosite
@@ -465,7 +467,7 @@ begin
   if length(p_title) > 60 or length(p_body) > 180 then raise exception 'Titlul are maxim 60 de caractere, textul maxim 180.' using errcode = 'P0001'; end if;
   if link !~ '^/' then raise exception 'Linkul trebuie să fie o pagină de pe site (începe cu /).' using errcode = 'P0001'; end if;
   link := link || case when link like '%?%' then '&' else '?' end || 's=push';   -- apare în Vizite cu sursa „push”
-  select array_agg(id order by id) into ids from public.push_subs where not p_test or customer_id = auth.uid();
+  select array_agg(id order by id) into ids from public.push_subs where courier_id is null and (not p_test or customer_id = auth.uid());
   if ids is null then
     raise exception '%', case when p_test then 'Pe telefonul tău nu sunt pornite notificările. Intră în cont pe telefon și pornește „Vreau oferte prin notificări”.'
       else 'Nimeni nu are încă notificările pornite.' end using errcode = 'P0001';
@@ -479,7 +481,7 @@ end $$;
 create or replace function public.admin_push_overview() returns jsonb
 language sql stable security definer set search_path = public as $$
   select case when public.is_admin() then jsonb_build_object(
-    'subscribers', (select count(*) from public.push_subs),
+    'subscribers', (select count(*) from public.push_subs where courier_id is null),
     'with_account', (select count(*) from public.push_subs where customer_id is not null),
     'configured', exists (select 1 from public.settings where id = 1 and push_public_key is not null),
     'recent', (select coalesce(jsonb_agg(x order by x.created_at desc), '[]') from

@@ -1555,3 +1555,62 @@ body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area
 .gift-facts svg{color:#d9b45a;flex:none}
 @media (max-width:760px){.gift{grid-template-columns:1fr}.gift-art{aspect-ratio:auto;align-self:auto}.gift-art img{position:relative;display:block;height:auto}.gift-body{padding:20px 16px 22px}.gift-opts button{font-size:15px;padding:11px 2px}}
 @media (prefers-reduced-motion:reduce){.gift::before{animation:none}}
+/* aplicația livratorului: tura, alarme, întârzieri */
+.cr-start{display:grid;justify-items:center;align-content:center;gap:16px;min-height:100vh;text-align:center;padding:30px 20px}
+.cr-start h1{margin:10px 0 0;font-size:30px}
+.cr-start p{margin:0;max-width:34ch;color:var(--muted)}
+.cr-go{max-width:340px;padding:18px;font-size:18px}
+.cr-status{display:flex;align-items:center;gap:6px;margin:0 0 12px;padding:8px 12px;border-radius:12px;font-size:12.5px;font-weight:700}
+.cr-status.ok{background:var(--ok-bg);color:var(--ok)}
+.cr-status.bad{background:var(--bad-bg);color:var(--bad)}
+.cr-card.new{border:2px solid var(--brand);animation:crPulse 1.2s ease-in-out infinite}
+.cr-card.late{border:2px solid var(--bad)}
+@keyframes crPulse{50%{box-shadow:0 0 0 6px rgba(255,122,26,.25)}}
+.cr-st{padding:4px 10px;border-radius:999px;font-size:12px;font-weight:800;background:var(--surface-2)}
+.cr-st.prep{color:var(--warn)}
+.cr-st.road{color:var(--ok)}
+.cr-due{margin:-2px 0 0;font-size:15px}
+.cr-due b{font-size:20px;color:var(--gold-2)}
+.cr-btns{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:stretch}
+.cr-btns .cta{grid-column:-2 / -1}
+.cr-btns .mini.warn{padding:12px 14px;border-color:var(--bad);color:var(--bad);font-weight:800}
+.cr-alarm{position:fixed;inset:0;z-index:120;display:grid;place-items:center;padding:18px;background:rgba(0,0,0,.82);backdrop-filter:blur(4px)}
+.cr-alarm-box{display:grid;justify-items:center;gap:12px;width:min(440px,100%);padding:26px 20px;border-radius:28px;background:var(--surface);border:2px solid var(--brand);text-align:center;animation:crPulse 1s ease-in-out infinite}
+.cr-alarm-box svg{color:var(--brand);animation:crShake .5s ease-in-out infinite}
+@keyframes crShake{25%{transform:rotate(-12deg)}75%{transform:rotate(12deg)}}
+.cr-alarm-box h2{margin:0;font-size:26px}
+.cr-alarm-box p{margin:0;color:var(--muted)}
+.cr-alarm-addr{font-family:var(--f-display);font-weight:800;font-size:20px;color:var(--text)!important}
+.cr-alarm-box .cta{width:100%;padding:18px;font-size:18px}
+.cta.warnb{background:transparent!important;border:2px solid var(--bad);color:var(--bad)!important}
+.cta.ok{background:var(--ok)!important;color:#fff!important}
+@media (prefers-reduced-motion:reduce){.cr-card.new,.cr-alarm-box,.cr-alarm-box svg{animation:none}}
+/* recepție: livratori */
+.assign{margin:0 0 14px;padding:12px;border-radius:var(--r);border:2px solid var(--brand);background:linear-gradient(160deg,rgba(255,122,26,.12),transparent 60%),var(--surface);animation:crPulse 1.6s ease-in-out infinite}
+.assign-list{display:grid;gap:8px}
+.as-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 12px;border-radius:var(--r-sm);background:var(--surface-2)}
+.as-row small{display:block;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.as-btns{display:flex;flex-wrap:wrap;gap:8px}
+.as-btns button{display:grid;grid-template-columns:auto 1fr;column-gap:8px;align-items:center;padding:9px 14px;border-radius:12px;border:2px solid var(--line-2);background:var(--surface);color:var(--text);font-weight:800;font-size:13.5px;text-align:left}
+.as-btns button i{grid-row:span 2;width:12px;height:12px;border-radius:50%}
+.as-btns button small{font-size:11px;font-weight:600;color:var(--muted)}
+.as-btns button[aria-pressed="true"]{background:var(--surface-2);box-shadow:inset 0 0 0 1px currentColor}
+.cr-strip{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.crs{display:grid;grid-template-columns:auto 1fr;column-gap:8px;align-items:center;padding:8px 12px;border-radius:12px;background:var(--surface);border:1px solid var(--line);color:var(--text);text-align:left}
+.crs i{grid-row:span 2;width:10px;height:10px;border-radius:50%}
+.crs small{color:var(--muted);font-size:11.5px}
+.crchip{display:inline-block;margin-left:4px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;vertical-align:middle}
+.crchip.wait{background:var(--warn-bg);color:var(--warn);animation:crPulse 1.2s ease-in-out infinite}
+.crchip.ok{background:var(--ok-bg);color:var(--ok)}
+.crchip.bad{background:var(--bad-bg);color:var(--bad)}
+.cm-wrap{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:14px;align-items:start}
+@media (max-width:1000px){.cm-wrap{grid-template-columns:1fr}}
+.cm-map{border-radius:var(--r);overflow:hidden;border:1px solid var(--line);background:var(--surface-2)}
+.cm-side{display:grid;gap:10px}
+.cm-c{display:grid;gap:6px;padding:12px;border-radius:var(--r-sm);background:var(--surface);border:1px solid var(--line)}
+.cm-c b i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+.cm-o{display:block;text-align:left;padding:8px 10px;border-radius:10px;background:var(--surface-2);color:var(--text);font-size:12.5px}
+.cm-courier span{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;color:#fff;font-weight:900;font-size:16px;border:3px solid #fff;box-shadow:0 4px 14px rgba(0,0,0,.45)}
+.cm-courier em{position:absolute;top:42px;left:50%;transform:translateX(-50%);white-space:nowrap;font-style:normal;font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px;background:#fff;color:#111}
+.cm-courier.stale span{filter:grayscale(1);opacity:.6}
+.cm-dest span{display:grid;place-items:center;width:46px;height:26px;border-radius:8px;background:#fff;color:#111;font-weight:800;font-size:12px;border:3px solid}

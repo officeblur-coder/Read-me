@@ -19,7 +19,10 @@ export async function currentSub() {
   try { return await (await reg()).pushManager.getSubscription(); } catch { return null; }
 }
 
-export async function enableOffers(): Promise<string> {
+export const enableOffers = () => enablePush("push_subscribe_offers");
+
+/** cere voie, abonează telefonul și îl salvează prin funcția dată (oferte / livratori); "" = gata */
+export async function enablePush(rpcName: string): Promise<string> {
   if (!pushSupported()) return iosNeedsInstall() ? "Pe iPhone, pune întâi Lyra pe ecran (Distribuie → Adaugă pe ecranul principal) și deschide-o de acolo." : "Telefonul sau browserul acesta nu are notificări.";
   const key = await publicKey();
   if (!key) return "Notificările nu sunt pornite încă de restaurant.";
@@ -27,7 +30,7 @@ export async function enableOffers(): Promise<string> {
   try {
     const r = await reg(); await navigator.serviceWorker.ready;
     const sub = (await r.pushManager.getSubscription()) || await r.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64(key) });
-    const { error } = await supabase.rpc("push_subscribe_offers", { p_sub: sub.toJSON() });
+    const { error } = await supabase.rpc(rpcName, { p_sub: sub.toJSON() });
     return error ? error.message : "";
   } catch { return "Nu am putut porni notificările. Încearcă din nou."; }
 }

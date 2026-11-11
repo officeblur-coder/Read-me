@@ -129,6 +129,10 @@ export type Order = {
   rating: number | null;
   courier_id?: string | null;
   courier_name?: string | null;
+  courier_assigned_at?: string | null;
+  courier_ack_at?: string | null;      // livratorul a confirmat
+  courier_late_at?: string | null;     // „Sunt în întârziere”
+  courier_late_count?: number;
   lat?: number | null;
   lng?: number | null;
   zone_name?: string | null;

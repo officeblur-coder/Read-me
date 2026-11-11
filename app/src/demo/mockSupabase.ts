@@ -9,7 +9,7 @@ import banners from "./seed/banners.json";
 
 type Row = Record<string, any>;
 type DB = Record<string, Row[]>;
-const KEY = "lyra-demo-db-v3";
+const KEY = "lyra-demo-db-v4";
 const AUTH = "lyra-demo-session";
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36));
 const iso = (ms = Date.now()) => new Date(ms).toISOString();
@@ -65,6 +65,12 @@ function fresh(): DB {
     item_discounts: [
       { id: "d-liv", name: "10% la tot meniul · livrare", percent: 10, item_ids: [], active: true, starts_at: null, ends_at: null, mode: "livrare", all_items: true, created_at: iso() },
       { id: "d-rid", name: "15% la tot meniul · ridicare", percent: 15, item_ids: [], active: true, starts_at: null, ends_at: null, mode: "ridicare", all_items: true, created_at: iso() },
+    ],
+    // livratorii și ultima lor poziție (demo: în jurul Târgu Mureș)
+    couriers: [{ id: "c-a", name: "Livrator A" }, { id: "c-b", name: "Livrator B" }],
+    courier_locations: [
+      { courier_id: "c-a", lat: 46.5455, lng: 24.5625, accuracy: 12, battery: 0.82, updated_at: iso() },
+      { courier_id: "c-b", lat: 46.5280, lng: 24.5980, accuracy: 18, battery: 0.64, updated_at: iso() },
     ],
     staff: [{ user_id: STAFF_USER, email: "demo@lyrasdelivery.ro", name: "Vlad", role: "admin" }],
     customers: [],
@@ -138,7 +144,8 @@ function setStatus(o: Row, status: string) {
     o.credited = true;
   }
 }
-const tick = () => { db.orders.forEach(advance); save(); };
+// demo: livratorul „confirmă” la câteva secunde după atribuire
+const tick = () => { db.orders.forEach(advance); db.orders.forEach(o => { if (o.demo_ack && !o.courier_ack_at && Date.now() > o.demo_ack) o.courier_ack_at = iso(); }); save(); };
 
 // ---------- query builder ----------
 type Filter = (r: Row) => boolean;
@@ -342,6 +349,18 @@ function rpc(fn: string, args: Row = {}): Promise<{ data: any; error: any }> {
           db.order_messages.push({ id: uid(), order_id: o.id, body: `Putem ${o.mode === "livrare" ? "livra" : "pregăti"} comanda în ${args.p_eta} de minute. Confirmă timpul sau anulează comanda.`, created_at: iso() });
           save(); emit("orders", "UPDATE", o); return res({ data: null, error: null });
         }
+        case "couriers": return res({ data: structuredClone(db.couriers || []), error: null });
+        case "courier_assign": {
+          const o = db.orders.find(x => x.id === args.p_order); const c = (db.couriers || []).find(x => x.id === args.p_courier);
+          if (o) { o.courier_id = c ? c.id : null; o.courier_name = c ? c.name : null; o.courier_assigned_at = c ? iso() : null; o.courier_ack_at = null; o.demo_ack = c ? Date.now() + 6000 : null; save(); emit("orders", "UPDATE", o); }
+          return res({ data: { courier: c?.name }, error: null });
+        }
+        case "courier_ack": case "courier_late": case "courier_delivered": {
+          const o = db.orders.find(x => x.id === args.p_order);
+          if (o) { if (fn === "courier_ack") o.courier_ack_at = iso(); if (fn === "courier_late") { o.courier_late_at = iso(); o.courier_late_count = (o.courier_late_count || 0) + 1; } if (fn === "courier_delivered") setStatus(o, "done"); save(); }
+          return res({ data: null, error: null });
+        }
+        case "courier_ping": return res({ data: null, error: null });
         case "admin_push_overview": return res({ data: { subscribers: 214, with_account: 87, configured: true, recent: [{ title: "Smash Week: -20% la burgeri", body: "", url: "/", sent_to: 209, test: false, created_at: iso(Date.now() - 2 * 864e5) }] }, error: null });
         case "admin_push_send": return res({ data: { sent_to: args.p_test ? 1 : 214 }, error: null });
         case "confirm_offer_phone": { const o = db.orders.find(x => x.id === args.p_id); if (o && o.status === "new" && o.offered_at) { closeOffer(o, "phone"); save(); } return res({ data: null, error: null }); }

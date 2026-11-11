@@ -2440,6 +2440,8 @@ create table if not exists public.push_subs (
   created_at  timestamptz not null default now()
 );
 alter table public.push_subs add column if not exists customer_id uuid references public.customers(id) on delete set null;
+-- telefoanele livratorilor (15_couriers.sql) nu primesc ofertele
+alter table public.push_subs add column if not exists courier_id uuid references auth.users(id) on delete cascade;
 alter table public.push_subs enable row level security;   -- fără politici: doar funcțiile de mai jos ating tabela
 
 -- curățare după versiunea de test (notificări pe comenzi, „Invită un prieten”): nu mai sunt folosite
@@ -2534,7 +2536,7 @@ begin
   if length(p_title) > 60 or length(p_body) > 180 then raise exception 'Titlul are maxim 60 de caractere, textul maxim 180.' using errcode = 'P0001'; end if;
   if link !~ '^/' then raise exception 'Linkul trebuie să fie o pagină de pe site (începe cu /).' using errcode = 'P0001'; end if;
   link := link || case when link like '%?%' then '&' else '?' end || 's=push';   -- apare în Vizite cu sursa „push”
-  select array_agg(id order by id) into ids from public.push_subs where not p_test or customer_id = auth.uid();
+  select array_agg(id order by id) into ids from public.push_subs where courier_id is null and (not p_test or customer_id = auth.uid());
   if ids is null then
     raise exception '%', case when p_test then 'Pe telefonul tău nu sunt pornite notificările. Intră în cont pe telefon și pornește „Vreau oferte prin notificări”.'
       else 'Nimeni nu are încă notificările pornite.' end using errcode = 'P0001';
@@ -2548,7 +2550,7 @@ end $$;
 create or replace function public.admin_push_overview() returns jsonb
 language sql stable security definer set search_path = public as $$
   select case when public.is_admin() then jsonb_build_object(
-    'subscribers', (select count(*) from public.push_subs),
+    'subscribers', (select count(*) from public.push_subs where courier_id is null),
     'with_account', (select count(*) from public.push_subs where customer_id is not null),
     'configured', exists (select 1 from public.settings where id = 1 and push_public_key is not null),
     'recent', (select coalesce(jsonb_agg(x order by x.created_at desc), '[]') from
@@ -2726,6 +2728,196 @@ on conflict (id) do update set kind = 'gift', packaging = 0, sgr = 0;
 -- textul vechi (cu emailul) se schimbă doar dacă n-a fost editat din admin
 update public.items set desc_ro = 'Cel mai gustos cadou: o masă la Restaurant Lyra. Alegi valoarea, iar cardul cadou ți-l aducem odată cu comanda sau îl ridici din restaurant.'
  where id = 'card-cadou' and desc_ro like '%ajunge pe email%';
+
+
+-- =====================================================================
+-- Livratori (Livrator A / Livrator B), cu aplicația pe telefon (lyrasdelivery.ro/curier)
+-- • Recepția atribuie comanda unui livrator (oricând, oricâte comenzi, chiar dacă e pe traseu).
+-- • Livratorul primește alarmă / notificare până apasă „Confirm”; recepția vede confirmarea.
+-- • „Predat clientului” e disponibil tot timpul; după ora promisă, la fiecare 5 minute vine o reamintire
+--   cu „Am predat” / „Sunt în întârziere”.
+-- • Poziția GPS a livratorului (cât aplicația e deschisă) apare pe harta din recepție.
+-- Conturile: Supabase → Authentication → Add user: livratora@lyrasdelivery.ro și livratorb@lyrasdelivery.ro,
+-- apoi rulați acest fișier (le adaugă în echipă ca „Livrator A” / „Livrator B”).
+-- =====================================================================
+
+alter table public.orders add column if not exists courier_assigned_at timestamptz;
+alter table public.orders add column if not exists courier_ack_at timestamptz;          -- livratorul a confirmat că are comanda
+alter table public.orders add column if not exists courier_late_at timestamptz;         -- ultima apăsare „Sunt în întârziere”
+alter table public.orders add column if not exists courier_late_count int not null default 0;
+alter table public.orders add column if not exists courier_pinged_at timestamptz;       -- ultima notificare trimisă livratorului
+
+-- conturile livratorilor (dacă au fost create în Authentication)
+insert into public.staff(user_id, name, role)
+select u.id, case when lower(u.email) like 'livratora@%' then 'Livrator A' else 'Livrator B' end, 'courier'
+  from auth.users u where lower(u.email) in ('livratora@lyrasdelivery.ro', 'livratorb@lyrasdelivery.ro')
+on conflict (user_id) do update set role = 'courier', name = excluded.name;
+
+create or replace function public.is_courier() returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.staff where user_id = auth.uid() and role = 'courier');
+$$;
+grant execute on function public.is_courier() to authenticated;
+
+-- lista livratorilor, pentru recepție
+create or replace function public.couriers() returns jsonb
+language sql stable security definer set search_path = public as $$
+  select case when public.is_staff() then coalesce(jsonb_agg(jsonb_build_object('id', s.user_id, 'name', coalesce(nullif(s.name, ''), split_part(u.email, '@', 1))) order by s.name), '[]') end
+  from public.staff s join auth.users u on u.id = s.user_id where s.role = 'courier';
+$$;
+grant execute on function public.couriers() to authenticated;
+
+-- poziția GPS (ultima) a fiecărui livrator
+create table if not exists public.courier_locations (
+  courier_id uuid primary key references auth.users(id) on delete cascade,
+  lat        double precision not null,
+  lng        double precision not null,
+  accuracy   real,
+  heading    real,
+  speed      real,
+  battery    real,
+  updated_at timestamptz not null default now()
+);
+alter table public.courier_locations enable row level security;
+drop policy if exists "courier loc staff read" on public.courier_locations;
+create policy "courier loc staff read" on public.courier_locations for select using (public.is_staff());
+grant select on public.courier_locations to authenticated;
+do $$ begin
+  if exists (select 1 from pg_publication where pubname = 'supabase_realtime')
+     and not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and tablename = 'courier_locations') then
+    alter publication supabase_realtime add table public.courier_locations;
+  end if;
+end $$;
+
+create or replace function public.courier_ping(p_lat double precision, p_lng double precision, p_acc real default null,
+  p_heading real default null, p_speed real default null, p_battery real default null) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if not public.is_courier() then raise exception 'Doar livratorii.' using errcode = 'P0001'; end if;
+  insert into public.courier_locations(courier_id, lat, lng, accuracy, heading, speed, battery, updated_at)
+  values (auth.uid(), p_lat, p_lng, p_acc, p_heading, p_speed, p_battery, now())
+  on conflict (courier_id) do update set lat = excluded.lat, lng = excluded.lng, accuracy = excluded.accuracy,
+    heading = excluded.heading, speed = excluded.speed, battery = excluded.battery, updated_at = now();
+end $$;
+grant execute on function public.courier_ping(double precision, double precision, real, real, real, real) to authenticated;
+
+-- notificare pe telefonul livratorului (Web Push, dacă e configurat; altfel aplicația deschisă sună singură)
+alter table public.push_subs add column if not exists courier_id uuid references auth.users(id) on delete cascade;
+create or replace function public.push_subscribe_courier(p_sub jsonb) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if not public.is_courier() then raise exception 'Doar livratorii.' using errcode = 'P0001'; end if;
+  if coalesce(p_sub->>'endpoint', '') !~ '^https://' then raise exception 'Abonament invalid.' using errcode = 'P0001'; end if;
+  insert into public.push_subs(endpoint, p256dh, auth, courier_id)
+  values (p_sub->>'endpoint', p_sub#>>'{keys,p256dh}', p_sub#>>'{keys,auth}', auth.uid())
+  on conflict (endpoint) do update set p256dh = excluded.p256dh, auth = excluded.auth, courier_id = excluded.courier_id, customer_id = null;
+end $$;
+grant execute on function public.push_subscribe_courier(jsonb) to authenticated;
+
+create or replace function public.courier_push(p_courier uuid, p_title text, p_body text, p_tag text) returns boolean
+language plpgsql security definer set search_path = public as $$
+declare ids bigint[];
+begin
+  select array_agg(id) into ids from public.push_subs where courier_id = p_courier;
+  if ids is null then return false; end if;
+  perform public.push_deliver(ids, p_title, p_body, '/curier', p_tag);
+  return true;
+exception when others then
+  return false;   -- notificările nu sunt configurate: aplicația deschisă sună oricum
+end $$;
+revoke execute on function public.courier_push(uuid, text, text, text) from public, anon, authenticated;
+
+-- ora la care trebuie să ajungă comanda la client
+create or replace function public.order_due(o public.orders) returns timestamptz
+language sql stable as $$
+  select coalesce(o.scheduled_for, o.accepted_at + make_interval(mins => coalesce(o.eta_min, 0)));
+$$;
+
+-- recepția atribuie (sau schimbă) livratorul; p_courier null = scoate atribuirea
+create or replace function public.courier_assign(p_order uuid, p_courier uuid) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare o public.orders; nm text; s public.settings;
+begin
+  if not public.is_staff() or public.is_courier() then raise exception 'Doar recepția atribuie livrările.' using errcode = 'P0001'; end if;
+  select * into o from public.orders where id = p_order for update;
+  if not found then raise exception 'Comanda nu există.' using errcode = 'P0001'; end if;
+  if o.mode <> 'livrare' then raise exception 'Comanda #% e cu ridicare.', o.number using errcode = 'P0001'; end if;
+  if o.status in ('done', 'rejected', 'refunded') then raise exception 'Comanda #% e închisă.', o.number using errcode = 'P0001'; end if;
+  if p_courier is not null then
+    select coalesce(nullif(st.name, ''), split_part(u.email, '@', 1)) into nm from public.staff st join auth.users u on u.id = st.user_id
+     where st.user_id = p_courier and st.role = 'courier';
+    if nm is null then raise exception 'Livratorul nu există.' using errcode = 'P0001'; end if;
+  end if;
+  if o.courier_id is not distinct from p_courier then return jsonb_build_object('courier', nm); end if;
+  update public.orders set courier_id = p_courier, courier_name = nm, courier_assigned_at = case when p_courier is null then null else now() end,
+         courier_ack_at = null, courier_pinged_at = case when p_courier is null then null else now() end
+   where id = o.id returning * into o;
+  if p_courier is not null then
+    select * into s from public.settings where id = 1;
+    perform public.courier_push(p_courier, format('Comandă nouă #%s · confirmă', o.number),
+      format('%s · %s · la client %s', o.address, o.name, coalesce(to_char(public.order_due(o) at time zone s.tz, 'HH24:MI'), 'cât mai curând')), 'cr-' || o.id);
+  end if;
+  return jsonb_build_object('courier', nm);
+end $$;
+grant execute on function public.courier_assign(uuid, uuid) to authenticated;
+
+-- livratorul: „Confirm” (am aflat de comandă)
+create or replace function public.courier_ack(p_order uuid) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  update public.orders set courier_ack_at = coalesce(courier_ack_at, now()) where id = p_order and courier_id = auth.uid();
+  if not found then raise exception 'Comanda nu mai e atribuită ție.' using errcode = 'P0001'; end if;
+end $$;
+
+-- livratorul: „Predat clientului” (oricând, chiar dacă recepția n-a apăsat încă „Predă curierului”)
+create or replace function public.courier_delivered(p_order uuid) returns void
+language plpgsql security definer set search_path = public as $$
+declare o public.orders;
+begin
+  select * into o from public.orders where id = p_order and courier_id = auth.uid() for update;
+  if not found then raise exception 'Comanda nu mai e atribuită ție.' using errcode = 'P0001'; end if;
+  if o.status = 'done' then return; end if;
+  if o.status not in ('prep', 'road') then raise exception 'Comanda #% nu mai e activă.', o.number using errcode = 'P0001'; end if;
+  if o.status = 'prep' then update public.orders set status = 'road' where id = o.id; end if;
+  update public.orders set status = 'done', courier_ack_at = coalesce(courier_ack_at, now()) where id = o.id;
+  insert into public.order_messages(order_id, body) values (o.id, 'Comanda a fost livrată. Poftă bună!');
+end $$;
+
+-- livratorul: „Sunt în întârziere” (recepția vede; reamintirea revine peste 5 minute)
+create or replace function public.courier_late(p_order uuid) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  update public.orders set courier_late_at = now(), courier_late_count = courier_late_count + 1, courier_pinged_at = now(),
+         courier_ack_at = coalesce(courier_ack_at, now())
+   where id = p_order and courier_id = auth.uid() and status in ('prep', 'road');
+  if not found then raise exception 'Comanda nu mai e atribuită ție.' using errcode = 'P0001'; end if;
+end $$;
+grant execute on function public.courier_ack(uuid), public.courier_delivered(uuid), public.courier_late(uuid) to authenticated;
+
+-- la fiecare minut (pg_cron): notificări repetate cât timp livratorul n-a confirmat; după ora promisă, la 5 minute
+create or replace function public.courier_tick() returns int
+language plpgsql security definer set search_path = public as $$
+declare o public.orders; n int := 0; s public.settings; due timestamptz;
+begin
+  select * into s from public.settings where id = 1;
+  for o in select * from public.orders where courier_id is not null and status in ('prep', 'road') loop
+    due := public.order_due(o);
+    if o.courier_ack_at is null and (o.courier_pinged_at is null or o.courier_pinged_at < now() - interval '55 seconds') then
+      perform public.courier_push(o.courier_id, format('Comandă nouă #%s · confirmă', o.number), format('%s · %s', o.address, o.name), 'cr-' || o.id);
+      update public.orders set courier_pinged_at = now() where id = o.id; n := n + 1;
+    elsif due is not null and due < now() and (o.courier_pinged_at is null or o.courier_pinged_at < now() - interval '295 seconds') then
+      perform public.courier_push(o.courier_id, format('#%s trebuia livrată la %s', o.number, to_char(due at time zone s.tz, 'HH24:MI')),
+        'Apasă „Am predat” sau „Sunt în întârziere”.', 'cr-late-' || o.id);
+      update public.orders set courier_pinged_at = now() where id = o.id; n := n + 1;
+    end if;
+  end loop;
+  return n;
+end $$;
+do $$ begin
+  begin perform cron.unschedule('lyra-couriers'); exception when others then null; end;
+  begin perform cron.schedule('lyra-couriers', '* * * * *', 'select public.courier_tick()');
+  exception when others then raise notice 'pg_cron indisponibil: alarmele vin doar cu aplicația livratorului deschisă.'; end;
+end $$;
 
 
 -- Meniul Lyra (generat automat din lyra/data/menu.js). Nu suprascrie modificările făcute în admin.
