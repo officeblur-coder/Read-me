@@ -3,15 +3,16 @@ above and below it the same photo continues, softly blurred (no generated conten
 import os
 from PIL import Image, ImageFilter, ImageEnhance, ImageOps
 SRC = '/tmp/claude-0/-home-user-Read-me/de11a589-1ee0-587f-b8e4-12a0eeb9cdb4/images/'
-PUB = '/home/user/Read-me/kitzalpen-hero/public/images/hero/'
+PUB = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'public', 'images', 'hero') + '/'
 W, H = 941, 1672
 def compose(n, box, house_cy, target_cy=0.40, feather=110):
-    im = ImageOps.exif_transpose(Image.open(f'{SRC}{n}.jpg')).convert('RGB')
+    im = ImageOps.exif_transpose(Image.open(next(f'{SRC}{n}.{e}' for e in ('webp', 'jpg') if os.path.exists(f'{SRC}{n}.{e}')))).convert('RGB')
     iw, ih = im.size
     crop = im.crop((round(box[0] * iw), round(box[1] * ih), round(box[2] * iw), round(box[3] * ih)))
     fh = round(crop.height * W / crop.width)
     fg = crop.resize((W, fh), Image.LANCZOS)
-    y = round(target_cy * H - house_cy * fh); y = max(min(y, H - fh), 0)
+    y = round(target_cy * H - house_cy * fh); y = min(y, H - fh)
+    if y < 0: fg = fg.crop((0, -y, W, fh)); fh += y; y = 0
     # above / below: the photo's own top and bottom edge, stretched and blurred (sky above, ground below)
     bg = Image.new('RGB', (W, H))
     strip = max(8, round(fh * 0.06))
@@ -40,8 +41,9 @@ def save(im, stem):
     im.save(f'{PUB}{stem}.jpg', 'JPEG', quality=86, optimize=True, progressive=True)
     for f in (f'{PUB}{stem}.webp', f'{PUB}{stem}.avif'):
         if os.path.exists(f): im.save(f, f.rsplit('.', 1)[1].upper().replace('WEBP', 'WEBP'), **({'quality': 82} if f.endswith('webp') else {'quality': 60}))
-w, _ = compose(191, (0.14, 0.0, 0.78, 1.0), house_cy=0.63, target_cy=0.30)
-s, _ = compose(190, (0.20, 0.0, 1.0, 1.0), house_cy=0.37)
+# owner's portrait photos (Nov 2026): 200 winter, 201 summer – whole width, house just under the title
+w, _ = compose(200, (0.0, 0.0, 1.0, 1.0), house_cy=0.65, target_cy=0.43)
+s, _ = compose(201, (0.0, 0.0, 1.0, 1.0), house_cy=0.66, target_cy=0.43)
 save(w, 'winter-m'); save(s, 'summer-m')
 both = Image.new('RGB', (W * 2 + 20, H), 'white'); both.paste(s, (0, 0)); both.paste(w, (W + 20, 0))
 both.resize((both.width // 2, H // 2)).save('/tmp/claude-0/-home-user-Read-me/de11a589-1ee0-587f-b8e4-12a0eeb9cdb4/scratchpad/hero-m-new.jpg', quality=85)
