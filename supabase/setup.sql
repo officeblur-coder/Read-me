@@ -2814,16 +2814,48 @@ begin
 end $$;
 grant execute on function public.push_subscribe_courier(jsonb) to authenticated;
 
+-- aplicația Android „Lyra Livrator”: tokenul Firebase al telefonului
+create table if not exists public.courier_devices (
+  token      text primary key,
+  courier_id uuid not null references auth.users(id) on delete cascade,
+  updated_at timestamptz not null default now()
+);
+alter table public.courier_devices enable row level security;   -- fără politici: doar funcțiile de mai jos
+create or replace function public.courier_device_register(p_token text) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if not public.is_courier() then raise exception 'Doar livratorii.' using errcode = 'P0001'; end if;
+  if length(coalesce(p_token, '')) < 20 then raise exception 'Token invalid.' using errcode = 'P0001'; end if;
+  insert into public.courier_devices(token, courier_id) values (p_token, auth.uid())
+  on conflict (token) do update set courier_id = excluded.courier_id, updated_at = now();
+end $$;
+grant execute on function public.courier_device_register(text) to authenticated;
+
+-- notificarea către livrator: aplicația Android (Firebase, secretul vault 'fcm_url') și/sau browserul (Web Push)
 create or replace function public.courier_push(p_courier uuid, p_title text, p_body text, p_tag text) returns boolean
 language plpgsql security definer set search_path = public as $$
-declare ids bigint[];
+declare ids bigint[]; toks jsonb; url text; secret text; sent boolean := false;
 begin
+  select jsonb_agg(token) into toks from public.courier_devices where courier_id = p_courier;
+  if toks is not null then
+    begin
+      select decrypted_secret into url from vault.decrypted_secrets where name = 'fcm_url' limit 1;
+      select decrypted_secret into secret from vault.decrypted_secrets where name = 'push_secret' limit 1;
+    exception when others then url := null; end;
+    if url is not null and secret is not null then
+      perform net.http_post(url := url, body := jsonb_build_object('tokens', toks, 'title', p_title, 'body', p_body, 'tag', p_tag),
+        headers := jsonb_build_object('Content-Type', 'application/json', 'x-push-secret', secret), timeout_milliseconds := 15000);
+      sent := true;
+    end if;
+  end if;
   select array_agg(id) into ids from public.push_subs where courier_id = p_courier;
-  if ids is null then return false; end if;
-  perform public.push_deliver(ids, p_title, p_body, '/curier', p_tag);
-  return true;
+  if ids is not null then
+    begin perform public.push_deliver(ids, p_title, p_body, '/curier', p_tag); sent := true;
+    exception when others then null; end;   -- Web Push neconfigurat
+  end if;
+  return sent;
 exception when others then
-  return false;   -- notificările nu sunt configurate: aplicația deschisă sună oricum
+  return false;   -- fără notificări configurate: aplicația deschisă sună oricum
 end $$;
 revoke execute on function public.courier_push(uuid, text, text, text) from public, anon, authenticated;
 

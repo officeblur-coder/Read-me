@@ -4,13 +4,23 @@
   "webDir": "www",
   "server": {
     "url": "https://lyrasdelivery.ro/curier",
-    "allowNavigation": ["lyrasdelivery.ro", "*.lyrasdelivery.ro"]
+    "allowNavigation": [
+      "lyrasdelivery.ro",
+      "*.lyrasdelivery.ro"
+    ]
   },
   "android": {
     "backgroundColor": "#0b0806",
-    "allowMixedContent": false
+    "allowMixedContent": false,
+    "appendUserAgent": "LyraLivrator"
   },
   "plugins": {
-    "PushNotifications": { "presentationOptions": ["badge", "sound", "alert"] }
+    "PushNotifications": {
+      "presentationOptions": [
+        "badge",
+        "sound",
+        "alert"
+      ]
+    }
   }
 }

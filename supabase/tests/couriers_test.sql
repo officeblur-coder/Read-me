@@ -85,6 +85,20 @@ begin
   select * into o from public.orders where id = o1;
   perform pg_temp.ok(o.status = 'done' and o.road_at is not null and o.done_at is not null, 'predat: comanda e livrată');
 
+  -- aplicația Android: tokenul Firebase; notificarea pleacă și pe Firebase
+  insert into vault.decrypted_secrets(name, decrypted_secret) values ('fcm_url', 'https://x.supabase.co/functions/v1/fcm');
+  perform pg_temp.as_(b);
+  perform public.courier_device_register('fcm-token-telefon-B-0123456789');
+  perform pg_temp.as_(rec);
+  perform public.courier_assign(o2, a);
+  perform public.courier_assign(o2, b);
+  perform pg_temp.ok((select count(*) from net.http_request_queue where url like '%/functions/v1/fcm' and convert_from(body, 'utf8') like '%fcm-token-telefon-B%') = 1,
+    'atribuirea către B trimite notificare Firebase pe telefonul lui');
+  perform pg_temp.as_(cli);
+  e := pg_temp.err('select public.courier_device_register(''fcm-token-client-0123456789'')');
+  perform pg_temp.ok(e like 'Doar livratorii%', 'clientul nu își poate înregistra telefonul ca livrator');
+  perform pg_temp.as_(a);
+
   -- GPS
   perform public.courier_ping(46.54, 24.56, 12, 90, 8, 0.8);
   perform public.courier_ping(46.55, 24.57, 10);

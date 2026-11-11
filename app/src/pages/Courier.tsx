@@ -9,6 +9,7 @@ import { supabase } from "../lib/supabase";
 import type { Order } from "../lib/types";
 import { hm, lei, mmss } from "../lib/format";
 import { enablePush, publicKey } from "../lib/notify";
+import { isNativeApp, startNativeGps, startNativePush } from "../lib/native";
 import Icon from "../components/Icon";
 import Wordmark from "../components/Wordmark";
 import { Login, chime, keepAwake, unlockAudio } from "./Reception";
@@ -89,8 +90,22 @@ function CourierApp({ me }: { me: Me }) {
 
   // GPS: trimite poziția la cel mult 10 secunde (sau la 25 m distanță)
   const last = useRef<{ t: number; lat: number; lng: number } | null>(null);
+  const native = isNativeApp();
+  // în aplicația Android: GPS și cu ecranul blocat
   useEffect(() => {
-    if (!started || !("geolocation" in navigator)) return;
+    if (!started || !native) return;
+    let stop: (() => void) | null = null;
+    startNativeGps(l => {
+      setGps({ ok: true, at: Date.now(), acc: Math.round(l.accuracy) });
+      const p = last.current, moved = p ? Math.hypot((l.latitude - p.lat) * 111000, (l.longitude - p.lng) * 76000) : 1e9;
+      if (p && Date.now() - p.t < 10000 && moved < 25) return;
+      last.current = { t: Date.now(), lat: l.latitude, lng: l.longitude };
+      supabase.rpc("courier_ping", { p_lat: l.latitude, p_lng: l.longitude, p_acc: l.accuracy, p_heading: l.bearing, p_speed: l.speed, p_battery: null });
+    }, m => setGps({ ok: false, err: m })).then(s => { stop = s; });
+    return () => { stop?.(); };
+  }, [started, native]);
+  useEffect(() => {
+    if (!started || native || !("geolocation" in navigator)) return;
     const id = navigator.geolocation.watchPosition(async p => {
       const { latitude: lat, longitude: lng, accuracy, heading, speed } = p.coords;
       setGps({ ok: true, at: Date.now(), acc: Math.round(accuracy) });
@@ -117,7 +132,10 @@ function CourierApp({ me }: { me: Me }) {
   async function start() {
     unlockAudio(); chime();
     setStarted(true);
-    if (push === "off") { const err = await enablePush("push_subscribe_courier"); if (!err) setPush("on"); }
+    if (native) {   // aplicația Android: notificări Firebase (sună și cu ecranul blocat)
+      const err = await startNativePush(t => Promise.resolve(supabase.rpc("courier_device_register", { p_token: t })), () => load());
+      setPush(err ? "" : "on"); if (err && !err.startsWith("fără")) flash(err);
+    } else if (push === "off") { const err = await enablePush("push_subscribe_courier"); if (!err) setPush("on"); }
   }
 
   const active = orders.filter(o => o.status === "prep" || o.status === "road").sort((a, b) => (dueOf(a) || 9e15) - (dueOf(b) || 9e15));
@@ -151,7 +169,8 @@ function CourierApp({ me }: { me: Me }) {
     <div className="cr cr-start">
       <Wordmark />
       <h1>Bună, {me.name}!</h1>
-      <p>Apasă ca să pornești tura. Telefonul va suna și vibra la fiecare comandă nouă, ecranul rămâne aprins, iar recepția îți vede locația pe hartă.</p>
+      <p>{native ? "Apasă ca să pornești tura. Telefonul sună la fiecare comandă nouă, și cu ecranul blocat, iar recepția îți vede locația pe hartă. La prima pornire permite locația „Tot timpul” și notificările."
+        : "Apasă ca să pornești tura. Telefonul va suna și vibra la fiecare comandă nouă, ecranul rămâne aprins, iar recepția îți vede locația pe hartă."}</p>
       <button className="cta cr-go" onClick={start}><Icon name="bike" size={22} />Pornește tura</button>
       <button className="linkbtn" onClick={() => supabase.auth.signOut()}>Ieși din cont</button>
     </div>

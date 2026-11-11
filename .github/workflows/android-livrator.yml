@@ -28,13 +28,17 @@ jobs:
           java-version: 21
           cache: gradle
       - run: npm ci
-      - run: npx cap sync android
       - name: google-services.json (Firebase, pentru notificări)
         env:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
-          if [ -n "$GOOGLE_SERVICES_JSON" ]; then printf '%s' "$GOOGLE_SERVICES_JSON" > android/app/google-services.json; echo "Firebase: da";
+          if [ -n "$GOOGLE_SERVICES_JSON" ]; then
+            printf '%s' "$GOOGLE_SERVICES_JSON" > android/app/google-services.json
+            # pagina livratorului află din user agent că aplicația are Firebase (altfel nu cere notificările)
+            node -e 'const f="capacitor.config.json",c=require("./"+f);c.android.appendUserAgent="LyraLivrator/fcm";require("fs").writeFileSync(f,JSON.stringify(c,null,2))'
+            echo "Firebase: da"
           else echo "Firebase: nu (aplicația merge, dar fără notificări cu ecranul blocat)"; fi
+      - run: npx cap sync android
       - name: Semnătura (din secrete, dacă există)
         env:
           KS: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
