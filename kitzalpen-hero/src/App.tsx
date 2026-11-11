@@ -9,6 +9,7 @@ import { activateSiteLang, baseLang, locale, tr, prepareSiteLang, saveSiteLang, 
 import { Header } from './components/Header';
 import { SkiPage } from './components/ski/SkiPage';
 import { ArrivalPage } from './components/arrival/ArrivalPage';
+import { FaqPage } from './components/faq/FaqPage';
 import { TopPage, TopTeaser } from './components/top/TopPage';
 import { PlacesPage, ToursPage } from './components/tours/ToursPage';
 import { ExplorePage } from './components/ExplorePage';
@@ -91,6 +92,7 @@ export default function App() {
   }, []);
 
   useEffect(() => { document.documentElement.lang = site; }, [site]);
+  const { season, setSeason } = useSeason();
   // SEO: title + description (+ Open Graph) per route and language
   useEffect(() => {
     const [title, desc] = SEO[seoKey(page)][lang];
@@ -130,11 +132,10 @@ export default function App() {
       const name = document.title.replace(/ · KitzAlpen.*$/, '');
       let ld = document.getElementById('ld-page');
       if (!ld) { ld = document.createElement('script'); ld.id = 'ld-page'; ld.setAttribute('type', 'application/ld+json'); document.head.appendChild(ld); }
-      ld.textContent = JSON.stringify(pageSchema(page, site, name, description, plain));
+      ld.textContent = JSON.stringify(pageSchema(page, site, name, description, plain, season));
     }
-  }, [page, site, lang]);
+  }, [page, site, lang, season]);
   // activities: the shared Sommer/Winter switch also switches between the two activity pages
-  const { season, setSeason } = useSeason();
   const seasonMounted = useRef(false);
   useEffect(() => { if ((page === 'summer' || page === 'winter') && page !== season) setSeason(page); }, [page]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
@@ -191,6 +192,8 @@ export default function App() {
         <main id="main"><PlacesPage lang={lang} /></main>
       ) : page === 'experiences' ? (
         <main id="main"><TopPage lang={lang} /></main>
+      ) : page === 'faq' ? (
+        <main id="main"><FaqPage lang={lang} /></main>
       ) : page === 'arrival' ? (
         <main id="main"><ArrivalPage lang={lang} /></main>
       ) : page === 'ski' ? (

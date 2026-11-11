@@ -1,4 +1,10 @@
 import { ROOMS } from '../content/rooms';
+import { FAQ } from '../content/faq';
+import { TOP } from '../content/topExperiences';
+import { SKI_AREAS } from '../content/skiAreas';
+import { PLACES, TOURS } from '../content/tours';
+import type { Lang, Season } from '../content/hero';
+import { baseLang, tr } from './i18n';
 import type { SiteLang } from './i18n';
 import { SITE, pathFor, type Route } from './routes';
 
@@ -21,7 +27,8 @@ const PARENT: Partial<Record<Route, Route>> = {
 };
 const BUSINESS = `${SITE}/#lodging`;
 
-export function pageSchema(route: Route, lang: SiteLang, name: string, description: string, nameOf: (r: Route) => string) {
+export function pageSchema(route: Route, lang: SiteLang, name: string, description: string, nameOf: (r: Route) => string, season: Season = 'winter') {
+  const L: Lang = baseLang(lang);
   const url = SITE + pathFor(route, lang);
   const trail: Route[] = [];
   for (let r: Route | undefined = route; r && r !== 'home'; r = PARENT[r]) trail.unshift(r);
@@ -66,5 +73,17 @@ export function pageSchema(route: Route, lang: SiteLang, name: string, descripti
       ],
     });
   }
+  const list = (items: Record<string, unknown>[]) => graph.push({ '@type': 'ItemList', name, numberOfItems: items.length, itemListElement: items.map((item, i) => ({ '@type': 'ListItem', position: i + 1, item })) });
+  const geo = (lat: number, lon: number) => ({ '@type': 'GeoCoordinates', latitude: lat, longitude: lon });
+  if (route === 'faq') {
+    graph.push({
+      '@type': 'FAQPage', '@id': `${url}#faq`, url, inLanguage: lang,
+      mainEntity: FAQ.flatMap((g) => g.items).map((f) => ({ '@type': 'Question', name: tr(f.q[L]), acceptedAnswer: { '@type': 'Answer', text: tr(f.a[L]) } })),
+    });
+  }
+  if (route === 'experiences') list(TOP[season].map((e) => ({ '@type': 'TouristAttraction', name: L === 'en' && e.nameEn ? e.nameEn : e.name, description: tr(e.text[L]), url: e.url, geo: geo(e.lat, e.lon), address: { '@type': 'PostalAddress', addressLocality: e.town, addressCountry: 'AT' } })));
+  if (route === 'ski') list(SKI_AREAS.map((a) => ({ '@type': 'SkiResort', name: a.name, url: a.links.status, description: tr(a.features[L].join(' · ')), areaServed: a.region[L] })));
+  if (route === 'places') list(PLACES.map((pl) => ({ '@type': 'Place', name: pl.name, description: tr(pl.intro[L]), url: pl.url, geo: geo(pl.lat, pl.lon) })));
+  if (route === 'tours') list(TOURS.filter((x) => x.url).map((x) => ({ '@type': 'TouristTrip', name: tr(x.name[L]), url: x.url, ...(x.km ? { description: `${x.km} km${x.up ? ` · ${x.up} m` : ''}` } : {}) })));
   return { '@context': 'https://schema.org', '@graph': graph };
 }

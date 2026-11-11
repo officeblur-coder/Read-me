@@ -23,6 +23,7 @@
 - [Restaurant](https://www.kitzalpen.at/en/restaurant/)
 - [Groups](https://www.kitzalpen.at/en/group-activities/)
 - [Contact](https://www.kitzalpen.at/en/contact/)
+- [Frequently asked questions](https://www.kitzalpen.at/en/faq/) · [Häufige Fragen](https://www.kitzalpen.at/faq/)
 - [Mountain live: weather, webcams, ski day](https://www.kitzalpen.at/en/mountain/)
 
 ## Region guides (official sources, distances from the house)

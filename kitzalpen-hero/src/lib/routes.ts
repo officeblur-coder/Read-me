@@ -9,7 +9,7 @@ import type { SiteLang } from './i18n';
  * - Preview copies in a sub-folder (base './'): the same pages are chosen with '#' (#chalet …).
  * Components keep writing hash links ('#chalet'); on the live site the link layer below turns them into real addresses.
  */
-export type Route = 'home' | 'explore' | 'ski' | 'arrival' | 'experiences' | 'tours' | 'places' | 'pension' | 'chalet' | 'all-rooms' | 'restaurant' | 'groups' | 'contact' | 'mountain' | Season | `room-${RoomKey}`;
+export type Route = 'home' | 'faq' | 'explore' | 'ski' | 'arrival' | 'experiences' | 'tours' | 'places' | 'pension' | 'chalet' | 'all-rooms' | 'restaurant' | 'groups' | 'contact' | 'mountain' | Season | `room-${RoomKey}`;
 
 export const SITE = 'https://www.kitzalpen.at';
 export const PATHS = import.meta.env.BASE_URL === '/';
@@ -21,12 +21,12 @@ const SLUG: Record<'de' | 'en', Record<Route, string>> = {
   de: {
     home: '', pension: 'pension/', 'all-rooms': 'zimmer/', ...rooms, chalet: 'chalet/', restaurant: 'restaurant/', groups: 'group-activities/', contact: 'kontakt/',
     mountain: 'bergerlebnis/', winter: 'activities/winter/', summer: 'activities/summer/', explore: 'entdecken/', experiences: 'entdecken/top-15/',
-    ski: 'entdecken/skigebiete/', tours: 'entdecken/touren/', places: 'entdecken/orte/', arrival: 'anreise/',
+    ski: 'entdecken/skigebiete/', tours: 'entdecken/touren/', places: 'entdecken/orte/', arrival: 'anreise/', faq: 'faq/',
   },
   en: {
     home: '', pension: 'pension/', 'all-rooms': 'rooms/', ...rooms, chalet: 'chalet/', restaurant: 'restaurant/', groups: 'group-activities/', contact: 'contact/',
     mountain: 'mountain/', winter: 'activities/winter/', summer: 'activities/summer/', explore: 'explore/', experiences: 'explore/top-15/',
-    ski: 'explore/ski-areas/', tours: 'explore/tours/', places: 'explore/places/', arrival: 'arrival/',
+    ski: 'explore/ski-areas/', tours: 'explore/tours/', places: 'explore/places/', arrival: 'arrival/', faq: 'faq/',
   },
 };
 export const ROUTES = Object.keys(SLUG.de) as Route[];
@@ -42,7 +42,7 @@ export function routeOfHash(h: string): Route | null {
   if (h === 'activities-summer') return 'summer';
   if (h === 'activities-winter') return 'winter';
   if (h.startsWith('room-')) return ROOM_KEYS.includes(h.slice(5) as RoomKey) ? (h as Route) : null;
-  return (['chalet', 'all-rooms', 'restaurant', 'arrival', 'experiences', 'tours', 'places', 'contact'] as string[]).includes(h) ? (h as Route) : null;
+  return (['chalet', 'all-rooms', 'restaurant', 'arrival', 'experiences', 'tours', 'places', 'contact', 'faq'] as string[]).includes(h) ? (h as Route) : null;
 }
 /** the part of a hash that is an anchor inside the page (#pension-rooms, #mountain-cams …), kept after the address */
 const isSub = (h: string) => /^(pension-rooms|groups-plan|ski-passes|explore-map|mountain-(dash|cams|plan|find))$/.test(h);
