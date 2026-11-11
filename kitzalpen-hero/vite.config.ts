@@ -18,7 +18,11 @@ function head(preview: boolean): Plugin {
             '<meta name="robots" content="index, follow" />',
             `<link rel="canonical" href="${SITE}" />`,
             `<meta property="og:url" content="${SITE}" />`,
-            `<meta property="og:image" content="${SITE}images/hero/winter-d.jpg" />`,
+            `<meta property="og:image" content="${SITE}images/og/home.jpg" />`,
+            '<meta property="og:image:type" content="image/jpeg" />',
+            '<meta property="og:image:width" content="1200" />',
+            '<meta property="og:image:height" content="630" />',
+            `<meta name="twitter:image" content="${SITE}images/og/home.jpg" />`,
           ].join('\n    ');
       return html.replace('<!--robots-->', tags);
     },

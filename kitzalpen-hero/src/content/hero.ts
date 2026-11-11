@@ -130,6 +130,6 @@ export const PHOTOS: Record<Season, Photo> = {
 };
 /** Portrait versions for phones. */
 export const PHOTOS_M: Record<Season, Photo> = {
-  summer: { name: 'hero/summer-m', w: 941, h: 1672, sizes: [640, 941], lx: 0.5, ly: 0.43, bh: 0.3, alt: PHOTOS.summer.alt },
-  winter: { name: 'hero/winter-m', w: 941, h: 1672, sizes: [640, 941], lx: 0.5, ly: 0.43, bh: 0.3, alt: PHOTOS.winter.alt },
+  summer: { name: 'hero/summer-m2', w: 941, h: 1672, sizes: [640, 941], lx: 0.5, ly: 0.43, bh: 0.3, alt: PHOTOS.summer.alt },
+  winter: { name: 'hero/winter-m2', w: 941, h: 1672, sizes: [640, 941], lx: 0.5, ly: 0.43, bh: 0.3, alt: PHOTOS.winter.alt },
 };

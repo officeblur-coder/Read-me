@@ -12,14 +12,13 @@ import { SITE, pathFor, type Route } from './routes';
  * Per-page structured data (schema.org JSON-LD) and share image. The business itself (LodgingBusiness) is in index.html.
  * Only facts that the site already publishes.
  */
+/** share image per page: images/og/<name>.jpg, 1200×630, < 200 KB (scripts/og_images.py) */
 const IMG: Partial<Record<Route, string>> = {
-  home: 'hero/winter-d.jpg', pension: 'hero/winter-d.jpg', 'all-rooms': 'rooms/room-1.jpg', 'room-double': 'rooms/room-1.jpg', 'room-triple': 'rooms/room-2.jpg',
-  'room-family': 'rooms/room-3.jpg', 'room-quad': 'rooms/room-4.jpg', chalet: 'chalet/winter.jpg', restaurant: 'restaurant/hall.jpg', groups: 'groups/grossglockner.webp',
-  contact: 'hero/winter-d.jpg', mountain: 'real/kitzski-gondola-couple.webp', winter: 'real/ski-panorama.webp', summer: 'real/panoramabahn-summer.webp',
-  explore: 'real/kitzsteinhorn-aerial.webp', experiences: 'real/kitzsteinhorn-aerial.webp', ski: 'real/ski-panorama.webp', tours: 'real/winter-walk.webp',
-  places: 'winter/town-kitzbuehel.webp', arrival: 'winter/town-mittersill.webp',
+  home: 'home', pension: 'pension', 'all-rooms': 'rooms', 'room-double': 'room-double', 'room-triple': 'room-triple', 'room-family': 'room-family', 'room-quad': 'room-quad',
+  chalet: 'chalet', restaurant: 'restaurant', groups: 'groups', contact: 'home', mountain: 'mountain', winter: 'ski', summer: 'summer',
+  explore: 'explore', experiences: 'explore', ski: 'ski', tours: 'tours', places: 'places', arrival: 'arrival', faq: 'home',
 };
-export const shareImage = (r: Route) => `${SITE}/images/${IMG[r] ?? 'hero/winter-d.jpg'}`;
+export const shareImage = (r: Route) => `${SITE}/images/og/${IMG[r] ?? 'home'}.jpg`;
 
 const PARENT: Partial<Record<Route, Route>> = {
   'room-double': 'all-rooms', 'room-triple': 'all-rooms', 'room-family': 'all-rooms', 'room-quad': 'all-rooms', 'all-rooms': 'pension',

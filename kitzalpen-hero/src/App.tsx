@@ -127,6 +127,8 @@ export default function App() {
         a.href = SITE + pathFor(page, l === 'x-default' ? 'de' : l); document.head.appendChild(a);
       }
       set('meta[property="og:image"]', 'content', shareImage(page));
+      set('meta[name="twitter:image"]', 'content', shareImage(page));
+      set('meta[property="og:image:alt"]', 'content', document.title);
       // structured data for this page: WebPage, breadcrumb, room / chalet / restaurant details
       const plain = (r: Route) => { const t0 = SEO[seoKey(r)][lang][0]; const k = t0.lastIndexOf(' · KitzAlpen'); return tr(k > 0 ? t0.slice(0, k) : t0); };
       const name = document.title.replace(/ · KitzAlpen.*$/, '');

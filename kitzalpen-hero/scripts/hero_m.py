@@ -44,7 +44,7 @@ def save(im, stem):
 # owner's portrait photos (Nov 2026): 200 winter, 201 summer – whole width, house just under the title
 w, _ = compose(200, (0.0, 0.0, 1.0, 1.0), house_cy=0.65, target_cy=0.43)
 s, _ = compose(201, (0.0, 0.0, 1.0, 1.0), house_cy=0.66, target_cy=0.43)
-save(w, 'winter-m'); save(s, 'summer-m')
+save(w, 'winter-m2'); save(s, 'summer-m2')  # new name = no stale browser cache
 both = Image.new('RGB', (W * 2 + 20, H), 'white'); both.paste(s, (0, 0)); both.paste(w, (W + 20, 0))
 both.resize((both.width // 2, H // 2)).save('/tmp/claude-0/-home-user-Read-me/de11a589-1ee0-587f-b8e4-12a0eeb9cdb4/scratchpad/hero-m-new.jpg', quality=85)
 print('ok')

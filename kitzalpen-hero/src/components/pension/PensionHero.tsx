@@ -13,8 +13,8 @@ const IMG = `${import.meta.env.BASE_URL}images/hero/`;
 
 /** Client photos: landscape for desktop/tablet, portrait for phones; focal points keep the house in frame. */
 const PHOTO: Record<Season, { d: string; m: string; dSizes: number[]; mSizes: number[]; desk: string; mob: string }> = {
-  winter: { d: 'winter-d', m: 'winter-m', dSizes: [960, 1672], mSizes: [640, 941], desk: '45% 60%', mob: '50% 43%' },
-  summer: { d: 'summer-d', m: 'summer-m', dSizes: [960, 1671], mSizes: [640, 941], desk: '66% 50%', mob: '50% 43%' },
+  winter: { d: 'winter-d', m: 'winter-m2', dSizes: [960, 1672], mSizes: [640, 941], desk: '45% 60%', mob: '50% 43%' },
+  summer: { d: 'summer-d', m: 'summer-m2', dSizes: [960, 1671], mSizes: [640, 941], desk: '66% 50%', mob: '50% 43%' },
 };
 
 /** Reitlehen 42 (OSM Nominatim, see content/map-points.json): 47.27268 N, 12.42573 E */

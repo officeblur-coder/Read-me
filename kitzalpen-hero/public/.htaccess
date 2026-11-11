@@ -64,10 +64,10 @@ ErrorDocument 404 /404.html
   ExpiresByType application/javascript "access plus 1 year"
   ExpiresByType text/javascript "access plus 1 year"
   ExpiresByType font/woff2 "access plus 1 year"
-  ExpiresByType image/webp "access plus 1 month"
-  ExpiresByType image/avif "access plus 1 month"
-  ExpiresByType image/jpeg "access plus 1 month"
-  ExpiresByType image/png "access plus 1 month"
+  ExpiresByType image/webp "access plus 7 days"
+  ExpiresByType image/avif "access plus 7 days"
+  ExpiresByType image/jpeg "access plus 7 days"
+  ExpiresByType image/png "access plus 7 days"
   ExpiresByType image/svg+xml "access plus 1 month"
 </IfModule>
 
