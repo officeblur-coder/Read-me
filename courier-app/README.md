@@ -26,5 +26,5 @@ Fără ea, la o versiune nouă a aplicației dezinstalezi întâi versiunea vech
 Cu ea, actualizarea se instalează peste: secretele `ANDROID_KEYSTORE_BASE64` (fișierul .keystore în base64) și `ANDROID_KEYSTORE_PASSWORD`.
 
 ## Pe telefon
-Instalezi `lyra-livrator.apk` (permiți „instalare din surse necunoscute”), intri cu Livrator A / B, „Pornește tura”,
+Instalezi `lyra-livrator.apk` (permiți „instalare din surse necunoscute”), intri cu contul livratorului (Istvan, Pipe, Liviu sau Zoli), „Pornește tura”,
 permiți **locația „Tot timpul”** și **notificările**. Setări → Aplicații → Lyra Livrator → Baterie → **Fără restricții**.

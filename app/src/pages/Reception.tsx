@@ -105,7 +105,7 @@ export function Login({ title = "Recepție", users = [] }: { title?: string; use
       <form onSubmit={async e => {
         e.preventDefault(); setBusy(true); setErr(""); unlockAudio();
         // staff can type a short user name: "receptielyra" means receptielyra@lyrasdelivery.ro
-        // nume scurt: „Marco” = marco@lyrasdelivery.ro, „Livrator A” = livratora@lyrasdelivery.ro
+        // nume scurt: „Marco” = marco@lyrasdelivery.ro, „Istvan” = istvan@lyrasdelivery.ro
         const login = email.includes("@") ? email.trim() : email.trim().toLowerCase().replace(/\s+/g, "") + "@lyrasdelivery.ro";
         const { error } = await supabase.auth.signInWithPassword({ email: login, password });
         setBusy(false);

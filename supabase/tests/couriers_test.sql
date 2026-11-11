@@ -16,16 +16,17 @@ do $$
 declare a uuid := gen_random_uuid(); b uuid := gen_random_uuid(); rec uuid := gen_random_uuid(); cli uuid := gen_random_uuid();
   r jsonb; o1 uuid; o2 uuid; o3 uuid; e text; o public.orders; n0 int;
 begin
-  insert into auth.users(id, email) values (a, 'livratora@lyrasdelivery.ro'), (b, 'livratorb@lyrasdelivery.ro'), (rec, 'marco@c.ro'), (cli, 'client@c.ro');
+  insert into auth.users(id, email) values (a, 'istvan@lyrasdelivery.ro'), (b, 'pipe@lyrasdelivery.ro'), (rec, 'marco@c.ro'), (cli, 'client@c.ro');
   insert into public.staff(user_id, name, role) values (rec, 'Marco', 'reception');
   -- rândurile din 15_couriers.sql pentru conturile livratorilor
   insert into public.staff(user_id, name, role)
-  select u.id, case when lower(u.email) like 'livratora@%' then 'Livrator A' else 'Livrator B' end, 'courier'
-    from auth.users u where lower(u.email) in ('livratora@lyrasdelivery.ro', 'livratorb@lyrasdelivery.ro')
+  select u.id, n.name, 'courier'
+    from auth.users u join (values ('istvan@lyrasdelivery.ro', 'Istvan'), ('pipe@lyrasdelivery.ro', 'Pipe'),
+                                   ('liviu@lyrasdelivery.ro', 'Liviu'), ('zoli@lyrasdelivery.ro', 'Zoli')) n(email, name) on lower(u.email) = n.email
   on conflict (user_id) do update set role = 'courier', name = excluded.name;
   perform pg_temp.as_(rec);
   r := public.couriers();
-  perform pg_temp.ok(jsonb_array_length(r) = 2 and r->0->>'name' = 'Livrator A', 'recepția vede Livrator A și B');
+  perform pg_temp.ok(jsonb_array_length(r) = 2 and r->0->>'name' = 'Istvan' and r->1->>'name' = 'Pipe', 'recepția vede livratorii după nume (Istvan, Pipe)');
   perform pg_temp.as_(a); perform public.push_subscribe_courier('{"endpoint":"https://fcm.googleapis.com/a","keys":{"p256dh":"k","auth":"x"}}');
   perform pg_temp.as_(cli);
   perform public.push_subscribe_offers('{"endpoint":"https://fcm.googleapis.com/client","keys":{"p256dh":"k","auth":"x"}}');
@@ -48,7 +49,7 @@ begin
   perform public.courier_assign(o1, a);
   perform public.courier_assign(o2, a);   -- două comenzi aceluiași livrator
   select * into o from public.orders where id = o1;
-  perform pg_temp.ok(o.courier_name = 'Livrator A' and o.courier_assigned_at is not null and o.courier_ack_at is null, 'atribuită lui Livrator A, neconfirmată');
+  perform pg_temp.ok(o.courier_name = 'Istvan' and o.courier_assigned_at is not null and o.courier_ack_at is null, 'atribuită lui Istvan, neconfirmată');
   perform pg_temp.ok(pg_temp.pushes('Comandă nouă') = n0 + 2 and pg_temp.pushes('fcm.googleapis.com/a') >= 2, 'livratorul primește notificare la fiecare atribuire');
 
   -- reamintire cât timp nu confirmă (cron)
@@ -62,12 +63,12 @@ begin
   perform pg_temp.ok(e like 'Comanda nu mai e atribuită%', 'alt livrator nu poate confirma');
   perform pg_temp.as_(a);
   perform public.courier_ack(o1);
-  perform pg_temp.ok((select courier_ack_at from public.orders where id = o1) is not null, 'Livrator A a confirmat; recepția vede ora confirmării');
+  perform pg_temp.ok((select courier_ack_at from public.orders where id = o1) is not null, 'Istvan a confirmat; recepția vede ora confirmării');
 
   -- reatribuire către B: confirmarea se resetează
   perform pg_temp.as_(rec);
   perform public.courier_assign(o2, b);
-  perform pg_temp.ok((select courier_name from public.orders where id = o2) = 'Livrator B' and (select courier_ack_at from public.orders where id = o2) is null, 'reatribuită lui Livrator B');
+  perform pg_temp.ok((select courier_name from public.orders where id = o2) = 'Pipe' and (select courier_ack_at from public.orders where id = o2) is null, 'reatribuită lui Pipe');
 
   -- întârziere: după ora promisă, reamintire la 5 minute
   update public.orders set accepted_at = now() - interval '40 minutes', courier_pinged_at = now() - interval '6 minutes' where id = o1;

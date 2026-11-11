@@ -15,7 +15,7 @@ import Wordmark from "../components/Wordmark";
 import { Login, chime, keepAwake, unlockAudio } from "./Reception";
 
 type Me = { id: string; name: string; role: string };
-const COURIERS = ["Livrator A", "Livrator B"];
+const COURIERS = ["Istvan", "Pipe", "Liviu", "Zoli"];   // contul = numele@lyrasdelivery.ro
 
 export default function Courier() {
   const [session, setSession] = useState<Session | null>(null);
@@ -47,7 +47,7 @@ export default function Courier() {
   if (!me || me.role !== "courier") return (
     <div className="login"><form onSubmit={e => { e.preventDefault(); supabase.auth.signOut(); }}>
       <Wordmark small /><h1>Fără acces</h1>
-      <p className="muted" style={{ textAlign: "center" }}>Contul {session.user.email} nu e cont de livrator. Folosește Livrator A sau Livrator B.</p>
+      <p className="muted" style={{ textAlign: "center" }}>Contul {session.user.email} nu e cont de livrator. Intră cu contul tău de livrator (Istvan, Pipe, Liviu sau Zoli).</p>
       <button className="big ghost">Ieși din cont</button></form></div>
   );
   return <CourierApp me={me} />;

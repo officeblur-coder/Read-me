@@ -36,7 +36,7 @@ export default function CourierMap({ couriers, locs, orders, height = 520 }: { c
       const l = locs.find(x => x.courier_id === c.id); if (!l) return;
       const stale = Date.now() - new Date(l.updated_at).getTime() > 3 * 60000;
       if (l.accuracy && l.accuracy < 500) L.circle([l.lat, l.lng], { radius: l.accuracy, color: col, weight: 1, fillOpacity: 0.08 }).addTo(g);
-      L.marker([l.lat, l.lng], { icon: L.divIcon({ className: `cm-courier ${stale ? "stale" : ""}`, html: `<span style="background:${col}">${c.name.replace(/^Livrator\s*/i, "") || c.name[0]}</span><em>${c.name}</em>`, iconSize: [40, 40], iconAnchor: [20, 20] }), zIndexOffset: 1000 })
+      L.marker([l.lat, l.lng], { icon: L.divIcon({ className: `cm-courier ${stale ? "stale" : ""}`, html: `<span style="background:${col}">${c.name.slice(0, 1).toUpperCase()}</span><em>${c.name}</em>`, iconSize: [40, 40], iconAnchor: [20, 20] }), zIndexOffset: 1000 })
         .bindTooltip(`${c.name} · ${ago(l.updated_at)}${l.battery != null ? ` · baterie ${Math.round(l.battery * 100)}%` : ""}`).addTo(g);
       pts.push([l.lat, l.lng]);
     });

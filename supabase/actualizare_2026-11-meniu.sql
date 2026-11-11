@@ -2732,14 +2732,14 @@ update public.items set desc_ro = 'Cel mai gustos cadou: o masă la Restaurant L
 
 
 -- =====================================================================
--- Livratori (Livrator A / Livrator B), cu aplicația pe telefon (lyrasdelivery.ro/curier)
+-- Livratori (Istvan, Pipe, Liviu, Zoli), fiecare cu contul lui, cu aplicația pe telefon (lyrasdelivery.ro/curier)
 -- • Recepția atribuie comanda unui livrator (oricând, oricâte comenzi, chiar dacă e pe traseu).
 -- • Livratorul primește alarmă / notificare până apasă „Confirm”; recepția vede confirmarea.
 -- • „Predat clientului” e disponibil tot timpul; după ora promisă, la fiecare 5 minute vine o reamintire
 --   cu „Am predat” / „Sunt în întârziere”.
 -- • Poziția GPS a livratorului (cât aplicația e deschisă) apare pe harta din recepție.
--- Conturile: Supabase → Authentication → Add user: livratora@lyrasdelivery.ro și livratorb@lyrasdelivery.ro,
--- apoi rulați acest fișier (le adaugă în echipă ca „Livrator A” / „Livrator B”).
+-- Conturile: Supabase → Authentication → Add user: istvan@, pipe@, liviu@, zoli@lyrasdelivery.ro (fiecare cu parola lui),
+-- apoi rulați acest fișier: le adaugă în echipă ca livratori, cu numele lor. Alți livratori se adaugă din admin → Echipa.
 -- =====================================================================
 
 alter table public.orders add column if not exists courier_assigned_at timestamptz;
@@ -2750,8 +2750,10 @@ alter table public.orders add column if not exists courier_pinged_at timestamptz
 
 -- conturile livratorilor (dacă au fost create în Authentication)
 insert into public.staff(user_id, name, role)
-select u.id, case when lower(u.email) like 'livratora@%' then 'Livrator A' else 'Livrator B' end, 'courier'
-  from auth.users u where lower(u.email) in ('livratora@lyrasdelivery.ro', 'livratorb@lyrasdelivery.ro')
+select u.id, n.name, 'courier'
+  from auth.users u join (values ('istvan@lyrasdelivery.ro', 'Istvan'), ('pipe@lyrasdelivery.ro', 'Pipe'),
+                                 ('liviu@lyrasdelivery.ro', 'Liviu'), ('zoli@lyrasdelivery.ro', 'Zoli')) n(email, name)
+    on lower(u.email) = n.email
 on conflict (user_id) do update set role = 'courier', name = excluded.name;
 
 create or replace function public.is_courier() returns boolean
