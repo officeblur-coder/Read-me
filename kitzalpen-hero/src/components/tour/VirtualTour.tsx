@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import type { Lang } from '../../content/hero';
-import { TOUR_COPY, TOUR_URL } from '../../content/tour';
+import { TOUR_COPY, TOUR_URL, resolveTourUrl } from '../../content/tour';
 import { useReducedMotion } from '../../lib/hooks';
 
 /** 360° icon */
@@ -22,6 +22,7 @@ export function VirtualTour({ lang }: { lang: Lang }) {
   const [warm, setWarm] = useState(false);   // iframe mounted (pre-loads hidden)
   const [loaded, setLoaded] = useState(false);
   const [slow, setSlow] = useState(false);
+  const [src, setSrc] = useState<string | null>(null);
   const loadedRef = useRef(false);
   const panel = useRef<HTMLDivElement>(null);
   const closeBtn = useRef<HTMLButtonElement>(null);
@@ -44,6 +45,8 @@ export function VirtualTour({ lang }: { lang: Lang }) {
     }
     return () => { window.clearTimeout(id); window.removeEventListener('kitzalpen:tour-warm', go); };
   }, []);
+
+  useEffect(() => { if (warm && !src) resolveTourUrl().then(setSrc); }, [warm, src]);
 
   useEffect(() => {
     const on = (e: Event) => {
@@ -91,8 +94,8 @@ export function VirtualTour({ lang }: { lang: Lang }) {
               <div className="flex flex-col items-center gap-4 text-cream/80"><span className="vt-spin text-gold-light"><Icon360 size={44} /></span><span className="text-[14px] font-semibold tracking-[.08em]">{t.loading}</span></div>
             </div>
           )}
-          <iframe src={TOUR_URL} title={t.title} onLoad={() => { loadedRef.current = true; setLoaded(true); }} allow="fullscreen; xr-spatial-tracking; gyroscope; accelerometer; magnetometer" allowFullScreen
-            className={`absolute inset-0 h-full w-full border-0 transition-opacity duration-700 ${loaded ? 'opacity-100' : 'opacity-0'}`} />
+          {src && <iframe src={src} title={t.title} onLoad={() => { loadedRef.current = true; setLoaded(true); }} allow="fullscreen; xr-spatial-tracking; gyroscope; accelerometer; magnetometer" allowFullScreen
+            className={`absolute inset-0 h-full w-full border-0 transition-opacity duration-700 ${loaded ? 'opacity-100' : 'opacity-0'}`} />}
         </>
       ) : (
         <div className="absolute inset-0 grid place-items-center px-6 text-center">
@@ -104,7 +107,7 @@ export function VirtualTour({ lang }: { lang: Lang }) {
         </div>
       )}
       {TOUR_URL && open && slow && !loaded && (
-        <a href={TOUR_URL} target="_blank" rel="noopener noreferrer" className="absolute right-[calc(max(16px,env(safe-area-inset-right))+60px)] top-[max(16px,env(safe-area-inset-top))] z-10 inline-flex min-h-12 items-center gap-2 rounded-full bg-cream/90 px-4 text-[12.5px] font-semibold text-deep shadow-[0_10px_30px_-10px_rgba(0,0,0,.6)] backdrop-blur-sm">
+        <a href={src ?? TOUR_URL} target="_blank" rel="noopener noreferrer" className="absolute right-[calc(max(16px,env(safe-area-inset-right))+60px)] top-[max(16px,env(safe-area-inset-top))] z-10 inline-flex min-h-12 items-center gap-2 rounded-full bg-cream/90 px-4 text-[12.5px] font-semibold text-deep shadow-[0_10px_30px_-10px_rgba(0,0,0,.6)] backdrop-blur-sm">
           {t.direct} ↗
         </a>
       )}

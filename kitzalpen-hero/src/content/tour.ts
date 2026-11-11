@@ -5,8 +5,20 @@
  * While it is empty, the button still opens the overlay and shows a short "coming soon" note.
  */
 const HOSTED = 'https://kitzbuhelalpenpension.at/virtualtour/index.htm';
-/** On the same host (with or without www) load the tour from the same origin – keeps the host's bot check and cookies happy. */
-export const TOUR_URL = typeof window !== 'undefined' && /(^|\.)kitzbuhelalpenpension\.at$/.test(window.location.hostname) ? '/virtualtour/index.htm' : HOSTED;
+/** A copy of the tour folder on the site's own domain (/virtualtour/) is preferred: same origin, so the host's
+ * bot check keeps its cookie (Safari blocks it inside a third-party iframe) and nothing extra is fetched. */
+const LOCAL = '/virtualtour/index.htm';
+const OWN_HOST = /(^|\.)(kitzbuhelalpenpension|kitzalpen)\.at$/;
+export const TOUR_URL = HOSTED;
+let resolved: Promise<string> | null = null;
+/** the address to load: the local copy when it exists on this domain, otherwise the hosted tour */
+export function resolveTourUrl(): Promise<string> {
+  if (typeof window === 'undefined' || !OWN_HOST.test(window.location.hostname)) return Promise.resolve(HOSTED);
+  resolved ??= fetch(LOCAL, { method: 'HEAD', cache: 'no-store' })
+    .then((r) => (r.ok && /html/.test(r.headers.get('content-type') || '') ? LOCAL : HOSTED))
+    .catch(() => HOSTED);
+  return resolved;
+}
 
 export const TOUR_COPY = {
   de: { button: '360° Rundgang', title: 'Virtueller Rundgang', close: 'Rundgang schließen', loading: 'Rundgang wird geladen …', direct: 'Lädt nicht? Rundgang direkt öffnen',
