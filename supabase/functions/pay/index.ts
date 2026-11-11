@@ -18,10 +18,17 @@ export function form(obj: Record<string, unknown>, prefix = ""): string {
   return out.filter(Boolean).join("&");
 }
 
+// versiunea API fixată: integrarea nu se schimbă singură când Stripe lansează versiuni noi
+export const STRIPE_VERSION = "2026-10-28.endive";
+// eticheta sesiunilor Lyra în Dashboard (Checkout → filtrare după integrare)
+export const INTEGRATION_ID = "lyra_comenzi_qkvmtrwz";
+// STRIPE_SECRET_KEY poate fi o cheie restricționată (rk_…), recomandat: Checkout Sessions = Write, Refunds = Write
+const auth = (env: Env) => ({ Authorization: "Bearer " + env.get("STRIPE_SECRET_KEY"), "Stripe-Version": STRIPE_VERSION });
+
 export async function stripe(env: Env, path: string, body: Record<string, unknown>, idem?: string) {
   const r = await fetch("https://api.stripe.com/v1/" + path, {
     method: "POST",
-    headers: { Authorization: "Bearer " + env.get("STRIPE_SECRET_KEY"), "Content-Type": "application/x-www-form-urlencoded", ...(idem ? { "Idempotency-Key": idem } : {}) },
+    headers: { ...auth(env), "Content-Type": "application/x-www-form-urlencoded", ...(idem ? { "Idempotency-Key": idem } : {}) },
     body: form(body),
   });
   const j = await r.json();
@@ -45,7 +52,8 @@ export function sessionParams(o: { id: string; number: number; total: number; em
   return {
     mode: "payment",
     locale: "ro",
-    "payment_method_types": ["card"],
+    // fără payment_method_types: Stripe arată singur metodele potrivite (card, Apple Pay, Google Pay…), alese din Dashboard
+    integration_identifier: INTEGRATION_ID,
     line_items: [{ quantity: 1, price_data: { currency: "ron", unit_amount: Math.round(Number(o.total) * 100), product_data: { name: `Comanda #${o.number} · Lyra's Delivery` } } }],
     customer_email: o.email || undefined,
     client_reference_id: o.id,
@@ -97,7 +105,7 @@ export async function handler(req: Request, env: Env): Promise<Response> {
     if (Date.now() - new Date(o.created_at).getTime() > 29 * 60000) return json({ error: "Timpul pentru plată a expirat. Plasează comanda din nou." }, 409);
     // aceeași sesiune dacă clientul revine (Stripe o păstrează deschisă până expiră)
     if (o.stripe_session) {
-      const r = await fetch("https://api.stripe.com/v1/checkout/sessions/" + o.stripe_session, { headers: { Authorization: "Bearer " + env.get("STRIPE_SECRET_KEY") } });
+      const r = await fetch("https://api.stripe.com/v1/checkout/sessions/" + o.stripe_session, { headers: auth(env) });
       const s = await r.json();
       if (r.ok && s.status === "open" && s.url) return json({ url: s.url });
     }

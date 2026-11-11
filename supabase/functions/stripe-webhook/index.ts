@@ -1,7 +1,7 @@
 // Funcția Edge „stripe-webhook”: Stripe anunță plata reușită / sesiunea expirată.
 // Publicare: supabase functions deploy stripe-webhook --no-verify-jwt
 // În Stripe → Developers → Webhooks: URL https://<proiect>.supabase.co/functions/v1/stripe-webhook,
-// evenimentele checkout.session.completed, checkout.session.async_payment_succeeded, checkout.session.expired.
+// evenimentele checkout.session.completed, checkout.session.async_payment_succeeded, checkout.session.async_payment_failed, checkout.session.expired.
 // Fișier unic: se poate lipi direct în Supabase → Edge Functions → Via Editor.
 
 export type Env = { get(k: string): string | undefined };
@@ -38,7 +38,7 @@ export async function handler(req: Request, env: Env): Promise<Response> {
   try {
     if (order && (ev.type === "checkout.session.completed" || ev.type === "checkout.session.async_payment_succeeded") && s.payment_status === "paid") {
       await rpc(env, "pay_mark_paid", { p_order: order, p_session: s.id, p_payment: s.payment_intent });
-    } else if (order && ev.type === "checkout.session.expired") {
+    } else if (order && (ev.type === "checkout.session.expired" || ev.type === "checkout.session.async_payment_failed")) {
       await rpc(env, "pay_mark_failed", { p_order: order });
     }
   } catch (e) {
