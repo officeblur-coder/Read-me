@@ -14,6 +14,9 @@ create table if not exists public.item_discounts (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+-- pentru cine: toată lumea, doar livrare sau doar ridicare; all_items = la tot meniul (și produsele adăugate mai târziu)
+alter table public.item_discounts add column if not exists mode text not null default 'all' check (mode in ('all', 'livrare', 'ridicare'));
+alter table public.item_discounts add column if not exists all_items boolean not null default false;
 alter table public.item_discounts enable row level security;
 do $$ begin
   drop policy if exists "discounts public read" on public.item_discounts;
@@ -24,14 +27,15 @@ create policy "discounts admin write" on public.item_discounts for all using (pu
 grant select on public.item_discounts to anon, authenticated;
 grant insert, update, delete on public.item_discounts to authenticated;
 
--- reducerea activă acum pentru un produs (0 = fără reducere)
-create or replace function public.item_discount_pct(p_item text) returns numeric
+-- reducerea activă acum pentru un produs, la livrare sau ridicare (0 = fără reducere)
+drop function if exists public.item_discount_pct(text);
+create or replace function public.item_discount_pct(p_item text, p_mode text default null) returns numeric
 language sql stable set search_path = public as $$
   select coalesce(max(percent), 0) from public.item_discounts
-  where active and p_item = any(item_ids)
+  where active and (all_items or p_item = any(item_ids)) and (mode = 'all' or mode = p_mode)
     and (starts_at is null or starts_at <= now()) and (ends_at is null or ends_at > now());
 $$;
-grant execute on function public.item_discount_pct(text) to anon, authenticated;
+grant execute on function public.item_discount_pct(text, text) to anon, authenticated;
 
 -- realtime: site-ul se actualizează când admin pornește sau oprește o reducere
 do $$ begin

@@ -2,10 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { imgUrl, lei } from "../lib/format";
 import type { Category, Item } from "../lib/types";
-import { cut, useDiscounts, type Discount } from "../lib/discounts";
+import { cut, MODE_LABEL, useDiscounts, type Discount, type Mode } from "../lib/discounts";
 import Icon from "../components/Icon";
 
-type Draft = { id?: string; name: string; percent: string; item_ids: string[]; active: boolean; starts: string; ends: string };
+type Draft = { id?: string; name: string; percent: string; item_ids: string[]; active: boolean; starts: string; ends: string; mode: Mode; all_items: boolean };
 const QUICK = [5, 10, 15, 20, 25, 30, 40, 50];
 const fold = (x: string) => x.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 // <input type="datetime-local"> works in local time: ISO ↔ "2026-11-03T12:00"
@@ -76,8 +76,8 @@ export function DiscountsTab({ items, cats, flash }: { items: Item[]; cats: Cate
   const groups = useMemo(() => cats.map(c => ({ c, its: shown.filter(i => i.category_id === c.id) })).filter(g => g.its.length), [cats, shown]);
   const pct = Math.min(90, Math.max(0, Number((d?.percent || "").replace(",", ".")) || 0));
 
-  const startNew = () => { setD({ name: "", percent: "10", item_ids: [], active: true, starts: "", ends: "" }); setQ(""); setCat("all"); setOnlySel(false); };
-  const edit = (x: Discount) => { setD({ id: x.id, name: x.name, percent: String(x.percent), item_ids: [...x.item_ids], active: x.active, starts: toLocal(x.starts_at), ends: toLocal(x.ends_at) }); setQ(""); setCat("all"); setOnlySel(true); };
+  const startNew = () => { setD({ name: "", percent: "10", item_ids: [], active: true, starts: "", ends: "", mode: "all", all_items: false }); setQ(""); setCat("all"); setOnlySel(false); };
+  const edit = (x: Discount) => { setD({ id: x.id, name: x.name, percent: String(x.percent), item_ids: [...x.item_ids], active: x.active, starts: toLocal(x.starts_at), ends: toLocal(x.ends_at), mode: x.mode || "all", all_items: !!x.all_items }); setQ(""); setCat("all"); setOnlySel(true); };
   const setIds = (ids: string[]) => d && setD({ ...d, item_ids: ids });
   const toggle = (id: string) => setIds(sel.has(id) ? d!.item_ids.filter(x => x !== id) : [...d!.item_ids, id]);
   const selectShown = () => setIds([...new Set([...(d?.item_ids || []), ...shown.map(i => i.id)])]);
@@ -88,11 +88,11 @@ export function DiscountsTab({ items, cats, flash }: { items: Item[]; cats: Cate
   async function save() {
     if (!d) return;
     if (!(pct > 0 && pct <= 90)) { flash("Procentul trebuie să fie între 1 și 90."); return; }
-    if (!d.item_ids.length) { flash("Alege cel puțin un produs."); return; }
+    if (!d.all_items && !d.item_ids.length) { flash("Alege cel puțin un produs sau bifează „La tot meniul”."); return; }
     if (d.starts && d.ends && d.ends <= d.starts) { flash("Data de sfârșit trebuie să fie după început."); return; }
     setBusy(true);
     const row = { name: d.name.trim() || `Reducere ${pct}%`, percent: pct, item_ids: d.item_ids, active: d.active,
-      starts_at: fromLocal(d.starts), ends_at: fromLocal(d.ends), updated_at: new Date().toISOString() };
+      starts_at: fromLocal(d.starts), ends_at: fromLocal(d.ends), mode: d.mode, all_items: d.all_items, updated_at: new Date().toISOString() };
     const { error } = d.id ? await supabase.from("item_discounts").update(row).eq("id", d.id) : await supabase.from("item_discounts").insert(row);
     setBusy(false);
     if (error) { flash("Nu s-a salvat: " + error.message); return; }
@@ -112,7 +112,7 @@ export function DiscountsTab({ items, cats, flash }: { items: Item[]; cats: Cate
     <div className="adm-page">
       <div className="adm-bar"><h1>Reduceri pe produse</h1><button className="addbtn" onClick={startNew}><span>+</span>Reducere nouă</button></div>
       <WelcomeCard flash={flash} />
-      <p className="muted adm-help">Alegi procentul (5%, 10%, 25%, cât vrei) și produsele. Pe site apar prețul vechi tăiat, prețul nou și eticheta roșie de reducere, iar comanda se calculează cu prețul redus. Dacă un produs e în mai multe reduceri active, se aplică cea mai mare. Codurile de reducere nu se adaugă peste produsele deja reduse.</p>
+      <p className="muted adm-help">Alegi procentul, pentru cine (livrare, ridicare sau ambele) și produsele sau tot meniul. Procentul „la tot meniul” apare și în fereastra de la intrare, unde clientul alege livrare sau ridicare. Pe site apar prețul vechi tăiat, prețul nou și eticheta roșie de reducere, iar comanda se calculează cu prețul redus. Dacă un produs e în mai multe reduceri active, se aplică cea mai mare. Codurile de reducere nu se adaugă peste produsele deja reduse.</p>
       {!list.length && <div className="dsc-empty"><Icon name="tag" size={28} /><b>Nicio reducere încă</b><span>Apasă „Reducere nouă” ca să alegi produsele și procentul.</span></div>}
       <div className="dsc-list">{list.map(x => {
         const [st, cls] = status(x);
@@ -123,7 +123,7 @@ export function DiscountsTab({ items, cats, flash }: { items: Item[]; cats: Cate
             <div className="dsc-info">
               <b>{x.name}</b>
               <span className={`dsc-st ${cls}`}>{st}</span>
-              <small>{x.item_ids.length} produse · {names.slice(0, 4).join(", ")}{names.length > 4 ? ` +${names.length - 4}` : ""}</small>
+              <small>{MODE_LABEL[x.mode || "all"]} · {x.all_items ? "la tot meniul" : <>{x.item_ids.length} produse · {names.slice(0, 4).join(", ")}{names.length > 4 ? ` +${names.length - 4}` : ""}</>}</small>
               {(x.starts_at || x.ends_at) && <small>{x.starts_at ? `de la ${fmt(x.starts_at)}` : "de acum"} {x.ends_at ? `până la ${fmt(x.ends_at)}` : "fără dată de final"}</small>}
             </div>
             <div className="dsc-act">
@@ -141,7 +141,7 @@ export function DiscountsTab({ items, cats, flash }: { items: Item[]; cats: Cate
     <div className="adm-page">
       <div className="adm-bar"><h1>{d.id ? "Editează reducerea" : "Reducere nouă"}</h1>
         <button className="mini" onClick={() => setD(null)}>Renunță</button>
-        <button className="addbtn" onClick={save} disabled={busy}>{busy ? "Se salvează…" : `Salvează · ${d.item_ids.length} produse`}</button></div>
+        <button className="addbtn" onClick={save} disabled={busy}>{busy ? "Se salvează…" : `Salvează · ${d.all_items ? "tot meniul" : `${d.item_ids.length} produse`}`}</button></div>
       <div className="dsc-edit">
         <section className="dsc-form">
           <label className="fl"><span>Nume (doar pentru tine)</span><input value={d.name} onChange={e => setD({ ...d, name: e.target.value })} placeholder={`ex. Burgeri −${pct || 20}% weekend`} /></label>
@@ -149,6 +149,9 @@ export function DiscountsTab({ items, cats, flash }: { items: Item[]; cats: Cate
             <div className="dsc-quick">{QUICK.map(p => <button key={p} aria-pressed={pct === p} onClick={() => setD({ ...d, percent: String(p) })}>{p}%</button>)}</div>
             <label className="dsc-custom">Alt procent <input inputMode="decimal" value={d.percent} onChange={e => setD({ ...d, percent: e.target.value.replace(/[^\d.,]/g, "").slice(0, 5) })} /> %</label>
           </div>
+          <div className="fl"><span>Pentru cine</span>
+            <div className="dsc-quick">{(["all", "livrare", "ridicare"] as Mode[]).map(m => <button key={m} aria-pressed={d.mode === m} onClick={() => setD({ ...d, mode: m })}>{MODE_LABEL[m]}</button>)}</div></div>
+          <label className="adm-sw"><button className="switch" role="switch" aria-checked={d.all_items} onClick={() => setD({ ...d, all_items: !d.all_items })} /><span>{d.all_items ? "La tot meniul (și produsele adăugate mai târziu)" : "Doar produsele alese din listă"}</span></label>
           <div className="hours-row">
             <label className="fl"><span>Începe <i>opțional</i></span><input type="datetime-local" value={d.starts} onChange={e => setD({ ...d, starts: e.target.value })} /></label>
             <label className="fl"><span>Se termină <i>opțional</i></span><input type="datetime-local" value={d.ends} onChange={e => setD({ ...d, ends: e.target.value })} /></label>

@@ -1,7 +1,7 @@
 // Program de lucru și precomenzi, în ora României (aceleași reguli ca is_open_at / preorder_error din baza de date).
 export type Hours = {
   open_time?: string; close_time?: string; open_days?: number[];
-  preorder_on?: boolean; preorder_from?: string; preorder_days?: number; preorder_lead_min?: number; tz?: string;
+  preorder_on?: boolean; preorder_from?: string; preorder_days?: number; preorder_lead_min?: number; preorder_until?: string; tz?: string;
 };
 
 const TZ = (h: Hours) => h.tz || "Europe/Bucharest";
@@ -41,7 +41,7 @@ const MO = ["ian.", "feb.", "mar.", "apr.", "mai", "iun.", "iul.", "aug.", "sept
 export function slotDays(h: Hours, now = Date.now(), step = 15): SlotDay[] {
   if (h.preorder_on === false) return [];
   const tz = TZ(h), lead = (h.preorder_lead_min ?? 45) * 60000;
-  const from = Math.max(mins(h.preorder_from, 720), mins(h.open_time, 660)), to = mins(h.close_time, 1320);
+  const from = Math.max(mins(h.preorder_from, 720), mins(h.open_time, 660)), to = Math.min(mins(h.close_time, 1320), mins(h.preorder_until, 1305));
   const today = parts(now, tz), out: SlotDay[] = [];
   for (let i = 0; i <= (h.preorder_days ?? 2); i++) {
     const noon = zoned(today.y, today.mo, today.d, 720, tz) + i * 864e5;

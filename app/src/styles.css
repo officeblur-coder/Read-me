@@ -1500,3 +1500,33 @@ body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area
 .pay-box{display:grid;gap:10px;width:100%;max-width:420px;margin:16px auto 0;padding:14px;border-radius:var(--r);border:1px solid var(--gold);background:var(--surface-2);text-align:center}
 .pay-box p{margin:0;font-size:13px}
 .paid-tag{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:6px 12px;border-radius:999px;background:var(--ok-bg);color:var(--ok);font-weight:700;font-size:12.5px}
+/* subsol: rețele sociale + semnătura agenției */
+.sf-social{display:flex;flex-wrap:wrap;gap:10px}
+.sf-social a{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:999px;border:1px solid var(--line-2);color:var(--text);text-decoration:none;font-weight:700;font-size:13px}
+.sf-social a:hover{border-color:var(--brand);color:var(--brand)}
+.sf-blur{display:inline-flex;align-items:center;gap:10px;justify-self:start;color:var(--muted)!important;text-decoration:none;font-size:12.5px}
+.sf-blur img{width:36px;height:36px;border-radius:8px}
+.sf-blur b{color:var(--text)}
+/* livrare / ridicare: prima fereastră */
+.mp-wrap{position:fixed;inset:0;z-index:95;display:grid;place-items:end center}
+.mp-veil{position:absolute;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(3px)}
+.mp-sheet{position:relative;width:min(560px,100%);margin:0 auto;padding:26px 18px calc(22px + env(safe-area-inset-bottom));border-radius:28px 28px 0 0;background:var(--surface);box-shadow:var(--shadow);text-align:center;animation:mpUp .32s cubic-bezier(.2,.9,.3,1)}
+@media (min-width:700px){.mp-wrap{place-items:center}.mp-sheet{border-radius:28px}}
+@keyframes mpUp{from{transform:translateY(40px);opacity:0}}
+.mp-sheet h2{margin:0;font-size:24px}
+.mp-sub{margin:6px 0 18px;color:var(--muted);font-size:13.5px}
+.mp-x{position:absolute;top:12px;right:12px}
+.mp-opts{display:grid;gap:12px}
+.mp-opt{position:relative;display:grid;justify-items:center;gap:6px;padding:20px 16px 18px;border-radius:22px;border:2px solid var(--line-2);background:var(--surface-2);color:var(--text)}
+.mp-opt b{font-size:18px}
+.mp-opt span{font-size:13px;color:var(--muted)}
+.mp-opt em{font-style:normal;font-weight:800;color:var(--brand)}
+.mp-opt.pick{border-color:var(--brand);background:linear-gradient(160deg,rgba(255,122,26,.16),rgba(255,122,26,.04)),var(--surface-2)}
+.mp-opt.on{box-shadow:0 0 0 3px rgba(255,122,26,.35)}
+.mp-opt svg{color:var(--brand)}
+.mp-badge{position:absolute;top:-12px;right:14px;padding:6px 12px;border-radius:999px;background:var(--brand);color:#fff;font-weight:900;font-size:18px;box-shadow:0 8px 20px -6px rgba(255,122,26,.8)}
+.mp-badge.soft{font-size:15px;background:var(--gold);color:#1a1209;box-shadow:none}
+.mp-opt.pick b{font-size:20px}
+/* coș: modul ales în prima fereastră, fără schimbare la finalizare */
+.mode-fixed{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:14px 0 6px;padding:12px 14px;border-radius:14px;background:var(--surface-2);border:1px solid var(--line-2)}
+.mode-fixed svg{color:var(--brand)}

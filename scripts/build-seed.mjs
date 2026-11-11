@@ -57,3 +57,8 @@ fs.writeFileSync(path.join(root, "supabase/actualizare_stripe.sql"),
   "-- Lyra: plata online cu cardul (Stripe). Nu atinge meniul, comenzile sau clienții. Opțiunea rămâne oprită până o pornești din admin.\n" +
   "-- Supabase → SQL Editor → New query → lipiți tot fișierul → Run. Se poate rula de mai multe ori.\n\n" +
   ["05_reports.sql", "10_eta_confirm.sql", "13_online_pay.sql"].map(f => fs.readFileSync(path.join(root, "supabase", f), "utf8")).join("\n\n") + "\n");
+// Noiembrie 2026 (meniu): toată schema (place_order, reduceri pe livrare/ridicare, SGR, precomenzi) + schimbările de date
+fs.writeFileSync(path.join(root, "supabase/actualizare_2026-11-meniu.sql"),
+  "-- Lyra: actualizare meniu noiembrie 2026 (−10% livrare / −15% ridicare, SGR, precomenzi până la 21:45). Nu șterge comenzi sau clienți.\n" +
+  "-- Supabase → SQL Editor → New query → lipiți tot fișierul → Run. Se poate rula de mai multe ori.\n\n" +
+  schema + "\n\n" + fs.readFileSync(path.join(root, "supabase/date_2026-11-meniu.sql"), "utf8") + "\n");

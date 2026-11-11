@@ -293,7 +293,7 @@ begin
   end if;
   return (select to_jsonb(x) from (
     select o.number, o.status, o.mode, o.address, o.items, o.subtotal, o.discount, o.discount_label,
-           o.points_value, o.delivery_fee, o.packaging, o.total, o.points_earned, o.eta_min, o.created_at,
+           o.points_value, o.delivery_fee, o.packaging, o.sgr, o.total, o.points_earned, o.eta_min, o.created_at,
            o.accepted_at, o.road_at, o.done_at, o.reject_reason, o.rating, o.scheduled_for, o.welcome_value,
            o.offered_at, o.offer_eta, o.offer_answer, o.cancelled_by, o.payment, o.pay_status, s.offer_window_min as offer_window, s.offer_timeout, now() as server_now,
            coalesce((select jsonb_agg(jsonb_build_object('body', m.body, 'at', m.created_at) order by m.created_at)

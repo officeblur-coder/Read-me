@@ -13,8 +13,8 @@ export function HoursTab({ flash }: { flash: (m: string) => void }) {
   useEffect(() => {
     supabase.from("settings").select("confirm_eta,offer_window_min,offer_timeout,online_pay_on").eq("id", 1).single()
       .then(({ data }) => data && setC({ confirm_eta: data.confirm_eta !== false, offer_window_min: data.offer_window_min ?? 5, offer_timeout: data.offer_timeout === "cancel" ? "cancel" : "accept", online_pay_on: !!data.online_pay_on }));
-    supabase.from("settings").select("open_time,close_time,open_days,preorder_on,preorder_from,preorder_days,preorder_lead_min,tz").eq("id", 1).single()
-      .then(({ data }) => data && setH({ ...(data as Hours), open_time: t5(data.open_time), close_time: t5(data.close_time), preorder_from: t5(data.preorder_from) }));
+    supabase.from("settings").select("open_time,close_time,open_days,preorder_on,preorder_from,preorder_days,preorder_lead_min,preorder_until,tz").eq("id", 1).single()
+      .then(({ data }) => data && setH({ ...(data as Hours), open_time: t5(data.open_time), close_time: t5(data.close_time), preorder_from: t5(data.preorder_from), preorder_until: t5(data.preorder_until || "21:45") }));
   }, []);
   if (!h) return <div className="adm-page"><p className="muted">Se încarcă…</p></div>;
   const days = h.open_days || [];
@@ -26,7 +26,7 @@ export function HoursTab({ flash }: { flash: (m: string) => void }) {
     setBusy(true);
     const { error } = await supabase.from("settings").update({
       open_time: h.open_time, close_time: h.close_time, open_days: [...days].sort(), preorder_on: h.preorder_on,
-      preorder_from: h.preorder_from, preorder_days: Math.min(14, Math.max(0, Number(h.preorder_days) || 0)), preorder_lead_min: Math.min(600, Math.max(0, Number(h.preorder_lead_min) || 0)),
+      preorder_from: h.preorder_from, preorder_until: h.preorder_until || "21:45", preorder_days: Math.min(14, Math.max(0, Number(h.preorder_days) || 0)), preorder_lead_min: Math.min(600, Math.max(0, Number(h.preorder_lead_min) || 0)),
       ...(c ? { confirm_eta: c.confirm_eta, offer_window_min: Math.min(30, Math.max(1, Number(c.offer_window_min) || 5)), offer_timeout: c.offer_timeout, online_pay_on: c.online_pay_on } : {}),
     }).eq("id", 1);
     setBusy(false);
@@ -51,6 +51,7 @@ export function HoursTab({ flash }: { flash: (m: string) => void }) {
           <label className="adm-sw"><button className="switch" role="switch" aria-checked={h.preorder_on !== false} onClick={() => setH({ ...h, preorder_on: h.preorder_on === false })} /><span>{h.preorder_on !== false ? "Clienții pot programa comenzi" : "Precomenzi oprite"}</span></label>
           <div className="hours-row">
             <label className="fl"><span>Cel mai devreme la</span><input type="time" value={h.preorder_from} onChange={e => setH({ ...h, preorder_from: e.target.value })} /></label>
+            <label className="fl"><span>Cel mai târziu la</span><input type="time" value={h.preorder_until} onChange={e => setH({ ...h, preorder_until: e.target.value })} /></label>
             <label className="fl"><span>Cu câte zile înainte</span><input inputMode="numeric" value={String(h.preorder_days ?? "")} onChange={e => setH({ ...h, preorder_days: Number(e.target.value.replace(/\D/g, "")) })} /></label>
             <label className="fl"><span>Minim minute de acum</span><input inputMode="numeric" value={String(h.preorder_lead_min ?? "")} onChange={e => setH({ ...h, preorder_lead_min: Number(e.target.value.replace(/\D/g, "")) })} /></label>
           </div>

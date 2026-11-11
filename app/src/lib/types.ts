@@ -31,6 +31,7 @@ export type Item = {
   active: boolean;
   sort: number;
   packaging: number;     // ambalaj, lei pe bucată
+  sgr?: number;          // garanție SGR, lei pe bucată
 };
 
 export type Settings = import("./schedule").Hours & {
@@ -113,6 +114,7 @@ export type Order = {
   points_value: number;
   delivery_fee: number;
   packaging?: number;
+  sgr?: number;
   total: number;
   points_earned: number;
   source: string | null;
@@ -143,7 +145,7 @@ export type OfferAnswer = "accepted" | "cancelled" | "auto_accepted" | "auto_can
 export type PublicOrder = Pick<
   Order,
   | "number" | "status" | "mode" | "address" | "items" | "subtotal" | "discount" | "discount_label"
-  | "points_value" | "delivery_fee" | "packaging" | "total" | "points_earned" | "eta_min" | "created_at"
+  | "points_value" | "delivery_fee" | "packaging" | "sgr" | "total" | "points_earned" | "eta_min" | "created_at"
   | "accepted_at" | "road_at" | "done_at" | "reject_reason" | "rating" | "scheduled_for" | "welcome_value"
   | "offered_at" | "offer_eta" | "offer_answer" | "cancelled_by" | "payment" | "pay_status"
 > & { messages: { body: string; at: string }[]; offer_window?: number; offer_timeout?: "accept" | "cancel"; server_now?: string };

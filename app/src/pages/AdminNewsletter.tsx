@@ -180,7 +180,7 @@ export function NewsletterTab({ items, cats, flash }: { items: Item[]; cats: Cat
 function Editor({ d, setD, items, cats, flash, subscribers, limit, onClose }: {
   d: Draft; setD: (d: Draft) => void; items: Item[]; cats: Category[]; flash: (m: string) => void; subscribers: number; limit: number; onClose: () => void;
 }) {
-  const dsc = useDiscounts();
+  const dsc = useDiscounts(false, "livrare");   // emailurile arată prețul de livrare
   const [site, setSite] = useState("https://lyrasdelivery.ro");
   const [me, setMe] = useState("");
   const [view, setView] = useState<"desk" | "mob">("desk");

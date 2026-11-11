@@ -42,6 +42,8 @@ create table if not exists public.items (
 create index if not exists items_category_idx on public.items(category_id, sort);
 -- ambalaj pentru livrare, lei pe bucată (adăugat la fiecare porție comandată)
 alter table public.items add column if not exists packaging numeric(6,2) not null default 2 check (packaging >= 0);
+-- garanția SGR (sticle, doze, PET): se adaugă la total, nu intră la reduceri
+alter table public.items add column if not exists sgr numeric(6,2) not null default 0 check (sgr >= 0);
 
 -- ---------- Setări restaurant (un singur rând) ----------
 create table if not exists public.settings (
@@ -76,6 +78,7 @@ alter table public.settings add column if not exists preorder_on boolean not nul
 alter table public.settings add column if not exists preorder_from time not null default '12:00';
 alter table public.settings add column if not exists preorder_days int not null default 2;
 alter table public.settings add column if not exists preorder_lead_min int not null default 45;
+alter table public.settings add column if not exists preorder_until time not null default '21:45';   -- ultima oră pentru precomenzi
 alter table public.settings add column if not exists tz text not null default 'Europe/Bucharest';
 
 create or replace function public.is_open_at(p_at timestamptz) returns boolean
@@ -97,8 +100,8 @@ begin
   if l::date > (now() at time zone s.tz)::date + s.preorder_days then
     return format('Poți programa cel mult cu %s zile înainte.', s.preorder_days); end if;
   if not (extract(isodow from l)::int = any(s.open_days)) then return 'În ziua aleasă restaurantul este închis.'; end if;
-  if l::time < t0 or l::time > s.close_time then
-    return format('Poți programa între %s și %s.', to_char(t0, 'HH24:MI'), to_char(s.close_time, 'HH24:MI')); end if;
+  if l::time < t0 or l::time > least(s.close_time, s.preorder_until) then
+    return format('Poți programa între %s și %s.', to_char(t0, 'HH24:MI'), to_char(least(s.close_time, s.preorder_until), 'HH24:MI')); end if;
   return null;
 end $$;
 grant execute on function public.is_open_at(timestamptz), public.preorder_error(timestamptz) to anon, authenticated;
@@ -217,6 +220,7 @@ create table if not exists public.orders (
   credited       boolean not null default false
 );
 alter table public.orders add column if not exists packaging numeric(10,2) not null default 0;
+alter table public.orders add column if not exists sgr numeric(10,2) not null default 0;
 create index if not exists orders_status_idx on public.orders(status, created_at desc);
 -- precomandă: ora la care clientul vrea comanda (null = cât mai curând)
 alter table public.orders add column if not exists scheduled_for timestamptz;
@@ -309,6 +313,8 @@ declare
   is_promo boolean;
   pack     numeric := 0;  -- ambalaj, nu intră la reduceri
   lpack    numeric;
+  sgr      numeric := 0;  -- garanție SGR, nu intră la reduceri
+  lsgr     numeric;
   cfg      record;          -- rewards_settings (tabelul e creat în 03_rewards.sql)
   want     int;
   pts_used int := 0;
@@ -360,7 +366,7 @@ begin
     if not found then raise exception 'Produsul % nu mai există în meniu.', line->>'id' using errcode = 'P0001'; end if;
     if not it.available then raise exception '% este epuizat azi.', it.name_ro using errcode = 'P0001'; end if;
     qty := least(greatest(coalesce((line->>'qty')::int, 1), 1), 50);
-    vi := null; vlabel := null; grams := it.grams; unit := it.price; lpack := it.packaging;
+    vi := null; vlabel := null; grams := it.grams; unit := it.price; lpack := it.packaging; lsgr := it.sgr;
     if it.variants is not null and jsonb_array_length(it.variants) > 0 then
       vi := least(greatest(coalesce((line->>'vi')::int, 0), 0), jsonb_array_length(it.variants) - 1);
       unit   := (it.variants->vi->>'p')::numeric;
@@ -379,26 +385,27 @@ begin
       unit := pr.price;
       for ex_id in select unnest(pr.extras) loop
         select * into ex from public.items where id = ex_id;
-        if found then ex_arr := ex_arr || jsonb_build_object('id', ex.id, 'name', ex.name_ro, 'price', 0); lpack := lpack + ex.packaging; end if;
+        if found then ex_arr := ex_arr || jsonb_build_object('id', ex.id, 'name', ex.name_ro, 'price', 0); lpack := lpack + ex.packaging; lsgr := lsgr + ex.sgr; end if;
       end loop;
     else
-      -- reducere procentuală din admin (07_discounts.sql): doar pe prețul produsului, nu pe extra
-      dpct := public.item_discount_pct(it.id);
+      -- reducere procentuală din admin (07_discounts.sql), după livrare / ridicare: doar pe prețul produsului, nu pe extra
+      dpct := public.item_discount_pct(it.id, v_mode);
       if dpct > 0 then old_unit := unit; unit := round(unit * (100 - dpct) / 100.0, 2); end if;
       for ex_id in select jsonb_array_elements_text(coalesce(line->'extras','[]')) loop
         select * into ex from public.items where id = ex_id and active and available;
         if found then
-          unit := unit + ex.price; lpack := lpack + ex.packaging;
+          unit := unit + ex.price; lpack := lpack + ex.packaging; lsgr := lsgr + ex.sgr;
           ex_arr := ex_arr || jsonb_build_object('id', ex.id, 'name', ex.name_ro, 'price', ex.price);
         end if;
       end loop;
     end if;
     sub := sub + unit * qty;
     pack := pack + lpack * qty;
+    sgr := sgr + lsgr * qty;
     lines := lines || jsonb_build_object(
       'id', it.id, 'name', it.name_ro, 'qty', qty, 'unit', unit, 'variant', vlabel, 'vi', vi,
       'grams', grams, 'hot', it.hot, 'allergens', to_jsonb(it.allergens), 'category', it.category_id,
-      'extras', ex_arr, 'note', left(coalesce(line->>'note',''), 200), 'pack', lpack,
+      'extras', ex_arr, 'note', left(coalesce(line->>'note',''), 200), 'pack', lpack, 'sgr', lsgr,
       'promo', case when is_promo then pr.title end,
       'disc_pct', case when dpct > 0 then dpct end, 'old_unit', old_unit);
   end loop;
@@ -479,15 +486,15 @@ begin
   rbase := greatest(sub - disc - pts_val - welc, 0);   -- doar produsele plătite cu bani aduc puncte (bonusul nu)
   earn  := case when coalesce(cfg.enabled, false) then floor(rbase)::int else 0 end;
 
-  total := greatest(sub - disc - pts_val - welc + fee, 0) + pack;
+  total := greatest(sub - disc - pts_val - welc + fee, 0) + pack + sgr;
 
   insert into public.orders(customer_id, name, phone, email, address, mode, payment, note, items, allergies,
-    subtotal, discount, discount_label, points_used, points_value, delivery_fee, packaging, total, points_earned, source,
+    subtotal, discount, discount_label, points_used, points_value, delivery_fee, packaging, sgr, total, points_earned, source,
     reward_tier, reward_base, voucher_id, lat, lng, zone_name, scheduled_for, welcome_value)
   values (cust.id, left(trim(p->>'name'),80), left(trim(p->>'phone'),30), coalesce(nullif(trim(p->>'email'),''), cust.email),
     case when v_mode = 'livrare' then left(trim(p->>'address'),200) else 'Ridicare din restaurant' end,
     v_mode, coalesce(p->>'payment','card'), left(p->>'note',300), lines, allg,
-    sub, disc, disc_lbl, pts_used, pts_val, fee, pack, total, earn, left(p->>'source',30),
+    sub, disc, disc_lbl, pts_used, pts_val, fee, pack, sgr, total, earn, left(p->>'source',30),
     rtier, rbase, vo_id, case when v_mode = 'livrare' then v_lat end, case when v_mode = 'livrare' then v_lng end, zone_nm, v_sched, welc)
   returning * into o;
   if welc > 0 then

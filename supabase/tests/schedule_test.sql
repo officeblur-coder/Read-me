@@ -36,8 +36,10 @@ begin
 
   update public.settings set open_time = '11:00', close_time = '22:00', accepting_orders = true where id = 1;
   perform pg_temp.ok(pg_temp.err(jsonb_build_object('scheduled_for', pg_temp.at(1, '12:00'))) is null, 'mâine la 12:00 e permis');
-  perform pg_temp.ok(pg_temp.err(jsonb_build_object('scheduled_for', pg_temp.at(1, '22:00'))) is null, 'mâine la 22:00 e permis');
-  perform pg_temp.ok(pg_temp.err(jsonb_build_object('scheduled_for', pg_temp.at(1, '11:30'))) like 'Poți programa între 12:00 și 22:00%', 'mâine la 11:30 refuzat (înainte de 12)');
+  update public.settings set preorder_until = '21:45' where id = 1;
+  perform pg_temp.ok(pg_temp.err(jsonb_build_object('scheduled_for', pg_temp.at(1, '21:45'))) is null, 'mâine la 21:45 e permis (ultima oră)');
+  perform pg_temp.ok(pg_temp.err(jsonb_build_object('scheduled_for', pg_temp.at(1, '22:00'))) like 'Poți programa între 12:00 și 21:45%', 'mâine la 22:00 refuzat (după 21:45)');
+  perform pg_temp.ok(pg_temp.err(jsonb_build_object('scheduled_for', pg_temp.at(1, '11:30'))) like 'Poți programa între 12:00 și 21:45%', 'mâine la 11:30 refuzat (înainte de 12)');
   perform pg_temp.ok(pg_temp.err(jsonb_build_object('scheduled_for', pg_temp.at(1, '22:15'))) like 'Poți programa între%', 'mâine la 22:15 refuzat');
   perform pg_temp.ok(pg_temp.err(jsonb_build_object('scheduled_for', pg_temp.at(3, '13:00'))) like 'Poți programa cel mult%', 'peste 3 zile refuzat');
   perform pg_temp.ok(pg_temp.err(jsonb_build_object('scheduled_for', (now() + interval '10 minutes')::text)) like 'Alege o oră%', 'prea curând refuzat');

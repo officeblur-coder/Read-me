@@ -9,7 +9,7 @@ import banners from "./seed/banners.json";
 
 type Row = Record<string, any>;
 type DB = Record<string, Row[]>;
-const KEY = "lyra-demo-db-v1";
+const KEY = "lyra-demo-db-v2";
 const AUTH = "lyra-demo-session";
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36));
 const iso = (ms = Date.now()) => new Date(ms).toISOString();
@@ -60,6 +60,11 @@ function fresh(): DB {
     promo_codes: [
       { code: "LYRA10", percent: 10, category_id: null, label: "-10% la toată comanda", active: true },
       { code: "PRANZ15", percent: 15, category_id: "burger", label: "-15% la Lyra's Burger", active: true },
+    ],
+    // ca în restaurantul real: -10% la tot meniul la livrare, -15% la ridicare
+    item_discounts: [
+      { id: "d-liv", name: "10% la tot meniul · livrare", percent: 10, item_ids: [], active: true, starts_at: null, ends_at: null, mode: "livrare", all_items: true, created_at: iso() },
+      { id: "d-rid", name: "15% la tot meniul · ridicare", percent: 15, item_ids: [], active: true, starts_at: null, ends_at: null, mode: "ridicare", all_items: true, created_at: iso() },
     ],
     staff: [{ user_id: STAFF_USER, email: "demo@lyrasdelivery.ro", name: "Vlad", role: "admin" }],
     customers: [],
@@ -255,7 +260,8 @@ function placeOrder(p: Row) {
   if (p.mode === "livrare" && !p.address?.trim()) throw new Error("Completează adresa de livrare.");
   if (!p.items?.length) throw new Error("Coșul e gol.");
   const cust = session ? db.customers.find(c => c.id === session!.user.id) : null;
-  const lines: Row[] = []; let sub = 0, pack = 0;
+  const lines: Row[] = []; let sub = 0, pack = 0, sgr = 0;
+  const dpct = (id: string) => Math.max(0, ...(db.item_discounts || []).filter(d => d.active && (d.all_items || d.item_ids.includes(id)) && (d.mode === "all" || d.mode === p.mode)).map(d => d.percent));
   for (const l of p.items) {
     const it = db.items.find(x => x.id === l.id && x.active);
     if (!it) throw new Error(`Produsul ${l.id} nu mai există în meniu.`);
@@ -266,8 +272,10 @@ function placeOrder(p: Row) {
     const pr = l.promo ? db.promos.find(x => x.id === l.promo && x.active && x.item_id === it.id && x.price != null) : null;
     const extras: Row[] = [];
     if (pr) { unit = pr.price; (pr.extras || []).forEach((id: string) => { const e = db.items.find(x => x.id === id); if (e) extras.push({ id, name: e.name_ro, price: 0 }); }); }
-    else (l.extras || []).forEach((id: string) => { const e = db.items.find(x => x.id === id && x.active && x.available); if (e) { unit += e.price; extras.push({ id, name: e.name_ro, price: e.price }); } });
+    else { const dp = dpct(it.id); if (dp > 0) unit = Math.round(unit * (100 - dp)) / 100; }
+    if (!pr) (l.extras || []).forEach((id: string) => { const e = db.items.find(x => x.id === id && x.active && x.available); if (e) { unit += e.price; extras.push({ id, name: e.name_ro, price: e.price }); } });
     sub += unit * qty;
+    sgr += (it.sgr ?? 0) * qty;
     pack += ((it.packaging ?? 2) + extras.reduce((t: number, e: Row) => t + (db.items.find(x => x.id === e.id)?.packaging ?? 2), 0)) * qty;
     lines.push({ id: it.id, name: it.name_ro, qty, unit, variant, vi, grams, hot: it.hot, allergens: it.allergens, category: it.category_id, extras, note: (l.note || "").slice(0, 200), promo: pr ? pr.title : null });
   }
@@ -290,14 +298,14 @@ function placeOrder(p: Row) {
     if (sub < (s.welcome_min ?? 150)) throw new Error(`Bonusul se folosește la o comandă de minim ${s.welcome_min ?? 150} lei.`);
     welc = Math.min(cust.welcome_credit, Math.max(0, sub - disc - ptsVal)); cust.welcome_used_at = iso();
   }
-  const total = Math.max(sub - disc - ptsVal - welc + fee, 0) + pack;
+  const total = Math.max(sub - disc - ptsVal - welc + fee, 0) + pack + sgr;
   const mult = !cust ? 1 : cust.lifetime >= 1500 ? 1.1 : cust.lifetime >= 500 ? 1.05 : 1;
   const number = Math.max(1036, ...db.orders.map(o => o.number)) + 1;
   const o: Row = {
     id: uid(), number, token: uid(), customer_id: cust?.id ?? null, name: p.name.trim(), phone: p.phone.trim(), email: p.email || cust?.email || null,
     address: p.mode === "livrare" ? p.address.trim() : "Ridicare din restaurant", mode: p.mode, payment: p.payment || "card", note: p.note || null,
     items: lines, allergies: cust?.allergies || [], subtotal: sub, discount: disc, discount_label: label, points_used: ptsVal * 10, points_value: ptsVal,
-    delivery_fee: fee, packaging: pack, total, points_earned: Math.floor((total - pack) * mult), source: p.source, status: "new", reject_reason: null, eta_min: null,
+    delivery_fee: fee, packaging: pack, sgr, total, points_earned: Math.floor((total - pack - sgr) * mult), source: p.source, status: "new", reject_reason: null, eta_min: null,
     created_at: iso(), accepted_at: null, road_at: null, done_at: null, rating: null, credited: false, courier_id: null, courier_name: null, demo_auto: true, scheduled_for: p.scheduled_for || null, welcome_value: welc,
   };
   db.orders.push(o); save(); emit("orders", "INSERT", o);

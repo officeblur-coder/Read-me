@@ -8,7 +8,8 @@ import { TIER_CLS, nextTierInfo, planRedeem, redeemCap, tierName, useRewards, vp
 import { flyToCart, haptic } from "../lib/fx";
 import { LOCALITIES, geocodeAddress, useZones, zoneFor, type LatLng } from "../lib/zones";
 import { hoursLabel, isOpenNow, slotDays, whenLabel } from "../lib/schedule";
-import { cut, useDiscounts } from "../lib/discounts";
+import { cut, menuPct, useDiscounts } from "../lib/discounts";
+import ModePick from "../components/ModePick";
 import { track } from "../lib/track";
 import { InstallSheet, OffersAsk, shouldAutoShow, useInstall } from "../components/InstallApp";
 import Icon from "../components/Icon";
@@ -60,7 +61,11 @@ export default function Menu({ source }: { source?: string }) {
   const [loadErr, setLoadErr] = useState("");
   const [loaded, setLoaded] = useState(false);
   const [lang, setLang] = useState<Lang>("ro");
-  const [mode, setMode] = useState<"livrare" | "ridicare">("livrare");
+  // livrare / ridicare: aleasă în prima fereastră (o dată pe vizită), ținută minte pe telefon
+  const [mode, setModeRaw] = useState<"livrare" | "ridicare">(() => { try { return localStorage.getItem("lyra-mode") === "ridicare" ? "ridicare" : "livrare"; } catch { return "livrare"; } });
+  const setMode = (m: "livrare" | "ridicare") => { setModeRaw(m); try { localStorage.setItem("lyra-mode", m); } catch { /* ignore */ } };
+  const [modePick, setModePick] = useState(() => { try { return !sessionStorage.getItem("lyra-mode-ok"); } catch { return true; } });
+  const pickMode = (m: "livrare" | "ridicare") => { setMode(m); setModePick(false); try { sessionStorage.setItem("lyra-mode-ok", "1"); } catch { /* ignore */ } };
   // când: „cât mai curând” (doar în program) sau o oră aleasă (precomandă)
   const [when, setWhen] = useState<"asap" | "later">("asap");
   const [schedDay, setSchedDay] = useState("");
@@ -193,7 +198,7 @@ export default function Menu({ source }: { source?: string }) {
   }, [shownBanners.length]);
 
   const byId = useMemo(() => Object.fromEntries(items.map(x => [x.id, x])), [items]);
-  const dsc = useDiscounts();
+  const dsc = useDiscounts(false, mode);
   useEffect(() => { track("visit"); }, []);
   const nm = (it: Item) => (L && it.name_hu) || it.name_ro;
   const ds = (it: Item) => (L && it.desc_hu) || it.desc_ro || "";
@@ -247,13 +252,16 @@ export default function Menu({ source }: { source?: string }) {
   // delivery packaging, per piece (dish + each extra); no discounts or points on it
   const pk = (it?: Item) => (it ? Number(it.packaging ?? 2) : 0);
   const pack = validCart.reduce((s, l) => s + (pk(byId[l.id]) + l.extras.reduce((t, k) => t + pk(byId[k]), 0)) * l.qty, 0);
+  // garanția SGR (sticle, doze, PET), pe bucată; fără reduceri
+  const sg = (it?: Item) => (it ? Number(it.sgr ?? 0) : 0);
+  const sgr = validCart.reduce((s, l) => s + (sg(byId[l.id]) + l.extras.reduce((t, k) => t + sg(byId[k]), 0)) * l.qty, 0);
   // bonus de bun venit: tot odată, la produse de minim welcome_min lei, fără cod de reducere (ca în place_order)
   const wMin = Number(settings?.welcome_min ?? 150);
   const wCredit = Number(customer?.welcome_credit || 0);
   const wHas = !!customer && wCredit > 0 && !customer.welcome_used_at;
   const wOk = wHas && sub >= wMin && disc === 0;
   const welc = wOk && useWelcome ? Math.min(wCredit, Math.max(0, sub - disc - ptsVal)) : 0;
-  const total = Math.max(0, sub - disc - ptsVal - welc + fee) + pack;
+  const total = Math.max(0, sub - disc - ptsVal - welc + fee) + pack + sgr;
   const earn = rwOn ? Math.floor(Math.max(0, sub - disc - ptsVal - welc)) : 0;
   const count = validCart.reduce((s, l) => s + l.qty, 0);
   const qtyOf = (id: string) => validCart.filter(l => l.id === id && !l.promo).reduce((s, l) => s + l.qty, 0);
@@ -476,19 +484,18 @@ export default function Menu({ source }: { source?: string }) {
         <div className="cp-sum">
           <div><span>Produse</span><span className="num">{lei(sub)}</span></div>
           {pack > 0 && <div><span>Ambalaj</span><span className="num">{lei(pack)}</span></div>}
+          {sgr > 0 && <div><span>Garanție SGR</span><span className="num">{lei(sgr)}</span></div>}
           {mode === "livrare" && <div><span>Livrare{zone ? ` · ${zone.name}` : ""}</span><span className="num">{!feeKnown ? "după adresă" : fee ? lei(fee) : "gratuit"}</span></div>}
-          <div className="tot"><span>Total</span><span className="num">{lei(sub + pack + fee)}</span></div>
+          <div className="tot"><span>Total</span><span className="num">{lei(sub + pack + sgr + fee)}</span></div>
         </div>
         <button className="cta" onClick={() => { setStep("details"); track("checkout"); }}>Continuă <span>→</span></button>
       </>) : (<>
         {rwOn && (customer
           ? <div className="club-strip"><span className={`club-dot ${TIER_CLS[tierN - 1]}`} /><div><b>Lyra {tierLabel} · {rw.me?.points ?? customer.points} puncte</b><small>Valorează {lei(rw.me?.value ?? 0)} · câștigi +{earn} puncte la comanda asta</small></div></div>
           : <Link to="/cont" className="club-strip guest"><Icon name="star" size={18} fill /><div><b>Ai cont Lyra Rewards?</b><small>Intră ca să folosești punctele și să-ți salvăm adresa.</small></div><span>→</span></Link>)}
-        <p className="cp-lbl">Cum vrei comanda?</p>
-        <div className="seg big2">
-          <button aria-pressed={mode === "livrare"} onClick={() => setMode("livrare")}><Icon name="bike" size={18} />{t.deliv}</button>
-          <button aria-pressed={mode === "ridicare"} onClick={() => setMode("ridicare")}><Icon name="bag" size={18} />{t.pick}</button>
-        </div>
+        <div className="mode-fixed"><Icon name={mode === "livrare" ? "bike" : "bag"} size={18} />
+          <b>{mode === "livrare" ? "Livrare la domiciliu" : "Ridicare din restaurant"}</b>
+          {menuPct(dsc.list, mode) > 0 && <span className="b b-off">−{menuPct(dsc.list, mode)}% la tot meniul</span>}</div>
         <p className="cp-lbl">Când o vrei?</p>
         <div className="seg big2">
           <button aria-pressed={whenEff === "asap"} disabled={!canAsap} onClick={() => setWhen("asap")}><Icon name="bolt" size={18} />{canAsap ? "Cât mai curând" : "Închis acum"}</button>
@@ -568,6 +575,7 @@ export default function Menu({ source }: { source?: string }) {
           {welc > 0 && <div className="neg"><span>Bonus de bun venit</span><span className="num">−{lei(welc)}</span></div>}
           {voucherPick && <div className="neg"><span>Desert cadou: {nm(byId[voucherPick])}</span><span className="num">gratuit</span></div>}
           {pack > 0 && <div><span>Ambalaj</span><span className="num">{lei(pack)}</span></div>}
+          {sgr > 0 && <div><span>Garanție SGR</span><span className="num">{lei(sgr)}</span></div>}
           {mode === "livrare" && <div><span>Livrare{zone ? ` · ${zone.name}` : ""}</span><span className="num">{!feeKnown ? "după adresă" : fee ? lei(fee) : "gratuit"}</span></div>}
           <div className="tot"><span>Total</span><span className="num">{lei(total)}</span></div>
           {rwOn && (customer || form.email.includes("@")) && earn > 0 && <div className="earn"><span>Câștigi la livrare</span><span className="num">+{earn} puncte · {lei(Math.floor(earn * vppOf(rw.cfg, customer ? tierN : 1) * 100) / 100)}</span></div>}
@@ -598,7 +606,7 @@ export default function Menu({ source }: { source?: string }) {
             <b>LYRA’S</b><span>DELIVERY</span>
             <svg viewBox="0 0 120 10" aria-hidden="true"><path d="M4 6c30-5 80-5 112 0" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" /></svg>
           </a>
-          <button className="tb-where" onClick={() => setMode(mode === "livrare" ? "ridicare" : "livrare")} aria-label="Livrare sau ridicare">
+          <button className="tb-where" onClick={() => setModePick(true)} aria-label="Livrare sau ridicare">
             <Icon name="pin" size={17} /><span>{mode === "livrare" ? `${t.deliv} · Mureș` : `${t.pick} · Acățari`}</span><Icon name="chev" size={15} />
           </button>
           <label className="tb-search"><Icon name="search" size={18} /><input type="search" value={q} onChange={e => setQ(e.target.value)} placeholder={t.search} aria-label="Caută în meniu" /></label>
@@ -779,9 +787,11 @@ export default function Menu({ source }: { source?: string }) {
       })()}
 
       {/* ---------- promo popup ---------- */}
-      {!cartOpen && !sheet && !popup && <OffersAsk />}
-      {installOpen && !cartOpen && !sheet && <InstallSheet hasAccount={!!customer} onClose={() => setInstallOpen(false)} />}
-      {joinPop && !installOpen && !installShown.current && !popup && !customer && !cartOpen && !sheet && <div className="pop" role="dialog" aria-modal="true" aria-label="Lyra Rewards" onClick={e => e.target === e.currentTarget && closeJoin()}>
+      {modePick && <ModePick current={mode} livPct={menuPct(dsc.list, "livrare")} ridPct={menuPct(dsc.list, "ridicare")} onPick={pickMode}
+        onClose={(() => { try { return sessionStorage.getItem("lyra-mode-ok") ? () => setModePick(false) : undefined; } catch { return undefined; } })()} />}
+      {!modePick && !cartOpen && !sheet && !popup && <OffersAsk />}
+      {installOpen && !modePick && !cartOpen && !sheet && <InstallSheet hasAccount={!!customer} onClose={() => setInstallOpen(false)} />}
+      {joinPop && !modePick && !installOpen && !installShown.current && !popup && !customer && !cartOpen && !sheet && <div className="pop" role="dialog" aria-modal="true" aria-label="Lyra Rewards" onClick={e => e.target === e.currentTarget && closeJoin()}>
         <div className="pop-card join-pop">
           <button className="x-btn" onClick={closeJoin} aria-label="Închide">×</button>
           {settings?.welcome_on && Number(settings.welcome_lei) > 0
@@ -803,7 +813,7 @@ export default function Menu({ source }: { source?: string }) {
           <button className="later" onClick={closeJoin}>Mai târziu</button>
         </div>
       </div>}
-      {popup && !installOpen && (() => {
+      {popup && !installOpen && !modePick && (() => {
         const it = popup.item_id ? byId[popup.item_id] : undefined;
         const old = it ? it.price + popup.extras.reduce((s, k) => s + (byId[k]?.price || 0), 0) : 0;
         const close = () => { setPopup(null); try { sessionStorage.setItem("lyra-popup", "1"); } catch { /* ignore */ } };
