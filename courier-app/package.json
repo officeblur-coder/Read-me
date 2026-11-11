@@ -1,0 +1,18 @@
+{
+  "name": "lyra-livrator",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Aplicația Android a livratorilor Lyra's Delivery (deschide lyrasdelivery.ro/curier, cu GPS în fundal și notificări native).",
+  "scripts": {
+    "sync": "cap sync android"
+  },
+  "dependencies": {
+    "@capacitor-community/background-geolocation": "1.3.1",
+    "@capacitor/android": "8.6.0",
+    "@capacitor/core": "8.6.0",
+    "@capacitor/push-notifications": "8.1.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.6.0"
+  }
+}

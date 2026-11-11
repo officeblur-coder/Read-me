@@ -1,0 +1,54 @@
+# Construiește aplicația Android a livratorilor (courier-app) și o pune la „Artifacts” ca lyra-livrator.apk.
+# Rulează la fiecare schimbare în courier-app/ sau manual (Actions → Aplicația livratorilor → Run workflow).
+# Secrete de repo (opționale): GOOGLE_SERVICES_JSON = conținutul google-services.json din Firebase (notificări native);
+# ANDROID_KEYSTORE_BASE64 + ANDROID_KEYSTORE_PASSWORD = semnătura fixă (actualizările se instalează peste cea veche).
+name: Aplicația livratorilor (Android)
+on:
+  push:
+    paths: ["courier-app/**", ".github/workflows/android-livrator.yml"]
+  workflow_dispatch:
+concurrency: android-livrator-${{ github.ref }}
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: courier-app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: courier-app/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+      - run: npm ci
+      - run: npx cap sync android
+      - name: google-services.json (Firebase, pentru notificări)
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          if [ -n "$GOOGLE_SERVICES_JSON" ]; then printf '%s' "$GOOGLE_SERVICES_JSON" > android/app/google-services.json; echo "Firebase: da";
+          else echo "Firebase: nu (aplicația merge, dar fără notificări cu ecranul blocat)"; fi
+      - name: Semnătura (din secrete, dacă există)
+        env:
+          KS: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KS" ]; then printf '%s' "$KS" | base64 -d > "$RUNNER_TEMP/lyra.keystore"; echo "ANDROID_KEYSTORE_FILE=$RUNNER_TEMP/lyra.keystore" >> "$GITHUB_ENV"; echo "Semnătură fixă: da";
+          else echo "Semnătură fixă: nu (la o versiune nouă dezinstalezi întâi aplicația veche)"; fi
+      - name: Build APK
+        working-directory: courier-app/android
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
+      - run: cp android/app/build/outputs/apk/release/app-release.apk lyra-livrator.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lyra-livrator-apk
+          path: courier-app/lyra-livrator.apk
+          retention-days: 90

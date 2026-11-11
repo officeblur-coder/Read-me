@@ -1,0 +1,16 @@
+{
+  "appId": "ro.lyrasdelivery.livrator",
+  "appName": "Lyra Livrator",
+  "webDir": "www",
+  "server": {
+    "url": "https://lyrasdelivery.ro/curier",
+    "allowNavigation": ["lyrasdelivery.ro", "*.lyrasdelivery.ro"]
+  },
+  "android": {
+    "backgroundColor": "#0b0806",
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "PushNotifications": { "presentationOptions": ["badge", "sound", "alert"] }
+  }
+}
