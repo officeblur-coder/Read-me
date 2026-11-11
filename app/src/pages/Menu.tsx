@@ -10,6 +10,7 @@ import { LOCALITIES, geocodeAddress, useZones, zoneFor, type LatLng } from "../l
 import { hoursLabel, isOpenNow, slotDays, whenLabel } from "../lib/schedule";
 import { cut, menuPct, useDiscounts } from "../lib/discounts";
 import ModePick from "../components/ModePick";
+import GiftCard from "../components/GiftCard";
 import { track } from "../lib/track";
 import { InstallSheet, OffersAsk, shouldAutoShow, useInstall } from "../components/InstallApp";
 import Icon from "../components/Icon";
@@ -206,7 +207,9 @@ export default function Menu({ source }: { source?: string }) {
 
   // ---- pricing (mirrors place_order in the database; the database has the final word) ----
   const fullOf = (it: Item, vi?: number) => (it.variants?.length ? it.variants[vi ?? 0].p : it.price);
-  const pctOf = (id: string) => dsc.pct[id] || 0;
+  // voucherul cadou nu are reduceri (nici de livrare, nici de ridicare)
+  const isGift = (id: string) => byId[id]?.kind === "gift";
+  const pctOf = (id: string) => (isGift(id) ? 0 : dsc.pct[id] || 0);
   // reducerea din admin se aplică doar prețului produsului (nu și extra), exact ca în baza de date
   const baseOf = (it: Item, vi?: number) => cut(fullOf(it, vi), pctOf(it.id));
   const unitOf = (l: CartLine) => {
@@ -220,8 +223,12 @@ export default function Menu({ source }: { source?: string }) {
   const disc = code
     ? Math.round((code.category_id
         ? validCart.filter(l => byId[l.id].category_id === code.category_id && l.promoPrice == null && !lineOff(l)).reduce((s, l) => s + unitOf(l) * l.qty, 0)
-        : validCart.filter(l => !lineOff(l)).reduce((s, l) => s + unitOf(l) * l.qty, 0)) * code.percent) / 100
+        : validCart.filter(l => !lineOff(l) && !isGift(l.id)).reduce((s, l) => s + unitOf(l) * l.qty, 0)) * code.percent) / 100
     : 0;
+  // voucherele cadou: fără livrare gratuită, puncte sau bonus pe ele; doar voucher = nu se livrează nimic (ca în place_order)
+  const gcSum = validCart.filter(l => isGift(l.id)).reduce((s, l) => s + unitOf(l) * l.qty, 0);
+  const food = validCart.some(l => !isGift(l.id));
+  const fsub = sub - gcSum;
   const openNow = !!settings && isOpenNow(settings, clock);
   const canAsap = openNow && !!settings?.accepting_orders;
   const days = useMemo(() => (settings ? slotDays(settings, clock) : []), [settings, clock]);
@@ -236,13 +243,13 @@ export default function Menu({ source }: { source?: string }) {
   const feeKnown = !hasZones || !!zone;
   const freeOver = hasZones ? (zone?.free_over ?? Infinity) : (settings?.free_delivery_over ?? 100);
   const baseFee = hasZones ? (zone?.fee ?? 0) : (settings?.delivery_fee ?? 0);
-  const fee = mode === "livrare" && settings && sub > 0 && sub < freeOver ? baseFee : 0;
+  const fee = mode === "livrare" && food && settings && fsub > 0 && fsub < freeOver ? baseFee : 0;
   // ---- Lyra Rewards (same rules as place_order: max % of products, oldest points first) ----
   const tierN = rw.me?.tier ?? customer?.tier ?? 1;
   const tierLabel = tierName(rw.cfg, tierN);
   const rwOn = rw.cfg.enabled;
   const lots = rw.me?.lots || [];
-  const cap = redeemCap(rw.cfg, sub - disc);
+  const cap = redeemCap(rw.cfg, fsub - disc);
   const maxPlan = rwOn && customer ? planRedeem(lots, Number.MAX_SAFE_INTEGER, cap) : { points: 0, value: 0 };
   const plan = rwOn && customer ? planRedeem(lots, Math.min(redeemWant, maxPlan.points), cap) : { points: 0, value: 0 };
   const ptsVal = plan.value;
@@ -259,10 +266,10 @@ export default function Menu({ source }: { source?: string }) {
   const wMin = Number(settings?.welcome_min ?? 150);
   const wCredit = Number(customer?.welcome_credit || 0);
   const wHas = !!customer && wCredit > 0 && !customer.welcome_used_at;
-  const wOk = wHas && sub >= wMin && disc === 0;
-  const welc = wOk && useWelcome ? Math.min(wCredit, Math.max(0, sub - disc - ptsVal)) : 0;
+  const wOk = wHas && fsub >= wMin && disc === 0;
+  const welc = wOk && useWelcome ? Math.min(wCredit, Math.max(0, fsub - disc - ptsVal)) : 0;
   const total = Math.max(0, sub - disc - ptsVal - welc + fee) + pack + sgr;
-  const earn = rwOn ? Math.floor(Math.max(0, sub - disc - ptsVal - welc)) : 0;
+  const earn = rwOn ? Math.floor(Math.max(0, fsub - disc - ptsVal - welc)) : 0;
   const count = validCart.reduce((s, l) => s + l.qty, 0);
   const qtyOf = (id: string) => validCart.filter(l => l.id === id && !l.promo).reduce((s, l) => s + l.qty, 0);
 
@@ -343,10 +350,13 @@ export default function Menu({ source }: { source?: string }) {
 
   async function placeOrder() {
     setSendErr("");
-    if (!form.name.trim() || !form.phone.trim() || (mode === "livrare" && !form.address.trim())) {
-      setSendErr(mode === "livrare" ? "Completează numele, telefonul și adresa." : "Completează numele și telefonul."); return;
+    if (!form.name.trim() || !form.phone.trim() || (mode === "livrare" && food && !form.address.trim())) {
+      setSendErr(mode === "livrare" && food ? "Completează numele, telefonul și adresa." : "Completează numele și telefonul."); return;
     }
-    if (mode === "livrare" && hasZones) {
+    if (gcSum > 0 && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test((form.email || customer?.email || "").trim())) {
+      setSendErr("Adaugă adresa ta de email: cardul cadou se trimite pe email."); return;
+    }
+    if (mode === "livrare" && food && hasZones) {
       let p = addrKey === geoFor ? geo : null;
       if (!p) { const r = await locate(); p = r ? { lat: r.lat, lng: r.lng } : null; }
       if (!p) { setSendErr("Nu găsim adresa pe hartă. Verifică numele străzii și localitatea."); return; }
@@ -511,23 +521,24 @@ export default function Menu({ source }: { source?: string }) {
         <div className="fields">
           <label className="fl"><span>Nume</span><input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} autoComplete="name" placeholder="Ioana Pop" /></label>
           <label className="fl"><span>Telefon</span><input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} inputMode="tel" autoComplete="tel" placeholder="07xx xxx xxx" /></label>
-          {mode === "livrare" && <label className="fl wide"><span>Adresa de livrare</span>
+          {mode === "livrare" && food && <label className="fl wide"><span>Adresa de livrare</span>
             {customer && customer.addresses?.length > 1
               ? <select value={form.address} onChange={e => setForm({ ...form, address: e.target.value })}>{customer.addresses.map(a => <option key={a}>{a}</option>)}<option value="">Altă adresă…</option></select>
               : null}
             {(!customer || (customer.addresses?.length || 0) < 2 || !form.address) && <input value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} autoComplete="street-address" placeholder="Strada, număr, bloc, apartament" />}
           </label>}
-          {mode === "livrare" && <label className="fl wide"><span>Localitatea</span>
+          {mode === "livrare" && food && <label className="fl wide"><span>Localitatea</span>
             <input list="lyra-localities" value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} autoComplete="address-level2" placeholder="Târgu Mureș" />
             <datalist id="lyra-localities">{LOCALITIES.map(l => <option key={l} value={l} />)}</datalist>
           </label>}
-          {mode === "livrare" && hasZones && form.address.trim().length >= 4 && <div className={`geo-zone wide ${geoBusy || addrKey !== geoFor ? "" : zone ? "ok" : "out"}`}>
+          {mode === "livrare" && food && hasZones && form.address.trim().length >= 4 && <div className={`geo-zone wide ${geoBusy || addrKey !== geoFor ? "" : zone ? "ok" : "out"}`}>
             {geoBusy || addrKey !== geoFor ? "Verificăm adresa…"
               : !geo ? <>Nu găsim adresa pe hartă. Scrie strada și numărul (ex.: Strada Gheorghe Doja 10) și alege localitatea corectă.</>
               : zone ? <><b>Livrăm la tine</b> · {zone.free_over != null && sub >= zone.free_over ? "livrare gratuită" : zone.fee ? `livrare ${lei(zone.fee)}` : "livrare gratuită"}{zone.free_over != null && sub < zone.free_over ? ` · gratuit peste ${lei(zone.free_over)}` : ""}{zone.min_order ? ` · minim ${lei(zone.min_order)}` : ""}{geoLabel && <small className="geo-found">Adresa găsită: {geoLabel}</small>}</>
               : <>{geoLabel && <small className="geo-found">Adresa găsită: {geoLabel}</small>}Ne pare rău, adresa nu este în zona noastră de livrare. Poți alege <button type="button" className="linkbtn" onClick={() => setMode("ridicare")}>ridicarea din restaurant</button>.</>}
           </div>}
-          {!customer && <label className="fl wide"><span>Email <i>opțional · strângi puncte Lyra Rewards pe email</i></span><input value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} inputMode="email" autoComplete="email" placeholder="nume@email.com" /></label>}
+          {gcSum > 0 && <p className="gift-mail wide">🎁 {customer?.email && !form.email ? <>Cardul cadou se trimite pe <b>{customer.email}</b>.</> : <>Cardul cadou se trimite pe emailul de mai jos.</>}{!food && " Nu se livrează nimic: primești codul pe email după confirmarea plății."}</p>}
+          {!customer && <label className="fl wide"><span>Email <i>{gcSum > 0 ? "obligatoriu · aici primești cardul cadou" : "opțional · strângi puncte Lyra Rewards pe email"}</i></span><input value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} inputMode="email" autoComplete="email" placeholder="nume@email.com" /></label>}
           <label className="fl wide"><span>Mențiuni <i>opțional</i></span><textarea rows={2} value={orderNote} onChange={e => setOrderNote(e.target.value)} placeholder="Interfon, etaj, fără tacâmuri…" /></label>
         </div>
         {wHas && <div className={`wl-box ${wOk ? "" : "dis"}`}>
@@ -695,6 +706,11 @@ export default function Menu({ source }: { source?: string }) {
             const list = items.filter(i => i.category_id === c.id && match(i));
             if (!list.length) return null;
             const note = L ? c.note_hu : c.note_ro;
+            if (list.every(i => i.kind === "gift")) return (
+              <section key={c.id} className="sec gift-sec" id={"sec-" + c.id} data-sec={c.id}>
+                {list.map(it => <GiftCard key={it.id} item={it} onAdd={(vi, el) => addLine({ id: it.id, qty: 1, vi, extras: [], note: "" }, el)} />)}
+              </section>
+            );
             return (
               <section key={c.id} className="sec" id={"sec-" + c.id} data-sec={c.id}>
                 <header className="sec-h"><h2>{catName(c)}</h2><span>{list.length} {t.all}</span>{note && <p>{note}</p>}</header>

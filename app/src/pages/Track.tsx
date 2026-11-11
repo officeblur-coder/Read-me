@@ -18,6 +18,7 @@ export default function Track() {
   const [skew, setSkew] = useState(0);               // ceasul telefonului față de server
   const [answering, setAnswering] = useState<"" | "confirm-cancel" | "busy">("");
   const [answerErr, setAnswerErr] = useState("");
+  const [gifts, setGifts] = useState<{ code: string; value: number; expires_at: string; status: string; emailed: boolean }[]>([]);
   const [payBusy, setPayBusy] = useState(false);
   const [payErr, setPayErr] = useState("");
   async function payNow() {
@@ -35,6 +36,10 @@ export default function Track() {
     if (error || !data) { setMissing(true); return; }
     const d = data as PublicOrder;
     if (d.server_now) setSkew(new Date(d.server_now).getTime() - Date.now());
+    // cardurile cadou apar aici după finalizarea comenzii (și vin pe email)
+    if (d.status === "done" && d.items.some(l => (l as { giftcard?: boolean }).giftcard)) {
+      supabase.rpc("order_gift_cards", { p_token: token }).then(({ data: g }) => g && setGifts(g as typeof gifts));
+    }
     setO(d);
   }
   useEffect(() => {
@@ -148,6 +153,12 @@ export default function Track() {
           )}
           {o.rating && o.rating <= 3 && <p className="t-sub">Ne pare rău că n-a fost perfect. Am transmis bucătăriei și ne vom strădui mai mult data viitoare.</p>}
         </>}
+        {gifts.length > 0 && <div className="gift-codes">
+          <b>🎁 {gifts.length > 1 ? "Cardurile tale cadou" : "Cardul tău cadou"}</b>
+          {gifts.map(g => <div key={g.code} className={`gc ${g.status !== "issued" ? "dim" : ""}`}><span className="num">{Number(g.value)} lei</span><code>{g.code}</code>
+            <small>{g.status === "used" ? "folosit" : g.status === "cancelled" ? "anulat" : `valabil până la ${new Date(g.expires_at).toLocaleDateString("ro-RO")}`}</small></div>)}
+          <p>{gifts.some(g => g.emailed) ? "Ți l-am trimis și pe email." : "Îl primești și pe email în câteva minute."} Se folosește la Restaurant Lyra.</p>
+        </div>}
         {o.messages.length > 0 && <div className="msgs">{[...o.messages].reverse().map((m, i) => <div key={i} className="msg">{m.body}<small>Lyra's Delivery · {hm(m.at)}</small></div>)}</div>}
       </div>
       <div className="receipt">

@@ -32,6 +32,7 @@ export type Item = {
   sort: number;
   packaging: number;     // ambalaj, lei pe bucată
   sgr?: number;          // garanție SGR, lei pe bucată
+  kind?: "dish" | "gift"; // gift = voucher cadou
 };
 
 export type Settings = import("./schedule").Hours & {

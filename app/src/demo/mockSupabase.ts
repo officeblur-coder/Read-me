@@ -9,7 +9,7 @@ import banners from "./seed/banners.json";
 
 type Row = Record<string, any>;
 type DB = Record<string, Row[]>;
-const KEY = "lyra-demo-db-v2";
+const KEY = "lyra-demo-db-v3";
 const AUTH = "lyra-demo-session";
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36));
 const iso = (ms = Date.now()) => new Date(ms).toISOString();
@@ -272,7 +272,7 @@ function placeOrder(p: Row) {
     const pr = l.promo ? db.promos.find(x => x.id === l.promo && x.active && x.item_id === it.id && x.price != null) : null;
     const extras: Row[] = [];
     if (pr) { unit = pr.price; (pr.extras || []).forEach((id: string) => { const e = db.items.find(x => x.id === id); if (e) extras.push({ id, name: e.name_ro, price: 0 }); }); }
-    else { const dp = dpct(it.id); if (dp > 0) unit = Math.round(unit * (100 - dp)) / 100; }
+    else if (it.kind !== "gift") { const dp = dpct(it.id); if (dp > 0) unit = Math.round(unit * (100 - dp)) / 100; }
     if (!pr) (l.extras || []).forEach((id: string) => { const e = db.items.find(x => x.id === id && x.active && x.available); if (e) { unit += e.price; extras.push({ id, name: e.name_ro, price: e.price }); } });
     sub += unit * qty;
     sgr += (it.sgr ?? 0) * qty;

@@ -1,1 +1,101 @@
-[{"id": "burgers", "name_ro": "Burgeri", "name_hu": null, "note_ro": "Vită maturată, chiflă brioche coaptă zilnic", "note_hu": null, "sort": 10, "active": true}, {"id": "pizza", "name_ro": "Pizza napoletană", "name_hu": null, "note_ro": "Aluat dospit 48 de ore, cuptor la 450°C", "note_hu": null, "sort": 20, "active": true}, {"id": "bowls", "name_ro": "Bowl-uri & salate", "name_hu": null, "note_ro": null, "note_hu": null, "sort": 30, "active": true}, {"id": "grill", "name_ro": "Grill", "name_hu": null, "note_ro": null, "note_hu": null, "sort": 40, "active": true}, {"id": "paste", "name_ro": "Paste", "name_hu": null, "note_ro": "Paste proaspete, făcute în casă", "note_hu": null, "sort": 50, "active": true}, {"id": "sushi", "name_ro": "Sushi", "name_hu": null, "note_ro": null, "note_hu": null, "sort": 60, "active": true}, {"id": "brunch", "name_ro": "Brunch", "name_hu": null, "note_ro": "Toată ziua, nu doar dimineața", "note_hu": null, "sort": 70, "active": true}, {"id": "desert", "name_ro": "Deserturi", "name_hu": null, "note_ro": null, "note_hu": null, "sort": 80, "active": true}, {"id": "bauturi", "name_ro": "Băuturi", "name_hu": null, "note_ro": null, "note_hu": null, "sort": 90, "active": true}, {"id": "extra", "name_ro": "Extra & sosuri", "name_hu": null, "note_ro": null, "note_hu": null, "sort": 100, "active": true}]
+[
+ {
+  "id": "voucher",
+  "name_ro": "Card cadou",
+  "name_hu": "Ajándékkártya",
+  "note_ro": null,
+  "note_hu": null,
+  "sort": -10,
+  "active": true
+ },
+ {
+  "id": "burgers",
+  "name_ro": "Burgeri",
+  "name_hu": null,
+  "note_ro": "Vită maturată, chiflă brioche coaptă zilnic",
+  "note_hu": null,
+  "sort": 10,
+  "active": true
+ },
+ {
+  "id": "pizza",
+  "name_ro": "Pizza napoletană",
+  "name_hu": null,
+  "note_ro": "Aluat dospit 48 de ore, cuptor la 450°C",
+  "note_hu": null,
+  "sort": 20,
+  "active": true
+ },
+ {
+  "id": "bowls",
+  "name_ro": "Bowl-uri & salate",
+  "name_hu": null,
+  "note_ro": null,
+  "note_hu": null,
+  "sort": 30,
+  "active": true
+ },
+ {
+  "id": "grill",
+  "name_ro": "Grill",
+  "name_hu": null,
+  "note_ro": null,
+  "note_hu": null,
+  "sort": 40,
+  "active": true
+ },
+ {
+  "id": "paste",
+  "name_ro": "Paste",
+  "name_hu": null,
+  "note_ro": "Paste proaspete, făcute în casă",
+  "note_hu": null,
+  "sort": 50,
+  "active": true
+ },
+ {
+  "id": "sushi",
+  "name_ro": "Sushi",
+  "name_hu": null,
+  "note_ro": null,
+  "note_hu": null,
+  "sort": 60,
+  "active": true
+ },
+ {
+  "id": "brunch",
+  "name_ro": "Brunch",
+  "name_hu": null,
+  "note_ro": "Toată ziua, nu doar dimineața",
+  "note_hu": null,
+  "sort": 70,
+  "active": true
+ },
+ {
+  "id": "desert",
+  "name_ro": "Deserturi",
+  "name_hu": null,
+  "note_ro": null,
+  "note_hu": null,
+  "sort": 80,
+  "active": true
+ },
+ {
+  "id": "bauturi",
+  "name_ro": "Băuturi",
+  "name_hu": null,
+  "note_ro": null,
+  "note_hu": null,
+  "sort": 90,
+  "active": true
+ },
+ {
+  "id": "extra",
+  "name_ro": "Extra & sosuri",
+  "name_hu": null,
+  "note_ro": null,
+  "note_hu": null,
+  "sort": 100,
+  "active": true
+ }
+]

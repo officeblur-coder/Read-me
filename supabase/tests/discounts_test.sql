@@ -50,7 +50,7 @@ begin
   end if;
 
   -- variante: fiecare porție redusă
-  select * into v from public.items where variants is not null and jsonb_array_length(variants) > 1 and active limit 1;
+  select * into v from public.items where variants is not null and jsonb_array_length(variants) > 1 and active and kind <> 'gift' limit 1;
   update public.items set available = true where id = v.id;
   insert into public.item_discounts(name, percent, item_ids) values ('Var', 50, array[v.id]);
   o := pg_temp.place(jsonb_build_object('items', jsonb_build_array(jsonb_build_object('id', v.id, 'qty', 1, 'vi', 1))));

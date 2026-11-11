@@ -44,6 +44,8 @@ create index if not exists items_category_idx on public.items(category_id, sort)
 alter table public.items add column if not exists packaging numeric(6,2) not null default 2 check (packaging >= 0);
 -- garanția SGR (sticle, doze, PET): se adaugă la total, nu intră la reduceri
 alter table public.items add column if not exists sgr numeric(6,2) not null default 0 check (sgr >= 0);
+-- tipul produsului: 'dish' = mâncare / băutură, 'gift' = voucher cadou (fără reduceri, ambalaj, puncte; se trimite pe email)
+alter table public.items add column if not exists kind text not null default 'dish' check (kind in ('dish', 'gift'));
 
 -- ---------- Setări restaurant (un singur rând) ----------
 create table if not exists public.settings (
@@ -315,6 +317,10 @@ declare
   lpack    numeric;
   sgr      numeric := 0;  -- garanție SGR, nu intră la reduceri
   lsgr     numeric;
+  is_gc    boolean;       -- linia e un voucher cadou
+  gc_sum   numeric := 0;  -- valoarea voucherelor cadou din coș
+  food     boolean := false;  -- există și mâncare / băuturi în comandă
+  fsub     numeric;       -- produsele fără vouchere (pentru reduceri, livrare, puncte)
   cfg      record;          -- rewards_settings (tabelul e creat în 03_rewards.sql)
   want     int;
   pts_used int := 0;
@@ -351,8 +357,6 @@ begin
   end if;
   if coalesce(trim(p->>'name'),'') = '' or coalesce(trim(p->>'phone'),'') = '' then
     raise exception 'Completează numele și telefonul.' using errcode = 'P0001'; end if;
-  if v_mode = 'livrare' and coalesce(trim(p->>'address'),'') = '' then
-    raise exception 'Completează adresa de livrare.' using errcode = 'P0001'; end if;
   if jsonb_array_length(coalesce(p->'items','[]')) = 0 then
     raise exception 'Coșul e gol.' using errcode = 'P0001'; end if;
 
@@ -367,6 +371,8 @@ begin
     if not it.available then raise exception '% este epuizat azi.', it.name_ro using errcode = 'P0001'; end if;
     qty := least(greatest(coalesce((line->>'qty')::int, 1), 1), 50);
     vi := null; vlabel := null; grams := it.grams; unit := it.price; lpack := it.packaging; lsgr := it.sgr;
+    is_gc := it.kind = 'gift';
+    if is_gc then lpack := 0; lsgr := 0; end if;
     if it.variants is not null and jsonb_array_length(it.variants) > 0 then
       vi := least(greatest(coalesce((line->>'vi')::int, 0), 0), jsonb_array_length(it.variants) - 1);
       unit   := (it.variants->vi->>'p')::numeric;
@@ -375,13 +381,15 @@ begin
     end if;
     ex_arr := '[]';
     is_promo := false; dpct := 0; old_unit := null;
-    if coalesce(line->>'promo','') <> '' then
+    if coalesce(line->>'promo','') <> '' and not is_gc then
       select * into pr from public.promos
         where id::text = line->>'promo' and active and item_id = it.id and price is not null
           and (starts_at is null or starts_at <= now()) and (ends_at is null or ends_at >= now());
       is_promo := found;
     end if;
-    if is_promo then
+    if is_gc then
+      null;   -- voucherul cadou: valoarea aleasă, fără reduceri și fără extra
+    elsif is_promo then
       unit := pr.price;
       for ex_id in select unnest(pr.extras) loop
         select * into ex from public.items where id = ex_id;
@@ -400,6 +408,7 @@ begin
       end loop;
     end if;
     sub := sub + unit * qty;
+    if is_gc then gc_sum := gc_sum + unit * qty; else food := true; end if;
     pack := pack + lpack * qty;
     sgr := sgr + lsgr * qty;
     lines := lines || jsonb_build_object(
@@ -407,10 +416,16 @@ begin
       'grams', grams, 'hot', it.hot, 'allergens', to_jsonb(it.allergens), 'category', it.category_id,
       'extras', ex_arr, 'note', left(coalesce(line->>'note',''), 200), 'pack', lpack, 'sgr', lsgr,
       'promo', case when is_promo then pr.title end,
-      'disc_pct', case when dpct > 0 then dpct end, 'old_unit', old_unit);
+      'disc_pct', case when dpct > 0 then dpct end, 'old_unit', old_unit, 'giftcard', case when is_gc then true end);
   end loop;
+  fsub := sub - gc_sum;
 
-  if sub < s.min_order then raise exception 'Comanda minimă este % lei.', s.min_order using errcode = 'P0001'; end if;
+  if v_mode = 'livrare' and food and coalesce(trim(p->>'address'),'') = '' then
+    raise exception 'Completează adresa de livrare.' using errcode = 'P0001'; end if;
+  -- voucherul cadou se emite pe email: emailul e obligatoriu
+  if gc_sum > 0 and coalesce(nullif(trim(p->>'email'),''), cust.email, '') !~ '^[^@\s]+@[^@\s]+\.[^@\s]+$' then
+    raise exception 'Adaugă adresa ta de email: voucherul cadou se trimite pe email.' using errcode = 'P0001'; end if;
+  if food and fsub < s.min_order then raise exception 'Comanda minimă este % lei.', s.min_order using errcode = 'P0001'; end if;
 
   -- cod promoțional
   if coalesce(p->>'code','') <> '' then
@@ -419,7 +434,7 @@ begin
       -- codul nu se cumulează cu reducerile pe produse: se aplică doar produselor fără reducere
       if pc.category_id is null then
         select round(coalesce(sum((l->>'unit')::numeric * (l->>'qty')::int), 0) * pc.percent / 100.0, 2) into disc
-          from jsonb_array_elements(lines) l where l->>'disc_pct' is null;
+          from jsonb_array_elements(lines) l where l->>'disc_pct' is null and l->>'giftcard' is null;
       else
         select round(coalesce(sum((l->>'unit')::numeric * (l->>'qty')::int), 0) * pc.percent / 100.0, 2) into disc
           from jsonb_array_elements(lines) l where l->>'category' = pc.category_id and l->>'promo' is null and l->>'disc_pct' is null;
@@ -442,7 +457,7 @@ begin
   end if;
 
   -- livrare: zona de pe hartă (dacă există zone desenate), altfel taxa generală din setări
-  if v_mode = 'livrare' then
+  if v_mode = 'livrare' and food then   -- doar voucher cadou: nu se livrează nimic
     select exists (select 1 from public.delivery_zones where active) into has_zones;
     if has_zones then
       if v_lat is null or v_lng is null then
@@ -450,11 +465,11 @@ begin
       select * into zn from public.zone_for(v_lat, v_lng);
       if zn.id is null then
         raise exception 'Din păcate nu livrăm încă la această adresă. Poți alege ridicarea din restaurant.' using errcode = 'P0001'; end if;
-      if sub < zn.min_order then
+      if fsub < zn.min_order then
         raise exception 'Comanda minimă pentru zona % este % lei.', zn.name, zn.min_order using errcode = 'P0001'; end if;
-      if zn.free_over is null or sub < zn.free_over then fee := zn.fee; end if;
+      if zn.free_over is null or fsub < zn.free_over then fee := zn.fee; end if;
       zone_nm := zn.name;
-    elsif sub < s.free_delivery_over then
+    elsif fsub < s.free_delivery_over then
       fee := s.delivery_fee;
     end if;
   end if;
@@ -464,7 +479,7 @@ begin
     rtier := cust.tier;
     want := coalesce((p->>'redeem_points')::int, case when coalesce((p->>'use_points')::boolean, false) then 2147483647 else 0 end);
     if want > 0 then
-      select * into plan from public.rewards_plan(cust.id, want, floor((sub - disc) * cfg.max_redeem_pct) / 100);
+      select * into plan from public.rewards_plan(cust.id, want, floor((fsub - disc) * cfg.max_redeem_pct) / 100);
       pts_used := plan.points; pts_val := plan.value; alloc := plan.alloc;
     end if;
   end if;
@@ -474,16 +489,16 @@ begin
     if coalesce(cust.welcome_credit, 0) <= 0 or cust.welcome_used_at is not null then
       raise exception 'Bonusul de bun venit a fost deja folosit.' using errcode = 'P0001'; end if;
     if disc > 0 then raise exception 'Bonusul de bun venit nu se cumulează cu un cod de reducere.' using errcode = 'P0001'; end if;
-    if sub < s.welcome_min then
+    if fsub < s.welcome_min then
       raise exception 'Bonusul de % lei se folosește la o comandă de minim % lei (produse). Mai adaugă % lei.',
-        trim(to_char(cust.welcome_credit, 'FM999990.00')), trim(to_char(s.welcome_min, 'FM999990.00')), trim(to_char(s.welcome_min - sub, 'FM999990.00')) using errcode = 'P0001'; end if;
+        trim(to_char(cust.welcome_credit, 'FM999990.00')), trim(to_char(s.welcome_min, 'FM999990.00')), trim(to_char(s.welcome_min - fsub, 'FM999990.00')) using errcode = 'P0001'; end if;
     -- un bonus pe număr de telefon, ca să nu se ia de mai multe ori cu emailuri diferite
     if exists (select 1 from public.orders x where x.welcome_value > 0 and x.status not in ('rejected', 'refunded')
                and right(regexp_replace(x.phone, '\D', '', 'g'), 9) = right(regexp_replace(p->>'phone', '\D', '', 'g'), 9)) then
       raise exception 'Bonusul de bun venit a fost deja folosit pentru acest număr de telefon.' using errcode = 'P0001'; end if;
-    welc := least(cust.welcome_credit, greatest(sub - disc - pts_val, 0));
+    welc := least(cust.welcome_credit, greatest(fsub - disc - pts_val, 0));
   end if;
-  rbase := greatest(sub - disc - pts_val - welc, 0);   -- doar produsele plătite cu bani aduc puncte (bonusul nu)
+  rbase := greatest(fsub - disc - pts_val - welc, 0);   -- doar produsele plătite cu bani aduc puncte (bonusul nu)
   earn  := case when coalesce(cfg.enabled, false) then floor(rbase)::int else 0 end;
 
   total := greatest(sub - disc - pts_val - welc + fee, 0) + pack + sgr;
@@ -492,7 +507,7 @@ begin
     subtotal, discount, discount_label, points_used, points_value, delivery_fee, packaging, sgr, total, points_earned, source,
     reward_tier, reward_base, voucher_id, lat, lng, zone_name, scheduled_for, welcome_value)
   values (cust.id, left(trim(p->>'name'),80), left(trim(p->>'phone'),30), coalesce(nullif(trim(p->>'email'),''), cust.email),
-    case when v_mode = 'livrare' then left(trim(p->>'address'),200) else 'Ridicare din restaurant' end,
+    case when not food then 'Voucher cadou · se trimite pe email' when v_mode = 'livrare' then left(trim(p->>'address'),200) else 'Ridicare din restaurant' end,
     v_mode, coalesce(p->>'payment','card'), left(p->>'note',300), lines, allg,
     sub, disc, disc_lbl, pts_used, pts_val, fee, pack, sgr, total, earn, left(p->>'source',30),
     rtier, rbase, vo_id, case when v_mode = 'livrare' then v_lat end, case when v_mode = 'livrare' then v_lng end, zone_nm, v_sched, welc)
