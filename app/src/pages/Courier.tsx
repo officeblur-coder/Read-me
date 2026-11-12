@@ -121,7 +121,7 @@ function CourierApp({ me }: { me: Me }) {
       const p = last.current, moved = p ? Math.hypot((l.latitude - p.lat) * 111000, (l.longitude - p.lng) * 76000) : 1e9;
       if (p && Date.now() - p.t < 10000 && moved < 25) return;
       last.current = { t: Date.now(), lat: l.latitude, lng: l.longitude };
-      supabase.rpc("courier_ping", { p_lat: l.latitude, p_lng: l.longitude, p_acc: l.accuracy, p_heading: l.bearing, p_speed: l.speed, p_battery: null });
+      supabase.rpc("courier_ping", { p_lat: l.latitude, p_lng: l.longitude, p_acc: l.accuracy, p_heading: l.bearing, p_speed: l.speed, p_battery: null }).then(() => {});   // .then: altfel cererea nu pleacă
     }, m => setGps({ ok: false, err: m })).then(s => { stop = s; });
     return () => { stop?.(); };
   }, [started, native]);
@@ -135,7 +135,7 @@ function CourierApp({ me }: { me: Me }) {
       last.current = { t: Date.now(), lat, lng };
       let battery: number | null = null;
       try { battery = (await (navigator as unknown as { getBattery?: () => Promise<{ level: number }> }).getBattery?.())?.level ?? null; } catch { /* ignore */ }
-      supabase.rpc("courier_ping", { p_lat: lat, p_lng: lng, p_acc: accuracy, p_heading: heading, p_speed: speed, p_battery: battery });
+      supabase.rpc("courier_ping", { p_lat: lat, p_lng: lng, p_acc: accuracy, p_heading: heading, p_speed: speed, p_battery: battery }).then(() => {});
     }, e => setGps({ ok: false, err: e.code === 1 ? "Locația e blocată: permite accesul la locație pentru lyrasdelivery.ro." : "Nu găsim semnal GPS." }),
     { enableHighAccuracy: true, maximumAge: 5000, timeout: 30000 });
     return () => navigator.geolocation.clearWatch(id);
