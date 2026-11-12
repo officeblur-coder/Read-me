@@ -241,7 +241,8 @@ function Console({ email }: { email: string }) {
   const waiting = orders.filter(o => o.status === "new" && !!o.offered_at);
   const confirmEta = settings?.confirm_eta !== false;
   // livrări din bucătărie / de la pass fără livrator: cerere de atribuire
-  const unassigned = orders.filter(o => o.mode === "livrare" && (o.status === "prep" || o.status === "road") && !o.courier_id
+  const couriersOn = settings?.couriers_on === true;   // admin → Program → Livratori
+  const unassigned = !couriersOn ? [] : orders.filter(o => o.mode === "livrare" && (o.status === "prep" || o.status === "road") && !o.courier_id
     && !(o.status === "prep" && !!o.scheduled_for && new Date(o.scheduled_for).getTime() - now > 60 * 60000));
   const loadOf = (cid: string) => orders.filter(o => o.courier_id === cid && (o.status === "prep" || o.status === "road")).length;
   const unSeen = useRef<Set<string>>(new Set());
@@ -316,7 +317,7 @@ function Console({ email }: { email: string }) {
       <aside className="rx-side">
         <div className="rb"><Wordmark small /><small>Recepție</small></div>
         <button className="rnav" aria-current={tab === "orders"} onClick={() => setTab("orders")}><Icon name="orders" />Comenzi{incoming.length > 0 && <span className="n">{incoming.length}</span>}</button>
-        <button className="rnav" aria-current={tab === "couriers"} onClick={() => setTab("couriers")}><Icon name="bike" />Livratori{unassigned.length > 0 && <span className="n">{unassigned.length}</span>}</button>
+        {couriersOn && <button className="rnav" aria-current={tab === "couriers"} onClick={() => setTab("couriers")}><Icon name="bike" />Livratori{unassigned.length > 0 && <span className="n">{unassigned.length}</span>}</button>}
         <button className="rnav" aria-current={tab === "menu"} onClick={() => setTab("menu")}><Icon name="dish" />Meniu & stoc</button>
         <button className="rnav" aria-current={tab === "promos"} onClick={() => setTab("promos")}><Icon name="send" />Promoții</button>
         <div className="openbox">
@@ -378,7 +379,7 @@ function Console({ email }: { email: string }) {
                 <i style={{ background: courierColor(i) }} />{c.name}<small>{loadOf(c.id) ? `${loadOf(c.id)} în curs` : "liber"}</small></button>)}</div>
             </div>)}</div>
           </section>}
-          {couriers.length > 0 && <div className="cr-strip">{couriers.map((c, i) => {
+          {couriersOn && couriers.length > 0 && <div className="cr-strip">{couriers.map((c, i) => {
             const l = locs.find(x => x.courier_id === c.id), n = loadOf(c.id);
             const pend = orders.filter(o => o.courier_id === c.id && (o.status === "prep" || o.status === "road") && !o.courier_ack_at).length;
             return <button key={c.id} className="crs" onClick={() => setTab("couriers")}><i style={{ background: courierColor(i) }} /><b>{c.name}</b>
@@ -417,7 +418,7 @@ function Console({ email }: { email: string }) {
           </div>
         </div>}
 
-        {tab === "couriers" && <div className="rx-body">
+        {tab === "couriers" && couriersOn && <div className="rx-body">
           {couriers.length === 0 && <p className="muted">Nu există încă livratori. Creează conturile livratora@lyrasdelivery.ro și livratorb@lyrasdelivery.ro în Supabase și rulează actualizarea bazei.</p>}
           <div className="cm-wrap">
             <Suspense fallback={<div className="cm-map" style={{ height: 520 }} />}><CourierMap couriers={couriers} locs={locs} orders={orders.filter(o => o.status === "prep" || o.status === "road")} /></Suspense>
@@ -471,7 +472,7 @@ function Console({ email }: { email: string }) {
           <div className="row-btw"><h3>Comanda #{drawerOrder.number}</h3><button className="mini" onClick={() => setDrawer(null)} aria-label="Închide">×</button></div>
           <p className="muted">{drawerOrder.name} · {drawerOrder.phone}<br />{drawerOrder.address}</p>
           <Ticket o={drawerOrder} />
-          {["prep", "road"].includes(drawerOrder.status) && drawerOrder.mode === "livrare" && couriers.length > 0 && <>
+          {couriersOn && ["prep", "road"].includes(drawerOrder.status) && drawerOrder.mode === "livrare" && couriers.length > 0 && <>
             <p className="lbl">Livrator {drawerOrder.courier_name && <CourierChip o={drawerOrder} now={now} />}</p>
             <div className="as-btns">{couriers.map((c, i) => <button key={c.id} aria-pressed={drawerOrder.courier_id === c.id} style={{ borderColor: courierColor(i) }} onClick={() => assign(drawerOrder, c.id)}>
               <i style={{ background: courierColor(i) }} />{c.name}<small>{loadOf(c.id) ? `${loadOf(c.id)} în curs` : "liber"}</small></button>)}

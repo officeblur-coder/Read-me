@@ -39,7 +39,8 @@ export type Settings = import("./schedule").Hours & {
   welcome_on?: boolean; welcome_lei?: number; welcome_min?: number;   // bonus de bun venit la cont nou
   accepting_orders: boolean;
   confirm_eta?: boolean;
-  online_pay_on?: boolean;                     // plata online cu cardul (Stripe) e configurată și pornită                       // clientul confirmă timpul propus de recepție
+  online_pay_on?: boolean;
+  couriers_on?: boolean;                       // livratorii (atribuire, aplicație, hartă) porniți din admin                     // plata online cu cardul (Stripe) e configurată și pornită                       // clientul confirmă timpul propus de recepție
   offer_window_min?: number;                   // minute pentru răspuns
   offer_timeout?: "accept" | "cancel";         // ce se întâmplă fără răspuns
   delivery_fee: number;

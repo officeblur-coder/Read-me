@@ -9,6 +9,9 @@
 -- apoi rulați acest fișier: le adaugă în echipă ca livratori, cu numele lor. Alți livratori se adaugă din admin → Echipa.
 -- =====================================================================
 
+-- pornit / oprit din admin → Program (implicit oprit, până la instruirea echipei)
+alter table public.settings add column if not exists couriers_on boolean not null default false;
+
 alter table public.orders add column if not exists courier_assigned_at timestamptz;
 alter table public.orders add column if not exists courier_ack_at timestamptz;          -- livratorul a confirmat că are comanda
 alter table public.orders add column if not exists courier_late_at timestamptz;         -- ultima apăsare „Sunt în întârziere”
@@ -141,6 +144,8 @@ language plpgsql security definer set search_path = public as $$
 declare o public.orders; nm text; s public.settings;
 begin
   if not public.is_staff() or public.is_courier() then raise exception 'Doar recepția atribuie livrările.' using errcode = 'P0001'; end if;
+  if not coalesce((select couriers_on from public.settings where id = 1), false) and p_courier is not null then
+    raise exception 'Livratorii sunt opriți din admin (Program → Livratori).' using errcode = 'P0001'; end if;
   select * into o from public.orders where id = p_order for update;
   if not found then raise exception 'Comanda nu există.' using errcode = 'P0001'; end if;
   if o.mode <> 'livrare' then raise exception 'Comanda #% e cu ridicare.', o.number using errcode = 'P0001'; end if;
@@ -202,6 +207,7 @@ language plpgsql security definer set search_path = public as $$
 declare o public.orders; n int := 0; s public.settings; due timestamptz;
 begin
   select * into s from public.settings where id = 1;
+  if not s.couriers_on then return 0; end if;   -- oprit din admin: fără notificări către livratori
   for o in select * from public.orders where courier_id is not null and status in ('prep', 'road') loop
     due := public.order_due(o);
     if o.courier_ack_at is null and (o.courier_pinged_at is null or o.courier_pinged_at < now() - interval '55 seconds') then

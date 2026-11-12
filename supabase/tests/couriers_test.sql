@@ -1,6 +1,6 @@
 -- Teste livratori (pe o copie; se anulează). Necesită pg_net (net.http_request_queue). psql -v ON_ERROR_STOP=1 -f supabase/tests/couriers_test.sql
 begin;
-update public.settings set open_time = '00:00', close_time = '23:59:59', accepting_orders = true, min_order = 0, confirm_eta = false where id = 1;
+update public.settings set open_time = '00:00', close_time = '23:59:59', accepting_orders = true, min_order = 0, confirm_eta = false, couriers_on = false where id = 1;
 delete from public.delivery_zones; delete from public.item_discounts;
 delete from vault.decrypted_secrets where name in ('push_url', 'push_secret');
 insert into vault.decrypted_secrets(name, decrypted_secret) values ('push_url', 'https://x.supabase.co/functions/v1/push'), ('push_secret', 's3');
@@ -43,6 +43,9 @@ begin
   e := pg_temp.err(format('select public.courier_assign(%L, %L)', o1, a));
   perform pg_temp.ok(e like 'Doar recepția%', 'livratorul nu își atribuie singur');
   perform pg_temp.as_(rec);
+  e := pg_temp.err(format('select public.courier_assign(%L, %L)', o1, a));
+  perform pg_temp.ok(e like 'Livratorii sunt opriți%', 'oprit din admin: atribuirea e refuzată');
+  update public.settings set couriers_on = true where id = 1;
   e := pg_temp.err(format('select public.courier_assign(%L, %L)', o3, a));
   perform pg_temp.ok(e like '%ridicare%', 'comanda cu ridicare nu se atribuie');
   n0 := pg_temp.pushes('Comandă nouă');
@@ -77,6 +80,10 @@ begin
   perform pg_temp.ok(pg_temp.pushes('trebuia livrată') = n0 + 1, 'după ora promisă: reamintire');
   perform public.courier_tick();
   perform pg_temp.ok(pg_temp.pushes('trebuia livrată') = n0 + 1, 'nu mai des de 5 minute');
+  update public.settings set couriers_on = false where id = 1;
+  update public.orders set courier_pinged_at = now() - interval '6 minutes' where id = o1;
+  perform pg_temp.ok(public.courier_tick() = 0, 'oprit din admin: fără reamintiri');
+  update public.settings set couriers_on = true where id = 1;
   perform pg_temp.as_(a);
   perform public.courier_late(o1);
   perform pg_temp.ok((select courier_late_count from public.orders where id = o1) = 1, '„Sunt în întârziere” apare la recepție');

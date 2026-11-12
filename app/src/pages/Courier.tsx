@@ -50,6 +50,27 @@ export default function Courier() {
       <p className="muted" style={{ textAlign: "center" }}>Contul {session.user.email} nu e cont de livrator. Intră cu contul tău de livrator (Istvan, Pipe, Liviu sau Zoli).</p>
       <button className="big ghost">Ieși din cont</button></form></div>
   );
+  return <CourierGate me={me} />;
+}
+
+/** pornit / oprit din admin → Program → Livratori */
+function CourierGate({ me }: { me: Me }) {
+  const [on, setOn] = useState<boolean | null>(null);
+  useEffect(() => {
+    const load = () => supabase.from("settings").select("couriers_on").eq("id", 1).maybeSingle().then(({ data }) => setOn(!!data?.couriers_on));
+    load();
+    const t = setInterval(load, 30000);
+    return () => clearInterval(t);
+  }, []);
+  if (on === null) return <div className="login"><p className="muted">Se încarcă…</p></div>;
+  if (!on) return (
+    <div className="cr cr-start">
+      <Wordmark />
+      <h1>Bună, {me.name}!</h1>
+      <p>Aplicația livratorilor e oprită momentan de restaurant. Pornește singură când recepția o activează (verificăm la 30 de secunde).</p>
+      <button className="linkbtn" onClick={() => supabase.auth.signOut()}>Ieși din cont</button>
+    </div>
+  );
   return <CourierApp me={me} />;
 }
 
