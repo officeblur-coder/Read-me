@@ -32,11 +32,41 @@ language sql stable security definer set search_path = public as $$
 $$;
 grant execute on function public.is_courier() to authenticated;
 
--- lista livratorilor, pentru recepție
+-- tura livratorului: „Pornește tura” / „Ieși” în aplicație (ziua e în ora României)
+create table if not exists public.courier_shifts (
+  courier_id uuid primary key references auth.users(id) on delete cascade,
+  day        date not null,
+  started_at timestamptz not null default now(),
+  ended_at   timestamptz
+);
+alter table public.courier_shifts enable row level security;   -- fără politici: doar funcțiile de mai jos
+create or replace function public.courier_shift_start() returns void
+language plpgsql security definer set search_path = public as $$
+declare d date := (now() at time zone 'Europe/Bucharest')::date;
+begin
+  if not public.is_courier() then raise exception 'Doar livratorii.' using errcode = 'P0001'; end if;
+  insert into public.courier_shifts(courier_id, day, started_at, ended_at) values (auth.uid(), d, now(), null)
+  on conflict (courier_id) do update set started_at = case when courier_shifts.day = d then courier_shifts.started_at else now() end,
+    day = d, ended_at = null;
+end $$;
+create or replace function public.courier_shift_end() returns void
+language sql security definer set search_path = public as $$
+  update public.courier_shifts set ended_at = now() where courier_id = auth.uid() and ended_at is null;
+$$;
+grant execute on function public.courier_shift_start(), public.courier_shift_end() to authenticated;
+
+-- lista livratorilor pentru recepție: doar cei care au pornit tura azi (și cei cu comenzi în curs)
 create or replace function public.couriers() returns jsonb
 language sql stable security definer set search_path = public as $$
-  select case when public.is_staff() then coalesce(jsonb_agg(jsonb_build_object('id', s.user_id, 'name', coalesce(nullif(s.name, ''), split_part(u.email, '@', 1))) order by s.name), '[]') end
-  from public.staff s join auth.users u on u.id = s.user_id where s.role = 'courier';
+  select case when public.is_staff() then coalesce(jsonb_agg(jsonb_build_object(
+      'id', s.user_id, 'name', coalesce(nullif(s.name, ''), split_part(u.email, '@', 1)),
+      'started_at', sh.started_at, 'ended_at', sh.ended_at,
+      'on_shift', sh.started_at is not null and sh.ended_at is null) order by s.name), '[]') end
+  from public.staff s join auth.users u on u.id = s.user_id
+  left join public.courier_shifts sh on sh.courier_id = s.user_id and sh.day = (now() at time zone 'Europe/Bucharest')::date
+  where s.role = 'courier'
+    and (sh.courier_id is not null
+         or exists (select 1 from public.orders o where o.courier_id = s.user_id and o.status in ('prep', 'road')));
 $$;
 grant execute on function public.couriers() to authenticated;
 

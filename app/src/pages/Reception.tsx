@@ -212,12 +212,15 @@ function Console({ email }: { email: string }) {
   }, []);
 
   useEffect(() => {
-    supabase.rpc("couriers").then(({ data }) => data && setCouriers(data as CourierInfo[]));
+    // doar livratorii care au pornit tura azi (lista se reîmprospătează la 30 s)
+    const loadCouriers = () => supabase.rpc("couriers").then(({ data }) => data && setCouriers(data as CourierInfo[]));
+    loadCouriers();
+    const cp = setInterval(loadCouriers, 30000);
     const loadLocs = () => supabase.from("courier_locations").select("*").then(({ data }) => data && setLocs(data as CourierLoc[]));
     loadLocs();
     const lc = supabase.channel("courier-locs").on("postgres_changes", { event: "*", schema: "public", table: "courier_locations" }, () => loadLocs()).subscribe();
     const lp = setInterval(loadLocs, 15000);
-    return () => { supabase.removeChannel(lc); clearInterval(lp); };
+    return () => { supabase.removeChannel(lc); clearInterval(lp); clearInterval(cp); };
   }, []);
   useEffect(() => {
     loadOrders(); loadMenu();
@@ -371,19 +374,20 @@ function Console({ email }: { email: string }) {
             </section>
           )}
 
-          {unassigned.length > 0 && couriers.length > 0 && <section className="assign" aria-live="polite">
+          {unassigned.length > 0 && couriersOn && <section className="assign" aria-live="polite">
             <div className="col-h"><i style={{ background: "var(--brand)" }} />Atribuie livratorului<span>{unassigned.length}</span></div>
             <div className="assign-list">{unassigned.map(o => <div key={o.id} className="as-row">
               <div><b>#{o.number}</b> <span className="muted">{o.status === "prep" ? "în bucătărie" : "la pass"}</span><small>{o.address}</small></div>
-              <div className="as-btns">{couriers.map((c, i) => <button key={c.id} style={{ borderColor: courierColor(i) }} onClick={() => assign(o, c.id)}>
+              <div className="as-btns">{couriers.map((c, i) => c.on_shift && <button key={c.id} style={{ borderColor: courierColor(i) }} onClick={() => assign(o, c.id)}>
                 <i style={{ background: courierColor(i) }} />{c.name}<small>{loadOf(c.id) ? `${loadOf(c.id)} în curs` : "liber"}</small></button>)}</div>
             </div>)}</div>
+            {!couriers.some(c => c.on_shift) && <p className="muted" style={{ margin: "8px 2px 0", fontSize: 13 }}>Niciun livrator n-a pornit tura azi. Livratorii apar aici după ce apasă „Pornește tura” în aplicație.</p>}
           </section>}
           {couriersOn && couriers.length > 0 && <div className="cr-strip">{couriers.map((c, i) => {
             const l = locs.find(x => x.courier_id === c.id), n = loadOf(c.id);
             const pend = orders.filter(o => o.courier_id === c.id && (o.status === "prep" || o.status === "road") && !o.courier_ack_at).length;
             return <button key={c.id} className="crs" onClick={() => setTab("couriers")}><i style={{ background: courierColor(i) }} /><b>{c.name}</b>
-              <small>{n ? `${n} comenzi` : "liber"}{pend ? ` · ${pend} neconfirmate` : ""} · {l ? `GPS ${ago(l.updated_at, now)}` : "fără GPS"}</small></button>;
+              <small>{!c.on_shift && c.ended_at ? `a ieșit la ${hm(c.ended_at)} · ` : ""}{n ? `${n} comenzi` : "liber"}{pend ? ` · ${pend} neconfirmate` : ""} · {l ? `GPS ${ago(l.updated_at, now)}` : "fără GPS"}</small></button>;
           })}</div>}
           {waiting.length > 0 && <section className="waiting" aria-live="polite"><div className="col-h"><i style={{ background: "var(--gold)" }} />Așteaptă confirmarea clientului<span>{waiting.length}</span></div>
             <div className="waiting-list">{waiting.map(o => {
@@ -419,14 +423,14 @@ function Console({ email }: { email: string }) {
         </div>}
 
         {tab === "couriers" && couriersOn && <div className="rx-body">
-          {couriers.length === 0 && <p className="muted">Nu există încă livratori. Creează conturile livratora@lyrasdelivery.ro și livratorb@lyrasdelivery.ro în Supabase și rulează actualizarea bazei.</p>}
+          {couriers.length === 0 && <p className="muted">Niciun livrator n-a pornit tura azi. Apar aici după ce apasă „Pornește tura” în aplicația Lyra Livrator.</p>}
           <div className="cm-wrap">
             <Suspense fallback={<div className="cm-map" style={{ height: 520 }} />}><CourierMap couriers={couriers} locs={locs} orders={orders.filter(o => o.status === "prep" || o.status === "road")} /></Suspense>
             <div className="cm-side">{couriers.map((c, i) => {
               const l = locs.find(x => x.courier_id === c.id);
               const mine = orders.filter(o => o.courier_id === c.id && (o.status === "prep" || o.status === "road"));
               return <div key={c.id} className="cm-c">
-                <div className="row-btw"><b><i style={{ background: courierColor(i) }} />{c.name}</b><small className="muted">{l ? `GPS ${ago(l.updated_at, now)}${l.battery != null ? ` · ${Math.round(l.battery * 100)}%` : ""}` : "fără GPS"}</small></div>
+                <div className="row-btw"><b><i style={{ background: courierColor(i) }} />{c.name}{!c.on_shift && c.ended_at ? <small className="muted"> · a ieșit la {hm(c.ended_at)}</small> : c.started_at ? <small className="muted"> · tura de la {hm(c.started_at)}</small> : null}</b><small className="muted">{l ? `GPS ${ago(l.updated_at, now)}${l.battery != null ? ` · ${Math.round(l.battery * 100)}%` : ""}` : "fără GPS"}</small></div>
                 {mine.length === 0 && <small className="muted">Liber</small>}
                 {mine.map(o => <button key={o.id} className="cm-o" onClick={() => setDrawer(o.id)}><b>#{o.number}</b> {o.address}
                   <CourierChip o={o} now={now} /></button>)}
@@ -474,7 +478,7 @@ function Console({ email }: { email: string }) {
           <Ticket o={drawerOrder} />
           {couriersOn && ["prep", "road"].includes(drawerOrder.status) && drawerOrder.mode === "livrare" && couriers.length > 0 && <>
             <p className="lbl">Livrator {drawerOrder.courier_name && <CourierChip o={drawerOrder} now={now} />}</p>
-            <div className="as-btns">{couriers.map((c, i) => <button key={c.id} aria-pressed={drawerOrder.courier_id === c.id} style={{ borderColor: courierColor(i) }} onClick={() => assign(drawerOrder, c.id)}>
+            <div className="as-btns">{couriers.map((c, i) => (c.on_shift || drawerOrder.courier_id === c.id) && <button key={c.id} aria-pressed={drawerOrder.courier_id === c.id} style={{ borderColor: courierColor(i) }} onClick={() => assign(drawerOrder, c.id)}>
               <i style={{ background: courierColor(i) }} />{c.name}<small>{loadOf(c.id) ? `${loadOf(c.id)} în curs` : "liber"}</small></button>)}
               {drawerOrder.courier_id && <button onClick={() => assign(drawerOrder, null)}>Fără livrator</button>}</div>
           </>}

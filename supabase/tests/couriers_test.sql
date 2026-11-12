@@ -25,8 +25,16 @@ begin
                                    ('liviu@lyrasdelivery.ro', 'Liviu'), ('zoli@lyrasdelivery.ro', 'Zoli')) n(email, name) on lower(u.email) = n.email
   on conflict (user_id) do update set role = 'courier', name = excluded.name;
   perform pg_temp.as_(rec);
+  perform pg_temp.ok(jsonb_array_length(public.couriers()) = 0, 'nimeni n-a pornit tura: recepția nu vede livratori');
+  perform pg_temp.as_(a); perform public.courier_shift_start();
+  perform pg_temp.as_(b); perform public.courier_shift_start();
+  perform pg_temp.as_(rec);
   r := public.couriers();
-  perform pg_temp.ok(jsonb_array_length(r) = 2 and r->0->>'name' = 'Istvan' and r->1->>'name' = 'Pipe', 'recepția vede livratorii după nume (Istvan, Pipe)');
+  perform pg_temp.ok(jsonb_array_length(r) = 2 and r->0->>'name' = 'Istvan' and r->1->>'name' = 'Pipe' and (r->0->>'on_shift')::boolean, 'după „Pornește tura”: recepția îi vede (Istvan, Pipe)');
+  -- tura de ieri nu contează
+  update public.courier_shifts set day = day - 1 where courier_id = b;
+  perform pg_temp.ok(jsonb_array_length(public.couriers()) = 1, 'tura de ieri: livratorul nu mai apare azi');
+  perform pg_temp.as_(b); perform public.courier_shift_start(); perform pg_temp.as_(rec);
   perform pg_temp.as_(a); perform public.push_subscribe_courier('{"endpoint":"https://fcm.googleapis.com/a","keys":{"p256dh":"k","auth":"x"}}');
   perform pg_temp.as_(cli);
   perform public.push_subscribe_offers('{"endpoint":"https://fcm.googleapis.com/client","keys":{"p256dh":"k","auth":"x"}}');
@@ -105,6 +113,12 @@ begin
   perform pg_temp.as_(cli);
   e := pg_temp.err('select public.courier_device_register(''fcm-token-client-0123456789'')');
   perform pg_temp.ok(e like 'Doar livratorii%', 'clientul nu își poate înregistra telefonul ca livrator');
+  perform pg_temp.as_(a);
+
+  -- „Ieși”: rămâne în listă azi, marcat ieșit
+  perform pg_temp.as_(b); perform public.courier_shift_end(); perform pg_temp.as_(rec);
+  r := public.couriers();
+  perform pg_temp.ok(exists (select 1 from jsonb_array_elements(r) x where x->>'name' = 'Pipe' and not (x->>'on_shift')::boolean and x->>'ended_at' is not null), 'Pipe a ieșit: apare ca ieșit');
   perform pg_temp.as_(a);
 
   -- GPS

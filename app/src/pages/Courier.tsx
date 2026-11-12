@@ -153,6 +153,7 @@ function CourierApp({ me }: { me: Me }) {
   async function start() {
     unlockAudio(); chime();
     setStarted(true);
+    supabase.rpc("courier_shift_start").then(() => {});   // recepția îl vede în lista de azi
     if (native) {   // aplicația Android: notificări Firebase (sună și cu ecranul blocat)
       const err = await startNativePush(t => Promise.resolve(supabase.rpc("courier_device_register", { p_token: t })), () => load());
       setPush(err ? "" : "on"); if (err && !err.startsWith("fără")) flash(err);
@@ -202,7 +203,7 @@ function CourierApp({ me }: { me: Me }) {
       <header className="cr-top">
         <Wordmark small />
         <div><b>{me.name}</b><small>{active.length} de livrat · {doneToday.length} livrate azi · {lei(doneToday.reduce((s, o) => s + (o.payment === "online" ? 0 : Number(o.total)), 0))} încasat</small></div>
-        <button className="mini" onClick={() => supabase.auth.signOut()} aria-label="Ieși"><Icon name="logout" size={15} /></button>
+        <button className="mini" onClick={async () => { if (window.confirm("Închei tura și ieși din cont?")) { await supabase.rpc("courier_shift_end"); supabase.auth.signOut(); } }} aria-label="Închei tura și ieși"><Icon name="logout" size={15} /></button>
       </header>
       <div className={`cr-status ${gps.ok ? "ok" : "bad"}`}>
         <Icon name="pin" size={14} />{gps.ok ? `GPS activ · ±${gps.acc} m` : gps.err || "Pornim GPS-ul…"}

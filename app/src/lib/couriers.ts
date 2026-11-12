@@ -1,6 +1,6 @@
 // Livratori: tipuri și mici utilitare comune (recepție + hartă).
 export type CourierLoc = { courier_id: string; lat: number; lng: number; accuracy: number | null; battery: number | null; updated_at: string };
-export type CourierInfo = { id: string; name: string };
+export type CourierInfo = { id: string; name: string; on_shift?: boolean; started_at?: string | null; ended_at?: string | null };
 const COLORS = ["#ff7a1a", "#3b82f6", "#16a34a", "#a855f7"];
 export const courierColor = (i: number) => COLORS[i % COLORS.length];
 export const ago = (iso: string, now = Date.now()) => {

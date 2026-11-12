@@ -67,7 +67,7 @@ function fresh(): DB {
       { id: "d-rid", name: "15% la tot meniul · ridicare", percent: 15, item_ids: [], active: true, starts_at: null, ends_at: null, mode: "ridicare", all_items: true, created_at: iso() },
     ],
     // livratorii și ultima lor poziție (demo: în jurul Târgu Mureș)
-    couriers: [{ id: "c-a", name: "Istvan" }, { id: "c-b", name: "Pipe" }, { id: "c-c", name: "Liviu" }, { id: "c-d", name: "Zoli" }],
+    couriers: [{ id: "c-a", name: "Istvan", on_shift: true, started_at: iso() }, { id: "c-b", name: "Pipe", on_shift: true, started_at: iso() }],
     courier_locations: [
       { courier_id: "c-a", lat: 46.5455, lng: 24.5625, accuracy: 12, battery: 0.82, updated_at: iso() },
       { courier_id: "c-b", lat: 46.5280, lng: 24.5980, accuracy: 18, battery: 0.64, updated_at: iso() },
