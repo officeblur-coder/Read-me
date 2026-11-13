@@ -101,6 +101,10 @@ begin
   values (auth.uid(), p_lat, p_lng, p_acc, p_heading, p_speed, p_battery, now())
   on conflict (courier_id) do update set lat = excluded.lat, lng = excluded.lng, accuracy = excluded.accuracy,
     heading = excluded.heading, speed = excluded.speed, battery = excluded.battery, updated_at = now();
+  -- un telefon care trimite GPS e în tură azi (și dacă aplicația a rămas deschisă de ieri sau peste o actualizare)
+  insert into public.courier_shifts(courier_id, day, started_at) values (auth.uid(), (now() at time zone 'Europe/Bucharest')::date, now())
+  on conflict (courier_id) do update set day = excluded.day, started_at = now(), ended_at = null
+    where courier_shifts.day <> excluded.day;
 end $$;
 grant execute on function public.courier_ping(double precision, double precision, real, real, real, real) to authenticated;
 

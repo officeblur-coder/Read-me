@@ -121,8 +121,12 @@ begin
   perform pg_temp.ok(exists (select 1 from jsonb_array_elements(r) x where x->>'name' = 'Pipe' and not (x->>'on_shift')::boolean and x->>'ended_at' is not null), 'Pipe a ieșit: apare ca ieșit');
   perform pg_temp.as_(a);
 
-  -- GPS
+  -- GPS: un telefon care trimite poziția intră automat în tura de azi
+  delete from public.courier_shifts where courier_id = a;
   perform public.courier_ping(46.54, 24.56, 12, 90, 8, 0.8);
+  perform pg_temp.as_(rec);
+  perform pg_temp.ok(exists (select 1 from jsonb_array_elements(public.couriers()) x where x->>'name' = 'Istvan' and (x->>'on_shift')::boolean), 'GPS fără „Pornește tura”: apare la recepție');
+  perform pg_temp.as_(a);
   perform public.courier_ping(46.55, 24.57, 10);
   perform pg_temp.ok((select lat from public.courier_locations where courier_id = a) = 46.55, 'poziția GPS se actualizează');
   perform pg_temp.as_(cli);
