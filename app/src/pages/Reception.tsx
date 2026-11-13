@@ -375,13 +375,21 @@ function Console({ email }: { email: string }) {
           )}
 
           {unassigned.length > 0 && couriersOn && <section className="assign" aria-live="polite">
-            <div className="col-h"><i style={{ background: "var(--brand)" }} />Atribuie livratorului<span>{unassigned.length}</span></div>
-            <div className="assign-list">{unassigned.map(o => <div key={o.id} className="as-row">
-              <div><b>#{o.number}</b> <span className="muted">{o.status === "prep" ? "în bucătărie" : "la pass"}</span><small>{o.address}</small></div>
-              <div className="as-btns">{couriers.map((c, i) => c.on_shift && <button key={c.id} style={{ borderColor: courierColor(i) }} onClick={() => assign(o, c.id)}>
-                <i style={{ background: courierColor(i) }} />{c.name}<small>{loadOf(c.id) ? `${loadOf(c.id)} în curs` : "liber"}</small></button>)}</div>
-            </div>)}</div>
-            {!couriers.some(c => c.on_shift) && <p className="muted" style={{ margin: "8px 2px 0", fontSize: 13 }}>Niciun livrator n-a pornit tura azi. Livratorii apar aici după ce apasă „Pornește tura” în aplicație.</p>}
+            <h3 className="as-title"><Icon name="bike" size={26} />Atribuie livratorului<span className="num">{unassigned.length}</span></h3>
+            <div className="assign-list">{unassigned.map(o => {
+              const due = o.scheduled_for ? new Date(o.scheduled_for).getTime() : o.accepted_at && o.eta_min ? new Date(o.accepted_at).getTime() + o.eta_min * 60000 : 0;
+              return <div key={o.id} className="as-row">
+                <div className="as-info">
+                  <b className="num">#{o.number}</b>
+                  <span className="as-st">{o.status === "prep" ? "în bucătărie" : "la pass"}{due ? ` · la client ${hm(due)}` : ""}</span>
+                  <span className="as-addr">{o.address}</span>
+                  <small>{o.name} · {o.items.reduce((s, l) => s + l.qty, 0)} produse · {lei(Number(o.total))}</small>
+                </div>
+                <div className="as-btns as-big">{couriers.map((c, i) => c.on_shift && <button key={c.id} style={{ borderColor: courierColor(i) }} onClick={() => assign(o, c.id)}>
+                  <i style={{ background: courierColor(i) }}>{c.name.slice(0, 1).toUpperCase()}</i>{c.name}<small>{loadOf(c.id) ? `${loadOf(c.id)} comenzi în curs` : "liber"}</small></button>)}</div>
+              </div>;
+            })}</div>
+            {!couriers.some(c => c.on_shift) && <p className="as-none">Niciun livrator n-a pornit tura azi. Livratorii apar aici după ce apasă „Pornește tura” în aplicație.</p>}
           </section>}
           {couriersOn && couriers.length > 0 && <div className="cr-strip">{couriers.map((c, i) => {
             const l = locs.find(x => x.courier_id === c.id), n = loadOf(c.id);
