@@ -23,5 +23,5 @@ update public.items set packaging = 0, sgr = 0.50 where category_id in ('racorit
 -- cocktailuri, limonade și fresh: ambalaj băuturi 2 lei, fără SGR
 update public.items set packaging = 2, sgr = 0 where category_id in ('cocktail', 'limonade');
 
--- 3) Precomenzi: ultima oră 21:45
-update public.settings set preorder_until = '21:45' where id = 1;
+-- 3) Precomenzi: 12:00–21:00, pe intervale de o oră
+update public.settings set preorder_from = '12:00', preorder_until = '21:00' where id = 1;   -- precomenzi 12–21, intervale de o oră

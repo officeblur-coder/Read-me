@@ -137,7 +137,8 @@ export type Order = {
   lat?: number | null;
   lng?: number | null;
   zone_name?: string | null;
-  scheduled_for?: string | null;   // precomandă: ora aleasă de client
+  scheduled_for?: string | null;   // precomandă: începutul intervalului ales (ex. 13:00 = 13:00–14:00)
+  pre_reminder_ack_at?: string | null;   // recepția a văzut reminderul de cu o oră înainte
   welcome_value?: number;          // bonus de bun venit folosit (lei)
   offered_at?: string | null;      // recepția a propus timpul și așteaptă clientul
   offer_eta?: number | null;

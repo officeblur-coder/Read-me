@@ -45,6 +45,9 @@ function seedOrders(): Row[] {
       courier_id: STAFF_USER, courier_name: "Vlad", items: [line("sushi-boat")] }),
     mk(1032, { name: "Maria S.", phone: "0733 640 210", address: "Str. Libertății 21", status: "done", eta_min: 40, accepted_at: iso(now - 80 * m), road_at: iso(now - 55 * m), done_at: iso(now - 41 * m), created_at: iso(now - 81 * m),
       courier_id: STAFF_USER, courier_name: "Vlad", rating: 5, items: [line("margherita", 2), line("aripioare")] }),
+    // precomandă plătită online, cu intervalul peste ~40 min: apare reminderul în recepție
+    mk(1030, { name: "Elena V.", phone: "0744 551 203", address: "Str. Florilor 7", status: "prep", payment: "online", pay_status: "paid", created_at: iso(now - 180 * m), accepted_at: iso(now - 170 * m), eta_min: 210,
+      scheduled_for: iso(Math.ceil((now + 30 * m) / (60 * m)) * 60 * m), items: [line("margherita"), line("tiramisu")] }),
     mk(1031, { name: "Radu T.", phone: "0766 010 332", mode: "ridicare", address: "Ridicare din restaurant", status: "done", eta_min: 25, accepted_at: iso(now - 130 * m), done_at: iso(now - 100 * m), created_at: iso(now - 131 * m),
       rating: 4, items: [line("bbq-bacon", 2)] }),
   ];
@@ -361,6 +364,7 @@ function rpc(fn: string, args: Row = {}): Promise<{ data: any; error: any }> {
           return res({ data: null, error: null });
         }
         case "courier_ping": return res({ data: null, error: null });
+        case "preorder_ack": { const o = db.orders.find(x => x.id === args.p_order); if (o) { o.pre_reminder_ack_at = iso(); save(); } return res({ data: null, error: null }); }
         case "admin_push_overview": return res({ data: { subscribers: 214, with_account: 87, configured: true, recent: [{ title: "Smash Week: -20% la burgeri", body: "", url: "/", sent_to: 209, test: false, created_at: iso(Date.now() - 2 * 864e5) }] }, error: null });
         case "admin_push_send": return res({ data: { sent_to: args.p_test ? 1 : 214 }, error: null });
         case "confirm_offer_phone": { const o = db.orders.find(x => x.id === args.p_id); if (o && o.status === "new" && o.offered_at) { closeOffer(o, "phone"); save(); } return res({ data: null, error: null }); }

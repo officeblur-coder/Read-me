@@ -1631,3 +1631,15 @@ body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area
 .as-big button i{grid-row:span 2;display:grid;place-items:center;width:44px;height:44px;border-radius:50%;color:#fff;font-style:normal;font-size:20px;font-weight:900}
 .as-big button small{font-size:13px}
 .as-none{margin:10px 2px 0;font-size:16px;font-weight:700;color:var(--warn)}
+
+/* recepție: reminder cu o oră înainte de precomandă */
+.pre-remind{margin:0 0 14px;padding:16px 18px;border-radius:var(--r);border:3px solid #5aa0ff;background:linear-gradient(160deg,rgba(90,160,255,.16),transparent 60%),var(--surface);animation:crPulse 1.6s ease-in-out infinite}
+.pre-remind .as-title{color:#8cb8ff}
+.pre-remind .as-title span{background:#3b82f6}
+.pr-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:12px 0;border-top:1px solid var(--line)}
+.pr-when b{display:block;font:800 26px/1.1 var(--f-display);color:var(--text)}
+.pr-when small{color:#8cb8ff;font-weight:700}
+.pr-who{flex:1;min-width:200px}
+.pr-who b{display:block;font-size:17px}
+.pr-who small{color:var(--muted)}
+.pr-ok{display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:12px;border:0;background:#3b82f6;color:#fff;font:800 16px var(--f-body,inherit);cursor:pointer}

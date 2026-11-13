@@ -169,7 +169,8 @@ revoke execute on function public.courier_push(uuid, text, text, text) from publ
 -- ora la care trebuie să ajungă comanda la client
 create or replace function public.order_due(o public.orders) returns timestamptz
 language sql stable as $$
-  select coalesce(o.scheduled_for, o.accepted_at + make_interval(mins => coalesce(o.eta_min, 0)));
+  -- precomandă: sfârșitul intervalului ales (13:00–14:00 → 14:00)
+  select coalesce(o.scheduled_for + interval '1 hour', o.accepted_at + make_interval(mins => coalesce(o.eta_min, 0)));
 $$;
 
 -- recepția atribuie (sau schimbă) livratorul; p_courier null = scoate atribuirea

@@ -80,7 +80,8 @@ alter table public.settings add column if not exists preorder_on boolean not nul
 alter table public.settings add column if not exists preorder_from time not null default '12:00';
 alter table public.settings add column if not exists preorder_days int not null default 2;
 alter table public.settings add column if not exists preorder_lead_min int not null default 45;
-alter table public.settings add column if not exists preorder_until time not null default '21:45';   -- ultima oră pentru precomenzi
+alter table public.settings add column if not exists preorder_until time not null default '21:00';   -- sfârșitul ultimului interval de precomandă
+alter table public.settings alter column preorder_until set default '21:00';
 alter table public.settings add column if not exists tz text not null default 'Europe/Bucharest';
 
 create or replace function public.is_open_at(p_at timestamptz) returns boolean
@@ -102,8 +103,10 @@ begin
   if l::date > (now() at time zone s.tz)::date + s.preorder_days then
     return format('Poți programa cel mult cu %s zile înainte.', s.preorder_days); end if;
   if not (extract(isodow from l)::int = any(s.open_days)) then return 'În ziua aleasă restaurantul este închis.'; end if;
-  if l::time < t0 or l::time > least(s.close_time, s.preorder_until) then
-    return format('Poți programa între %s și %s.', to_char(t0, 'HH24:MI'), to_char(least(s.close_time, s.preorder_until), 'HH24:MI')); end if;
+  -- intervale de o oră (12:00–13:00, 13:00–14:00 …); scheduled_for = începutul intervalului
+  if extract(minute from l) <> 0 or extract(second from l) <> 0 or l::time < t0
+     or l::time + interval '1 hour' > least(s.close_time, s.preorder_until) or l::time > time '23:00' then
+    return format('Poți programa între %s și %s, pe intervale de o oră.', to_char(t0, 'HH24:MI'), to_char(least(s.close_time, s.preorder_until), 'HH24:MI')); end if;
   return null;
 end $$;
 grant execute on function public.is_open_at(timestamptz), public.preorder_error(timestamptz) to anon, authenticated;

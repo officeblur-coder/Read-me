@@ -231,9 +231,11 @@ export default function Menu({ source }: { source?: string }) {
   const fsub = sub - gcSum;
   const openNow = !!settings && isOpenNow(settings, clock);
   const canAsap = openNow && !!settings?.accepting_orders;
-  const days = useMemo(() => (settings ? slotDays(settings, clock) : []), [settings, clock]);
+  // precomenzile se plătesc doar online: fără plata online pornită nu se pot programa
+  const days = useMemo(() => (settings?.online_pay_on ? slotDays(settings, clock) : []), [settings, clock]);
   const canOrder = canAsap || days.length > 0;
   const whenEff = canAsap ? when : "later";
+  const payEff = whenEff === "later" ? "online" : pay;
   const day = days.find(d => d.key === schedDay) || days[0];
   const slot = day?.slots.find(x => x.iso === schedAt);
   const schedOk = whenEff === "asap" || !!slot;
@@ -365,7 +367,7 @@ export default function Menu({ source }: { source?: string }) {
     setSending(true);
     const { data, error } = await supabase.rpc("place_order", {
       p: {
-        name: form.name, phone: form.phone, email: form.email, mode, payment: pay,
+        name: form.name, phone: form.phone, email: form.email, mode, payment: payEff,
         address: form.city && !form.address.toLowerCase().includes(form.city.toLowerCase().slice(0, 5)) ? `${form.address.trim()}, ${form.city.trim()}` : form.address,
         lat: mode === "livrare" && geo ? geo.lat : null, lng: mode === "livrare" && geo ? geo.lng : null,
         scheduled_for: whenEff === "later" && slot ? slot.iso : null,
@@ -385,14 +387,14 @@ export default function Menu({ source }: { source?: string }) {
       supabase.from("customers").update({ addresses: [form.address, ...(customer.addresses || [])].slice(0, 5), phone: customer.phone || form.phone, name: customer.name || form.name }).eq("id", customer.id).then(() => {});
     }
     setCart([]); setCartOpen(false); setStep("cart"); setOrderNote(""); setCode(null); setCodeInput(""); setCodeMsg(""); setRedeemWant(0); setVoucherItem(""); rw.reload(); if (welc > 0) refreshCustomer();
-    if (pay === "online") {   // pagina de plată Stripe; dacă nu pornește, clientul poate plăti din pagina comenzii
+    if (payEff === "online") {   // pagina de plată Stripe; dacă nu pornește, clientul poate plăti din pagina comenzii
       setSending(true);
       const { startPayment } = await import("../lib/pay");
       const err = await startPayment(res.token);
       setSending(false);
       if (!err) return;
     }
-    nav("/comanda/" + res.token, { state: { fresh: pay !== "online" } });
+    nav("/comanda/" + res.token, { state: { fresh: payEff !== "online" } });
   }
 
   // ---- category highlight while scrolling ----
@@ -512,7 +514,7 @@ export default function Menu({ source }: { source?: string }) {
         {whenEff === "later" && day && <div className="sched">
           <div className="sched-days">{days.map(d => <button key={d.key} aria-pressed={d.key === day.key} onClick={() => { setSchedDay(d.key); setSchedAt(""); }}>{d.label}</button>)}</div>
           <div className="sched-slots">{day.slots.map(x => <button key={x.iso} aria-pressed={x.iso === schedAt} onClick={() => setSchedAt(x.iso)}>{x.label}</button>)}</div>
-          <p className="sched-note">{slot ? <>Comanda ta {mode === "livrare" ? "ajunge" : "e gata de ridicat"} <b>{whenLabel(slot.iso)}</b>.</> : `Alege ora ${mode === "livrare" ? "livrării" : "ridicării"}.`}</p>
+          <p className="sched-note">{slot ? <>Comanda ta {mode === "livrare" ? "ajunge" : "e gata de ridicat"} <b>{whenLabel(slot.iso)}</b>.</> : `Alege intervalul ${mode === "livrare" ? "livrării" : "ridicării"}.`}</p>
         </div>}
         <p className="cp-lbl">Datele tale</p>
         <div className="fields">
@@ -564,12 +566,15 @@ export default function Menu({ source }: { source?: string }) {
           </div>
         </div>}
         <p className="cp-lbl">Plata</p>
-        <div className="paygrid">
+        {whenEff === "later" ? <div className="paygrid">
+          <button aria-pressed={true}><b>Card online</b><small>plătești acum</small></button>
+        </div> : <div className="paygrid">
           <button aria-pressed={pay === "card"} onClick={() => setPay("card")}><b>Card</b><small>{mode === "livrare" ? "la livrare, POS la livrator" : "la ridicare"}</small></button>
           <button aria-pressed={pay === "cash"} onClick={() => setPay("cash")}><b>Numerar</b><small>{mode === "livrare" ? "la livrare" : "la ridicare"}</small></button>
           {settings?.online_pay_on && <button aria-pressed={pay === "online"} onClick={() => setPay("online")}><b>Card online</b><small>plătești acum</small></button>}
-        </div>
-        {pay === "online" && <p className="muted" style={{ fontSize: 12, margin: "6px 2px 0" }}>După „Trimite comanda” te ducem pe pagina securizată de plată. Comanda ajunge la restaurant după plată.</p>}
+        </div>}
+        {whenEff === "later" && <p className="muted" style={{ fontSize: 12, margin: "6px 2px 0" }}><b>Precomenzile se plătesc online, cu cardul.</b></p>}
+        {payEff === "online" && <p className="muted" style={{ fontSize: 12, margin: "6px 2px 0" }}>După „Trimite comanda” te ducem pe pagina securizată de plată. Comanda ajunge la restaurant după plată.</p>}
         <div className="codebar">
           <input value={codeInput} onChange={e => setCodeInput(e.target.value)} placeholder="Cod promoțional" aria-label="Cod promoțional" />
           <button onClick={applyCode}>Aplică</button>

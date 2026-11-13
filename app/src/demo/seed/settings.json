@@ -32,6 +32,8 @@
   "confirm_eta": true,
   "offer_window_min": 5,
   "offer_timeout": "accept",
-  "couriers_on": true
+  "couriers_on": true,
+  "online_pay_on": true,
+  "preorder_until": "21:00"
  }
 ]

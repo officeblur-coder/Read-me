@@ -37,30 +37,38 @@ export type SlotDay = { key: string; label: string; slots: { iso: string; label:
 const WD = ["", "luni", "marți", "miercuri", "joi", "vineri", "sâmbătă", "duminică"];
 const MO = ["ian.", "feb.", "mar.", "apr.", "mai", "iun.", "iul.", "aug.", "sept.", "oct.", "nov.", "dec."];
 
-/** the days and 15-minute times a customer can pre-order for */
-export function slotDays(h: Hours, now = Date.now(), step = 15): SlotDay[] {
+/** the days and one-hour intervals (12:00–13:00 … 20:00–21:00) a customer can pre-order for; iso = start of the interval */
+export function slotDays(h: Hours, now = Date.now()): SlotDay[] {
   if (h.preorder_on === false) return [];
   const tz = TZ(h), lead = (h.preorder_lead_min ?? 45) * 60000;
-  const from = Math.max(mins(h.preorder_from, 720), mins(h.open_time, 660)), to = Math.min(mins(h.close_time, 1320), mins(h.preorder_until, 1305));
+  const from = Math.max(mins(h.preorder_from, 720), mins(h.open_time, 660)), to = Math.min(mins(h.close_time, 1320), mins(h.preorder_until, 1260), 1440);
   const today = parts(now, tz), out: SlotDay[] = [];
   for (let i = 0; i <= (h.preorder_days ?? 2); i++) {
     const noon = zoned(today.y, today.mo, today.d, 720, tz) + i * 864e5;
     const p = parts(noon, tz);
     if (!(h.open_days || [1, 2, 3, 4, 5, 6, 7]).includes(p.dow)) continue;
     const slots: SlotDay["slots"] = [];
-    for (let m = Math.ceil(from / step) * step; m <= to; m += step) {
+    for (let m = Math.ceil(from / 60) * 60; m + 60 <= to; m += 60) {
       const t = zoned(p.y, p.mo, p.d, m, tz);
-      if (t >= now + lead) slots.push({ iso: new Date(t).toISOString(), label: hhmm(m) });
+      if (t >= now + lead) slots.push({ iso: new Date(t).toISOString(), label: `${hhmm(m)}–${hhmm(m + 60)}` });
     }
     if (slots.length) out.push({ key: `${p.y}-${p.mo}-${p.d}`, label: i === 0 ? "Azi" : i === 1 ? "Mâine" : `${WD[p.dow][0].toUpperCase() + WD[p.dow].slice(1)} ${p.d} ${MO[p.mo - 1]}`, slots });
   }
   return out;
 }
 
-/** "azi la 13:30", "mâine la 13:30", "joi 5 nov. la 13:30" */
-export function whenLabel(iso: string, tz = "Europe/Bucharest", now = Date.now()) {
+/** "13:00–14:00": the one-hour interval that starts at iso */
+export function slotRange(iso: string, tz = "Europe/Bucharest") {
+  const m = parts(new Date(iso).getTime(), tz).min;
+  return `${hhmm(m)}–${hhmm((m + 60) % 1440)}`;
+}
+/** "azi", "mâine", "joi 5 nov." */
+export function slotDay(iso: string, tz = "Europe/Bucharest", now = Date.now()) {
   const p = parts(new Date(iso).getTime(), tz), n = parts(now, tz);
   const dayDiff = Math.round((Date.UTC(p.y, p.mo - 1, p.d) - Date.UTC(n.y, n.mo - 1, n.d)) / 864e5);
-  const day = dayDiff === 0 ? "azi" : dayDiff === 1 ? "mâine" : `${WD[p.dow]} ${p.d} ${MO[p.mo - 1]}`;
-  return `${day} la ${hhmm(p.min)}`;
+  return dayDiff === 0 ? "azi" : dayDiff === 1 ? "mâine" : `${WD[p.dow]} ${p.d} ${MO[p.mo - 1]}`;
+}
+/** "azi, 13:00–14:00", "mâine, 13:00–14:00", "joi 5 nov., 13:00–14:00" */
+export function whenLabel(iso: string, tz = "Europe/Bucharest", now = Date.now()) {
+  return `${slotDay(iso, tz, now)}, ${slotRange(iso, tz)}`;
 }

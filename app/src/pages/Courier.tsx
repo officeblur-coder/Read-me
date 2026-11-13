@@ -79,7 +79,8 @@ function startOfDay() { const d = new Date(); d.setHours(0, 0, 0, 0); return d.t
 const mapsUrl = (a: string, lat?: number | null, lng?: number | null) =>
   "https://www.google.com/maps/dir/?api=1&travelmode=driving&destination=" + encodeURIComponent(lat != null && lng != null ? `${lat},${lng}` : a);
 const payText = (o: Order) => o.payment === "online" ? "Plătit online · nu încasezi nimic" : `De încasat ${lei(Number(o.total))} · ${o.payment === "cash" ? "numerar" : "card (POS)"}`;
-const dueOf = (o: Order) => o.scheduled_for ? new Date(o.scheduled_for).getTime() : o.accepted_at && o.eta_min ? new Date(o.accepted_at).getTime() + o.eta_min * 60000 : 0;
+// precomandă: sfârșitul intervalului ales (13:00–14:00 → 14:00)
+const dueOf = (o: Order) => o.scheduled_for ? new Date(o.scheduled_for).getTime() + 60 * 60000 : o.accepted_at && o.eta_min ? new Date(o.accepted_at).getTime() + o.eta_min * 60000 : 0;
 const LATE_EVERY = 5 * 60000;
 
 type Alarm = { o: Order; kind: "new" | "late" };

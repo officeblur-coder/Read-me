@@ -5,7 +5,7 @@ import type { Item, Order, OrderStatus, Promo, Settings } from "../lib/types";
 import { ALLERGENS, hm, imgUrl, lei, mmss } from "../lib/format";
 import Icon from "../components/Icon";
 import Wordmark from "../components/Wordmark";
-import { whenLabel } from "../lib/schedule";
+import { slotDay, slotRange, whenLabel } from "../lib/schedule";
 import { ago, courierColor, type CourierInfo, type CourierLoc } from "../lib/couriers";
 const CourierMap = lazy(() => import("../components/CourierMap"));
 
@@ -197,6 +197,9 @@ function Console({ email }: { email: string }) {
       if (o.status === "prep") flashRef.current(`#${o.number} ${o.name}: ${o.offer_answer === "accepted" ? "clientul a acceptat" : o.offer_answer === "phone" ? "confirmat telefonic" : "confirmată automat"} · ${o.eta_min} min`);
       else if (o.status === "rejected") { flashRef.current(`#${o.number} ${o.name}: ${o.cancelled_by === "client" ? "clientul a ANULAT comanda (timpul nu convine)" : "anulată, clientul nu a răspuns"}`, true); if (soundRef.current) chime(); }
     }
+    // precomandă nouă (după plata online): anunț separat pe ecran
+    if (seen.current) for (const o of list) if (o.scheduled_for && o.status === "new" && !seen.current.has(o.id))
+      flashRef.current(`Precomandă nouă #${o.number} · ${o.name} · ${whenLabel(o.scheduled_for)}`, true);
     prev.current = new Map(list.map(o => [o.id, o]));
     if (seen.current && fresh.some(id => !seen.current!.has(id)) && soundRef.current) chime();
     seen.current = new Set(list.map(o => o.id));
@@ -231,7 +234,7 @@ function Console({ email }: { email: string }) {
       .subscribe();
     const tick = setInterval(() => setNow(Date.now()), 1000);
     const poll = setInterval(loadOrders, 4000);                // new orders show up within 4 s even if the live connection drops
-    const ring = setInterval(() => { if (soundRef.current && document.querySelector(".incoming")) chime(); }, 4000);
+    const ring = setInterval(() => { if (soundRef.current && document.querySelector(".incoming, .pre-remind")) chime(); }, 4000);
     const wake = () => { if (document.visibilityState === "visible" && started.current) keepAwake(); };
     document.addEventListener("visibilitychange", wake);
     const unlock = () => unlockAudio();
@@ -258,6 +261,14 @@ function Console({ email }: { email: string }) {
   const isLater = (o: Order) => o.status === "prep" && !!o.scheduled_for && new Date(o.scheduled_for).getTime() - now > 60 * 60000;
   const planned = orders.filter(isLater).sort((a, b) => (a.scheduled_for || "").localeCompare(b.scheduled_for || ""));
   const kitchen = orders.filter(o => o.status === "prep" && !isLater(o)).length;
+  // reminder cu o oră înainte de intervalul precomenzii (doar pentru cele puse cu mai mult de o oră înainte); sună până „Am văzut”
+  const remind = orders.filter(o => o.status === "prep" && !!o.scheduled_for && !o.pre_reminder_ack_at
+    && new Date(o.scheduled_for).getTime() - now <= 60 * 60000 && new Date(o.scheduled_for).getTime() - new Date(o.created_at).getTime() > 60 * 60000)
+    .sort((a, b) => (a.scheduled_for || "").localeCompare(b.scheduled_for || ""));
+  async function ackRemind(o: Order) {
+    const { error } = await supabase.rpc("preorder_ack", { p_order: o.id });
+    if (error) flash("Nu s-a salvat: " + error.message, true); else loadOrders();
+  }
   useEffect(() => { document.title = incoming.length ? `(${incoming.length}) Comandă nouă · Lyra` : "Recepție · Lyra"; }, [incoming.length]);
 
   async function setStatus(o: Order, status: OrderStatus, extra: Partial<Order> = {}, message?: string) {
@@ -347,9 +358,19 @@ function Console({ email }: { email: string }) {
             <div className="kpi"><small>Rating azi</small><b className="num">{kpi.rating}</b></div>
           </div>
 
+          {remind.length > 0 && <section className="pre-remind" aria-live="assertive">
+            <h3 className="as-title"><Icon name="clock" size={26} />Precomenzi peste o oră<span className="num">{remind.length}</span></h3>
+            {remind.map(o => <div key={o.id} className="pr-row">
+              <div className="pr-when"><b className="num">{slotRange(o.scheduled_for!)}</b><small>{slotDay(o.scheduled_for!, undefined, now)}</small></div>
+              <div className="pr-who"><b>#{o.number} · {o.name}</b><small>{o.mode === "livrare" ? `livrare · ${o.address}` : "ridicare din restaurant"} · {lei(Number(o.total))}{o.payment === "online" ? " · plătită online" : ""}</small></div>
+              <button className="rbtn" onClick={() => setDrawer(o.id)}>Detalii</button>
+              <button className="pr-ok" onClick={() => ackRemind(o)}><Icon name="check" size={18} />Am văzut</button>
+            </div>)}
+          </section>}
+
           {cur && (
             <section className="incoming" aria-live="assertive">
-              <div className="inc-h"><Icon name="bell" size={22} /><b>Comandă nouă</b>
+              <div className="inc-h"><Icon name="bell" size={22} /><b>{cur.scheduled_for ? "Precomandă nouă" : "Comandă nouă"}</b>
                 {incoming.length > 1 && <span className="q">{incoming.map((x, i) => <button key={x.id} aria-current={x.id === cur.id} onClick={() => { setSel(i); setEta(null); setCustomEta(""); setRejecting(false); }}>#{x.number}</button>)}</span>}
                 <span className="age num">acum {mmss(now - new Date(cur.created_at).getTime())}</span></div>
               <Ticket o={cur} />
@@ -357,7 +378,7 @@ function Console({ email }: { email: string }) {
                 <div className="who"><b>{cur.name}</b><small>{cur.phone} · {cur.address}</small>{cur.source && cur.source !== "site" && <small> · sursa: {cur.source}</small>}</div>
                 {cur.scheduled_for ? <>
                   <div className="sched-box"><Icon name="clock" size={22} /><div><small>PRECOMANDĂ · {cur.mode === "livrare" ? "livrare" : "ridicare"}</small><b>{whenLabel(cur.scheduled_for, undefined, now)}</b></div></div>
-                  <button className="accept" onClick={() => { acceptLater(cur); setSel(0); }}><Icon name="check" size={20} />Acceptă precomanda · {hm(cur.scheduled_for)}</button>
+                  <button className="accept" onClick={() => { acceptLater(cur); setSel(0); }}><Icon name="check" size={20} />Acceptă precomanda · {slotRange(cur.scheduled_for)}</button>
                 </> : <>
                 <div><p className="muted" style={{ margin: "0 0 10px", fontSize: 12 }}>Timp estimat {cur.mode === "livrare" ? "de livrare" : "de ridicare"} · {kitchen} comenzi în bucătărie</p>
                   <div className="etas">{ETAS.map(m => <button key={m} className="eta" aria-pressed={chosen === m && !customEta} onClick={() => { setEta(m); setCustomEta(""); }}>{m === rec && <span className="rec">recomandat</span>}{m}<small>gata la {hm(now + m * 60000)}</small></button>)}</div>
@@ -377,7 +398,7 @@ function Console({ email }: { email: string }) {
           {unassigned.length > 0 && couriersOn && <section className="assign" aria-live="polite">
             <h3 className="as-title"><Icon name="bike" size={26} />Atribuie livratorului<span className="num">{unassigned.length}</span></h3>
             <div className="assign-list">{unassigned.map(o => {
-              const due = o.scheduled_for ? new Date(o.scheduled_for).getTime() : o.accepted_at && o.eta_min ? new Date(o.accepted_at).getTime() + o.eta_min * 60000 : 0;
+              const due = o.scheduled_for ? new Date(o.scheduled_for).getTime() + 60 * 60000 : o.accepted_at && o.eta_min ? new Date(o.accepted_at).getTime() + o.eta_min * 60000 : 0;
               return <div key={o.id} className="as-row">
                 <div className="as-info">
                   <b className="num">#{o.number}</b>
@@ -414,7 +435,7 @@ function Console({ email }: { email: string }) {
             })}</div></section>}
           {planned.length > 0 && <div className="planned"><div className="col-h"><i style={{ background: "#5aa0ff" }} />Precomenzi programate<span>{planned.length}</span></div>
             <div className="planned-list">{planned.map(o => <button key={o.id} className="pl" onClick={() => setDrawer(o.id)}>
-              <b className="num">{hm(o.scheduled_for!)}</b><small>{whenLabel(o.scheduled_for!, undefined, now).split(" la ")[0]}</small>
+              <b className="num">{slotRange(o.scheduled_for!)}</b><small>{slotDay(o.scheduled_for!, undefined, now)}</small>
               <span>#{o.number} · {o.name}</span><em>{o.mode}{o.zone_name ? ` · ${o.zone_name}` : ""} · {lei(Number(o.total))}</em></button>)}</div></div>}
           <div className="board">
             {([["prep", "În bucătărie", "var(--warn)", "Nicio comandă în lucru"], ["road", "Pe drum / la pass", "var(--gold)", "Nimic de predat"], ["done", "Finalizate azi", "var(--ok)", "Încă nimic finalizat"]] as const).map(([st, title, color, empty]) => {
@@ -594,7 +615,7 @@ function OrderCard({ o, now, onOpen, onAdvance }: { o: Order; now: number; onOpe
         {o.status === "rejected" && <span className="tag red">{o.cancelled_by === "client" ? "anulată de client" : o.cancelled_by ? "anulată, fără răspuns" : "refuzată"}</span>}
         {o.status === "refunded" && <span className="tag red">rambursată</span>}
         {o.allergies.length > 0 && <span className="tag red">alergie</span>}
-        {o.scheduled_for && <span className="tag blue">{hm(o.scheduled_for)}</span>}
+        {o.scheduled_for && <span className="tag blue">{slotRange(o.scheduled_for)}</span>}
         {active && due ? <span className={`tm ${cls} num`}>{rem < 0 ? "întârziere " + mmss(rem) : mmss(rem)}</span> : o.done_at ? <span className="tm ok num">{hm(o.done_at)}</span> : null}</div>
       <div style={{ fontWeight: 700, fontSize: 13 }}>{o.name}{o.courier_name && <> <CourierChip o={o} now={now} /></>}</div>
       <div className="its">{o.items.map(l => `${l.qty}× ${l.name}`).join(" · ")}</div>

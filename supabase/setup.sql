@@ -82,7 +82,8 @@ alter table public.settings add column if not exists preorder_on boolean not nul
 alter table public.settings add column if not exists preorder_from time not null default '12:00';
 alter table public.settings add column if not exists preorder_days int not null default 2;
 alter table public.settings add column if not exists preorder_lead_min int not null default 45;
-alter table public.settings add column if not exists preorder_until time not null default '21:45';   -- ultima oră pentru precomenzi
+alter table public.settings add column if not exists preorder_until time not null default '21:00';   -- sfârșitul ultimului interval de precomandă
+alter table public.settings alter column preorder_until set default '21:00';
 alter table public.settings add column if not exists tz text not null default 'Europe/Bucharest';
 
 create or replace function public.is_open_at(p_at timestamptz) returns boolean
@@ -104,8 +105,10 @@ begin
   if l::date > (now() at time zone s.tz)::date + s.preorder_days then
     return format('Poți programa cel mult cu %s zile înainte.', s.preorder_days); end if;
   if not (extract(isodow from l)::int = any(s.open_days)) then return 'În ziua aleasă restaurantul este închis.'; end if;
-  if l::time < t0 or l::time > least(s.close_time, s.preorder_until) then
-    return format('Poți programa între %s și %s.', to_char(t0, 'HH24:MI'), to_char(least(s.close_time, s.preorder_until), 'HH24:MI')); end if;
+  -- intervale de o oră (12:00–13:00, 13:00–14:00 …); scheduled_for = începutul intervalului
+  if extract(minute from l) <> 0 or extract(second from l) <> 0 or l::time < t0
+     or l::time + interval '1 hour' > least(s.close_time, s.preorder_until) or l::time > time '23:00' then
+    return format('Poți programa între %s și %s, pe intervale de o oră.', to_char(t0, 'HH24:MI'), to_char(least(s.close_time, s.preorder_until), 'HH24:MI')); end if;
   return null;
 end $$;
 grant execute on function public.is_open_at(timestamptz), public.preorder_error(timestamptz) to anon, authenticated;
@@ -2583,6 +2586,9 @@ create index if not exists orders_pay_pending_idx on public.orders(created_at) w
 create or replace function public.orders_pay_insert() returns trigger
 language plpgsql security definer set search_path = public as $$
 begin
+  if new.scheduled_for is not null and new.payment is distinct from 'online' then
+    raise exception 'Precomenzile se plătesc online, cu cardul.' using errcode = 'P0001';
+  end if;
   if new.payment = 'online' then
     if not coalesce((select online_pay_on from public.settings where id = 1), false) then
       raise exception 'Plata online nu este disponibilă acum. Alege plata la livrare.' using errcode = 'P0001';
@@ -2901,7 +2907,8 @@ revoke execute on function public.courier_push(uuid, text, text, text) from publ
 -- ora la care trebuie să ajungă comanda la client
 create or replace function public.order_due(o public.orders) returns timestamptz
 language sql stable as $$
-  select coalesce(o.scheduled_for, o.accepted_at + make_interval(mins => coalesce(o.eta_min, 0)));
+  -- precomandă: sfârșitul intervalului ales (13:00–14:00 → 14:00)
+  select coalesce(o.scheduled_for + interval '1 hour', o.accepted_at + make_interval(mins => coalesce(o.eta_min, 0)));
 $$;
 
 -- recepția atribuie (sau schimbă) livratorul; p_courier null = scoate atribuirea
@@ -2992,6 +2999,23 @@ do $$ begin
   begin perform cron.schedule('lyra-couriers', '* * * * *', 'select public.courier_tick()');
   exception when others then raise notice 'pg_cron indisponibil: alarmele vin doar cu aplicația livratorului deschisă.'; end;
 end $$;
+
+
+-- =====================================================================
+-- Precomenzi: reminder pe recepție cu o oră înainte de intervalul ales
+-- Recepția vede reminderul (cu sunet) până apasă „Am văzut”; confirmarea e comună pentru toate ecranele.
+-- =====================================================================
+
+alter table public.orders add column if not exists pre_reminder_ack_at timestamptz;
+
+create or replace function public.preorder_ack(p_order uuid) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if not public.is_staff() then raise exception 'Doar recepția confirmă reminderul.' using errcode = 'P0001'; end if;
+  update public.orders set pre_reminder_ack_at = now() where id = p_order and scheduled_for is not null and pre_reminder_ack_at is null;
+end $$;
+revoke execute on function public.preorder_ack(uuid) from public, anon;
+grant execute on function public.preorder_ack(uuid) to authenticated;
 
 
 -- Meniul Lyra (generat automat din lyra/data/menu.js). Nu suprascrie modificările făcute în admin.

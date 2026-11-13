@@ -5,7 +5,7 @@ begin if cond is distinct from true then raise exception 'TEST EȘUAT: %', msg; 
 create function pg_temp.err(p jsonb) returns text language plpgsql as $$
 begin
   perform set_config('request.jwt.claim.sub', '', true);
-  perform public.place_order(jsonb_build_object('name','T','phone','07','mode','ridicare','payment','card','items','[{"id":"smash","qty":1}]'::jsonb) || p);
+  perform public.place_order(jsonb_build_object('name','T','phone','07','mode','ridicare','payment',case when p ? 'scheduled_for' then 'online' else 'card' end,'items','[{"id":"smash","qty":1}]'::jsonb) || p);
   return null;
 exception when sqlstate 'P0001' then return sqlerrm;
 end $$;
@@ -15,7 +15,7 @@ create function pg_temp.at(days int, hhmm text) returns text language sql as $$
 update public.items set available = true, active = true where id = 'smash';
 delete from public.delivery_zones;
 update public.settings set accepting_orders = true, min_order = 0, open_days = '{1,2,3,4,5,6,7}', preorder_on = true,
-  preorder_from = '12:00', preorder_days = 2, preorder_lead_min = 45 where id = 1;
+  preorder_from = '12:00', preorder_until = '21:00', preorder_days = 2, preorder_lead_min = 45, online_pay_on = true where id = 1;
 
 do $$
 declare e text;
@@ -32,15 +32,28 @@ begin
   perform pg_temp.ok(pg_temp.err('{}') is null, 'deschis: comanda „cât mai curând” trece');
   update public.settings set accepting_orders = false where id = 1;
   perform pg_temp.ok(pg_temp.err('{}') like 'Restaurantul nu preia%', 'recepția a oprit preluarea: „cât mai curând” refuzat');
-  perform pg_temp.ok(pg_temp.err(jsonb_build_object('scheduled_for', pg_temp.at(1, '13:30'))) is null, 'recepția oprită: precomanda pentru mâine trece');
+  perform pg_temp.ok(pg_temp.err(jsonb_build_object('scheduled_for', pg_temp.at(1, '13:00'))) is null, 'recepția oprită: precomanda pentru mâine trece');
 
   update public.settings set open_time = '11:00', close_time = '22:00', accepting_orders = true where id = 1;
   perform pg_temp.ok(pg_temp.err(jsonb_build_object('scheduled_for', pg_temp.at(1, '12:00'))) is null, 'mâine la 12:00 e permis');
-  update public.settings set preorder_until = '21:45' where id = 1;
-  perform pg_temp.ok(pg_temp.err(jsonb_build_object('scheduled_for', pg_temp.at(1, '21:45'))) is null, 'mâine la 21:45 e permis (ultima oră)');
-  perform pg_temp.ok(pg_temp.err(jsonb_build_object('scheduled_for', pg_temp.at(1, '22:00'))) like 'Poți programa între 12:00 și 21:45%', 'mâine la 22:00 refuzat (după 21:45)');
-  perform pg_temp.ok(pg_temp.err(jsonb_build_object('scheduled_for', pg_temp.at(1, '11:30'))) like 'Poți programa între 12:00 și 21:45%', 'mâine la 11:30 refuzat (înainte de 12)');
-  perform pg_temp.ok(pg_temp.err(jsonb_build_object('scheduled_for', pg_temp.at(1, '22:15'))) like 'Poți programa între%', 'mâine la 22:15 refuzat');
+  perform pg_temp.ok(pg_temp.err(jsonb_build_object('scheduled_for', pg_temp.at(1, '20:00'))) is null, 'mâine 20:00–21:00 e permis (ultimul interval)');
+  perform pg_temp.ok(pg_temp.err(jsonb_build_object('scheduled_for', pg_temp.at(1, '21:00'))) like 'Poți programa între 12:00 și 21:00, pe intervale de o oră%', 'mâine 21:00 refuzat (după 21:00)');
+  perform pg_temp.ok(pg_temp.err(jsonb_build_object('scheduled_for', pg_temp.at(1, '13:30'))) like 'Poți programa între 12:00 și 21:00%', 'mâine 13:30 refuzat (doar ore fixe)');
+  perform pg_temp.ok(pg_temp.err(jsonb_build_object('scheduled_for', pg_temp.at(1, '20:45'))) like 'Poți programa între%', 'mâine 20:45 refuzat');
+  perform pg_temp.ok(pg_temp.err(jsonb_build_object('scheduled_for', pg_temp.at(1, '11:00'))) like 'Poți programa între 12:00 și 21:00%', 'mâine la 11:00 refuzat (înainte de 12)');
+  perform pg_temp.ok(pg_temp.err(jsonb_build_object('scheduled_for', pg_temp.at(1, '14:00'), 'payment', 'card')) like 'Precomenzile se plătesc online%', 'precomandă cu card la livrare refuzată');
+  perform pg_temp.ok(pg_temp.err(jsonb_build_object('scheduled_for', pg_temp.at(1, '14:00'), 'payment', 'cash')) like 'Precomenzile se plătesc online%', 'precomandă cu numerar refuzată');
+  perform pg_temp.ok((select pay_status = 'pending' from public.orders where scheduled_for = pg_temp.at(1, '20:00')::timestamptz limit 1), 'precomanda online așteaptă plata');
+  -- reminder: recepția confirmă „Am văzut”
+  insert into auth.users(id, email) values ('00000000-0000-4000-8000-0000000000ae', 'rx@t.ro');
+  insert into public.staff(user_id, name, role) values ('00000000-0000-4000-8000-0000000000ae', 'Rx', 'reception');
+  perform set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-0000000000ae', true);
+  perform public.preorder_ack((select id from public.orders where scheduled_for = pg_temp.at(1, '20:00')::timestamptz limit 1));
+  perform pg_temp.ok((select pre_reminder_ack_at is not null from public.orders where scheduled_for = pg_temp.at(1, '20:00')::timestamptz limit 1), 'reminderul precomenzii e confirmat');
+  perform set_config('request.jwt.claim.sub', '', true);
+  begin perform public.preorder_ack(gen_random_uuid()); perform pg_temp.ok(false, 'anonim nu confirmă reminderul');
+  exception when sqlstate 'P0001' then perform pg_temp.ok(true, 'anonim nu confirmă reminderul'); end;
+  perform pg_temp.ok((select public.order_due(o) = o.scheduled_for + interval '1 hour' from public.orders o where scheduled_for is not null limit 1), 'livrarea precomenzii e datorată la sfârșitul intervalului');
   perform pg_temp.ok(pg_temp.err(jsonb_build_object('scheduled_for', pg_temp.at(3, '13:00'))) like 'Poți programa cel mult%', 'peste 3 zile refuzat');
   perform pg_temp.ok(pg_temp.err(jsonb_build_object('scheduled_for', (now() + interval '10 minutes')::text)) like 'Alege o oră%', 'prea curând refuzat');
   update public.settings set open_days = array_remove('{1,2,3,4,5,6,7}'::int[], extract(isodow from (now() at time zone 'Europe/Bucharest')::date + 1)::int) where id = 1;

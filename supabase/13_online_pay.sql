@@ -21,6 +21,9 @@ create index if not exists orders_pay_pending_idx on public.orders(created_at) w
 create or replace function public.orders_pay_insert() returns trigger
 language plpgsql security definer set search_path = public as $$
 begin
+  if new.scheduled_for is not null and new.payment is distinct from 'online' then
+    raise exception 'Precomenzile se plătesc online, cu cardul.' using errcode = 'P0001';
+  end if;
   if new.payment = 'online' then
     if not coalesce((select online_pay_on from public.settings where id = 1), false) then
       raise exception 'Plata online nu este disponibilă acum. Alege plata la livrare.' using errcode = 'P0001';
