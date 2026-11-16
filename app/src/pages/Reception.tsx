@@ -301,7 +301,7 @@ function Console({ email }: { email: string }) {
     setStatus(o, "prep", { eta_min: m, accepted_at: new Date().toISOString() },
       `Comanda a fost acceptată. Estimăm ${o.mode === "livrare" ? "livrarea" : "ridicarea"} în ${m} minute, la ${hm(Date.now() + m * 60000)}.`);
   const advance = (o: Order) => o.status === "prep"
-    ? setStatus(o, "road", {}, o.mode === "livrare" ? `${o.courier_name || "Curierul"} a preluat comanda și e pe drum spre tine.` : "Comanda e gata. Te așteptăm la restaurant.")
+    ? setStatus(o, "road", {}, o.mode === "livrare" ? undefined : "Comanda e gata. Te așteptăm la restaurant.")   // livrare: clientul nu e anunțat la predarea către curier
     : setStatus(o, "done", {}, "Poftă bună! Mulțumim că ai comandat de la Lyra's Delivery.");
   async function delay(o: Order, m: number) {
     const e = Math.max(5, (o.eta_min || 0) + m);

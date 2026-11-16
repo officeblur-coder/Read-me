@@ -62,12 +62,15 @@ export default function Track() {
   if (!o) return <div className="app"><p className="t-sub" style={{ padding: 24, textAlign: "center" }}>Se încarcă comanda…</p></div>;
 
   const pick = o.mode === "ridicare";
-  const si = { new: 0, prep: 1, road: 2, done: 3, rejected: 0, refunded: 3 }[o.status];
-  const labels = ["Trimisă", "În bucătărie", pick ? "Gata de ridicare" : "Pe drum", pick ? "Ridicată" : "Livrată"];
+  // livrare: clientul nu vede predarea la curier („pe drum” arată ca „în bucătărie”)
+  const st = !pick && o.status === "road" ? "prep" : o.status;
+  const si = pick ? { new: 0, prep: 1, road: 2, done: 3, rejected: 0, refunded: 3 }[o.status] : { new: 0, prep: 1, road: 1, done: 2, rejected: 0, refunded: 2 }[st];
+  const labels = pick ? ["Trimisă", "În bucătărie", "Gata de ridicare", "Ridicată"] : ["Trimisă", "În bucătărie", "Livrată"];
   const due = o.accepted_at && o.eta_min ? new Date(o.accepted_at).getTime() + o.eta_min * 60000 : 0;
   const rem = due - now;
   const frac = o.eta_min ? Math.max(0, Math.min(1, rem / (o.eta_min * 60000))) : 0;
 
+  const msgs = pick ? o.messages : o.messages.filter(m => !/e pe drum spre tine|a preluat comanda/i.test(m.body));
   let ring = null, title = "", sub: React.ReactNode = "", offer: React.ReactNode = null;
   const refundNote = o.pay_status === "refunding" || o.pay_status === "refunded";
   const sched = o.scheduled_for ? whenLabel(o.scheduled_for) : "";
@@ -75,7 +78,7 @@ export default function Track() {
   if (o.status === "new" && sched && o.pay_status !== "pending") {
     ring = <div className="ring wait"><svg viewBox="0 0 184 184"><circle cx="92" cy="92" r={R} style={{ stroke: "var(--surface-3)" }} strokeWidth="10" fill="none" /></svg><div className="c"><b className="num" style={{ fontSize: 23 }}>{slotRange(o.scheduled_for!)}</b><small>{slotDay(o.scheduled_for!)}</small></div></div>;
     title = "Precomandă trimisă"; sub = <>Ai programat comanda pentru <b>{sched}</b>, plătită online. Restaurantul o confirmă în program și primești confirmarea aici.</>;
-  } else if ((o.status === "prep") && later) {
+  } else if ((st === "prep") && later) {
     ring = <div className="ring"><svg viewBox="0 0 184 184"><circle cx="92" cy="92" r={R} style={{ stroke: "var(--ok)" }} strokeWidth="10" fill="none" /></svg><div className="c"><b className="num" style={{ fontSize: 23 }}>{slotRange(o.scheduled_for!)}</b><small>{slotDay(o.scheduled_for!)}</small></div></div>;
     title = "Precomandă confirmată"; sub = <>{pick ? "Comanda e gata de ridicat" : "Comanda ajunge"} <b>{sched}</b>{!pick && o.address ? ` · ${o.address}` : ""}</>;
   } else if (o.status === "new" && o.pay_status === "pending") {
@@ -121,7 +124,7 @@ export default function Track() {
     title = "Poftă bună!"; sub = "Mulțumim că ai comandat de la Lyra's Delivery.";
   } else {
     ring = <div className="ring"><svg viewBox="0 0 184 184"><circle cx="92" cy="92" r={R} style={{ stroke: "var(--surface-3)" }} strokeWidth="10" fill="none" /><circle cx="92" cy="92" r={R} style={{ stroke: "var(--brand)", transition: "stroke-dashoffset 1s linear" }} strokeWidth="10" fill="none" strokeLinecap="round" strokeDasharray={CIRC} strokeDashoffset={CIRC * (1 - frac)} /></svg><div className="c"><b className="num">{Math.max(0, Math.ceil(rem / 60000))}</b><small>minute</small></div></div>;
-    title = o.status === "prep" ? "Se gătește acum" : pick ? "Comanda te așteaptă" : "Curierul e pe drum";
+    title = st === "prep" ? "Se gătește acum" : "Comanda te așteaptă";
     sub = <>{pick ? "Gata de ridicare" : "Sosește"} la ~<b>{hm(due)}</b>{!pick && o.address ? ` · ${o.address}` : ""}</>;
   }
 
@@ -148,7 +151,7 @@ export default function Track() {
           )}
           {o.rating && o.rating <= 3 && <p className="t-sub">Ne pare rău că n-a fost perfect. Am transmis bucătăriei și ne vom strădui mai mult data viitoare.</p>}
         </>}
-        {o.messages.length > 0 && <div className="msgs">{[...o.messages].reverse().map((m, i) => <div key={i} className="msg">{m.body}<small>Lyra's Delivery · {hm(m.at)}</small></div>)}</div>}
+        {msgs.length > 0 && <div className="msgs">{[...msgs].reverse().map((m, i) => <div key={i} className="msg">{m.body}<small>Lyra's Delivery · {hm(m.at)}</small></div>)}</div>}
       </div>
       <div className="receipt">
         {o.items.map((l, i) => (
