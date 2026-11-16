@@ -49,6 +49,17 @@ begin
   update public.delivery_zones set active = false where name = 'Oraș';
   o := pg_temp.place('{"lat":46.545,"lng":24.56,"items":[{"id":"smash","qty":4}]}');
   perform pg_temp.ok(o.zone_name = 'Împrejurimi', 'zona dezactivată nu mai contează');
+  -- zonă cu „doar plată online”
+  update public.delivery_zones set online_only = true where name = 'Împrejurimi';
+  update public.settings set online_pay_on = true where id = 1;
+  begin
+    perform pg_temp.place('{"lat":46.48,"lng":24.63,"items":[{"id":"smash","qty":4}]}');
+    perform pg_temp.ok(false, 'zona doar online refuză cardul la livrare');
+  exception when others then perform pg_temp.ok(sqlerrm like 'În zona Împrejurimi plata se face doar online%', 'zona doar online refuză cardul la livrare'); end;
+  o := pg_temp.place('{"lat":46.48,"lng":24.63,"payment":"online","items":[{"id":"smash","qty":4}]}');
+  perform pg_temp.ok(o.pay_status = 'pending', 'zona doar online acceptă plata online');
+  o := pg_temp.place('{"mode":"ridicare","payment":"cash","items":[{"id":"smash","qty":1}]}');
+  perform pg_temp.ok(o.id is not null, 'ridicarea nu e afectată de zona doar online');
 end $$;
 rollback;
 \echo 'Toate testele pentru zonele de livrare au trecut.'

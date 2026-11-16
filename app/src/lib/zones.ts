@@ -4,7 +4,7 @@ import { supabase } from "./supabase";
 /** A delivery area drawn on the map in admin (table delivery_zones). */
 export type Zone = {
   id: string; name: string; color: string; polygon: [number, number][];
-  fee: number; min_order: number; free_over: number | null; eta_extra: number; active: boolean; sort: number;
+  fee: number; min_order: number; free_over: number | null; eta_extra: number; online_only?: boolean; active: boolean; sort: number;
 };
 export type LatLng = { lat: number; lng: number };
 

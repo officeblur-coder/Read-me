@@ -79,7 +79,7 @@ export function ZonesTab({ flash }: { flash: Flash }) {
 
   function startNew() {
     setErr("");
-    setDraft({ name: `Zona ${zones.length + 1}`, color: COLORS[zones.length % COLORS.length], polygon: [], fee: "10", min_order: "0", free_over: "", eta_extra: "0", active: true, sort: (zones.length + 1) * 10 });
+    setDraft({ name: `Zona ${zones.length + 1}`, color: COLORS[zones.length % COLORS.length], polygon: [], fee: "10", min_order: "0", free_over: "", eta_extra: "0", online_only: false, active: true, sort: (zones.length + 1) * 10 });
     setDrawing(true);
   }
   function focus(z: Zone) {
@@ -94,7 +94,7 @@ export function ZonesTab({ flash }: { flash: Flash }) {
     const num = (s: string) => parseFloat(s.replace(",", "."));
     const fee = num(draft.fee), min = num(draft.min_order || "0"), free = draft.free_over.trim() ? num(draft.free_over) : null;
     if (!(fee >= 0) || !(min >= 0) || (free != null && !(free >= 0))) { setErr("Verifică sumele (taxă, minim, gratuit peste)."); return; }
-    const row = { name: draft.name.trim(), color: draft.color, polygon: draft.polygon, fee, min_order: min, free_over: free, eta_extra: parseInt(draft.eta_extra || "0", 10) || 0, active: draft.active, sort: draft.sort, updated_at: new Date().toISOString() };
+    const row = { name: draft.name.trim(), color: draft.color, polygon: draft.polygon, fee, min_order: min, free_over: free, eta_extra: parseInt(draft.eta_extra || "0", 10) || 0, online_only: !!draft.online_only, active: draft.active, sort: draft.sort, updated_at: new Date().toISOString() };
     const { error } = draft.id ? await supabase.from("delivery_zones").update(row).eq("id", draft.id) : await supabase.from("delivery_zones").insert(row);
     if (error) { setErr(error.message); return; }
     flash(`Zona „${row.name}” a fost salvată.`); setDraft(null); setDrawing(false); reload();
@@ -135,7 +135,7 @@ export function ZonesTab({ flash }: { flash: Flash }) {
             <div className="zones-list">
               {zones.length === 0 && <p className="muted">Nicio zonă încă. Apasă „+ Zonă nouă” și desenează pe hartă.</p>}
               {zones.map(z => <button key={z.id} className={`zone-row ${z.active ? "" : "off"}`} onClick={() => focus(z)}>
-                <i style={{ background: z.color }} /><span><b>{z.name}</b><small>{z.fee ? lei(z.fee) : "gratuit"}{z.min_order ? ` · minim ${lei(z.min_order)}` : ""}{z.free_over != null ? ` · gratuit peste ${lei(z.free_over)}` : ""}{z.active ? "" : " · inactivă"}</small></span><em>Editează</em>
+                <i style={{ background: z.color }} /><span><b>{z.name}</b><small>{z.fee ? lei(z.fee) : "gratuit"}{z.min_order ? ` · minim ${lei(z.min_order)}` : ""}{z.free_over != null ? ` · gratuit peste ${lei(z.free_over)}` : ""}{z.online_only ? " · doar plată online" : ""}{z.active ? "" : " · inactivă"}</small></span><em>Editează</em>
               </button>)}
             </div>
             <div className="zones-test">
@@ -157,6 +157,7 @@ export function ZonesTab({ flash }: { flash: Flash }) {
             <p className="cp-lbl">Culoare pe hartă</p>
             <div className="zone-colors">{COLORS.map(c => <button key={c} aria-pressed={d.color === c} style={{ background: c }} onClick={() => setDraft({ ...d, color: c })} aria-label={c} />)}</div>
             <label className="adm-sw" style={{ marginTop: 12 }}><button className="switch" role="switch" aria-checked={d.active} onClick={() => setDraft({ ...d, active: !d.active })} /><span>{d.active ? "Zonă activă" : "Zonă oprită (nu se livrează aici)"}</span></label>
+            <label className="adm-sw" style={{ marginTop: 8 }}><button className="switch" role="switch" aria-checked={!!d.online_only} onClick={() => setDraft({ ...d, online_only: !d.online_only })} /><span>{d.online_only ? "Doar plată online (cardul, înainte de livrare)" : "Toate metodele de plată"}</span></label>
             <div className="zone-pts">{d.polygon.length} puncte pe hartă {!drawing && <button className="mini" onClick={() => setDrawing(true)}>Adaugă puncte</button>} {d.polygon.length > 0 && <button className="mini" onClick={() => setDraft({ ...d, polygon: [] })}>Redesenează</button>}</div>
             {err && <p className="err">{err}</p>}
             <div className="zone-actions">

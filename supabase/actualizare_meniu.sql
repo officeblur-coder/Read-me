@@ -1482,6 +1482,7 @@ create table if not exists public.delivery_zones (
   sort       int not null default 0,
   updated_at timestamptz not null default now()
 );
+alter table public.delivery_zones add column if not exists online_only boolean not null default false;   -- în zona asta se plătește doar online, cu cardul
 alter table public.orders add column if not exists lat numeric(9,6);
 alter table public.orders add column if not exists lng numeric(9,6);
 alter table public.orders add column if not exists zone_name text;
@@ -2588,6 +2589,15 @@ language plpgsql security definer set search_path = public as $$
 begin
   if new.scheduled_for is not null and new.payment is distinct from 'online' then
     raise exception 'Precomenzile se plătesc online, cu cardul.' using errcode = 'P0001';
+  end if;
+  -- zone de livrare cu „doar plată online” (admin → Zone livrare)
+  if new.mode = 'livrare' and new.payment is distinct from 'online' then
+    declare zn text; begin
+      select name into zn from public.zone_for(new.lat, new.lng) where online_only;
+      if zn is not null then
+        raise exception 'În zona % plata se face doar online, cu cardul.', zn using errcode = 'P0001';
+      end if;
+    end;
   end if;
   if new.payment = 'online' then
     if not coalesce((select online_pay_on from public.settings where id = 1), false) then

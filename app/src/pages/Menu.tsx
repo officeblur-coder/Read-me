@@ -235,13 +235,16 @@ export default function Menu({ source }: { source?: string }) {
   const days = useMemo(() => (settings?.online_pay_on ? slotDays(settings, clock) : []), [settings, clock]);
   const canOrder = canAsap || days.length > 0;
   const whenEff = canAsap ? when : "later";
-  const payEff = whenEff === "later" ? "online" : pay;
   const day = days.find(d => d.key === schedDay) || days[0];
   const slot = day?.slots.find(x => x.iso === schedAt);
   const schedOk = whenEff === "asap" || !!slot;
   // delivery: the zone drawn in admin where the pin falls; without zones, the general fee from settings
   const hasZones = zones.length > 0;
   const zone = hasZones ? zoneFor(geo, zones) : null;
+  // precomenzile și zonele marcate „doar plată online” (admin → Zone livrare) se plătesc doar online
+  const zoneOnline = mode === "livrare" && !!zone?.online_only;
+  const onlineOnly = whenEff === "later" || zoneOnline;
+  const payEff = onlineOnly ? "online" : pay;
   const feeKnown = !hasZones || !!zone;
   const freeOver = hasZones ? (zone?.free_over ?? Infinity) : (settings?.free_delivery_over ?? 100);
   const baseFee = hasZones ? (zone?.fee ?? 0) : (settings?.delivery_fee ?? 0);
@@ -566,14 +569,15 @@ export default function Menu({ source }: { source?: string }) {
           </div>
         </div>}
         <p className="cp-lbl">Plata</p>
-        {whenEff === "later" ? <div className="paygrid">
+        {onlineOnly ? <div className="paygrid">
           <button aria-pressed={true}><b>Card online</b><small>plătești acum</small></button>
         </div> : <div className="paygrid">
           <button aria-pressed={pay === "card"} onClick={() => setPay("card")}><b>Card</b><small>{mode === "livrare" ? "la livrare, POS la livrator" : "la ridicare"}</small></button>
           <button aria-pressed={pay === "cash"} onClick={() => setPay("cash")}><b>Numerar</b><small>{mode === "livrare" ? "la livrare" : "la ridicare"}</small></button>
           {settings?.online_pay_on && <button aria-pressed={pay === "online"} onClick={() => setPay("online")}><b>Card online</b><small>plătești acum</small></button>}
         </div>}
-        {whenEff === "later" && <p className="muted" style={{ fontSize: 12, margin: "6px 2px 0" }}><b>Precomenzile se plătesc online, cu cardul.</b></p>}
+        {onlineOnly && <p className="muted" style={{ fontSize: 12, margin: "6px 2px 0" }}><b>{whenEff === "later" ? "Precomenzile se plătesc online, cu cardul." : `În zona ${zone?.name} plata se face doar online, cu cardul.`}</b></p>}
+        {zoneOnline && !settings?.online_pay_on && <p className="err" style={{ fontSize: 12, margin: "6px 2px 0" }}>Plata online nu este disponibilă acum, așa că nu putem livra în această zonă. Poți alege ridicarea din restaurant.</p>}
         {payEff === "online" && <p className="muted" style={{ fontSize: 12, margin: "6px 2px 0" }}>După „Trimite comanda” te ducem pe pagina securizată de plată. Comanda ajunge la restaurant după plată.</p>}
         <div className="codebar">
           <input value={codeInput} onChange={e => setCodeInput(e.target.value)} placeholder="Cod promoțional" aria-label="Cod promoțional" />
@@ -599,7 +603,7 @@ export default function Menu({ source }: { source?: string }) {
             return left <= rw.cfg.near_tier_lei ? <p className="rw-near">După comanda asta mai ai doar {lei(left)} până la Lyra {tierName(rw.cfg, before.tier)}: {rw.cfg.rates[before.tier - 1]}% cashback și un desert cadou.</p> : null;
           })()}
         </div>
-        <button className="cta" onClick={placeOrder} disabled={sending || !canOrder || !schedOk}>
+        <button className="cta" onClick={placeOrder} disabled={sending || !canOrder || !schedOk || (zoneOnline && !settings?.online_pay_on)}>
           {!canOrder ? "Nu preluăm comenzi acum" : sending ? "Se trimite…" : whenEff === "later" ? <>{slot ? "Programează comanda" : "Alege ora"} · <span className="num">{lei(total)}</span></> : <>Trimite comanda · <span className="num">{lei(total)}</span></>}
         </button>
         {sendErr && <p className="err">{sendErr}</p>}

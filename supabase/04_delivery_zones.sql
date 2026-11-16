@@ -17,6 +17,7 @@ create table if not exists public.delivery_zones (
   sort       int not null default 0,
   updated_at timestamptz not null default now()
 );
+alter table public.delivery_zones add column if not exists online_only boolean not null default false;   -- în zona asta se plătește doar online, cu cardul
 alter table public.orders add column if not exists lat numeric(9,6);
 alter table public.orders add column if not exists lng numeric(9,6);
 alter table public.orders add column if not exists zone_name text;
