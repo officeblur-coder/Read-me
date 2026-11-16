@@ -12,13 +12,16 @@ CSS=f"""
 @font-face{{font-family:Man;src:url(file://{F}/fontsource-manrope/files/manrope-latin-600-normal.woff2);font-weight:600}}
 @font-face{{font-family:Man;src:url(file://{F}/fontsource-manrope/files/manrope-latin-700-normal.woff2);font-weight:700}}
 *{{margin:0;padding:0;box-sizing:border-box}}
-:root{{--cream:#f6f1e7;--ink:#1d1f1e;--gold:#d8bf8a;--gold2:#c7a56c}}
+:root{{--peak:#ecdcb4;--cream:#f6f1e7;--ink:#1d1f1e;--gold:#d8bf8a;--gold2:#c7a56c}}
 body{{width:1080px;height:1350px;overflow:hidden;font-family:Man;color:#fff;background:var(--ink)}}
 .post{{position:relative;width:1080px;height:1350px;overflow:hidden}}
 .bg{{position:absolute;inset:0;background-size:cover}}
 .shade{{position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,17,16,.55) 0%,rgba(15,17,16,0) 22%,rgba(15,17,16,0) 42%,rgba(15,17,16,.78) 72%,rgba(15,17,16,.94) 100%)}}
 .top{{position:absolute;top:56px;left:64px;right:64px;display:flex;justify-content:space-between;align-items:flex-start}}
-.mark{{line-height:1}}
+.mark{{line-height:0;color:#fff}}
+.logo{{width:330px;height:80px;display:block;filter:drop-shadow(0 1px 10px rgba(0,0,0,.35));margin-left:-4px;margin-top:-8px}}
+.strip .logo{{filter:none}}
+.strip{{--peak:#a5813f}}
 .mark b{{display:block;font-family:Corm;font-weight:600;font-size:40px;letter-spacing:.22em}}
 .mark i{{display:block;font-style:normal;font-family:Man;font-weight:600;font-size:13px;letter-spacing:.42em;margin-top:8px;opacity:.85}}
 .num{{font-family:Man;font-weight:600;font-size:15px;letter-spacing:.3em;opacity:.85;text-align:right;padding-top:6px}}
@@ -64,7 +67,7 @@ h1 em{{font-style:italic;color:var(--gold)}}
 def page(p):
     img=f"file://{D}/img/{p['img']}"
     dd=p['date'].split('-'); dlabel=f"{int(dd[2])} {MONTH[dd[1]]}"
-    top=f"""<div class=top><div class=mark><b>KITZALPEN</b><i>PENSION · CHALET</i></div>
+    top=f"""<div class=top><div class=mark><svg class=logo viewBox="0 0 330 80" role="img" aria-label="KitzAlpen – Pension &amp; Chalet"><g transform="translate(0 12)"><path d="M4 46 L24 18 L32 28 L44 8 L64 46" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round"></path><path d="M38 17 L44 8 L50 17 L46 15 L44 18 L41 15 Z" fill="var(--peak)"></path></g><text x="84" y="45" font-family="Corm" font-weight="600" font-size="35" letter-spacing="5.4" fill="currentColor">KITZALPEN</text><line x1="85" y1="59" x2="108" y2="59" stroke="var(--peak)" stroke-width="1.3"></line><text x="116" y="64" font-family="Man" font-weight="700" font-size="13" letter-spacing="3.2" fill="currentColor" opacity=".85">PENSION · CHALET</text></svg></div>
 <div class=num>{p['n']:02d} / 15<span></span></div></div>"""
     chips=''.join(f'<div class=chip>{H.escape(c)}</div>' for c in p.get('chips',[]))
     chips=f'<div class=chips>{chips}</div>' if chips else ''
