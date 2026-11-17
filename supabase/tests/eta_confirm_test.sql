@@ -1,7 +1,7 @@
 -- Teste: clientul confirmă sau anulează timpul propus (pe o copie; se anulează). psql -v ON_ERROR_STOP=1 -f supabase/tests/eta_confirm_test.sql
 begin;
 update public.settings set open_time = '00:00', close_time = '23:59:59', accepting_orders = true, min_order = 0,
-  confirm_eta = true, offer_window_min = 5, offer_timeout = 'accept' where id = 1;
+  confirm_eta = true, offer_window_sec = 30, offer_timeout = 'accept' where id = 1;
 delete from public.delivery_zones;
 create function pg_temp.ok(cond boolean, msg text) returns void language plpgsql as $$
 begin if cond is distinct from true then raise exception 'TEST EȘUAT: %', msg; end if; raise notice 'ok  %', msg; end $$;
@@ -38,7 +38,8 @@ begin
   perform pg_temp.ok(o.status = 'new' and o.offer_eta = 45 and o.offered_at is not null and o.accepted_at is null, 'după propunere comanda rămâne nouă, cu 45 min propuse');
   perform set_config('request.jwt.claim.sub', '', true);
   r := public.get_order(t1);
-  perform pg_temp.ok((r->>'offer_eta')::int = 45 and (r->>'offer_window')::int = 5 and r->>'status' = 'new', 'clientul vede oferta și fereastra de 5 min');
+  perform pg_temp.ok((r->>'offer_eta')::int = 45 and (r->>'offer_window_sec')::int = 30 and r->>'status' = 'new', 'clientul vede oferta și fereastra de 30 de secunde');
+  perform pg_temp.ok((r->'messages'->-1->>'body') like '%anulează comanda în 30 de secunde.', 'mesajul spune 30 de secunde');
   perform pg_temp.ok((r->'messages'->-1->>'body') like 'Putem livra comanda în 45 de minute%' or (r->'messages'->-1->>'body') like 'Putem livra comanda în 45 minute%', 'mesaj cu timpul propus');
 
   -- clientul acceptă: în bucătărie, cronometrul pornește acum, acceptată de Marco
@@ -68,7 +69,7 @@ begin
   e := pg_temp.err(format('select public.offer_eta(%L, 30)', o3));
   perform pg_temp.ok(e like '%a primit deja răspuns%', 'nu se mai propune după confirmare');
 
-  -- fără răspuns 5 minute: se confirmă automat (și apare corect la client)
+  -- fără răspuns în 30 de secunde: se confirmă automat (și apare corect la client)
   perform public.offer_eta(o4, 30);
   update public.orders set offered_at = now() - interval '6 minutes' where id = o4;
   perform set_config('request.jwt.claim.sub', '', true);

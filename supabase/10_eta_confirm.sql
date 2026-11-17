@@ -2,12 +2,19 @@
 -- Clientul confirmă timpul de livrare
 -- Recepția propune timpul („Propune · 45 min”). Comanda rămâne „new” până când clientul apasă
 -- „Accept timpul” (devine „prep”, bucătăria începe) sau „Anulez comanda” (devine „rejected”, anulată de client).
--- Dacă clientul nu răspunde în offer_window_min minute, comanda se confirmă singură (sau se anulează, după setare).
+-- Dacă clientul nu răspunde în offer_window_sec secunde, comanda se confirmă singură (sau se anulează, după setare).
 -- Precomenzile (ora aleasă de client) nu trec prin acest pas.
 -- =====================================================================
 
 alter table public.settings add column if not exists confirm_eta boolean not null default true;
-alter table public.settings add column if not exists offer_window_min int not null default 5 check (offer_window_min between 1 and 30);
+alter table public.settings add column if not exists offer_window_min int not null default 5 check (offer_window_min between 1 and 30);   -- vechi, înlocuit de offer_window_sec
+-- timpul în care clientul confirmă (secunde; implicit 30)
+alter table public.settings add column if not exists offer_window_sec int not null default 30 check (offer_window_sec between 15 and 1800);
+create or replace function public.offer_window_txt(p_sec int) returns text language sql immutable as $$
+  select case when p_sec < 60 then p_sec || ' de secunde'
+              when p_sec % 60 = 0 then case when p_sec = 60 then 'un minut' else (p_sec / 60) || ' minute' end
+              else (p_sec / 60) || ' min ' || (p_sec % 60) || ' s' end;
+$$;
 alter table public.settings add column if not exists offer_timeout text not null default 'accept' check (offer_timeout in ('accept', 'cancel'));
 
 alter table public.orders add column if not exists offered_at timestamptz;          -- când a propus recepția timpul
@@ -31,9 +38,9 @@ begin
          accepted_by = auth.uid(), accepted_by_name = public.staff_name()
    where id = p_id returning * into o;
   insert into public.order_messages(order_id, body) values (o.id, format(
-    'Putem %s comanda în %s minute, la %s. Confirmă timpul sau anulează comanda în %s minute.',
+    'Putem %s comanda în %s minute, la %s. Confirmă timpul sau anulează comanda în %s.',
     case when o.mode = 'livrare' then 'livra' else 'pregăti' end, p_eta,
-    to_char((now() + make_interval(mins => p_eta)) at time zone s.tz, 'HH24:MI'), s.offer_window_min));
+    to_char((now() + make_interval(mins => p_eta)) at time zone s.tz, 'HH24:MI'), public.offer_window_txt(s.offer_window_sec)));
   return jsonb_build_object('offered_at', o.offered_at, 'offer_eta', o.offer_eta);
 end $$;
 
@@ -79,7 +86,7 @@ declare s public.settings; r record; n int := 0;
 begin
   select * into s from public.settings where id = 1;
   for r in select id from public.orders
-            where status = 'new' and offered_at is not null and offered_at < now() - make_interval(mins => s.offer_window_min)
+            where status = 'new' and offered_at is not null and offered_at < now() - make_interval(secs => s.offer_window_sec)
   loop
     perform public.close_offer(r.id, case when s.offer_timeout = 'cancel' then 'auto_cancelled' else 'auto_accepted' end);
     n := n + 1;
@@ -127,14 +134,14 @@ begin
   select o.id into oid from public.orders o where o.token = p_token;
   if oid is null then return null; end if;
   select * into s from public.settings where id = 1;
-  if exists (select 1 from public.orders where id = oid and status = 'new' and offered_at < now() - make_interval(mins => s.offer_window_min)) then
+  if exists (select 1 from public.orders where id = oid and status = 'new' and offered_at < now() - make_interval(secs => s.offer_window_sec)) then
     perform public.close_offer(oid, case when s.offer_timeout = 'cancel' then 'auto_cancelled' else 'auto_accepted' end);
   end if;
   return (select to_jsonb(x) from (
     select o.number, o.status, o.mode, o.address, o.items, o.subtotal, o.discount, o.discount_label,
            o.points_value, o.delivery_fee, o.packaging, o.sgr, o.total, o.points_earned, o.eta_min, o.created_at,
            o.accepted_at, o.road_at, o.done_at, o.reject_reason, o.rating, o.scheduled_for, o.welcome_value,
-           o.offered_at, o.offer_eta, o.offer_answer, o.cancelled_by, o.payment, o.pay_status, s.offer_window_min as offer_window, s.offer_timeout, now() as server_now,
+           o.offered_at, o.offer_eta, o.offer_answer, o.cancelled_by, o.payment, o.pay_status, s.offer_window_min as offer_window, s.offer_window_sec, s.offer_timeout, now() as server_now,
            coalesce((select jsonb_agg(jsonb_build_object('body', m.body, 'at', m.created_at) order by m.created_at)
                      from public.order_messages m where m.order_id = o.id), '[]') as messages
     from public.orders o where o.id = oid
@@ -171,9 +178,9 @@ begin
   new.offered_at := now();
   new.accepted_by := coalesce(auth.uid(), old.accepted_by); new.accepted_by_name := coalesce(public.staff_name(), old.accepted_by_name);
   insert into public.order_messages(order_id, body) values (new.id, format(
-    'Putem %s comanda în %s minute, la %s. Confirmă timpul sau anulează comanda în %s minute.',
+    'Putem %s comanda în %s minute, la %s. Confirmă timpul sau anulează comanda în %s.',
     case when new.mode = 'livrare' then 'livra' else 'pregăti' end, new.offer_eta,
-    to_char((now() + make_interval(mins => new.offer_eta)) at time zone s.tz, 'HH24:MI'), s.offer_window_min));
+    to_char((now() + make_interval(mins => new.offer_eta)) at time zone s.tz, 'HH24:MI'), public.offer_window_txt(s.offer_window_sec)));
   return new;
 end $$;
 drop trigger if exists orders_a_offer on public.orders;

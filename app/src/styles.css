@@ -1643,3 +1643,6 @@ body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area
 .pr-who b{display:block;font-size:17px}
 .pr-who small{color:var(--muted)}
 .pr-ok{display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:12px;border:0;background:#3b82f6;color:#fff;font:800 16px var(--f-body,inherit);cursor:pointer}
+
+/* recepție: telefonul clientului mare, la comanda nouă */
+.who-tel{display:flex;align-items:center;gap:10px;margin:6px 0 4px;font:800 30px/1.15 var(--f-display);color:var(--gold);text-decoration:none;letter-spacing:.02em}

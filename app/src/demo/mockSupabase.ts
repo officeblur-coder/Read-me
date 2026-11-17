@@ -113,7 +113,7 @@ function advance(o: Row) {
       msg(`Putem ${o.mode === "livrare" ? "livra" : "pregăti"} comanda în 35 de minute. Confirmă timpul sau anulează comanda.`, 7000);
     }
   }
-  if (o.status === "new" && o.offered_at && Date.now() - new Date(o.offered_at).getTime() > (db.settings[0].offer_window_min || 5) * 60000) closeOffer(o, "auto_accepted");
+  if (o.status === "new" && o.offered_at && Date.now() - new Date(o.offered_at).getTime() > (db.settings[0].offer_window_sec || 30) * 1000) closeOffer(o, "auto_accepted");
   // după acceptare, restul pașilor curg de la ora acceptării
   const ta = o.accepted_at ? Date.now() - new Date(o.accepted_at).getTime() + 7000 : t;
   if (o.status === "prep" && ta > 30000 && o.mode === "livrare") {
@@ -337,7 +337,7 @@ function rpc(fn: string, args: Row = {}): Promise<{ data: any; error: any }> {
           if (!o) return res({ data: null, error: { message: "Nu există" } });
           const messages = db.order_messages.filter(m => m.order_id === o.id).map(m => ({ body: m.body, at: m.created_at }));
           const st = db.settings[0];
-          return res({ data: structuredClone({ ...o, messages, offer_window: st.offer_window_min || 5, offer_timeout: st.offer_timeout || "accept", server_now: iso() }), error: null });
+          return res({ data: structuredClone({ ...o, messages, offer_window: st.offer_window_min || 5, offer_window_sec: st.offer_window_sec || 30, offer_timeout: st.offer_timeout || "accept", server_now: iso() }), error: null });
         }
         case "answer_offer": {
           const o = db.orders.find(x => x.token === args.p_token);

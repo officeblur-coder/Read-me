@@ -92,7 +92,7 @@ export default function Track() {
     }
   } else if (o.status === "new" && o.offered_at && o.offer_eta) {
     const sNow = now + skew;
-    const left = new Date(o.offered_at).getTime() + (o.offer_window || 5) * 60000 - sNow;
+    const left = new Date(o.offered_at).getTime() + (o.offer_window_sec || (o.offer_window || 5) * 60) * 1000 - sNow;
     const at = hm(Date.now() + o.offer_eta * 60000);
     ring = <div className="ring offer"><svg viewBox="0 0 184 184"><circle cx="92" cy="92" r={R} style={{ stroke: "var(--gold)" }} strokeWidth="10" fill="none" /></svg><div className="c"><b className="num">{o.offer_eta}</b><small>minute</small></div></div>;
     title = `Restaurantul poate ${pick ? "pregăti" : "livra"} în ${o.offer_eta} minute`;

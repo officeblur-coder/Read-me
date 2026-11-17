@@ -41,7 +41,8 @@ export type Settings = import("./schedule").Hours & {
   confirm_eta?: boolean;
   online_pay_on?: boolean;
   couriers_on?: boolean;                       // livratorii (atribuire, aplicație, hartă) porniți din admin                     // plata online cu cardul (Stripe) e configurată și pornită                       // clientul confirmă timpul propus de recepție
-  offer_window_min?: number;                   // minute pentru răspuns
+  offer_window_min?: number;                   // vechi (minute)
+  offer_window_sec?: number;                   // secunde pentru răspunsul clientului
   offer_timeout?: "accept" | "cancel";         // ce se întâmplă fără răspuns
   delivery_fee: number;
   free_delivery_over: number;
@@ -155,7 +156,7 @@ export type PublicOrder = Pick<
   | "points_value" | "delivery_fee" | "packaging" | "sgr" | "total" | "points_earned" | "eta_min" | "created_at"
   | "accepted_at" | "road_at" | "done_at" | "reject_reason" | "rating" | "scheduled_for" | "welcome_value"
   | "offered_at" | "offer_eta" | "offer_answer" | "cancelled_by" | "payment" | "pay_status"
-> & { messages: { body: string; at: string }[]; offer_window?: number; offer_timeout?: "accept" | "cancel"; server_now?: string };
+> & { messages: { body: string; at: string }[]; offer_window?: number; offer_window_sec?: number; offer_timeout?: "accept" | "cancel"; server_now?: string };
 
 export type CartLine = {
   key: string;

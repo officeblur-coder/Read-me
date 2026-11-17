@@ -375,7 +375,7 @@ function Console({ email }: { email: string }) {
                 <span className="age num">acum {mmss(now - new Date(cur.created_at).getTime())}</span></div>
               <Ticket o={cur} />
               <div className="decide">
-                <div className="who"><b>{cur.name}</b><small>{cur.phone} · {cur.address}</small>{cur.source && cur.source !== "site" && <small> · sursa: {cur.source}</small>}</div>
+                <div className="who"><b>{cur.name}</b><a className="who-tel num" href={`tel:${cur.phone.replace(/\s/g, "")}`}><Icon name="phone" size={22} />{cur.phone}</a><small>{cur.address}</small>{cur.source && cur.source !== "site" && <small> · sursa: {cur.source}</small>}</div>
                 {cur.scheduled_for ? <>
                   <div className="sched-box"><Icon name="clock" size={22} /><div><small>PRECOMANDĂ · {cur.mode === "livrare" ? "livrare" : "ridicare"}</small><b>{whenLabel(cur.scheduled_for, undefined, now)}</b></div></div>
                   <button className="accept" onClick={() => { acceptLater(cur); setSel(0); }}><Icon name="check" size={20} />Acceptă precomanda · {slotRange(cur.scheduled_for)}</button>
@@ -420,7 +420,7 @@ function Console({ email }: { email: string }) {
           })}</div>}
           {waiting.length > 0 && <section className="waiting" aria-live="polite"><div className="col-h"><i style={{ background: "var(--gold)" }} />Așteaptă confirmarea clientului<span>{waiting.length}</span></div>
             <div className="waiting-list">{waiting.map(o => {
-              const left = new Date(o.offered_at!).getTime() + (settings?.offer_window_min || 5) * 60000 - now;
+              const left = new Date(o.offered_at!).getTime() + (settings?.offer_window_sec || 30) * 1000 - now;
               return <div key={o.id} className="wt">
                 <div className="h"><b>#{o.number}</b><span className={`tag ${o.mode === "livrare" ? "" : "green"}`}>{o.mode}</span><span>{o.name}</span>
                   <span className="tm num" title="timp rămas pentru răspuns">{left > 0 ? mmss(left) : "0:00"}</span></div>
