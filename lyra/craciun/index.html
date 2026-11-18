@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<title>Lyra · Pliant Crăciun A5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* A5 flyer, front + back. Trim 148 x 210 mm + 3 mm bleed on every side = 154 x 216 mm.
+   Text stays at least 5 mm inside the trim (8 mm from the sheet edge).
+   Same identity as the QR menu: deep forest green, Lyra gold, Cormorant + Montserrat. */
+:root{
+  --bg:#06120c; --bg2:#0d2318; --gold:#d8b46a; --gold2:#f1d9a0; --gold3:#a8843f;
+  --text:#f5efe2; --muted:#c9c1ad; --red:#a3201f;
+  --serif:'Cormorant Garamond','Times New Roman',serif;
+  --sans:'Montserrat',Arial,sans-serif;
+}
+@page{size:154mm 216mm;margin:0}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:#555}
+body{-webkit-print-color-adjust:exact;print-color-adjust:exact;font-family:var(--sans);color:var(--text)}
+.sheet{width:154mm;height:216mm;position:relative;overflow:hidden;background:var(--bg);margin:0 auto 8mm;page-break-after:always}
+@media print{.sheet{margin:0}html,body{background:none}}
+.glow{position:absolute;inset:0;background:
+  radial-gradient(90mm 70mm at 50% 0%,rgba(216,180,106,.22),transparent 70%),
+  radial-gradient(80mm 80mm at 100% 100%,rgba(163,32,31,.18),transparent 70%),
+  radial-gradient(70mm 90mm at 0% 60%,rgba(40,110,70,.25),transparent 70%)}
+.frame{position:absolute;left:8mm;right:8mm;top:8mm;bottom:8mm;border:.3mm solid rgba(216,180,106,.55);border-radius:2mm;pointer-events:none;z-index:5}
+.frame::before,.frame::after{content:"";position:absolute;width:6mm;height:6mm;border:.5mm solid var(--gold)}
+.frame::before{left:-1.4mm;top:-1.4mm;border-right:0;border-bottom:0}
+.frame::after{right:-1.4mm;bottom:-1.4mm;border-left:0;border-top:0}
+.spark{position:absolute;inset:0;pointer-events:none}
+.gold{background:linear-gradient(180deg,#fff7e3,var(--gold2) 45%,var(--gold) 75%,var(--gold3));-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* ---------- front ---------- */
+.front .photo{position:absolute;left:0;right:0;bottom:0;height:134mm}
+.front .photo img{width:100%;height:100%;object-fit:cover;object-position:52% 60%}
+.front .photo::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,var(--bg) 0%,rgba(6,18,12,.92) 8%,rgba(6,18,12,.55) 24%,rgba(6,18,12,.12) 42%,rgba(6,18,12,0) 52%,rgba(6,18,12,0) 64%,rgba(6,18,12,.9) 100%);z-index:1}
+.front .top{position:absolute;left:12mm;right:12mm;top:13mm;text-align:center;z-index:3}
+.front .logo{width:30mm}
+.front .kicker{font-size:6.4pt;letter-spacing:.42em;text-transform:uppercase;color:var(--gold);margin-top:5mm}
+.front h1{font-family:var(--serif);font-style:italic;font-weight:600;font-size:66pt;line-height:.9;margin-top:3mm}
+.front .la{font-family:var(--serif);font-weight:500;font-size:22pt;letter-spacing:.32em;text-transform:uppercase;margin-top:1mm}
+.front .tag{font-family:var(--serif);font-style:italic;font-size:12.5pt;color:var(--muted);margin-top:3mm}
+.front .bottom{position:absolute;left:12mm;right:12mm;bottom:13mm;z-index:3;display:flex;justify-content:space-between;align-items:flex-end;gap:6mm}
+.badge{display:inline-block;font-size:6.3pt;font-weight:700;letter-spacing:.2em;text-transform:uppercase;padding:1.8mm 3.4mm;border-radius:5mm;background:linear-gradient(135deg,var(--gold2),var(--gold));color:#1b1407}
+.front .ord{font-size:6.6pt;letter-spacing:.3em;text-transform:uppercase;color:var(--muted);margin-top:2.6mm}
+.front .phone{font-family:var(--serif);font-weight:700;font-size:25pt;line-height:1;margin-top:1mm}
+.front .hu{font-family:var(--serif);font-style:italic;font-size:10pt;color:var(--gold2);text-align:right;line-height:1.35}
+
+/* ---------- back ---------- */
+.back .inner{position:absolute;left:13mm;right:13mm;top:13mm;bottom:13mm;display:flex;flex-direction:column;align-items:center;text-align:center;z-index:3}
+.back .kicker{font-size:6.2pt;letter-spacing:.42em;text-transform:uppercase;color:var(--gold)}
+.back h2{font-family:var(--serif);font-weight:600;font-size:30pt;line-height:1;margin-top:2.4mm}
+.back .sub{font-family:var(--serif);font-style:italic;font-size:12pt;color:var(--gold2);margin-top:1.4mm}
+.back .arch{width:100mm;height:62mm;border-radius:50mm 50mm 2.5mm 2.5mm;overflow:hidden;margin-top:6mm;box-shadow:0 3mm 8mm rgba(0,0,0,.5),0 0 0 .4mm rgba(216,180,106,.6)}
+.back .arch img{width:100%;height:100%;object-fit:cover;object-position:62% 55%}
+.back ul{list-style:none;margin-top:6mm;display:grid;grid-template-columns:1fr 1fr;gap:2.4mm 6mm;text-align:left;width:100%}
+.back li{font-size:8pt;line-height:1.35;color:var(--text);padding-left:4.4mm;position:relative}
+.back li::before{content:"✦";position:absolute;left:0;top:0;color:var(--gold);font-size:7pt}
+.back li span{display:block;font-family:var(--serif);font-style:italic;font-size:8.6pt;color:var(--muted)}
+.offer{display:flex;align-items:center;justify-content:space-between;width:100%;margin-top:6mm;padding:3.6mm 5mm;border-radius:2.5mm;background:rgba(216,180,106,.1);border:.3mm solid rgba(216,180,106,.45)}
+.offer .l{text-align:left}
+.offer .l b{display:block;font-family:var(--serif);font-weight:600;font-size:14pt}
+.offer .l small{font-size:7pt;color:var(--muted);letter-spacing:.06em}
+.offer .p{font-family:var(--serif);font-weight:700;font-size:28pt;line-height:1}
+.offer .p small{font-family:var(--sans);font-size:8pt;letter-spacing:.14em;color:var(--gold);margin-left:1mm}
+.alsov{width:100%;display:flex;justify-content:space-between;font-size:7.6pt;color:var(--muted);margin-top:2.6mm;padding:0 5mm}
+.alsov b{color:var(--text);font-weight:600}
+.steps{display:grid;grid-template-columns:1fr 1fr;gap:4mm;width:100%;margin-top:6mm}
+.steps div{border-top:.3mm solid rgba(216,180,106,.4);padding-top:2.6mm;text-align:left}
+.steps b{display:block;font-size:6.2pt;letter-spacing:.32em;text-transform:uppercase;color:var(--gold);font-weight:600;margin-bottom:1.2mm}
+.steps p{font-size:8.4pt;line-height:1.4}
+.steps p big{font-family:var(--serif);font-weight:700;font-size:15pt;color:var(--gold2)}
+.wish{font-family:var(--serif);font-style:italic;font-size:17pt;margin-top:auto}
+.foot{display:flex;align-items:center;justify-content:center;gap:5mm;margin-top:3mm;font-size:6.6pt;letter-spacing:.24em;text-transform:uppercase;color:var(--muted)}
+.foot img{width:16mm}
+</style>
+</head>
+<body>
+
+<!-- ======================= FAȚĂ / FRONT ======================= -->
+<section class="sheet front">
+  <div class="glow"></div>
+  <div class="photo"><img src="platou.jpg" alt="Platou festiv Lyra"></div>
+  <svg class="spark" id="sp1" viewBox="0 0 154 216" preserveAspectRatio="none"></svg>
+  <div class="top">
+    <img class="logo" src="../img/logo.webp" alt="Lyra">
+    <div class="kicker">Sărbători de iarnă · Téli ünnepek</div>
+    <h1 class="gold">Crăciun</h1>
+    <div class="la">la Lyra</div>
+    <div class="tag">Platouri festive pentru masa de sărbătoare</div>
+  </div>
+  <div class="bottom">
+    <div>
+      <span class="badge">Precomandă 48h</span>
+      <div class="ord">Comenzi · Rendelés</div>
+      <div class="phone gold">0265 333 090</div>
+    </div>
+    <div class="hu">Ünnepi tálak<br>a karácsonyi asztalra</div>
+  </div>
+  <div class="frame"></div>
+</section>
+
+<!-- ======================= VERSO / BACK ======================= -->
+<section class="sheet back">
+  <div class="glow"></div>
+  <svg class="spark" id="sp2" viewBox="0 0 154 216" preserveAspectRatio="none"></svg>
+  <div class="inner">
+    <div class="kicker">Ediție de sărbătoare</div>
+    <h2 class="gold">Platoul festiv Lyra</h2>
+    <div class="sub">Ünnepi tál · Festive platter</div>
+    <div class="arch"><img src="platou.jpg" alt=""></div>
+    <ul>
+      <li>Tartine și coșulețe festive<span>Ünnepi falatkák</span></li>
+      <li>Terine și rulade de casă<span>Házi terrinek és tekercsek</span></li>
+      <li>Creveți crocanți în tempura<span>Ropogós tempura garnélarák</span></li>
+      <li>Brânzeturi cu merișoare<span>Sajtok vörösáfonyával</span></li>
+      <li>Chifteluțe aurii<span>Aranyló falatkák</span></li>
+      <li>Batoane crocante cu semințe<span>Ropogós magvas rudak</span></li>
+    </ul>
+    <div class="offer">
+      <div class="l"><b>Platou festiv · 4 persoane</b><small>1500 g · 4 személyre</small></div>
+      <div class="p gold">250<small>LEI</small></div>
+    </div>
+    <div class="alsov"><span>Și varianta <b>vegetariană</b> · 4 persoane · 1300 g</span><span><b>250 lei</b></span></div>
+    <div class="steps">
+      <div><b>Comandă · Rendelés</b><p><big>0265 333 090</big><br>Precomandă cu minim 48 de ore înainte</p></div>
+      <div><b>Program · Nyitva</b><p>Zilnic 07:00 – 22:00<br>www.restaurantlyra.ro</p></div>
+    </div>
+    <div class="wish gold">Crăciun fericit! · Boldog karácsonyt!</div>
+    <div class="foot"><img src="../img/logo.webp" alt="Lyra"><span>Pensiune · Restaurant · Tradiții din 1999</span></div>
+  </div>
+  <div class="frame"></div>
+</section>
+
+<script>
+/* deterministic gold sparkles: soft dots and a few four-point stars, kept away
+   from the photo on the front and spread lightly on the back */
+function sparkles(svg, n, yMax, seed, keepOut) {
+  const r = k => { const x = Math.sin(seed * 12.9898 + k * 78.233) * 43758.5453; return x - Math.floor(x); };
+  let out = "";
+  for (let i = 0; i < n; i++) {
+    const x = 4 + r(i) * 146, y = 4 + r(i + 500) * yMax, s = .25 + r(i + 900) * .7, o = .25 + r(i + 1300) * .6;
+    if (keepOut && keepOut(x, y)) continue;   // never over text
+    if (r(i + 1700) > .9) {
+      const L = 1.4 + s * 2.2;
+      out += `<path d="M${x} ${y - L}Q${x} ${y} ${x + L} ${y}Q${x} ${y} ${x} ${y + L}Q${x} ${y} ${x - L} ${y}Q${x} ${y} ${x} ${y - L}Z" fill="#f1d9a0" opacity="${o}"/>`;
+    } else out += `<circle cx="${x}" cy="${y}" r="${s * .45}" fill="#f1d9a0" opacity="${o * .7}"/>`;
+  }
+  svg.innerHTML = out;
+}
+sparkles(document.getElementById("sp1"), 90, 86, 3, (x, y) => x > 22 && x < 132 && y > 10 && y < 84);
+sparkles(document.getElementById("sp2"), 70, 208, 9, (x, y) => x > 12 && x < 142);
+</script>
+</body>
+</html>
