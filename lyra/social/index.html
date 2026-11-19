@@ -80,6 +80,16 @@ h1{font-family:var(--serif);font-style:italic;font-weight:600;font-size:104px;li
 .menu-list b{font-family:var(--serif);font-weight:700;font-size:34px;color:var(--gold2);white-space:nowrap}
 .menu-list b small{font-family:var(--sans);font-size:13px;letter-spacing:.14em;color:var(--gold);margin-left:4px}
 
+/* 3 · wine: vineyard backdrop + whole bottles standing on a dark "table" */
+.wine{height:700px;background:
+  radial-gradient(520px 380px at 50% 46%,rgba(241,217,160,.30),transparent 70%),
+  radial-gradient(900px 500px at 50% 120%,rgba(216,180,106,.18),transparent 60%),
+  linear-gradient(180deg,#123222 0%,#0b2116 58%,#06120c 100%)}
+.wine::before{content:"";position:absolute;left:0;right:0;bottom:0;height:120px;background:linear-gradient(180deg,rgba(216,180,106,.16),rgba(6,18,12,.2) 18%,rgba(6,18,12,.9));border-top:1.5px solid rgba(216,180,106,.35)}
+.bottles{position:absolute;left:0;right:0;bottom:58px;display:flex;justify-content:center;align-items:flex-end;gap:64px;z-index:2}
+.bottles img{height:590px;width:auto;filter:drop-shadow(0 30px 24px rgba(0,0,0,.7))}
+.wine .chip{z-index:3}
+
 /* 4 · versus */
 .vs{display:flex;flex-direction:column;align-items:center;margin-top:26px;position:relative}
 .vs .ph{width:750px}
@@ -159,9 +169,10 @@ h1{font-family:var(--serif);font-style:italic;font-weight:600;font-size:104px;li
   <div class="kicker">Seara la Lyra</div>
   <h1 class="gold">Un vin bun?</h1>
   <div class="hu">Egy jó bor?</div>
-  <div class="ph big"><img src="../img/vin-cover.webp"></div>
+  <div class="ph big wine">    <div class="bottles"><img src="img/savu-fe.webp" alt="Fetească Regală"><img src="img/savu-tr.webp" alt="Traminer"><img src="img/savu-nn.webp" alt="Not Noir"></div>
+    <span class="chip">Pivnița Savu · Ciumbrud</span></div>
   <div class="dish">
-    <div class="t"><b>Albe, roze și roșii</b><span>Vinuri alese, multe le găsești și la pahar.<br>Un roșu sec lângă vită? Îți recomandăm noi.</span></div>
+    <div class="t"><b>Vinuri de familie, din Transilvania</b><span>Fetească Regală, Traminer, Not Noir și multe altele de la Pivnița Savu,<br>unele și la pahar. Un roșu lângă vită? Îți recomandăm noi.</span></div>
   </div>
   <div class="foot">Zilnic 07:00 – 22:00<i></i>restaurantlyra.ro</div>
   <div class="frame"></div>
