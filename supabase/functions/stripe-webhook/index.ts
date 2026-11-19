@@ -34,8 +34,13 @@ export async function handler(req: Request, env: Env): Promise<Response> {
   if (!(await verifyStripe(payload, req.headers.get("stripe-signature"), env.get("STRIPE_WEBHOOK_SECRET") || ""))) return new Response("bad signature", { status: 400 });
   const ev = JSON.parse(payload);
   const s = ev.data?.object || {};
-  const order = s.metadata?.order_id || s.client_reference_id;
+  const platter = s.metadata?.platter_id;
+  const order = platter ? null : s.metadata?.order_id || s.client_reference_id;
   try {
+    // registrul de platouri: doar plata reușită contează (sesiunile expirate se refac din link)
+    if (platter && (ev.type === "checkout.session.completed" || ev.type === "checkout.session.async_payment_succeeded") && s.payment_status === "paid") {
+      await rpc(env, "platter_mark_paid", { p_id: platter, p_session: s.id, p_payment: s.payment_intent });
+    }
     if (order && (ev.type === "checkout.session.completed" || ev.type === "checkout.session.async_payment_succeeded") && s.payment_status === "paid") {
       await rpc(env, "pay_mark_paid", { p_order: order, p_session: s.id, p_payment: s.payment_intent });
     } else if (order && (ev.type === "checkout.session.expired" || ev.type === "checkout.session.async_payment_failed")) {

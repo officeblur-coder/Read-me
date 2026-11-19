@@ -49,3 +49,19 @@ res = await hookHandler(new Request("https://f/hook", { method: "POST", headers:
 ok(res.status === 200 && calls.some(c => c.u.endsWith("/rpc/pay_mark_paid") && c.b.p_order === "o9" && c.b.p_payment === "pi_9"), "webhook: plata marcată în bază");
 res = await hookHandler(new Request("https://f/hook", { method: "POST", headers: { "stripe-signature": `t=${ts},v1=00` }, body: ev }), ENV);
 ok(res.status === 400, "webhook cu semnătură falsă: respins");
+
+// ---- registrul de platouri ----
+calls.length = 0;
+const prevFetch = (globalThis as any).fetch;
+(globalThis as any).fetch = async (u: string, o: any = {}) => {
+  if (u.endsWith("/rpc/platter_pay_info")) { calls.push({ u, b: JSON.parse(o.body) }); return new Response(JSON.stringify({ id: "p5", number: 5, total: 640, email: "c@d.ro", pay_status: "sent", cancelled: false, site_url: "https://lyrasdelivery.ro", stripe_session: null })); }
+  return prevFetch(u, o);
+};
+res = await payHandler(new Request("https://f/pay", { method: "POST", body: JSON.stringify({ platter: "ptok" }) }), ENV);
+j = await res.json();
+const pb = decodeURIComponent(String(calls.find(c => c.u.endsWith("/checkout/sessions"))!.b));
+ok(j.url === "https://checkout.stripe.com/c/cs_9" && pb.includes("unit_amount]=64000") && pb.includes("metadata[platter_id]=p5") && pb.includes("success_url=https://lyrasdelivery.ro/platouri/plata/ptok?plata=ok"), "platouri: plata integrală 640 lei, linkul de întoarcere");
+ok(calls.some(c => c.u.endsWith("/rpc/platter_set_session") && c.b.p_id === "p5"), "platouri: sesiunea salvată");
+const pev = JSON.stringify({ type: "checkout.session.completed", data: { object: { id: "cs_p", payment_status: "paid", payment_intent: "pi_p", client_reference_id: "platou-p5", metadata: { platter_id: "p5" } } } });
+res = await hookHandler(new Request("https://f/hook", { method: "POST", headers: { "stripe-signature": `t=${ts},v1=${createHmac("sha256", "whsec_test").update(`${ts}.${pev}`).digest("hex")}` }, body: pev }), ENV);
+ok(res.status === 200 && calls.some(c => c.u.endsWith("/rpc/platter_mark_paid") && c.b.p_id === "p5") && !calls.some(c => c.u.endsWith("/rpc/pay_mark_paid") && c.b.p_order?.startsWith?.("platou")), "webhook: platoul marcat plătit, nu atinge comenzile");

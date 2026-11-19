@@ -328,6 +328,31 @@ function rpc(fn: string, args: Row = {}): Promise<{ data: any; error: any }> {
       tick();
       switch (fn) {
         case "place_order": return res({ data: placeOrder(args.p), error: null });
+        // registrul de platouri (doar pentru capturi de ecran)
+        case "platter_me": return res({ data: { role: sessionStorage.getItem("lyra-demo-platter-role") || "editor", name: "Recepție platouri" }, error: null });
+        case "platter_list": {
+          if (!db.platters) {
+            const d = (n: number) => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10);
+            const mkp = (n: number, o: Row) => ({ id: uid(), number: n, address: "", email: null, dispatcher: "Maria", order_date: d(-3), delivery_time: "", note: "", pay_status: "none", pay_sent_at: null, pay_sent_count: 0, paid_at: null, verified_at: null, verified_by: null, cancelled: false, created_by: "Recepție platouri", created_at: iso(), token: uid(), ...o,
+              qty: o.lines.reduce((a: number, l: Row) => a + l.qty, 0), total: o.lines.reduce((a: number, l: Row) => a + l.qty * l.price, 0) });
+            db.platters = [
+              mkp(1, { name: "Ana Pop", phone: "0745 111 222", address: "Str. Lungă 3", email: "ana@exemplu.ro", delivery_date: d(1), delivery_time: "12:00", lines: [{ name: "Platou rece 8 pers.", qty: 2, price: 320 }], pay_status: "paid", paid_at: iso(Date.now() - 864e5), verified_at: iso(), verified_by: "Simona" }),
+              mkp(2, { name: "Mihai Ionescu", phone: "0722 333 444", address: "Bd. 1 Decembrie 18", email: "mihai@exemplu.ro", delivery_date: d(1), delivery_time: "17:30", lines: [{ name: "Platou cald 6 pers.", qty: 1, price: 280 }, { name: "Platou rece 8 pers.", qty: 1, price: 320 }], pay_status: "sent", pay_sent_at: iso(Date.now() - 3600e3), pay_sent_count: 1 }),
+              mkp(3, { name: "Kovács Éva", phone: "0740 555 666", delivery_date: d(5), delivery_time: "11:00", dispatcher: "Andrei", lines: [{ name: "Platou de sarmale", qty: 3, price: 150 }] }),
+            ];
+          }
+          return res({ data: { orders: structuredClone(db.platters).map((o: Row) => { delete o.token; return o; }), products: [{ id: 1, name: "Platou rece 8 pers.", price: 320 }, { id: 2, name: "Platou cald 6 pers.", price: 280 }, { id: 3, name: "Platou de sarmale", price: 150 }] }, error: null });
+        }
+        case "platter_save": {
+          const p = args.p, lines = p.lines.filter((l: Row) => l.name.trim()); if (!lines.length) return res({ data: null, error: { message: "Adaugă cel puțin un produs." } });
+          const row: Row = { ...p, lines, qty: lines.reduce((a: number, l: Row) => a + l.qty, 0), total: lines.reduce((a: number, l: Row) => a + l.qty * l.price, 0), email: p.email || null };
+          let o = db.platters.find((x: Row) => x.id === p.id);
+          if (o) Object.assign(o, row); else { o = { ...row, id: uid(), number: db.platters.length + 1, pay_status: "none", pay_sent_count: 0, verified_at: null, cancelled: false, created_at: iso() }; db.platters.push(o); }
+          save(); return res({ data: structuredClone(o), error: null });
+        }
+        case "platter_send_pay": { const o = db.platters.find((x: Row) => x.id === args.p_id)!; o.pay_status = "sent"; o.pay_sent_at = iso(); o.pay_sent_count++; save(); return res({ data: { email: o.email }, error: null }); }
+        case "platter_verify": { const o = db.platters.find((x: Row) => x.id === args.p_id)!; o.verified_at = args.p_ok ? iso() : null; o.verified_by = args.p_ok ? "Simona" : null; save(); return res({ data: null, error: null }); }
+        case "platter_cancel": { const o = db.platters.find((x: Row) => x.id === args.p_id)!; o.cancelled = args.p_cancel; save(); return res({ data: null, error: null }); }
         case "check_code": {
           const c = db.promo_codes.find(x => x.code === String(args.p_code).trim().toUpperCase() && x.active);
           return res({ data: c ? { code: c.code, percent: c.percent, category_id: c.category_id, label: c.label } : null, error: null });

@@ -1,5 +1,6 @@
 // Funcția Edge „pay”:
 //  • din site: { token }            → deschide plata Stripe Checkout pentru comandă și întoarce { url }
+//  • din pagina de plată a platourilor: { platter: token } → plata integrală a comenzii de platouri, întoarce { url }
 //  • din baza de date (pg_net): { action: "refund", order_id } cu antetul x-pay-secret → rambursează pe card
 // Publicare: supabase functions deploy pay --no-verify-jwt   (vezi README.md)
 // Fișier unic: se poate lipi direct în Supabase → Edge Functions → Via Editor.
@@ -65,6 +66,24 @@ export function sessionParams(o: { id: string; number: number; total: number; em
   };
 }
 
+/** sesiunea Stripe pentru o comandă din registrul de platouri (suma integrală, din bază) */
+export function platterParams(o: { id: string; number: number; total: number; email?: string | null; site_url: string }, token: string) {
+  const site = o.site_url.replace(/\/$/, "");
+  return {
+    mode: "payment",
+    locale: "ro",
+    integration_identifier: INTEGRATION_ID,
+    line_items: [{ quantity: 1, price_data: { currency: "ron", unit_amount: Math.round(Number(o.total) * 100), product_data: { name: `Platouri #${o.number} · Lyra's Delivery` } } }],
+    customer_email: o.email || undefined,
+    client_reference_id: "platou-" + o.id,
+    metadata: { platter_id: o.id, platter_no: String(o.number) },
+    payment_intent_data: { metadata: { platter_id: o.id, platter_no: String(o.number) } },
+    success_url: `${site}/platouri/plata/${token}?plata=ok`,
+    cancel_url: `${site}/platouri/plata/${token}?plata=anulat`,
+    expires_at: Math.floor(Date.now() / 1000) + 31 * 60,
+  };
+}
+
 const hex = (b: ArrayBuffer) => [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, "0")).join("");
 
 /** verifică antetul Stripe-Signature (t=…,v1=…) cu secretul webhook-ului; toleranță 5 minute */
@@ -97,6 +116,21 @@ export async function handler(req: Request, env: Env): Promise<Response> {
       const ref = await stripe(env, "refunds", { payment_intent: o.stripe_payment, metadata: { order_id: b.order_id } }, "refund-" + b.order_id);
       await rpc(env, "pay_mark_refunded", { p_order: b.order_id, p_refund: ref.id });
       return json({ refunded: ref.id });
+    }
+    if (b.platter) {
+      const p = await rpc(env, "platter_pay_info", { p_token: b.platter });
+      if (!p) return json({ error: "Comanda nu a fost găsită." }, 404);
+      if (p.pay_status === "paid") return json({ error: "Comanda e deja plătită. Mulțumim!" }, 409);
+      if (p.cancelled) return json({ error: "Comanda a fost anulată. Sună-ne pentru detalii." }, 409);
+      if (p.stripe_session) {
+        const r = await fetch("https://api.stripe.com/v1/checkout/sessions/" + p.stripe_session, { headers: auth(env) });
+        const s = await r.json();
+        // aceeași sesiune doar dacă suma n-a fost schimbată între timp
+        if (r.ok && s.status === "open" && s.url && s.amount_total === Math.round(Number(p.total) * 100)) return json({ url: s.url });
+      }
+      const s = await stripe(env, "checkout/sessions", platterParams(p, b.platter));
+      await rpc(env, "platter_set_session", { p_id: p.id, p_session: s.id });
+      return json({ url: s.url });
     }
     if (!b.token) return json({ error: "Lipsește comanda." }, 400);
     const o = await rpc(env, "pay_order_info", { p_token: b.token });

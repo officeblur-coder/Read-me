@@ -17,6 +17,8 @@ const NewsletterLink = lazy(() => import("./pages/Link"));
 const Reception = lazy(() => import("./pages/Reception"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Courier = lazy(() => import("./pages/Courier"));
+const Platouri = lazy(() => import("./pages/Platouri"));
+const PlatouPlata = lazy(() => import("./pages/Platouri").then(m => ({ default: m.PlatouPlata })));
 
 // A tab left open across a new release asks for screen files that no longer exist: reload once to get the new version.
 window.addEventListener("vite:preloadError", e => {
@@ -51,6 +53,8 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         {STAFF && <Route path="/receptie" element={<Reception />} />}
         {STAFF && <Route path="/admin" element={<Admin />} />}
         {STAFF && <Route path="/curier" element={<Courier />} />}
+        {STAFF && <Route path="/platouri" element={<Platouri />} />}
+        <Route path="/platouri/plata/:token" element={<PlatouPlata />} />
         <Route path="/cont" element={<Account />} />
         <Route path="/confidentialitate" element={<Privacy />} />
         <Route path="/termeni" element={<Terms />} />
