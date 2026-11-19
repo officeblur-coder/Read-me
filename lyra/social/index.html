@@ -47,7 +47,8 @@ h1{font-family:var(--serif);font-style:italic;font-weight:600;font-size:104px;li
   background:rgba(6,18,12,.78);border:1.5px solid rgba(216,180,106,.7);color:var(--gold2);backdrop-filter:blur(4px)}
 .chip.r{left:auto;right:18px}
 
-.dish{display:flex;align-items:center;justify-content:space-between;gap:30px;width:1000px;margin-top:30px;text-align:left}
+.dish{display:flex;justify-content:center;width:1000px;margin-top:30px;text-align:center}
+.dish .t{max-width:900px}
 .dish .t b{display:block;font-family:var(--serif);font-weight:600;font-size:44px;line-height:1.02}
 .dish .t span{display:block;font-size:19px;line-height:1.45;color:var(--muted);margin-top:8px}
 .price{flex:none;width:150px;height:150px;border-radius:50%;display:grid;place-items:center;align-content:center;
@@ -72,7 +73,8 @@ h1{font-family:var(--serif);font-style:italic;font-weight:600;font-size:104px;li
 .crow .ph{width:520px;flex:none}
 .crow .col{flex:1;display:flex;flex-direction:column;padding:6px 0 4px}
 .menu-list{margin-top:44px;width:100%}
-.menu-list div{display:flex;align-items:baseline;gap:10px;padding:16px 0;border-bottom:1.5px solid rgba(216,180,106,.28)}
+.menu-list div{display:flex;align-items:baseline;gap:14px;padding:16px 0;border-bottom:1.5px solid rgba(216,180,106,.28)}
+.menu-list div::before{content:"✦";color:var(--gold);font-size:18px}
 .menu-list span{font-family:var(--serif);font-weight:600;font-size:30px;line-height:1.1}
 .menu-list i{flex:1}
 .menu-list b{font-family:var(--serif);font-weight:700;font-size:34px;color:var(--gold2);white-space:nowrap}
@@ -136,12 +138,12 @@ h1{font-family:var(--serif);font-style:italic;font-weight:600;font-size:104px;li
     <div class="col">
       <div class="hu" style="font-size:30px;text-align:left">Cappuccino vagy eszpresszó?</div>
       <div class="menu-list" style="margin-top:26px">
-        <div><span>Espresso</span><i></i><b>13<small>LEI</small></b></div>
-        <div><span>Cappuccino</span><i></i><b>18<small>LEI</small></b></div>
-        <div><span>Cappuccino caramel</span><i></i><b>20<small>LEI</small></b></div>
-        <div><span>Cappuccino hazelnut</span><i></i><b>20<small>LEI</small></b></div>
-        <div><span>Cappuccino matcha</span><i></i><b>23<small>LEI</small></b></div>
-        <div><span>Freddo espresso</span><i></i><b>18<small>LEI</small></b></div>
+        <div><span>Espresso</span></div>
+        <div><span>Cappuccino</span></div>
+        <div><span>Cappuccino caramel</span></div>
+        <div><span>Cappuccino hazelnut</span></div>
+        <div><span>Cappuccino matcha</span></div>
+        <div><span>Freddo espresso</span></div>
       </div>
       <div class="lead" style="margin-top:auto;font-size:36px">Prima cafea a zilei,<br>de la ora 07:00.</div>
       <div class="tag" style="margin-top:20px;align-self:flex-start">Zilnic 07:00 – 22:00</div>
@@ -160,7 +162,6 @@ h1{font-family:var(--serif);font-style:italic;font-weight:600;font-size:104px;li
   <div class="ph big"><img src="../img/vin-cover.webp"></div>
   <div class="dish">
     <div class="t"><b>Albe, roze și roșii</b><span>Vinuri alese, multe le găsești și la pahar.<br>Un roșu sec lângă vită? Îți recomandăm noi.</span></div>
-    <div class="price"><small style="letter-spacing:.12em">DE LA</small><b>19</b><small style="font-size:12px;letter-spacing:.1em">LEI/PAHAR</small></div>
   </div>
   <div class="foot">Zilnic 07:00 – 22:00<i></i>restaurantlyra.ro</div>
   <div class="frame"></div>
@@ -188,7 +189,6 @@ h1{font-family:var(--serif);font-style:italic;font-weight:600;font-size:104px;li
   <div class="ph big"><img src="../img/double-smash.webp"><span class="chip">Vită Black Angus</span></div>
   <div class="dish">
     <div class="t"><b>Double Smash</b><span>2 × 60 g vită Black Angus presată pe plită încinsă, cheddar topit, castraveți murați, ceapă, unt, iceberg, sos burger</span></div>
-    <div class="price"><b>35</b><small>LEI</small></div>
   </div>
   <div class="foot">Zilnic 07:00 – 22:00<i></i>restaurantlyra.ro</div>
   <div class="frame"></div>
@@ -203,7 +203,6 @@ h1{font-family:var(--serif);font-style:italic;font-weight:600;font-size:104px;li
   <div class="ph big"><img src="../img/eleven-burger.webp"></div>
   <div class="dish">
     <div class="t"><b>Meniu Eleven Burger</b><span>Chiftea Black Angus, cheddar, bacon, dulceață de ceapă, iceberg, sos burger. Cu cartofi prăjiți cu parmezan și sosul casei.</span></div>
-    <div class="price"><b>64<span style="font-size:34px">,5</span></b><small>LEI</small></div>
   </div>
   <div class="foot">Zilnic 07:00 – 22:00<i></i>restaurantlyra.ro</div>
   <div class="frame"></div>
@@ -214,9 +213,9 @@ h1{font-family:var(--serif);font-style:italic;font-weight:600;font-size:104px;li
   <div class="kicker" style="margin-top:0">Smash burgers · Black Angus</div>
   <h1 class="gold" style="font-size:92px">Alege-ți smash-ul</h1>
   <div class="trio">
-    <div class="ph span"><img src="../img/spicy-smash.webp"><span class="chip">Cu jalapeño</span><div class="pchip"><b>Spicy Smash · 2 × 60 g</b><span>35<small>LEI</small></span></div></div>
-    <div class="ph sm"><img src="../img/smash-burger.webp"><div class="pchip"><b>Smash · 60 g</b><span>25<small>LEI</small></span></div></div>
-    <div class="ph sm"><img src="../img/double-smash.webp"><div class="pchip"><b>Double · 2 × 60 g</b><span>35<small>LEI</small></span></div></div>
+    <div class="ph span"><img src="../img/spicy-smash.webp"><span class="chip">Cu jalapeño</span><div class="pchip"><b>Spicy Smash · 2 × 60 g</b></div></div>
+    <div class="ph sm"><img src="../img/smash-burger.webp"><div class="pchip"><b>Smash · 60 g</b></div></div>
+    <div class="ph sm"><img src="../img/double-smash.webp"><div class="pchip"><b>Double · 2 × 60 g</b></div></div>
   </div>
   <div class="lead" style="margin-top:22px;font-size:30px">Vită Black Angus, presată pe plită încinsă, cu margini crocante.</div>
   <div class="foot">Válaszd ki a kedvenc smash-ed<i></i>restaurantlyra.ro</div>
@@ -232,7 +231,6 @@ h1{font-family:var(--serif);font-style:italic;font-weight:600;font-size:104px;li
   <div class="ph big"><img src="../img/sarmale.webp"></div>
   <div class="dish">
     <div class="t"><b>Sarmale cu ciolan și mămăliguță prăjită</b><span>Cu ardei iute și smântână. Și un pahar de zeamă de varză, dacă vrei să fie ca la carte.</span></div>
-    <div class="price"><b>60</b><small>LEI</small></div>
   </div>
   <div class="foot">Zilnic 07:00 – 22:00<i></i>restaurantlyra.ro</div>
   <div class="frame"></div>
@@ -247,7 +245,6 @@ h1{font-family:var(--serif);font-style:italic;font-weight:600;font-size:104px;li
   <div class="ph big"><img src="../img/papanas.webp"><span class="chip">Home made</span></div>
   <div class="dish">
     <div class="t"><b>Papanaș</b><span>Rumenit, cu smântână și dulceață de afine. Din brânză de vacă și telemea, făcut în casă.</span></div>
-    <div class="price"><b>33</b><small>LEI</small></div>
   </div>
   <div class="foot">Zilnic 07:00 – 22:00<i></i>restaurantlyra.ro</div>
   <div class="frame"></div>
