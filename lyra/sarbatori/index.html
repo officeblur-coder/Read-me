@@ -51,10 +51,12 @@ body{font-variant-numeric:lining-nums;-webkit-print-color-adjust:exact;print-col
 .row{display:flex;gap:5mm;width:122mm;margin-top:4.4mm;align-items:stretch;text-align:left}
 .wine{position:relative;width:37mm;flex:none}
 .wine .ph{width:37mm}
-.seal{position:absolute;left:-2.4mm;top:-2.4mm;width:18mm;height:18mm;border-radius:50%;display:grid;place-items:center;align-content:center;text-align:center;z-index:4;
-  background:radial-gradient(circle at 35% 30%,#d6413f,var(--red) 55%,#7c1418);color:#fff4e0;box-shadow:0 1.5mm 4mm rgba(0,0,0,.55),0 0 0 .5mm var(--gold),inset 0 0 0 1mm rgba(255,255,255,.08)}
-.seal small{font-size:4.4pt;font-weight:700;letter-spacing:.16em;text-transform:uppercase;line-height:1.25}
-.seal b{font-family:var(--serif);font-style:italic;font-weight:700;font-size:10.5pt;line-height:.95}
+.seal{position:absolute;left:-5mm;top:-5mm;width:22mm;height:24.2mm;z-index:4;filter:drop-shadow(0 1.4mm 2.4mm rgba(0,0,0,.6))}
+.seal svg{position:absolute;inset:0;width:100%;height:100%}
+.seal .st{position:absolute;left:0;top:0;width:22mm;height:22mm;display:grid;place-items:center;align-content:center;text-align:center;padding-top:1.4mm}
+.seal small{font-size:4.2pt;font-weight:700;letter-spacing:.2em;text-transform:uppercase;line-height:1.2;color:#f1d9a0}
+.seal b{font-family:var(--serif);font-style:italic;font-weight:700;font-size:12.5pt;line-height:.95;background:linear-gradient(180deg,#fff7e3,#f1d9a0 45%,#d8b46a);-webkit-background-clip:text;background-clip:text;color:transparent;padding:0 .4mm}
+.seal i{font-style:normal;font-size:3.6pt;font-weight:600;letter-spacing:.34em;text-transform:uppercase;color:#d8b46a;margin-top:.5mm;padding-left:.34em}
 .right{flex:1;display:flex;flex-direction:column}
 .gift{font-family:var(--serif);font-style:italic;font-size:10.5pt;line-height:1.1;color:var(--text)}
 .gift b{display:block;font-weight:700;font-size:16pt;line-height:1;color:var(--gold2);margin-top:.4mm}
@@ -124,7 +126,19 @@ body{font-variant-numeric:lining-nums;-webkit-print-color-adjust:exact;print-col
     <div class="row">
       <div class="wine">
         <div class="ph"><img src="vin.jpg" alt="Sticlă de vin"></div>
-        <div class="seal"><small>Din partea</small><b>casei</b></div>
+        <div class="seal"><svg viewBox="0 0 100 110" aria-hidden="true">
+          <defs>
+            <linearGradient id="sg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff3d2"/><stop offset=".35" stop-color="#e9c983"/><stop offset=".7" stop-color="#c49a4c"/><stop offset="1" stop-color="#8f6a2a"/></linearGradient>
+            <linearGradient id="rb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1c4a33"/><stop offset="1" stop-color="#0c2a1c"/></linearGradient>
+            <radialGradient id="cg" cx=".4" cy=".35" r=".75"><stop offset="0" stop-color="#1f5238"/><stop offset="1" stop-color="#071a10"/></radialGradient>
+          </defs>
+          <path d="M34 80 L27 108 L35 102 L41 108 L47 85Z" fill="url(#rb)" stroke="#d8b46a" stroke-width=".8"/>
+          <path d="M66 80 L73 108 L65 102 L59 108 L53 85Z" fill="url(#rb)" stroke="#d8b46a" stroke-width=".8"/>
+          <path d="M50.00 2.00 L54.87 6.77 L60.68 3.20 L64.37 8.94 L70.83 6.75 L73.14 13.17 L79.93 12.47 L80.76 19.24 L87.53 20.07 L86.83 26.86 L93.25 29.17 L91.06 35.63 L96.80 39.32 L93.23 45.13 L98.00 50.00 L93.23 54.87 L96.80 60.68 L91.06 64.37 L93.25 70.83 L86.83 73.14 L87.53 79.93 L80.76 80.76 L79.93 87.53 L73.14 86.83 L70.83 93.25 L64.37 91.06 L60.68 96.80 L54.87 93.23 L50.00 98.00 L45.13 93.23 L39.32 96.80 L35.63 91.06 L29.17 93.25 L26.86 86.83 L20.07 87.53 L19.24 80.76 L12.47 79.93 L13.17 73.14 L6.75 70.83 L8.94 64.37 L3.20 60.68 L6.77 54.87 L2.00 50.00 L6.77 45.13 L3.20 39.32 L8.94 35.63 L6.75 29.17 L13.17 26.86 L12.47 20.07 L19.24 19.24 L20.07 12.47 L26.86 13.17 L29.17 6.75 L35.63 8.94 L39.32 3.20 L45.13 6.77Z" fill="url(#sg)"/>
+          <circle cx="50" cy="50" r="38.5" fill="url(#cg)" stroke="#f1d9a0" stroke-width="1.2"/>
+          <circle cx="50" cy="50" r="34.5" fill="none" stroke="#d8b46a" stroke-width=".6" stroke-dasharray="1.6 1.8" opacity=".9"/>
+          <path d="M50 17.5 l1.6 3.4 3.6.4-2.7 2.4.8 3.6-3.3-1.9-3.3 1.9.8-3.6-2.7-2.4 3.6-.4z" fill="#f1d9a0"/>
+        </svg><div class="st"><small>Din partea</small><b>casei</b><i>cadou</i></div></div>
       </div>
       <div class="right">
         <div class="gift">+ o sticlă de vin la fiecare platou<b>din partea casei</b></div>
