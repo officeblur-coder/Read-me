@@ -338,10 +338,10 @@ function rpc(fn: string, args: Row = {}): Promise<{ data: any; error: any }> {
             db.platters = [
               mkp(1, { name: "Ana Pop", phone: "0745 111 222", address: "Str. Lungă 3", email: "ana@exemplu.ro", delivery_date: d(1), delivery_time: "12:00", lines: [{ name: "Platou Festiv Signature Lyra (1,8 kg)", qty: 2, price: 255 }], pay_status: "paid", paid_at: iso(Date.now() - 864e5), verified_at: iso(), verified_by: "Simona" }),
               mkp(2, { name: "Mihai Ionescu", phone: "0722 333 444", address: "Bd. 1 Decembrie 18", email: "mihai@exemplu.ro", delivery_date: d(1), delivery_time: "17:30", lines: [{ name: "Platou Festiv Signature Lyra (1,8 kg)", qty: 1, price: 255 }, { name: "Ciolan cu varză călită (500/200/100 g)", qty: 2, price: 72 }], pay_status: "sent", pay_sent_at: iso(Date.now() - 3600e3), pay_sent_count: 1 }),
-              mkp(3, { name: "Kovács Éva", phone: "0740 555 666", delivery_date: d(5), delivery_time: "11:00", dispatcher: "Andrei", lines: [{ name: "Ciorbă de burtă (120 g / 300 ml)", qty: 4, price: 28 }, { name: "Vinete cu maioneză (500 g)", qty: 1, price: 40 }] }),
+              mkp(3, { name: "Kovács Éva", phone: "0740 555 666", delivery_date: d(5), delivery_time: "11:00", dispatcher: "Andrei", lines: [{ name: "Ciorbă de burtă (400 g burtă / 1200 g ciorbă · 4–5 persoane)", qty: 1, price: 100 }, { name: "Vinete cu maioneză (500 g · 4–5 persoane)", qty: 1, price: 40 }] }),
             ];
           }
-          return res({ data: { orders: structuredClone(db.platters).map((o: Row) => { delete o.token; return o; }), products: [{ id: 1, name: "Platou Festiv Signature Lyra (1,8 kg)", price: 255 }, { id: 2, name: "Ciolan cu varză călită (500/200/100 g)", price: 72 }, { id: 3, name: "Vinete cu maioneză (500 g)", price: 40 }, { id: 4, name: "Ciorbă de burtă (120 g / 300 ml)", price: 28 }] }, error: null });
+          return res({ data: { orders: structuredClone(db.platters).map((o: Row) => { delete o.token; return o; }), products: [{ id: 1, name: "Platou Festiv Signature Lyra (1,8 kg)", price: 255 }, { id: 2, name: "Ciolan cu varză călită (500/200/100 g)", price: 72 }, { id: 3, name: "Vinete cu maioneză (500 g · 4–5 persoane)", price: 40 }, { id: 4, name: "Ciorbă de burtă (400 g burtă / 1200 g ciorbă · 4–5 persoane)", price: 100 }] }, error: null });
         }
         case "platter_save": {
           const p = args.p, lines = p.lines.filter((l: Row) => l.name.trim()); if (!lines.length) return res({ data: null, error: { message: "Adaugă cel puțin un produs." } });

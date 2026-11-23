@@ -3280,9 +3280,11 @@ grant execute on function public.platter_pay_info(uuid), public.platter_set_sess
 insert into public.platter_products(name, price, sort) values
   ('Platou Festiv Signature Lyra (1,8 kg)', 255, 1),
   ('Ciolan cu varză călită (500/200/100 g)', 72, 2),
-  ('Vinete cu maioneză (500 g)', 40, 3),
-  ('Ciorbă de burtă (120 g / 300 ml)', 28, 4)
+  ('Vinete cu maioneză (500 g · 4–5 persoane)', 40, 3),
+  ('Ciorbă de burtă (400 g burtă / 1200 g ciorbă · 4–5 persoane)', 100, 4)
 on conflict (name) do update set price = excluded.price, sort = excluded.sort, active = true;
+-- denumirile vechi nu mai apar la introducere (comenzile deja salvate rămân neschimbate)
+update public.platter_products set active = false where name in ('Vinete cu maioneză (500 g)', 'Ciorbă de burtă (120 g / 300 ml)');
 
 
 -- Actualizare meniu (generat din lyra/data/menu.js). ATENȚIE: suprascrie prețurile, textele și pozele din admin.
