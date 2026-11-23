@@ -153,6 +153,11 @@ begin
 end $$;
 grant execute on function public.platter_save(jsonb), public.platter_cancel(uuid, boolean), public.platter_verify(uuid, boolean) to authenticated;
 
+-- câte sticle de vin din partea casei: una la fiecare Platou Festiv
+create or replace function public.platter_wine(p_lines jsonb) returns int language sql immutable as $$
+  select coalesce(sum((l->>'qty')::int), 0)::int from jsonb_array_elements(coalesce(p_lines, '[]')) l where l->>'name' ilike 'platou festiv%';
+$$;
+
 -- trimite clientului emailul cu linkul de plată (suma integrală)
 create or replace function public.platter_send_pay(p_id uuid) returns jsonb
 language plpgsql security definer set search_path = public as $$
@@ -175,6 +180,10 @@ begin
     rows := rows || format('<tr><td style="padding:6px 0;color:#f3e9df">%s× %s</td><td align="right" style="padding:6px 0;color:#f3e9df">%s lei</td></tr>',
       l->>'qty', replace(replace(l->>'name', '<', '&lt;'), '>', '&gt;'), to_char((l->>'qty')::int * (l->>'price')::numeric, 'FM999990.00'));
   end loop;
+  -- vinul din partea casei: o sticlă la fiecare Platou Festiv
+  if public.platter_wine(o.lines) > 0 then
+    rows := rows || format('<tr><td style="padding:6px 0;color:#ffb24a">+ %s× sticlă de vin din partea casei</td><td align="right" style="padding:6px 0;color:#ffb24a">cadou</td></tr>', public.platter_wine(o.lines));
+  end if;
   html := format($h$<!doctype html><html><body style="margin:0;background:#120d0a;font-family:Arial,Helvetica,sans-serif">
 <table width="100%%" cellpadding="0" cellspacing="0" style="background:#120d0a;padding:24px 12px"><tr><td align="center">
 <table width="100%%" style="max-width:520px;background:#1d1511;border-radius:18px;color:#f3e9df" cellpadding="0" cellspacing="0">
@@ -227,3 +236,13 @@ begin
 end $$;
 revoke execute on function public.platter_pay_info(uuid), public.platter_set_session(uuid, text), public.platter_mark_paid(uuid, text, text) from public, anon, authenticated;
 grant execute on function public.platter_pay_info(uuid), public.platter_set_session(uuid, text), public.platter_mark_paid(uuid, text, text) to service_role;
+
+-- produsele de sărbători (afișul „Crăciun & Revelion de la Lyra”); prețurile includ ambalajul
+-- Crăciun: comenzi 2–22 dec., livrare 24 dec. · Revelion: comenzi 2–29 dec., livrare 31 dec.
+-- Platoul Festiv: disponibil din 2 dec., precomandă cu minimum 24 de ore; + o sticlă de vin din partea casei la fiecare platou
+insert into public.platter_products(name, price, sort) values
+  ('Platou Festiv Signature Lyra (1,8 kg)', 255, 1),
+  ('Ciolan cu varză călită (500/200/100 g)', 72, 2),
+  ('Vinete cu maioneză (500 g)', 40, 3),
+  ('Ciorbă de burtă (120 g / 300 ml)', 28, 4)
+on conflict (name) do update set price = excluded.price, sort = excluded.sort, active = true;

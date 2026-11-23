@@ -32,6 +32,20 @@ const dayName = (iso: string) => WD[new Date(iso + "T12:00:00").getDay()];
 const at = (iso: string | null) => iso ? new Date(iso).toLocaleString("ro-RO", { timeZone: TZ, day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "";
 const empty = (): Draft => ({ name: "", phone: "", address: "", email: "", dispatcher: "", order_date: today(), delivery_date: "", delivery_time: "", note: "", lines: [{ name: "", qty: "1", price: "" }] });
 const num = (s: string) => Number(String(s).replace(",", ".")) || 0;
+// o sticlă de vin din partea casei la fiecare Platou Festiv
+const wineOf = (lines: { name: string; qty: number | string }[]) => lines.reduce((a, l) => a + (/^platou festiv/i.test(l.name.trim()) ? num(String(l.qty)) : 0), 0);
+// termenele de pe afiș: Crăciun comenzi până pe 22 dec. (livrare 24), Revelion până pe 29 dec. (livrare 31); precomandă minimum 24 h
+const YEAR = Number(today().slice(0, 4)) + (today().slice(5, 7) === "01" ? -1 : 0);
+const XMAS = `${YEAR}-12-24`, NYE = `${YEAR}-12-31`;
+function termWarnings(delivery: string, isNew: boolean): string[] {
+  if (!delivery) return [];
+  const w: string[] = [], t = today();
+  if (isNew && delivery <= t) w.push("Precomanda se face cu minimum 24 de ore înainte (livrarea e azi sau în trecut).");
+  if (delivery < `${YEAR}-12-02`) w.push("Produsele de sărbători sunt disponibile din 2 decembrie.");
+  if (isNew && delivery === XMAS && t > `${YEAR}-12-22`) w.push("Comenzile pentru Crăciun se primesc până pe 22 decembrie.");
+  if (isNew && delivery === NYE && t > `${YEAR}-12-29`) w.push("Comenzile pentru Revelion se primesc până pe 29 decembrie.");
+  return w;
+}
 
 export default function Platouri() {
   const [session, setSession] = useState<Session | null>(null);
@@ -113,6 +127,9 @@ function Register({ me }: { me: Me }) {
 
   async function save(thenPay = false) {
     if (!draft) return;
+    const changedDate = !draft.id || orders.find(o => o.id === draft.id)?.delivery_date !== draft.delivery_date;
+    const warn = termWarnings(draft.delivery_date, changedDate);
+    if (warn.length && !window.confirm(warn.join("\n") + "\n\nSalvez totuși comanda?")) return;
     setBusy(true); setErr("");
     const { data, error } = await supabase.rpc("platter_save", { p: { ...draft, lines: draft.lines.map(l => ({ name: l.name, qty: num(l.qty), price: num(l.price) })) } });
     if (error) { setBusy(false); setErr(error.message); return; }
@@ -178,7 +195,7 @@ function Register({ me }: { me: Me }) {
             <span className="num"><b>#{o.number}</b><small>{dmy(o.order_date)}</small></span>
             <span><b>{o.name}</b><small><a href={`tel:${o.phone.replace(/\s/g, "")}`}>{o.phone}</a>{o.address ? ` · ${o.address}` : ""}</small>{o.email && <small>{o.email}</small>}</span>
             <span><b>{dmy(o.delivery_date)}</b><small>{dayName(o.delivery_date)}{o.delivery_time ? ` · ${o.delivery_time}` : ""}</small></span>
-            <span className="pl-items">{o.lines.map((l, i) => <small key={i}>{l.qty}× {l.name} · {lei(l.price)}</small>)}{o.dispatcher && <small className="muted">dispecer: {o.dispatcher}</small>}{o.note && <small className="muted">„{o.note}”</small>}</span>
+            <span className="pl-items">{o.lines.map((l, i) => <small key={i}>{l.qty}× {l.name} · {lei(l.price)}</small>)}{wineOf(o.lines) > 0 && <small className="pl-wine-s">+ {wineOf(o.lines)}× vin din partea casei</small>}{o.dispatcher && <small className="muted">dispecer: {o.dispatcher}</small>}{o.note && <small className="muted">„{o.note}”</small>}</span>
             <span className="r num">{o.qty}</span>
             <span className="r num"><b>{lei(Number(o.total))}</b></span>
             <span><PayTag o={o} /></span>
@@ -208,7 +225,18 @@ function Register({ me }: { me: Me }) {
             <label className="fl"><span>Data livrării *</span><input type="date" value={draft.delivery_date} onChange={e => setDraft({ ...draft, delivery_date: e.target.value })} /></label>
             <label className="fl"><span>Ora livrării</span><input type="time" value={draft.delivery_time} onChange={e => setDraft({ ...draft, delivery_time: e.target.value })} /></label>
           </div>
+          <div className="pl-quick">
+            <button aria-pressed={draft.delivery_date === XMAS} onClick={() => setDraft({ ...draft, delivery_date: XMAS })}><b>Crăciun</b><small>livrare 24 dec. · comenzi până pe 22</small></button>
+            <button aria-pressed={draft.delivery_date === NYE} onClick={() => setDraft({ ...draft, delivery_date: NYE })}><b>Revelion</b><small>livrare 31 dec. · comenzi până pe 29</small></button>
+          </div>
+          {termWarnings(draft.delivery_date, !draft.id || editing?.delivery_date !== draft.delivery_date).map(w => <p key={w} className="pl-warn">{w}</p>)}
           <p className="cp-lbl" style={{ marginTop: 14 }}>Ce a comandat</p>
+          {!paidLocked && products.length > 0 && <div className="pl-prods">{products.map(p => <button key={p.id} onClick={() => {
+            const i = draft.lines.findIndex(l => l.name.trim().toLowerCase() === p.name.toLowerCase());
+            const lines = i >= 0 ? draft.lines.map((l, j) => j === i ? { ...l, qty: String(num(l.qty) + 1) } : l)
+              : [...draft.lines.filter(l => l.name.trim()), { name: p.name, qty: "1", price: String(p.price) }];
+            setDraft({ ...draft, lines: lines.length ? lines : [{ name: "", qty: "1", price: "" }] });
+          }}><b>+ {p.name}</b><small>{lei(p.price)}</small></button>)}</div>}
           {paidLocked && <p className="muted" style={{ fontSize: 13, margin: "0 0 8px" }}>Comanda e plătită: produsele și prețurile nu se mai pot schimba.</p>}
           <datalist id="pl-products">{products.map(p => <option key={p.id} value={p.name}>{lei(p.price)}</option>)}</datalist>
           <div className="pl-lines">
@@ -223,6 +251,7 @@ function Register({ me }: { me: Me }) {
             {!paidLocked && <button className="rbtn" onClick={() => setDraft({ ...draft, lines: [...draft.lines, { name: "", qty: "1", price: "" }] })}>+ Încă un produs</button>}
           </div>
           <label className="fl wide" style={{ marginTop: 10 }}><span>Mențiuni</span><input value={draft.note} onChange={e => setDraft({ ...draft, note: e.target.value })} /></label>
+          {draft && wineOf(draft.lines) > 0 && <p className="pl-wine">+ {wineOf(draft.lines)} {wineOf(draft.lines) === 1 ? "sticlă" : "sticle"} de vin din partea casei (câte una la fiecare Platou Festiv)</p>}
           <div className="pl-total"><span>{dQty} bucăți</span><b>Total {lei(dTotal)}</b></div>
           {err && <p className="err">{err}</p>}
           <div className="pl-fbtns">
@@ -248,14 +277,15 @@ function PayTag({ o }: { o: PO }) {
 }
 
 function Due({ title, list, hot, onOpen, canEdit, onPrint }: { title: string; list: PO[]; hot?: boolean; onOpen: (o: PO) => void; canEdit: boolean; onPrint: (l: PO[]) => void }) {
-  const qty = list.reduce((a, o) => a + o.qty, 0), unpaid = list.filter(o => o.pay_status !== "paid").length;
+  const qty = list.reduce((a, o) => a + o.qty, 0), wine = list.reduce((a, o) => a + wineOf(o.lines), 0), unpaid = list.filter(o => o.pay_status !== "paid").length;
   return <section className={`pl-due ${hot ? "hot" : ""}`}>
-    <div className="row-btw"><h3><Icon name="bell" size={20} />{title}: {list.length} {list.length === 1 ? "comandă" : "comenzi"} · {qty} bucăți</h3>
+    <div className="row-btw"><h3><Icon name="bell" size={20} />{title}: {list.length} {list.length === 1 ? "comandă" : "comenzi"} · {qty} bucăți{wine ? ` · ${wine} sticle vin` : ""}</h3>
       <button className="rbtn" onClick={() => onPrint(list)}>Printează</button></div>
+    <p className="pl-need">{Object.entries(list.reduce((m, o) => { o.lines.forEach(l => { m[l.name] = (m[l.name] || 0) + l.qty; }); return m; }, {} as Record<string, number>)).map(([n, q]) => `${q}× ${n}`).join(" · ")}</p>
     {unpaid > 0 && <p className="pl-warn">{unpaid} {unpaid === 1 ? "comandă nu e plătită" : "comenzi nu sunt plătite"}</p>}
     <div className="pl-due-list">{[...list].sort((a, b) => a.delivery_time.localeCompare(b.delivery_time)).map(o =>
       <button key={o.id} disabled={!canEdit} onClick={() => onOpen(o)}>
-        <b className="num">{o.delivery_time || "—"}</b><span>#{o.number} · {o.name}</span><small>{o.lines.map(l => `${l.qty}× ${l.name}`).join(", ")}</small>
+        <b className="num">{o.delivery_time || "—"}</b><span>#{o.number} · {o.name}</span><small>{o.lines.map(l => `${l.qty}× ${l.name}`).join(", ")}{wineOf(o.lines) ? ` + ${wineOf(o.lines)}× vin` : ""}</small>
         <em className={o.pay_status === "paid" ? "ok" : "no"}>{o.pay_status === "paid" ? "plătit" : "neplătit"}</em></button>)}</div>
   </section>;
 }
@@ -271,6 +301,7 @@ function PrintSheet({ list }: { list: PO[] }) {
     </tbody></table>
     <table className="pl-plines"><thead><tr><th>Ce a comandat</th><th>Nr bucăți</th><th>Preț</th><th>Total</th></tr></thead><tbody>
       {o.lines.map((l, i) => <tr key={i}><td>{l.name}</td><td>{l.qty}</td><td>{lei(l.price)}</td><td>{lei(l.qty * l.price)}</td></tr>)}
+      {wineOf(o.lines) > 0 && <tr><td>Vin din partea casei (cadou)</td><td>{wineOf(o.lines)}</td><td>0.00 lei</td><td>0.00 lei</td></tr>}
       <tr className="t"><td>Total</td><td>{o.qty}</td><td /><td>{lei(Number(o.total))}</td></tr>
     </tbody></table>
     <p>Plată: <b>{o.pay_status === "paid" ? `PLĂTIT ONLINE (${at(o.paid_at)})` : o.pay_status === "sent" ? "cerere de plată trimisă, neplătit încă" : "NEPLĂTIT"}</b>
@@ -314,6 +345,7 @@ export function PlatouPlata() {
       </div>
       <div className="receipt">
         {o.lines.map((l, i) => <div key={i} className="ln"><div>{l.qty}× {l.name}</div><span className="num">{lei(l.qty * l.price)}</span></div>)}
+        {wineOf(o.lines) > 0 && <div className="ln"><div>+ {wineOf(o.lines)}× sticlă de vin din partea casei</div><span className="num">cadou</span></div>}
         <div className="sum"><div className="tot"><span>Total</span><span className="num">{lei(Number(o.total))}</span></div></div>
         {!paid && !o.cancelled && <>
           {back === "anulat" && <p className="t-sub">Plata a fost întreruptă. Poți încerca din nou.</p>}

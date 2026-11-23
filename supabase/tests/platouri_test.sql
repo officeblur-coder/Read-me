@@ -61,6 +61,8 @@ begin
                       from net.http_request_queue where url = 'https://api.resend.com/emails' order by id desc limit 1), 'emailul are linkul de plată și suma integrală');
   perform pg_temp.ok((public.platter_public(tok))->>'total' = '680.50' and not (public.platter_public(tok) ? 'phone'), 'pagina de plată arată suma, fără date personale');
 
+  perform pg_temp.ok((select count(*) = 4 and bool_or(name like 'Platou Festiv%' and price = 255) from public.platter_products where active), 'cele 4 produse de sărbători, Platoul Festiv 255 lei');
+  perform pg_temp.ok(public.platter_wine('[{"name":"Platou Festiv Signature Lyra (1,8 kg)","qty":3},{"name":"Ciorbă de burtă","qty":2}]') = 3, 'o sticlă de vin la fiecare Platou Festiv');
   -- schimbarea produselor după verificare cere verificare din nou
   r := public.platter_save(jsonb_build_object('id', pid, 'name', 'Ana Pop', 'phone', '0745 111 222', 'email', 'ana@t.ro', 'delivery_date', ((now() at time zone 'Europe/Bucharest')::date + 1)::text,
         'lines', jsonb_build_array(jsonb_build_object('name', 'Platou rece', 'qty', 3, 'price', 250))));

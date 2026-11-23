@@ -1736,3 +1736,12 @@ body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area
   .pl-plines tr.t td{font-weight:bold;background:#f4f4f4}
   .pl-ticket p{font-size:11pt;margin:4pt 0}
 }
+.pl-quick{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.pl-quick button,.pl-prods button{display:grid;gap:2px;text-align:left;padding:10px 12px;border-radius:12px;border:1px solid var(--line-2);background:var(--surface-2);color:var(--text)}
+.pl-quick button[aria-pressed="true"]{border-color:var(--brand);background:rgba(255,122,26,.14)}
+.pl-quick small,.pl-prods small{color:var(--muted);font-size:12px}
+.pl-prods{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-bottom:10px}
+.pl-prods button b{font-size:13.5px}
+.pl-wine{margin:10px 0 0;color:var(--gold);font-weight:700;font-size:13.5px}
+.pl-row .pl-wine-s{color:var(--gold)}
+.pl-need{margin:6px 0 0;font-weight:700;font-size:13.5px}
