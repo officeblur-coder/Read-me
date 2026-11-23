@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600;1,700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* A5 flyer, front + back. Trim 148 x 210 mm + 3 mm bleed = 154 x 216 mm.
+/* A5 flyer, front + back. Trim 148 x 210 mm + 5 mm bleed = 158 x 220 mm.
    Text and photos stay inside the 8 mm safe line. Every photo is shown whole. */
 :root{
   --bg:#06120c; --gold:#d8b46a; --gold2:#f1d9a0; --gold3:#a8843f;
@@ -15,25 +15,25 @@
   --serif:'Cormorant Garamond','Times New Roman',serif;
   --sans:'Montserrat',Arial,sans-serif;
 }
-@page{size:154mm 216mm;margin:0}
+@page{size:158mm 220mm;margin:0}
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{background:#555}
 body{font-variant-numeric:lining-nums;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-family:var(--sans);color:var(--text)}
-.sheet{width:154mm;height:216mm;position:relative;overflow:hidden;background:var(--bg);margin:0 auto 8mm;page-break-after:always}
+.sheet{width:158mm;height:220mm;position:relative;overflow:hidden;background:var(--bg);margin:0 auto 8mm;page-break-after:always}
 @media print{.sheet{margin:0}html,body{background:none}}
 .glow{position:absolute;inset:0;background:
   radial-gradient(95mm 60mm at 50% 0%,rgba(216,180,106,.26),transparent 70%),
   radial-gradient(90mm 90mm at 105% 70%,rgba(179,38,42,.20),transparent 70%),
   radial-gradient(80mm 100mm at -5% 55%,rgba(40,110,70,.30),transparent 70%),
   radial-gradient(120mm 60mm at 50% 105%,rgba(216,180,106,.12),transparent 70%)}
-.frame{position:absolute;left:7mm;right:7mm;top:7mm;bottom:7mm;border:.3mm solid rgba(216,180,106,.55);border-radius:2mm;pointer-events:none;z-index:5}
+.frame{position:absolute;left:9mm;right:9mm;top:9mm;bottom:9mm;border:.3mm solid rgba(216,180,106,.55);border-radius:2mm;pointer-events:none;z-index:5}
 .frame::before,.frame::after{content:"";position:absolute;width:6mm;height:6mm;border:.5mm solid var(--gold)}
 .frame::before{left:-1.4mm;top:-1.4mm;border-right:0;border-bottom:0}
 .frame::after{right:-1.4mm;bottom:-1.4mm;border-left:0;border-top:0}
 .spark{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
 .gold{background:linear-gradient(180deg,#fff7e3,var(--gold2) 42%,var(--gold) 72%,var(--gold3));-webkit-background-clip:text;background-clip:text;color:transparent}
 .inner>*,.pair>*{flex-shrink:0}
-.inner{position:absolute;left:11mm;right:11mm;top:11mm;bottom:11mm;display:flex;flex-direction:column;align-items:center;text-align:center;z-index:3}
+.inner{position:absolute;left:13mm;right:13mm;top:13mm;bottom:13mm;display:flex;flex-direction:column;align-items:center;text-align:center;z-index:3}
 .kicker{font-size:6.2pt;font-weight:600;letter-spacing:.42em;text-transform:uppercase;color:var(--gold)}
 .ph{position:relative;border-radius:2mm;overflow:hidden;box-shadow:0 2.5mm 7mm rgba(0,0,0,.55),0 0 0 .35mm rgba(216,180,106,.75)}
 .ph img{display:block;width:100%;height:auto}
@@ -44,11 +44,13 @@ body{font-variant-numeric:lining-nums;-webkit-print-color-adjust:exact;print-col
 /* ---------- FRONT ---------- */
 .front .logo{width:18mm;filter:drop-shadow(0 1mm 3mm rgba(0,0,0,.5))}
 .front .kicker{margin-top:2.6mm}
+.fsub{font-family:var(--serif);font-style:italic;font-size:11pt;line-height:1.15;color:var(--text);margin-top:2mm}
+.fsub b{font-weight:700;color:var(--gold2)}
 .front h1{font-family:var(--serif);font-style:italic;font-weight:600;font-size:37pt;line-height:.95;margin-top:1.2mm;padding-bottom:1mm}
 .front .sig{font-family:var(--serif);font-weight:600;font-size:12pt;letter-spacing:.42em;text-transform:uppercase;color:var(--text);margin-top:.4mm}
-.front .platou{width:110mm;margin-top:3.2mm}
+.front .platou{width:105mm;margin-top:3mm}
 .front .kg{position:absolute;right:2.6mm;bottom:2.6mm;font-size:6pt;font-weight:700;letter-spacing:.2em;text-transform:uppercase;padding:1.4mm 2.6mm;border-radius:4mm;background:rgba(6,18,12,.82);border:.3mm solid rgba(216,180,106,.8);color:var(--gold2)}
-.row{display:flex;gap:5mm;width:122mm;margin-top:3.8mm;align-items:stretch;text-align:left}
+.row{display:flex;gap:5mm;width:122mm;margin-top:3.8mm;margin-bottom:3mm;align-items:stretch;text-align:left}
 .wine{position:relative;width:37mm;flex:none}
 .wine .ph{width:37mm}
 .seal{position:absolute;left:-5mm;top:-5mm;width:22mm;height:24.2mm;z-index:4;filter:drop-shadow(0 1.4mm 2.4mm rgba(0,0,0,.6))}
@@ -67,7 +69,7 @@ body{font-variant-numeric:lining-nums;-webkit-print-color-adjust:exact;print-col
 .pricebox .l{font-size:5.8pt;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);line-height:1.5}
 .pricebox .p{font-family:var(--serif);font-weight:700;font-size:34pt;line-height:.8}
 .pricebox .p small{font-family:var(--sans);font-size:8pt;font-weight:700;letter-spacing:.14em;color:var(--gold);margin-left:1mm}
-.fbox{margin-top:auto;width:122mm;border-radius:2mm;padding:2.4mm 4mm 2.2mm;text-align:left;background:linear-gradient(135deg,rgba(216,180,106,.18),rgba(216,180,106,.06));border:.35mm solid rgba(216,180,106,.7)}
+.fbox{margin-top:auto;position:relative;top:0;width:122mm;border-radius:2mm;padding:2.4mm 4mm 2.2mm;text-align:left;background:linear-gradient(135deg,rgba(216,180,106,.18),rgba(216,180,106,.06));border:.35mm solid rgba(216,180,106,.7)}
 .fd{display:grid;grid-template-columns:1fr 1fr 1.05fr;gap:3mm;align-items:center}
 .fd b{display:block;font-family:var(--serif);font-style:italic;font-weight:700;font-size:13pt;line-height:1}
 .fd p{font-size:6.6pt;line-height:1.45;margin-top:.8mm}
@@ -127,10 +129,10 @@ body{font-variant-numeric:lining-nums;-webkit-print-color-adjust:exact;print-col
 <!-- ======================= FAȚĂ ======================= -->
 <section class="sheet front">
   <div class="glow"></div>
-  <svg class="spark" id="sp1" viewBox="0 0 154 216" preserveAspectRatio="none"></svg>
+  <svg class="spark" id="sp1" viewBox="0 0 158 220" preserveAspectRatio="none"></svg>
   <div class="inner">
     <img class="logo" src="../img/logo.webp" alt="Lyra">
-    <div class="kicker">Crăciun &amp; Revelion de la Lyra</div>
+    <div class="fsub">Masa de Crăciun &amp; Revelion,<br><b>livrată și în acest an de Lyra</b></div>
     <h1 class="gold">Platoul Festiv</h1>
     <div class="sig">Signature Lyra</div>
     <div class="ph platou"><img src="platou.jpg" alt="Platou Festiv Signature Lyra"><span class="kg">1,8 kg · 8 specialități</span></div>
@@ -186,7 +188,7 @@ body{font-variant-numeric:lining-nums;-webkit-print-color-adjust:exact;print-col
 <!-- ======================= VERSO ======================= -->
 <section class="sheet back">
   <div class="glow"></div>
-  <svg class="spark" id="sp2" viewBox="0 0 154 216" preserveAspectRatio="none"></svg>
+  <svg class="spark" id="sp2" viewBox="0 0 158 220" preserveAspectRatio="none"></svg>
   <div class="inner">
     <div class="kicker">Sărbători fericite · Bucate de sărbători</div>
     <h2 class="gold">Masa de Crăciun &amp; Revelion</h2>
@@ -232,7 +234,7 @@ function sparkles(svg, n, seed, keepOut) {
   const r = k => { const x = Math.sin(seed * 12.9898 + k * 78.233) * 43758.5453; return x - Math.floor(x); };
   let out = "";
   for (let i = 0; i < n; i++) {
-    const x = 2 + r(i) * 150, y = 2 + r(i + 500) * 212, s = .25 + r(i + 900) * .7, o = .25 + r(i + 1300) * .6;
+    const x = 2 + r(i) * 154, y = 2 + r(i + 500) * 216, s = .25 + r(i + 900) * .7, o = .25 + r(i + 1300) * .6;
     if (keepOut(x, y)) continue;
     const k = r(i + 1700);
     if (k > .88) {
@@ -246,9 +248,9 @@ function sparkles(svg, n, seed, keepOut) {
   }
   svg.innerHTML = out;
 }
-const margin = (x, y) => x > 9 && x < 145 && y > 9 && y < 207;
-sparkles(document.getElementById("sp1"), 260, 4, (x, y) => margin(x, y) && !(y < 40 && (x < 50 || x > 104)));
-sparkles(document.getElementById("sp2"), 220, 11, (x, y) => margin(x, y) && !(y < 30 && (x < 30 || x > 124)));
+const margin = (x, y) => x > 11 && x < 147 && y > 11 && y < 209;
+sparkles(document.getElementById("sp1"), 260, 4, (x, y) => margin(x, y) && !(y < 42 && (x < 52 || x > 106)));
+sparkles(document.getElementById("sp2"), 220, 11, (x, y) => margin(x, y) && !(y < 32 && (x < 32 || x > 126)));
 </script>
 </body>
 </html>
