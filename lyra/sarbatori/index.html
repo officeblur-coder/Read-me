@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<title>Lyra · Flyer Crăciun & Revelion A5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600;1,700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* A5 flyer, front + back. Trim 148 x 210 mm + 3 mm bleed = 154 x 216 mm.
+   Text and photos stay inside the 8 mm safe line. Every photo is shown whole. */
+:root{
+  --bg:#06120c; --gold:#d8b46a; --gold2:#f1d9a0; --gold3:#a8843f;
+  --text:#f5efe2; --muted:#c9c1ad; --red:#b3262a;
+  --serif:'Cormorant Garamond','Times New Roman',serif;
+  --sans:'Montserrat',Arial,sans-serif;
+}
+@page{size:154mm 216mm;margin:0}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:#555}
+body{font-variant-numeric:lining-nums;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-family:var(--sans);color:var(--text)}
+.sheet{width:154mm;height:216mm;position:relative;overflow:hidden;background:var(--bg);margin:0 auto 8mm;page-break-after:always}
+@media print{.sheet{margin:0}html,body{background:none}}
+.glow{position:absolute;inset:0;background:
+  radial-gradient(95mm 60mm at 50% 0%,rgba(216,180,106,.26),transparent 70%),
+  radial-gradient(90mm 90mm at 105% 70%,rgba(179,38,42,.20),transparent 70%),
+  radial-gradient(80mm 100mm at -5% 55%,rgba(40,110,70,.30),transparent 70%),
+  radial-gradient(120mm 60mm at 50% 105%,rgba(216,180,106,.12),transparent 70%)}
+.frame{position:absolute;left:7mm;right:7mm;top:7mm;bottom:7mm;border:.3mm solid rgba(216,180,106,.55);border-radius:2mm;pointer-events:none;z-index:5}
+.frame::before,.frame::after{content:"";position:absolute;width:6mm;height:6mm;border:.5mm solid var(--gold)}
+.frame::before{left:-1.4mm;top:-1.4mm;border-right:0;border-bottom:0}
+.frame::after{right:-1.4mm;bottom:-1.4mm;border-left:0;border-top:0}
+.spark{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+.gold{background:linear-gradient(180deg,#fff7e3,var(--gold2) 42%,var(--gold) 72%,var(--gold3));-webkit-background-clip:text;background-clip:text;color:transparent}
+.inner{position:absolute;left:11mm;right:11mm;top:11mm;bottom:11mm;display:flex;flex-direction:column;align-items:center;text-align:center;z-index:3}
+.kicker{font-size:6.2pt;font-weight:600;letter-spacing:.42em;text-transform:uppercase;color:var(--gold)}
+.ph{position:relative;border-radius:2mm;overflow:hidden;box-shadow:0 2.5mm 7mm rgba(0,0,0,.55),0 0 0 .35mm rgba(216,180,106,.75)}
+.ph img{display:block;width:100%;height:auto}
+.orn{display:flex;align-items:center;gap:2.4mm;color:var(--gold);font-size:7pt}
+.orn::before,.orn::after{content:"";width:14mm;height:.25mm;background:linear-gradient(90deg,transparent,var(--gold))}
+.orn::after{transform:scaleX(-1)}
+
+/* ---------- FRONT ---------- */
+.front .logo{width:18mm;filter:drop-shadow(0 1mm 3mm rgba(0,0,0,.5))}
+.front .kicker{margin-top:2.6mm}
+.front h1{font-family:var(--serif);font-style:italic;font-weight:600;font-size:37pt;line-height:.95;margin-top:1.2mm;padding-bottom:1mm}
+.front .sig{font-family:var(--serif);font-weight:600;font-size:12pt;letter-spacing:.42em;text-transform:uppercase;color:var(--text);margin-top:.4mm}
+.front .platou{width:122mm;margin-top:3.6mm}
+.front .kg{position:absolute;right:2.6mm;bottom:2.6mm;font-size:6pt;font-weight:700;letter-spacing:.2em;text-transform:uppercase;padding:1.4mm 2.6mm;border-radius:4mm;background:rgba(6,18,12,.82);border:.3mm solid rgba(216,180,106,.8);color:var(--gold2)}
+.row{display:flex;gap:5mm;width:122mm;margin-top:4.4mm;align-items:stretch;text-align:left}
+.wine{position:relative;width:37mm;flex:none}
+.wine .ph{width:37mm}
+.seal{position:absolute;left:-2.4mm;top:-2.4mm;width:18mm;height:18mm;border-radius:50%;display:grid;place-items:center;align-content:center;text-align:center;z-index:4;
+  background:radial-gradient(circle at 35% 30%,#d6413f,var(--red) 55%,#7c1418);color:#fff4e0;box-shadow:0 1.5mm 4mm rgba(0,0,0,.55),0 0 0 .5mm var(--gold),inset 0 0 0 1mm rgba(255,255,255,.08)}
+.seal small{font-size:4.4pt;font-weight:700;letter-spacing:.16em;text-transform:uppercase;line-height:1.25}
+.seal b{font-family:var(--serif);font-style:italic;font-weight:700;font-size:10.5pt;line-height:.95}
+.right{flex:1;display:flex;flex-direction:column}
+.gift{font-family:var(--serif);font-style:italic;font-size:10.5pt;line-height:1.1;color:var(--text)}
+.gift b{display:block;font-weight:700;font-size:16pt;line-height:1;color:var(--gold2);margin-top:.4mm}
+.items{list-style:none;margin-top:2.4mm;display:grid;grid-template-columns:1fr 1fr;gap:1.3mm 3mm}
+.items li{font-size:6.1pt;line-height:1.3;padding-left:3mm;position:relative;color:var(--text)}
+.items li::before{content:"✦";position:absolute;left:0;top:0;color:var(--gold);font-size:5.4pt}
+.pricebox{margin-top:auto;display:flex;align-items:flex-end;justify-content:space-between;border-top:.3mm solid rgba(216,180,106,.45);padding-top:2.2mm}
+.pricebox .l{font-size:5.8pt;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);line-height:1.5}
+.pricebox .p{font-family:var(--serif);font-weight:700;font-size:34pt;line-height:.8}
+.pricebox .p small{font-family:var(--sans);font-size:8pt;font-weight:700;letter-spacing:.14em;color:var(--gold);margin-left:1mm}
+.callbar{margin-top:auto;width:122mm;display:flex;align-items:center;justify-content:space-between;padding:2.6mm 4.4mm;border-radius:2mm;
+  background:linear-gradient(135deg,rgba(216,180,106,.16),rgba(216,180,106,.06));border:.3mm solid rgba(216,180,106,.55)}
+.callbar .t{text-align:left;font-size:5.8pt;letter-spacing:.26em;text-transform:uppercase;color:var(--muted);line-height:1.6}
+.callbar .t b{color:var(--gold2);font-weight:700}
+.callbar .n{font-family:var(--serif);font-weight:700;font-size:21pt;line-height:1}
+
+/* ---------- BACK ---------- */
+.back h2{font-family:var(--serif);font-style:italic;font-weight:600;font-size:27pt;line-height:1;margin-top:1.6mm;padding-bottom:.6mm}
+.back .lead{font-family:var(--serif);font-style:italic;font-size:10pt;color:var(--muted);margin-top:.6mm}
+.dish-big{width:126mm;margin-top:3.6mm}
+.cap{display:flex;justify-content:space-between;align-items:baseline;gap:3mm;width:100%;margin-top:1.8mm;text-align:left}
+.cap b{font-family:var(--serif);font-weight:600;font-size:11.5pt;line-height:1.05}
+.cap span{font-family:var(--serif);font-weight:700;font-size:12pt;color:var(--gold2);white-space:nowrap}
+.cap span small{font-family:var(--sans);font-size:5.6pt;letter-spacing:.14em;color:var(--gold);margin-left:.6mm}
+.pair{display:grid;grid-template-columns:61mm 61mm;gap:4mm;margin-top:3.2mm;margin-bottom:3mm}
+.pair .ph{width:61mm}
+.orders{width:126mm;margin-top:auto;border-radius:2.4mm;padding:3.2mm 4.4mm 3mm;background:rgba(216,180,106,.09);border:.3mm solid rgba(216,180,106,.55);text-align:left}
+.orders h3{font-size:6.3pt;font-weight:700;letter-spacing:.34em;text-transform:uppercase;color:var(--gold);text-align:center}
+.dates{display:grid;grid-template-columns:1fr 1fr;gap:3mm;margin-top:2.2mm}
+.dates div{border-top:.3mm solid rgba(216,180,106,.4);padding-top:1.6mm}
+.dates b{display:block;font-family:var(--serif);font-style:italic;font-weight:700;font-size:13pt;line-height:1}
+.dates p{font-size:6.4pt;line-height:1.45;margin-top:.8mm;color:var(--text)}
+.dates p em{font-style:normal;font-weight:700;color:var(--gold2)}
+.note{font-size:6pt;line-height:1.45;color:var(--muted);margin-top:2mm}
+.note b{color:var(--text);font-weight:600}
+.backcall{display:flex;align-items:center;justify-content:center;gap:3mm;margin-top:2mm}
+.backcall small{font-size:5.8pt;letter-spacing:.3em;text-transform:uppercase;color:var(--muted)}
+.backcall b{font-family:var(--serif);font-weight:700;font-size:19pt;line-height:1}
+.wish{font-family:var(--serif);font-style:italic;font-size:12pt;margin-top:2mm}
+</style>
+</head>
+<body>
+
+<!-- ======================= FAȚĂ ======================= -->
+<section class="sheet front">
+  <div class="glow"></div>
+  <svg class="spark" id="sp1" viewBox="0 0 154 216" preserveAspectRatio="none"></svg>
+  <div class="inner">
+    <img class="logo" src="../img/logo.webp" alt="Lyra">
+    <div class="kicker">Crăciun &amp; Revelion la Lyra</div>
+    <h1 class="gold">Platoul Festiv</h1>
+    <div class="sig">Signature Lyra</div>
+    <div class="ph platou"><img src="platou.jpg" alt="Platou Festiv Signature Lyra"><span class="kg">1,8 kg · 8 specialități</span></div>
+
+    <div class="row">
+      <div class="wine">
+        <div class="ph"><img src="vin.jpg" alt="Sticlă de vin"></div>
+        <div class="seal"><small>Din partea</small><b>casei</b></div>
+      </div>
+      <div class="right">
+        <div class="gift">+ o sticlă de vin la fiecare platou<b>din partea casei</b></div>
+        <ul class="items">
+          <li>Coșulețe gourmet cu cârnați de Mangalița</li>
+          <li>Terină rustică de porc cu merișoare</li>
+          <li>Chifteluțe Lyra</li>
+          <li>Terină de brânzeturi nobile</li>
+          <li>Mini Camembert cu afine</li>
+          <li>Creveți gourmet cu sos Lyra</li>
+          <li>Ruladă de pui cu baby spanac</li>
+          <li>Mini șnițele în crustă de semințe</li>
+        </ul>
+        <div class="pricebox">
+          <div class="l">Platou festiv<br>1,8 kg</div>
+          <div class="p gold">255<small>LEI</small></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callbar">
+      <div class="t"><b>Comenzi</b><br>Precomandă min. 24 h</div>
+      <div class="n gold">0751 585 105</div>
+    </div>
+  </div>
+  <div class="frame"></div>
+</section>
+
+<!-- ======================= VERSO ======================= -->
+<section class="sheet back">
+  <div class="glow"></div>
+  <svg class="spark" id="sp2" viewBox="0 0 154 216" preserveAspectRatio="none"></svg>
+  <div class="inner">
+    <div class="kicker">Bucate de sărbători</div>
+    <h2 class="gold">Masa de Crăciun &amp; Revelion</h2>
+    <div class="lead">Gătite la Lyra, gata de pus pe masă acasă</div>
+
+    <div class="ph dish-big"><img src="ciolan-varza.jpg" alt="Ciolan cu varză călită"></div>
+    <div class="cap" style="width:126mm"><b>Ciolan fraged cu varză roșie călită</b><span>— <small>LEI</small></span></div>
+
+    <div class="pair">
+      <div><div class="ph"><img src="vinete.jpg" alt="Salată de vinete"></div><div class="cap"><b>Salată de vinete</b><span>— <small>LEI</small></span></div></div>
+      <div><div class="ph"><img src="ciorba-burta.jpg" alt="Ciorbă de burtă"></div><div class="cap"><b>Ciorbă de burtă</b><span>— <small>LEI</small></span></div></div>
+    </div>
+
+    <div class="orders">
+      <h3>Comenzi Crăciun &amp; Revelion</h3>
+      <div class="dates">
+        <div><b class="gold">Crăciun</b><p>Comenzi până pe <em>22 decembrie</em><br>Livrare pe <em>24 decembrie</em></p></div>
+        <div><b class="gold">Revelion</b><p>Comenzi până pe <em>29 decembrie</em><br>Livrare pe <em>31 decembrie</em></p></div>
+      </div>
+      <div class="note"><b>Platoul Festiv</b> se poate comanda în toată luna decembrie, cu precomandă de minimum 24 de ore. Comenzile se achită integral la plasare.</div>
+      <div class="backcall"><small>Comenzi</small><b class="gold">0751 585 105</b></div>
+    </div>
+    <div class="wish gold">Sărbători fericite și La mulți ani!</div>
+  </div>
+  <div class="frame"></div>
+</section>
+
+<script>
+/* deterministic gold sparkles and small snowflakes, only in the margins */
+function sparkles(svg, n, seed, keepOut) {
+  const r = k => { const x = Math.sin(seed * 12.9898 + k * 78.233) * 43758.5453; return x - Math.floor(x); };
+  let out = "";
+  for (let i = 0; i < n; i++) {
+    const x = 2 + r(i) * 150, y = 2 + r(i + 500) * 212, s = .25 + r(i + 900) * .7, o = .25 + r(i + 1300) * .6;
+    if (keepOut(x, y)) continue;
+    const k = r(i + 1700);
+    if (k > .88) {
+      const L = 1.4 + s * 2.2;
+      out += `<path d="M${x} ${y - L}Q${x} ${y} ${x + L} ${y}Q${x} ${y} ${x} ${y + L}Q${x} ${y} ${x - L} ${y}Q${x} ${y} ${x} ${y - L}Z" fill="#f1d9a0" opacity="${o}"/>`;
+    } else if (k > .8) {
+      const L = 1 + s * 1.6; let d = "";
+      for (let a = 0; a < 3; a++) { const t = a * Math.PI / 3, dx = Math.cos(t) * L, dy = Math.sin(t) * L; d += `M${x - dx} ${y - dy}L${x + dx} ${y + dy}`; }
+      out += `<path d="${d}" stroke="#f1d9a0" stroke-width=".22" stroke-linecap="round" opacity="${o * .8}"/>`;
+    } else out += `<circle cx="${x}" cy="${y}" r="${s * .42}" fill="#f1d9a0" opacity="${o * .65}"/>`;
+  }
+  svg.innerHTML = out;
+}
+const margin = (x, y) => x > 9 && x < 145 && y > 9 && y < 207;
+sparkles(document.getElementById("sp1"), 260, 4, (x, y) => margin(x, y) && !(y < 40 && (x < 50 || x > 104)));
+sparkles(document.getElementById("sp2"), 220, 11, (x, y) => margin(x, y) && !(y < 30 && (x < 30 || x > 124)));
+</script>
+</body>
+</html>
