@@ -46,9 +46,9 @@ body{font-variant-numeric:lining-nums;-webkit-print-color-adjust:exact;print-col
 .front .kicker{margin-top:2.6mm}
 .front h1{font-family:var(--serif);font-style:italic;font-weight:600;font-size:37pt;line-height:.95;margin-top:1.2mm;padding-bottom:1mm}
 .front .sig{font-family:var(--serif);font-weight:600;font-size:12pt;letter-spacing:.42em;text-transform:uppercase;color:var(--text);margin-top:.4mm}
-.front .platou{width:122mm;margin-top:3.6mm}
+.front .platou{width:110mm;margin-top:3.2mm}
 .front .kg{position:absolute;right:2.6mm;bottom:2.6mm;font-size:6pt;font-weight:700;letter-spacing:.2em;text-transform:uppercase;padding:1.4mm 2.6mm;border-radius:4mm;background:rgba(6,18,12,.82);border:.3mm solid rgba(216,180,106,.8);color:var(--gold2)}
-.row{display:flex;gap:5mm;width:122mm;margin-top:4.4mm;align-items:stretch;text-align:left}
+.row{display:flex;gap:5mm;width:122mm;margin-top:3.8mm;align-items:stretch;text-align:left}
 .wine{position:relative;width:37mm;flex:none}
 .wine .ph{width:37mm}
 .seal{position:absolute;left:-5mm;top:-5mm;width:22mm;height:24.2mm;z-index:4;filter:drop-shadow(0 1.4mm 2.4mm rgba(0,0,0,.6))}
@@ -67,6 +67,15 @@ body{font-variant-numeric:lining-nums;-webkit-print-color-adjust:exact;print-col
 .pricebox .l{font-size:5.8pt;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);line-height:1.5}
 .pricebox .p{font-family:var(--serif);font-weight:700;font-size:34pt;line-height:.8}
 .pricebox .p small{font-family:var(--sans);font-size:8pt;font-weight:700;letter-spacing:.14em;color:var(--gold);margin-left:1mm}
+.fbox{margin-top:auto;width:122mm;border-radius:2mm;padding:2.4mm 4mm 2.2mm;text-align:left;background:linear-gradient(135deg,rgba(216,180,106,.18),rgba(216,180,106,.06));border:.35mm solid rgba(216,180,106,.7)}
+.fd{display:grid;grid-template-columns:1fr 1fr 1.05fr;gap:3mm;align-items:center}
+.fd b{display:block;font-family:var(--serif);font-style:italic;font-weight:700;font-size:13pt;line-height:1}
+.fd p{font-size:6.6pt;line-height:1.45;margin-top:.8mm}
+.fd strong,.fx strong,.dates strong,.note strong{font-weight:700;color:var(--gold2)}
+.fd .tel{text-align:right}
+.fd .tel small{display:block;font-size:5.6pt;letter-spacing:.3em;text-transform:uppercase;color:var(--muted)}
+.fd .tel b{font-style:normal;font-size:18pt;margin-top:.6mm}
+.fx{display:flex;justify-content:space-between;gap:3mm;margin-top:1.8mm;padding-top:1.6mm;border-top:.3mm solid rgba(216,180,106,.4);font-size:5.9pt;color:var(--text)}
 .callbar{margin-top:auto;width:122mm;display:flex;align-items:center;justify-content:space-between;padding:2.6mm 4.4mm;border-radius:2mm;
   background:linear-gradient(135deg,rgba(216,180,106,.16),rgba(216,180,106,.06));border:.3mm solid rgba(216,180,106,.55)}
 .callbar .t{text-align:left;font-size:5.8pt;letter-spacing:.26em;text-transform:uppercase;color:var(--muted);line-height:1.6}
@@ -89,7 +98,7 @@ body{font-variant-numeric:lining-nums;-webkit-print-color-adjust:exact;print-col
 .dates{display:grid;grid-template-columns:1fr 1fr 1.05fr;gap:3mm;margin-top:1.8mm}
 .dates div{border-top:.3mm solid rgba(216,180,106,.4);padding-top:1.6mm}
 .dates b{display:block;font-family:var(--serif);font-style:italic;font-weight:700;font-size:13pt;line-height:1}
-.dates p{font-size:6.4pt;line-height:1.45;margin-top:.8mm;color:var(--text)}
+.dates p{font-size:6.8pt;line-height:1.45;margin-top:.8mm;color:var(--text)}
 .dates p em{font-style:normal;font-weight:700;color:var(--gold2)}
 .note{font-size:6pt;line-height:1.45;color:var(--muted);margin-top:1.8mm}
 .dates p.tel{font-family:var(--serif);font-weight:700;font-size:15pt;line-height:1;margin-top:1.4mm}
@@ -160,9 +169,13 @@ body{font-variant-numeric:lining-nums;-webkit-print-color-adjust:exact;print-col
       </div>
     </div>
 
-    <div class="callbar">
-      <div class="t"><b>Comenzi</b> · precomandă min. 24 h<br>Online pe <b>lyrasdelivery.ro</b><br>−10% livrare · −15% ridicare</div>
-      <div class="n gold">0751 585 105</div>
+    <div class="fbox">
+      <div class="fd">
+        <div><b class="gold">Crăciun</b><p>Comenzi <strong>5 – 22 decembrie</strong><br>Livrare <strong>24 decembrie</strong></p></div>
+        <div><b class="gold">Revelion</b><p>Comenzi <strong>5 – 29 decembrie</strong><br>Livrare <strong>31 decembrie</strong></p></div>
+        <div class="tel"><small>Comenzi</small><b class="gold">0751 585 105</b></div>
+      </div>
+      <div class="fx"><span>În altă perioadă: <strong>precomandă minimum 24 de ore</strong></span><span>Online pe <strong>lyrasdelivery.ro</strong>: −10% livrare · −15% ridicare</span></div>
     </div>
   </div>
   <div class="frame"></div>
@@ -200,11 +213,11 @@ body{font-variant-numeric:lining-nums;-webkit-print-color-adjust:exact;print-col
     <div class="orders">
       <h3>Comenzi Crăciun &amp; Revelion</h3>
       <div class="dates">
-        <div><b class="gold">Crăciun</b><p>Comenzi până pe <em>22 dec.</em><br>Livrare pe <em>24 dec.</em></p></div>
-        <div><b class="gold">Revelion</b><p>Comenzi până pe <em>29 dec.</em><br>Livrare pe <em>31 dec.</em></p></div>
+        <div><b class="gold">Crăciun</b><p>Comenzi <strong>5 – 22 dec.</strong><br>Livrare <strong>24 decembrie</strong></p></div>
+        <div><b class="gold">Revelion</b><p>Comenzi <strong>5 – 29 dec.</strong><br>Livrare <strong>31 decembrie</strong></p></div>
         <div><b class="gold">Telefon</b><p class="tel gold">0751 585 105</p></div>
       </div>
-      <div class="note"><b>Platoul Festiv</b> se poate comanda în toată luna decembrie, cu precomandă de minimum 24 de ore. Comenzile se achită integral la plasare. Prețurile includ ambalajul.</div>
+      <div class="note">În altă perioadă, <strong>Platoul Festiv se comandă cu precomandă de minimum 24 de ore.</strong> Comenzile se achită integral la plasare. Prețurile includ ambalajul.</div>
     </div>
   </div>
   <div class="frame"></div>
