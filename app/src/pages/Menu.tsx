@@ -233,7 +233,9 @@ export default function Menu({ source }: { source?: string }) {
   // produse de sărbători în coș: doar precomandă (min. 24 h, din 3 decembrie), plată online
   const hasHol = validCart.some(l => byId[l.id]?.kind === "holiday");
   const wineN = validCart.filter(l => l.id === "platou-festiv").reduce((a, l) => a + l.qty, 0);   // vin din partea casei
-  const canAsap = openNow && !!settings?.accepting_orders && !hasHol;
+  // restaurantul preia acum comenzi (program + „Preiau comenzi” din recepție); produsele de sărbători rămân doar cu precomandă
+  const restOpen = openNow && !!settings?.accepting_orders;
+  const canAsap = restOpen && !hasHol;
   // precomenzile se plătesc doar online: fără plata online pornită nu se pot programa
   const days = useMemo(() => (settings?.online_pay_on ? (hasHol ? holidaySlotDays(settings, clock) : slotDays(settings, clock)) : []), [settings, clock, hasHol]);
   const canOrder = canAsap || days.length > 0;
@@ -661,7 +663,7 @@ export default function Menu({ source }: { source?: string }) {
             <button onClick={() => setLang(lang === "ro" ? "hu" : "ro")}><b className="dr-lang">{lang === "ro" ? "HU" : "RO"}</b>{lang === "ro" ? "Magyarul" : "Românește"}</button></div>
           <div className="dr-legal"><Link to="/termeni">Termeni și condiții</Link><Link to="/confidentialitate">Confidențialitate</Link></div>
         </nav></div>}
-      {settings && !canAsap && <p className="closed">{openNow ? "Restaurantul nu preia comenzi pentru acum." : `Acum suntem închiși · program ${hoursLabel(settings)}.`} {days.length ? "Poți face o precomandă pentru mai târziu." : "Poți răsfoi meniul."}</p>}
+      {settings && !restOpen && <p className="closed">{openNow ? "Restaurantul nu preia comenzi pentru acum." : `Acum suntem închiși · program ${hoursLabel(settings)}.`} {days.length ? "Poți face o precomandă pentru mai târziu." : "Poți răsfoi meniul."}</p>}
 
       <div className="shell">
         <main className="m-main">
