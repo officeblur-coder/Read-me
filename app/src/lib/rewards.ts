@@ -8,6 +8,7 @@ export type RewardsCfg = {
   tier_names: string[];
   thresholds: number[];
   rates: number[];
+  tier_bonus_lei: number[];   // puncte bonus (în lei) la urcarea în nivel: Classic, Select, Signature
   max_redeem_pct: number;
   voucher_days: number;
   expiry_months: number;
@@ -25,7 +26,7 @@ export type MyRewards = {
 
 export const DEFAULT_CFG: RewardsCfg = {
   enabled: true, program_name: "Lyra Rewards", tier_names: ["Classic", "Select", "Signature"],
-  thresholds: [0, 500, 1500], rates: [1, 2, 4], max_redeem_pct: 20, voucher_days: 30, expiry_months: 12,
+  thresholds: [0, 500, 1500], rates: [1, 2, 4], tier_bonus_lei: [0, 50, 150], max_redeem_pct: 20, voucher_days: 30, expiry_months: 12,
   near_tier_lei: 150, dessert_ids: [],
 };
 export const TIER_CLS = ["classic", "select", "signature"];
@@ -37,6 +38,7 @@ function normCfg(d: Record<string, unknown> | null): RewardsCfg {
     ...DEFAULT_CFG, ...d,
     thresholds: ((d.thresholds as unknown[]) || DEFAULT_CFG.thresholds).map(num),
     rates: ((d.rates as unknown[]) || DEFAULT_CFG.rates).map(num),
+    tier_bonus_lei: ((d.tier_bonus_lei as unknown[]) || DEFAULT_CFG.tier_bonus_lei).map(num),
     max_redeem_pct: num(d.max_redeem_pct ?? 20), near_tier_lei: num(d.near_tier_lei ?? 150),
   } as RewardsCfg;
 }
@@ -89,3 +91,6 @@ export const LEDGER_LABEL: Record<string, string> = {
   earn: "Câștigate", redeem: "Folosite", redeem_return: "Returnate", reverse: "Retrase (rambursare)",
   expire: "Expirate", adjust: "Ajustare", migration: "Din Lyra Club",
 };
+
+/** „ + 50 lei în puncte” la urcarea în nivelul t (gol dacă nu e bonus) */
+export const bonusOf = (cfg: RewardsCfg, t: number) => cfg.tier_bonus_lei?.[Math.min(3, Math.max(1, t)) - 1] || 0;

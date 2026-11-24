@@ -345,9 +345,14 @@ declare
   dpct     numeric := 0;
   old_unit numeric;
   welc     numeric := 0;
+  hol      boolean := false;   -- produse de sărbători în coș (19_sarbatori.sql): doar cu precomandă
+  wine_n   int := 0;           -- sticle de vin din partea casei (una la fiecare Platou Festiv)
 begin
   select * into s from public.settings where id = 1;
   select * into cfg from public.rewards_settings where id = 1;
+  select exists (select 1 from jsonb_array_elements(coalesce(p->'items', '[]')) x join public.items i on i.id = x->>'id' where i.kind = 'holiday') into hol;
+  if hol and v_sched is null then
+    raise exception 'Produsele de sărbători se comandă cu precomandă: alege ziua și intervalul livrării (minimum 24 de ore înainte).' using errcode = 'P0001'; end if;
   if v_sched is null then
     if not public.is_open_at(now()) then
       raise exception 'Acum suntem închiși (program %–%). Poți programa comanda pentru mai târziu.',
@@ -355,7 +360,7 @@ begin
     if not s.accepting_orders then
       raise exception 'Restaurantul nu preia comenzi acum. Poți programa comanda pentru mai târziu.' using errcode = 'P0001'; end if;
   else
-    v_err := public.preorder_error(v_sched);
+    v_err := case when hol then public.holiday_error(v_sched) else public.preorder_error(v_sched) end;
     if v_err is not null then raise exception '%', v_err using errcode = 'P0001'; end if;
   end if;
   if coalesce(trim(p->>'name'),'') = '' or coalesce(trim(p->>'phone'),'') = '' then
@@ -410,6 +415,7 @@ begin
         end if;
       end loop;
     end if;
+    if it.id = 'platou-festiv' then wine_n := wine_n + qty; end if;
     sub := sub + unit * qty;
     if is_gc then gc_sum := gc_sum + unit * qty; else food := true; end if;
     pack := pack + lpack * qty;
@@ -422,6 +428,11 @@ begin
       'disc_pct', case when dpct > 0 then dpct end, 'old_unit', old_unit, 'giftcard', case when is_gc then true end);
   end loop;
   fsub := sub - gc_sum;
+  -- vinul din partea casei: o sticlă la fiecare Platou Festiv, gratuit
+  if wine_n > 0 then
+    lines := lines || jsonb_build_object('id', 'vin-casa', 'name', 'Vin din partea casei (Pirovano Chardonnay)', 'qty', wine_n, 'unit', 0,
+      'wine', true, 'grams', '0,75 l', 'allergens', '[]'::jsonb, 'extras', '[]'::jsonb, 'note', '', 'pack', 0, 'sgr', 0);
+  end if;
 
   if v_mode = 'livrare' and coalesce(trim(p->>'address'),'') = '' then
     raise exception 'Completează adresa de livrare.' using errcode = 'P0001'; end if;
@@ -486,6 +497,7 @@ begin
   end if;
   -- bonus de bun venit: tot odată, o singură dată, doar la produse de minim welcome_min lei, fără cod de reducere
   if coalesce((p->>'use_welcome')::boolean, false) then
+    if not coalesce(s.welcome_on, false) then raise exception 'Bonusul de bun venit nu mai este disponibil.' using errcode = 'P0001'; end if;
     if cust.id is null then raise exception 'Intră în cont ca să folosești bonusul de bun venit.' using errcode = 'P0001'; end if;
     if coalesce(cust.welcome_credit, 0) <= 0 or cust.welcome_used_at is not null then
       raise exception 'Bonusul de bun venit a fost deja folosit.' using errcode = 'P0001'; end if;

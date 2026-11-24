@@ -1795,3 +1795,29 @@ body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area
 .pl-new.ok{background:var(--ok);color:#fff}
 .pl-acts button.paid{background:var(--ok);color:#fff;border-color:transparent}
 @media (max-width:640px){.pl-pm{grid-template-columns:minmax(0,1fr)}}
+
+/* ===== Sărbători: header în meniu ===== */
+.xmas{position:relative;margin:0 0 22px;padding:22px 18px 18px;border-radius:24px;overflow:hidden;color:#f6ecd8;
+  background:radial-gradient(120% 90% at 15% 0%,#1f4a35 0%,#0f2a1e 55%,#0a1d15 100%);border:1px solid rgba(214,180,110,.45)}
+.xmas::before{content:"✦  ✧   ✦     ✧  ✦    ✧";position:absolute;top:8px;right:14px;color:rgba(232,200,130,.55);font-size:14px;letter-spacing:6px;pointer-events:none}
+.xm-kick{display:block;font-size:11px;font-weight:800;letter-spacing:.28em;color:#d9b46e}
+.xm-head h2{margin:8px 0 6px;font:italic 700 clamp(26px,4.4vw,40px)/1.08 Georgia,"Times New Roman",serif;color:#f1d79c}
+.xm-head p{margin:0;color:#e8dcc3;font-size:14.5px}
+.xm-rules{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 14px}
+.xm-rules span{padding:6px 11px;border-radius:999px;border:1px solid rgba(217,180,110,.5);background:rgba(0,0,0,.18);font-size:12.5px;font-weight:700;color:#f3e3bd}
+.xm-rail{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(210px,1fr);gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:4px}
+.xm-card{scroll-snap-align:start;border-radius:18px;overflow:hidden;background:rgba(10,24,17,.65);border:1px solid rgba(217,180,110,.35)}
+.xm-img{position:relative;display:block;width:100%;aspect-ratio:16/10;padding:0;border:0;background:#0a1d15}
+.xm-img img{width:100%;height:100%;object-fit:cover;display:block}
+.xm-wine{position:absolute;left:8px;bottom:8px;padding:5px 10px;border-radius:999px;background:#7b1d2a;color:#fff;font-size:12px;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.xm-body{padding:10px 12px 12px;display:grid;gap:4px}
+.xm-body h3{margin:0;font-size:15.5px;color:#fbefd6}
+.xm-body small{color:#cbbd9f;font-size:12px}
+.xm-body .price{color:#f1d79c}
+.xm-wine-box{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px;padding:10px 12px;border-radius:16px;background:rgba(123,29,42,.35);border:1px solid rgba(217,180,110,.4)}
+.xm-wine-box img{width:46px;height:60px;object-fit:cover;border-radius:10px}
+.xm-wine-box div{flex:1;min-width:180px;display:grid;gap:2px}
+.xm-wine-box b{color:#f6e2b0;font-size:14.5px}.xm-wine-box small{color:#e0cfae;font-size:12.5px}
+.cl-wine .cl-txt span{color:var(--ok)}
+.hol-note{margin:10px 2px;padding:10px 12px;border-radius:12px;background:rgba(31,74,53,.18);border:1px solid rgba(46,125,80,.45);font-size:13px;line-height:1.45}
+.pl-row .pl-app{color:var(--brand);font-weight:700;white-space:normal}

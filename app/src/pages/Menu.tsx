@@ -4,10 +4,10 @@ import { supabase } from "../lib/supabase";
 import type { Banner, CartLine, Category, Item, Promo, Settings } from "../lib/types";
 import { ALLERGENS, MEAT, TAGS, imgUrl, lei, rememberOrder } from "../lib/format";
 import { useCustomer } from "../lib/auth";
-import { TIER_CLS, nextTierInfo, planRedeem, redeemCap, tierName, useRewards, vppOf } from "../lib/rewards";
+import { TIER_CLS, bonusOf, nextTierInfo, planRedeem, redeemCap, tierName, useRewards, vppOf } from "../lib/rewards";
 import { flyToCart, haptic } from "../lib/fx";
 import { LOCALITIES, geocodeAddress, useZones, zoneFor, type LatLng } from "../lib/zones";
-import { hoursLabel, isOpenNow, slotDays, whenLabel } from "../lib/schedule";
+import { holidaySlotDays, hoursLabel, isOpenNow, slotDays, whenLabel } from "../lib/schedule";
 import { cut, menuPct, useDiscounts } from "../lib/discounts";
 import ModePick from "../components/ModePick";
 import GiftCard from "../components/GiftCard";
@@ -230,9 +230,12 @@ export default function Menu({ source }: { source?: string }) {
   const food = validCart.some(l => !isGift(l.id));
   const fsub = sub - gcSum;
   const openNow = !!settings && isOpenNow(settings, clock);
-  const canAsap = openNow && !!settings?.accepting_orders;
+  // produse de sărbători în coș: doar precomandă (min. 24 h, din 3 decembrie), plată online
+  const hasHol = validCart.some(l => byId[l.id]?.kind === "holiday");
+  const wineN = validCart.filter(l => l.id === "platou-festiv").reduce((a, l) => a + l.qty, 0);   // vin din partea casei
+  const canAsap = openNow && !!settings?.accepting_orders && !hasHol;
   // precomenzile se plătesc doar online: fără plata online pornită nu se pot programa
-  const days = useMemo(() => (settings?.online_pay_on ? slotDays(settings, clock) : []), [settings, clock]);
+  const days = useMemo(() => (settings?.online_pay_on ? (hasHol ? holidaySlotDays(settings, clock) : slotDays(settings, clock)) : []), [settings, clock, hasHol]);
   const canOrder = canAsap || days.length > 0;
   const whenEff = canAsap ? when : "later";
   const day = days.find(d => d.key === schedDay) || days[0];
@@ -428,6 +431,9 @@ export default function Menu({ source }: { source?: string }) {
   const tagged = items.filter(it => it.tags.includes("top") && it.image);
   const popular = (tagged.length ? tagged : POPULAR.map(id => byId[id]).filter(it => it && it.image)).slice(0, 8);
   const catOf = (id: string | null) => cats.find(c => c.id === id);
+  const holItems = items.filter(i => i.kind === "holiday" && i.active !== false);
+  const holOn = holItems.length > 0 && (!settings?.holiday_until || new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Bucharest" }).format(clock) <= settings.holiday_until);
+  const holFrom = settings?.holiday_from ? new Date(settings.holiday_from + "T12:00:00").toLocaleDateString("ro-RO", { day: "numeric", month: "long" }) : "3 decembrie";
 
   if (loadErr) return <div className="m-page"><p className="closed">{loadErr}</p></div>;
 
@@ -482,7 +488,9 @@ export default function Menu({ source }: { source?: string }) {
               </div>
             );
           })}
+          {wineN > 0 && <div className="cl cl-wine"><img src="/img/sarbatori-vin.jpg" alt="" /><div className="cl-txt"><b>Vin din partea casei 🍷</b><small>Pirovano Chardonnay · câte o sticlă la fiecare Platou Festiv</small><span className="num">cadou</span></div><span className="qty"><b className="num">{wineN}×</b></span></div>}
         </div>
+        {hasHol && <p className="hol-note">🎄 <b>Comandă de sărbători:</b> se livrează cu precomandă de minimum 24 de ore (din {holFrom}), iar plata se face exclusiv online, cu cardul. Alegi ziua și intervalul la pasul următor.</p>}
         {mode === "livrare" && feeKnown && freeOver !== Infinity && (sub < freeOver
           ? <div className="freebar"><span>Încă <b className="num">{lei(freeOver - sub)}</b> și livrarea e gratuită</span><div className="prog"><i style={{ width: `${Math.min(100, (sub / freeOver) * 100)}%` }} /></div></div>
           : <div className="freebar ok"><Icon name="check" size={16} /> Livrarea e gratuită</div>)}
@@ -510,10 +518,11 @@ export default function Menu({ source }: { source?: string }) {
           {menuPct(dsc.list, mode) > 0 && <span className="b b-off">−{menuPct(dsc.list, mode)}% la tot meniul</span>}</div>
         <p className="cp-lbl">Când o vrei?</p>
         <div className="seg big2">
-          <button aria-pressed={whenEff === "asap"} disabled={!canAsap} onClick={() => setWhen("asap")}><Icon name="bolt" size={18} />{canAsap ? "Cât mai curând" : "Închis acum"}</button>
+          <button aria-pressed={whenEff === "asap"} disabled={!canAsap} onClick={() => setWhen("asap")}><Icon name="bolt" size={18} />{canAsap ? "Cât mai curând" : hasHol ? "Doar precomandă" : "Închis acum"}</button>
           <button aria-pressed={whenEff === "later"} disabled={!days.length} onClick={() => { setWhen("later"); if (!schedDay && days[0]) setSchedDay(days[0].key); }}><Icon name="clock" size={18} />Programează</button>
         </div>
-        {!canAsap && settings && <p className="sched-note">{openNow ? "Restaurantul nu preia comenzi pentru acum." : `Acum suntem închiși · program ${hoursLabel(settings)}.`}{days.length ? " Poți programa comanda pentru mai târziu." : ""}</p>}
+        {hasHol && <p className="sched-note">Produsele de sărbători se livrează cu precomandă de minimum 24 de ore, din {holFrom}. {days.length ? "Alege ziua și intervalul:" : "Momentan nu se pot programa (plata online e oprită)."}</p>}
+        {!canAsap && !hasHol && settings && <p className="sched-note">{openNow ? "Restaurantul nu preia comenzi pentru acum." : `Acum suntem închiși · program ${hoursLabel(settings)}.`}{days.length ? " Poți programa comanda pentru mai târziu." : ""}</p>}
         {whenEff === "later" && day && <div className="sched">
           <div className="sched-days">{days.map(d => <button key={d.key} aria-pressed={d.key === day.key} onClick={() => { setSchedDay(d.key); setSchedAt(""); }}>{d.label}</button>)}</div>
           <div className="sched-slots">{day.slots.map(x => <button key={x.iso} aria-pressed={x.iso === schedAt} onClick={() => setSchedAt(x.iso)}>{x.label}</button>)}</div>
@@ -598,9 +607,9 @@ export default function Menu({ source }: { source?: string }) {
           {rwOn && customer && (() => {
             const before = nextTierInfo(rw.cfg, tierN, rw.me?.spent ?? 0);
             if (!before || !earn) return null;
-            if (earn >= before.left) return <p className="rw-near">Cu această comandă urci la Lyra {tierName(rw.cfg, before.tier)} 🎉 și primești un desert cadou.</p>;
+            if (earn >= before.left) return <p className="rw-near">Cu această comandă urci la Lyra {tierName(rw.cfg, before.tier)} 🎉 și primești {bonusOf(rw.cfg, before.tier) ? `${bonusOf(rw.cfg, before.tier)} lei în puncte și ` : ""}un desert cadou.</p>;
             const left = before.left - earn;
-            return left <= rw.cfg.near_tier_lei ? <p className="rw-near">După comanda asta mai ai doar {lei(left)} până la Lyra {tierName(rw.cfg, before.tier)}: {rw.cfg.rates[before.tier - 1]}% cashback și un desert cadou.</p> : null;
+            return left <= rw.cfg.near_tier_lei ? <p className="rw-near">După comanda asta mai ai doar {lei(left)} până la Lyra {tierName(rw.cfg, before.tier)}: {rw.cfg.rates[before.tier - 1]}% cashback{bonusOf(rw.cfg, before.tier) ? `, ${bonusOf(rw.cfg, before.tier)} lei în puncte` : ""} și un desert cadou.</p> : null;
           })()}
         </div>
         <button className="cta" onClick={placeOrder} disabled={sending || !canOrder || !schedOk || (zoneOnline && !settings?.online_pay_on)}>
@@ -648,6 +657,23 @@ export default function Menu({ source }: { source?: string }) {
       <div className="shell">
         <main className="m-main">
           {!query && <>
+            {/* ---------- sărbători: platouri și bucate de sărbători ---------- */}
+            {holOn && <section className="xmas" aria-label="Comenzi pentru sărbători">
+              <div className="xm-head">
+                <span className="xm-kick">{L ? "KARÁCSONY & SZILVESZTER A LYRÁTÓL" : "CRĂCIUN & REVELION DE LA LYRA"}</span>
+                <h2>{L ? "Ünnepi asztal, házhoz szállítva" : "Masa de sărbători, livrată de Lyra"}</h2>
+                <p>{L ? `Rendelés az ünnepekre és egész decemberre · első szállítás: ${holFrom}` : `Comenzi pentru sărbători și pentru toată luna decembrie · prima livrare pe ${holFrom}`}</p>
+                <div className="xm-rules"><span>⏱ {L ? "Előrendelés min. 24 órával" : "Precomandă minimum 24 de ore"}</span><span>💳 {L ? "Csak online fizetés" : "Plată exclusiv online"}</span><span>−10% {L ? "szállítás" : "livrare"} · −15% {L ? "elvitel" : "ridicare"}</span></div>
+              </div>
+              <div className="xm-rail">{holItems.map(it => <article key={it.id} className="xm-card" data-card>
+                <button className="xm-img" onClick={() => openItem(it)} aria-label={nm(it)}><img src={imgUrl(it.image)!} alt="" loading="lazy" />
+                  {it.id === "platou-festiv" && <span className="xm-wine">🍷 {L ? "+ bor ajándékba" : "+ vin din partea casei"}</span>}</button>
+                <div className="xm-body"><button className="pc-name" onClick={() => openItem(it)}><h3>{nm(it)}</h3></button><small>{it.grams}</small>{buyRow(it)}</div>
+              </article>)}</div>
+              <div className="xm-wine-box"><img src="/img/sarbatori-vin.jpg" alt="" loading="lazy" /><div><b>{L ? "Minden tálhoz egy üveg bor, a ház ajándéka" : "O sticlă de vin la fiecare Platou Festiv, din partea casei"}</b><small>Pirovano Chardonnay · {L ? "ingyen, automatikusan a kosárban" : "gratuit, apare automat la comandă"}</small></div>
+                <button className="h2-cta" onClick={() => jump("sarbatori")}>{L ? "Ünnepi rendelés" : "Comandă pentru sărbători"}<Icon name="arrow" size={18} /></button></div>
+            </section>}
+
             {/* ---------- hero: banners from admin ---------- */}
             {shownBanners.length > 0 && <section className="hero2">
               <div className="hero-track" ref={heroRef} onScroll={e => { const el = e.currentTarget; setSlide(Math.round(el.scrollLeft / el.clientWidth)); }}>
@@ -728,6 +754,8 @@ export default function Menu({ source }: { source?: string }) {
                           <img src={img} alt="" loading="lazy" />
                           <span className="pc-badges">
                             {pctOf(it.id) > 0 && <span className="b b-off"><Icon name="tag" size={12} />−{pctOf(it.id)}%</span>}
+                            {it.kind === "holiday" && <span className="b b-new">{L ? "Előrendelés 24h" : "Precomandă 24 h"}</span>}
+                            {it.id === "platou-festiv" && <span className="b b-hot">🍷 {L ? "+ bor ajándék" : "+ vin cadou"}</span>}
                             {it.tags.includes("new") && <span className="b b-new">{L ? "Új" : "Nou"}</span>}
                             {it.hot && <span className="b b-hot"><Icon name="flame" size={12} fill />{t.hot}</span>}
                             {it.tags.includes("veg") && <span className="b b-veg">Veg</span>}
@@ -822,12 +850,12 @@ export default function Menu({ source }: { source?: string }) {
             : <div className="jp-top"><span className="rw-kicker">LYRA REWARDS</span><h2>Fă-ți cont și primești înapoi la fiecare comandă</h2></div>}
           {settings?.welcome_on && Number(settings.welcome_lei) > 0
             ? rw.cfg.enabled && <ul className="jp-perks">
-                <li><b>Plus Lyra Rewards: {rw.cfg.rates[0]}–{rw.cfg.rates[2]}% înapoi în puncte</b><span>la fiecare comandă, și desert cadou la fiecare nivel nou 🍰</span></li>
+                <li><b>Plus Lyra Rewards: {rw.cfg.rates[0]}–{rw.cfg.rates[2]}% înapoi în puncte</b><span>la fiecare comandă; la nivel nou: puncte bonus ({bonusOf(rw.cfg, 2)} lei la {rw.cfg.tier_names[1]}, {bonusOf(rw.cfg, 3)} lei la {rw.cfg.tier_names[2]}) și desert cadou 🍰</span></li>
               </ul>
             : <ul className="jp-perks">
                 <li><b>{rw.cfg.rates[0]}% înapoi în puncte</b><span>de la prima comandă, folosite la următoarele</span></li>
                 <li><b>Până la {rw.cfg.rates[2]}% la nivelul {rw.cfg.tier_names[2]}</b><span>cu cât comanzi mai des, cu atât valorează mai mult</span></li>
-                <li><b>Desert cadou 🍰</b><span>la fiecare nivel nou: {rw.cfg.tier_names[1]} și {rw.cfg.tier_names[2]}</span></li>
+                <li><b>{bonusOf(rw.cfg, 2)} lei în puncte + desert cadou 🍰</b><span>când urci la {rw.cfg.tier_names[1]} ({rw.cfg.rates[1]}% cashback); la {rw.cfg.tier_names[2]}: {bonusOf(rw.cfg, 3)} lei în puncte + desert ({rw.cfg.rates[2]}% cashback)</span></li>
                 <li><b>Comandă din nou cu un click</b><span>adrese salvate, istoric, fără parolă</span></li>
               </ul>}
           <Link to="/cont" className="cta" onClick={closeJoin}>{settings?.welcome_on && Number(settings.welcome_lei) > 0 ? `Creează cont și ia ${Number(settings.welcome_lei)} lei` : "Creează cont gratuit"}</Link>

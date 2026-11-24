@@ -628,7 +628,7 @@ function Ticket({ o }: { o: Order }) {
         return (
         <div key={i} className="tl"><span className="q">{l.qty}×</span>
           <div><b>{l.name}</b>{l.variant && <span className="x">{l.variant}</span>}{l.extras.map(e => <span key={e.id} className="x">+ {e.name}</span>)}
-            {l.note && <span className="tk-opt">„{l.note}”</span>}{l.gift && <span className="x">DESERT CADOU · LYRA REWARDS</span>}{l.promo && <span className="x">ofertă: {l.promo}</span>}
+            {l.note && <span className="tk-opt">„{l.note}”</span>}{l.gift && <span className="x">DESERT CADOU · LYRA REWARDS</span>}{l.wine && <span className="tk-opt">🍷 CADOU DIN PARTEA CASEI</span>}{l.promo && <span className="x">ofertă: {l.promo}</span>}
             <small>{l.grams}{l.hot ? " · tigaie fierbinte" : ""}</small>
             {off > l.unit && <small className="tk-disc">preț oficial {(off * l.qty).toFixed(2)} · −{l.disc_pct}% = −{((off - l.unit) * l.qty).toFixed(2)}</small>}</div>
           <span>{off > l.unit && <s className="tk-old">{(off * l.qty).toFixed(2)}</s>}{l.unit === 0 ? "0.00" : (l.unit * l.qty).toFixed(2)}</span></div>

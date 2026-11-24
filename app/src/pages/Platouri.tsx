@@ -15,7 +15,7 @@ type Line = { name: string; qty: number; price: number };
 type PO = {
   id: string; number: number; name: string; phone: string; address: string; email: string | null; lines: Line[]; qty: number; total: number;
   dispatcher: string; order_date: string; delivery_date: string; delivery_time: string; note: string;
-  pay_method: PM; paid_by: string | null;
+  pay_method: PM; paid_by: string | null; order_no?: number | null;
   pay_status: "none" | "sent" | "paid"; pay_sent_at: string | null; pay_sent_count: number; paid_at: string | null;
   verified_at: string | null; verified_by: string | null; cancelled: boolean; created_by: string | null; created_at: string;
 };
@@ -23,7 +23,7 @@ type PM = "online" | "cash" | "tichete";
 const PM_LABEL: Record<PM, string> = { online: "Online (link pe email)", cash: "Cash la recepție", tichete: "Tichete de vacanță" };
 type Product = { id: number; name: string; price: number };
 type Me = { role: "editor" | "checker"; name: string };
-type Draft = Omit<PO, "id" | "number" | "qty" | "total" | "lines" | "pay_status" | "pay_sent_at" | "pay_sent_count" | "paid_at" | "verified_at" | "verified_by" | "cancelled" | "created_by" | "created_at" | "email" | "paid_by"> & {
+type Draft = Omit<PO, "id" | "number" | "qty" | "total" | "lines" | "pay_status" | "pay_sent_at" | "pay_sent_count" | "paid_at" | "verified_at" | "verified_by" | "cancelled" | "created_by" | "created_at" | "email" | "paid_by" | "order_no"> & {
   id?: string; email: string; lines: { name: string; qty: string; price: string }[];
 };
 
@@ -205,7 +205,7 @@ function Register({ me }: { me: Me }) {
           <div className="pl-row pl-head"><span>Nr</span><span>Client</span><span>Livrare</span><span>Ce a comandat</span><span className="r">Buc</span><span className="r">Total</span><span>Plată</span><span>Verificat</span><span /></div>
           {shown.length === 0 && <p className="muted" style={{ padding: 20 }}>Nicio comandă aici.</p>}
           {shown.map(o => <div key={o.id} className={`pl-row ${o.cancelled ? "off" : ""}`}>
-            <span className="num"><b>#{o.number}</b><small>{dmy(o.order_date)}</small></span>
+            <span className="num"><b>#{o.number}</b><small>{dmy(o.order_date)}</small>{o.order_no && <small className="pl-app">din aplicație #{o.order_no}</small>}</span>
             <span><b>{o.name}</b><small><a href={`tel:${o.phone.replace(/\s/g, "")}`}>{o.phone}</a>{o.address ? ` · ${o.address}` : ""}</small>{o.email && <small>{o.email}</small>}</span>
             <span><b>{dmy(o.delivery_date)}</b><small>{dayName(o.delivery_date)}{o.delivery_time ? ` · ${o.delivery_time}` : ""}</small></span>
             <span className="pl-items">{o.lines.map((l, i) => <small key={i}>{l.qty}× {l.name} · {lei(l.price)}</small>)}{wineOf(o.lines) > 0 && <small className="pl-wine-s">+ {wineOf(o.lines)}× vin din partea casei</small>}{o.dispatcher && <small className="muted">dispecer: {o.dispatcher}</small>}{o.note && <small className="muted">„{o.note}”</small>}</span>

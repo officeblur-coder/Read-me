@@ -32,7 +32,7 @@ export type Item = {
   sort: number;
   packaging: number;     // ambalaj, lei pe bucată
   sgr?: number;          // garanție SGR, lei pe bucată
-  kind?: "dish" | "gift"; // gift = voucher cadou
+  kind?: "dish" | "gift" | "holiday"; // gift = voucher cadou, holiday = produs de sărbători (doar precomandă 24 h)
 };
 
 export type Settings = import("./schedule").Hours & {
@@ -41,6 +41,7 @@ export type Settings = import("./schedule").Hours & {
   auto_open?: boolean;                         // pornire / oprire automată după program
   confirm_eta?: boolean;
   online_pay_on?: boolean;
+  holiday_from?: string; holiday_until?: string; holiday_lead_hours?: number;
   couriers_on?: boolean;                       // livratorii (atribuire, aplicație, hartă) porniți din admin                     // plata online cu cardul (Stripe) e configurată și pornită                       // clientul confirmă timpul propus de recepție
   offer_window_min?: number;                   // vechi (minute)
   offer_window_sec?: number;                   // secunde pentru răspunsul clientului
@@ -91,6 +92,7 @@ export type OrderLine = {
   extras: { id: string; name: string; price: number }[];
   note: string;
   gift?: boolean;
+  wine?: boolean;   // vin din partea casei (la Platoul Festiv)
   promo?: string | null;
   pack?: number;   // ambalaj pe bucată
   disc_pct?: number | null;   // reducere procentuală (livrare / ridicare)

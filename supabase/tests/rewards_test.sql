@@ -39,6 +39,7 @@ update public.rewards_settings set enabled = true, tier_names = '{Classic,Select
 update public.settings set accepting_orders = true, min_order = 0 where id = 1;
 update public.items set available = true, active = true where id in ('smash','platou-lyra','papanas','cinnamon-rolls','pepsi');
 
+update public.rewards_settings set tier_bonus_lei = '{0,0,0}' where id = 1;   -- bonusul de nivel se testează separat (secțiunea 4)
 do $$
 declare a uuid; b uuid; g uuid; adm uuid; o public.orders; o2 public.orders; c public.customers; n int; v numeric; vid uuid; r jsonb;
 begin
@@ -79,13 +80,18 @@ begin
   perform pg_temp.ok(v = 0.02 and o.points_earned = 50, '3. comenzile următoare câștigă la 0,02 lei/punct');
 
   -- ===== 4. O comandă care trece simultan ambele praguri =====
+  update public.rewards_settings set tier_bonus_lei = '{0,50,150}' where id = 1;   -- bonusul de nivel, doar aici
   b := pg_temp.user_('b@test.ro');
   o := pg_temp.order_(b, '[{"id":"platou-lyra","qty":6}]');                 -- 1740 lei
   o := pg_temp.status_(o.id, 'done');
   c := pg_temp.cust(b);
   perform pg_temp.ok(c.tier = 3, '4. direct la Signature');
   perform pg_temp.ok((select count(*) from public.vouchers where customer_id = b) = 2, '4. două vouchere: Select și Signature');
-  perform pg_temp.ok((select vpp from public.point_lots where order_id = o.id) = 0.01 and c.points = 1740, '4. punctele comenzii rămân la 0,01');
+  -- bonus la urcare: Select 50 lei (2500 puncte × 0,02) + Signature 150 lei (3750 puncte × 0,04)
+  perform pg_temp.ok((select vpp from public.point_lots where order_id = o.id) = 0.01 and c.points = 1740 + 2500 + 3750, '4. punctele comenzii rămân la 0,01, plus bonusurile de nivel');
+  perform pg_temp.ok((select count(*) from public.point_ledger where customer_id = b and note like 'Bonus nivel Lyra %') = 2
+    and (select sum(value) from public.point_ledger where customer_id = b and note like 'Bonus nivel Lyra %') = 200, '4. bonus de nivel: 50 lei (Select) + 150 lei (Signature)');
+  update public.rewards_settings set tier_bonus_lei = '{0,0,0}' where id = 1;
 
   -- ===== 5. Folosirea punctelor: maxim 20% din produse, FIFO, valoarea fiecărui lot =====
   -- client a: loturi 100×0,01 + 580×0,01 + 50×0,02 = 7,80 lei
@@ -156,7 +162,7 @@ begin
   update public.customers set last_activity_at = now() - interval '12 months 1 day' where id = b;
   r := public.rewards_run_daily();
   perform pg_temp.ok((pg_temp.cust(b)).points = 0, '9. punctele expiră după 12 luni');
-  perform pg_temp.ok((select points from public.point_ledger where customer_id = b and kind = 'expire') = -1740, '9. expirarea apare în istoric');
+  perform pg_temp.ok((select points from public.point_ledger where customer_id = b and kind = 'expire') = -(1740 + 2500 + 3750), '9. expirarea apare în istoric (inclusiv bonusul de nivel)');
 
   -- ===== 11. Vizitator fără cont → își face cont cu același email =====
   o := pg_temp.order_(null, '[{"id":"platou-lyra","qty":2}]', '{"email":"Guest@Test.ro"}');

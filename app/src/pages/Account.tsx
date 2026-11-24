@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useCustomer, type Customer } from "../lib/auth";
-import { LEDGER_LABEL, TIER_CLS, nextTierInfo, rateOf, tierName, useRewards, vppOf, type RewardsCfg } from "../lib/rewards";
+import { LEDGER_LABEL, TIER_CLS, bonusOf, nextTierInfo, rateOf, tierName, useRewards, vppOf, type RewardsCfg } from "../lib/rewards";
 import { confetti } from "../lib/fx";
 import { track } from "../lib/track";
 import type { Order } from "../lib/types";
@@ -201,7 +201,7 @@ function JoinCard() {
       <p>1 leu = 1 punct. Cu cât comanzi mai des, cu atât punctele valorează mai mult. Fără card, fără parolă.</p>
       <ul className="perks">
         {[1, 2, 3].map(t => <li key={t}><b>Lyra {tierName(cfg, t)} · {rateOf(cfg, t)}% cashback</b>
-          <span>{t === 1 ? "de la prima comandă" : `după ${lei(cfg.thresholds[t - 1])} cumulat · desert cadou la promovare`}</span></li>)}
+          <span>{t === 1 ? "de la prima comandă" : `după ${lei(cfg.thresholds[t - 1])} cumulat · la promovare: ${bonusOf(cfg, t) ? `${bonusOf(cfg, t)} lei în puncte + ` : ""}desert cadou`}</span></li>)}
       </ul>
     </div>
   );
@@ -231,7 +231,7 @@ function Rewards({ cfg, me, name, since, onSeen }: { cfg: RewardsCfg; me: import
       <section className="acc-box rw-progress">
         {nx ? <>
           <h2>Mai ai doar {lei(nx.left)} până la Lyra {tierName(cfg, nx.tier)}!</h2>
-          <p className="muted">Deblochezi {rateOf(cfg, nx.tier)}% cashback (1 punct = {vppOf(cfg, nx.tier).toFixed(2).replace(".", ",")} lei) și un desert cadou.</p>
+          <p className="muted">Deblochezi {rateOf(cfg, nx.tier)}% cashback (1 punct = {vppOf(cfg, nx.tier).toFixed(2).replace(".", ",")} lei) {bonusOf(cfg, nx.tier) ? `, plus ${bonusOf(cfg, nx.tier)} lei în puncte` : ""} și un desert cadou.</p>
           <div className="rw-bar"><i style={{ width: nx.pct + "%" }} /></div>
           <div className="rw-bar-lbl"><span>Lyra {tierName(cfg, t)}</span><span className="num">{lei(me.spent)} din {lei(cfg.thresholds[nx.tier - 1])}</span><span>Lyra {tierName(cfg, nx.tier)}</span></div>
         </> : <>
@@ -260,7 +260,7 @@ function Rewards({ cfg, me, name, since, onSeen }: { cfg: RewardsCfg; me: import
           <b>Lyra {tierName(cfg, n)}</b>
           <em className="num">{rateOf(cfg, n)}%</em>
           <small>{n === 1 ? "Nivel de start" : `De la ${lei(cfg.thresholds[n - 1])} cumulat`}</small>
-          <small>1 punct = {vppOf(cfg, n).toFixed(2).replace(".", ",")} lei{n > 1 ? " · desert cadou la promovare" : ""}</small>
+          <small>1 punct = {vppOf(cfg, n).toFixed(2).replace(".", ",")} lei{n > 1 ? ` · la promovare: ${bonusOf(cfg, n) ? `${bonusOf(cfg, n)} lei în puncte + ` : ""}desert cadou` : ""}</small>
         </div>)}
       </div>
       <p className="fine" style={{ textAlign: "left", margin: 0 }}>1 leu plătit pe produse = 1 punct, acordat la livrare. Poți plăti cu puncte până la {cfg.max_redeem_pct}% din produse, de la comanda următoare. Punctele își păstrează valoarea nivelului la care le-ai câștigat. Nivelul nu scade niciodată.</p>

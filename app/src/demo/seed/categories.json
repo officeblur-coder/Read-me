@@ -1,5 +1,14 @@
 [
  {
+  "id": "sarbatori",
+  "name_ro": "Sărbători",
+  "name_hu": "Ünnepek",
+  "note_ro": "Precomandă minimum 24 de ore · plată online · livrare din 3 decembrie",
+  "note_hu": null,
+  "sort": -20,
+  "active": true
+ },
+ {
   "id": "voucher",
   "name_ro": "Card cadou",
   "name_hu": "Ajándékkártya",
