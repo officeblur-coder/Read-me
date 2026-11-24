@@ -38,6 +38,7 @@ export type Item = {
 export type Settings = import("./schedule").Hours & {
   welcome_on?: boolean; welcome_lei?: number; welcome_min?: number;   // bonus de bun venit la cont nou
   accepting_orders: boolean;
+  auto_open?: boolean;                         // pornire / oprire automată după program
   confirm_eta?: boolean;
   online_pay_on?: boolean;
   couriers_on?: boolean;                       // livratorii (atribuire, aplicație, hartă) porniți din admin                     // plata online cu cardul (Stripe) e configurată și pornită                       // clientul confirmă timpul propus de recepție
@@ -92,6 +93,8 @@ export type OrderLine = {
   gift?: boolean;
   promo?: string | null;
   pack?: number;   // ambalaj pe bucată
+  disc_pct?: number | null;   // reducere procentuală (livrare / ridicare)
+  old_unit?: number | null;   // prețul oficial înainte de reducere (fără extra)
 };
 
 export type OrderStatus = "new" | "prep" | "road" | "done" | "rejected" | "refunded";

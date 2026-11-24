@@ -8,6 +8,7 @@ import Wordmark from "../components/Wordmark";
 import { slotDay, slotRange, whenLabel } from "../lib/schedule";
 import { ago, courierColor, type CourierInfo, type CourierLoc } from "../lib/couriers";
 const CourierMap = lazy(() => import("../components/CourierMap"));
+const IncomeTab = lazy(() => import("../components/IncomeTab"));
 
 const ETAS = [20, 30, 40, 50, 60, 75];
 const REASONS = ["Produs epuizat", "Zonă în afara livrării", "Bucătăria e plină", "Restaurantul se închide"];
@@ -32,6 +33,24 @@ export function chime() {
     o.connect(g).connect(AC!.destination); o.start(t + base + dt); o.stop(t + base + dt + 0.75);
   }));
 }
+function tone(seq: [number, number, number, OscillatorType?][], vol = 0.5) {   // [frecvență, start, durată, formă]
+  if (!AC) return;
+  if (AC.state === "suspended") AC.resume();
+  const t = AC.currentTime;
+  seq.forEach(([f, dt, d, type]) => {
+    const o = AC!.createOscillator(), g = AC!.createGain();
+    o.type = type || "sine"; o.frequency.value = f;
+    g.gain.setValueAtTime(0, t + dt);
+    g.gain.linearRampToValueAtTime(vol, t + dt + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dt + d);
+    o.connect(g).connect(AC!.destination); o.start(t + dt); o.stop(t + dt + d + 0.05);
+  });
+}
+/** reamintire (comandă care încă așteaptă, precomandă peste o oră): două bipuri scurte, alt sunet decât primirea */
+export const remindChime = () => tone([[1568, 0, 0.12, "square"], [1568, 0.18, 0.12, "square"]], 0.22);
+/** deschiderea / închiderea automată a comenzilor online: gong grav, coborâtor la închidere */
+export const openChime = () => tone([[523, 0, 0.9], [659, 0.25, 0.9], [784, 0.5, 1.3]], 0.45);
+export const closeChime = () => tone([[784, 0, 0.9], [659, 0.3, 0.9], [440, 0.6, 1.5]], 0.45);
 let wakeLock: { release: () => Promise<void> } | null = null;
 export async function keepAwake() {
   try { wakeLock = await (navigator as unknown as { wakeLock: { request: (t: string) => Promise<{ release: () => Promise<void> }> } }).wakeLock.request("screen"); } catch { /* not supported */ }
@@ -134,7 +153,7 @@ export function Login({ title = "Recepție", users = [] }: { title?: string; use
 function startOfDay() { const d = new Date(); d.setHours(0, 0, 0, 0); return d.toISOString(); }
 
 function Console({ email }: { email: string }) {
-  const [tab, setTab] = useState<"orders" | "couriers" | "menu" | "promos">("orders");
+  const [tab, setTab] = useState<"orders" | "couriers" | "menu" | "promos" | "income">("orders");
   // livratorii: lista, poziția GPS, atribuirea comenzilor
   const [couriers, setCouriers] = useState<CourierInfo[]>([]);
   const [locs, setLocs] = useState<CourierLoc[]>([]);
@@ -205,13 +224,27 @@ function Console({ email }: { email: string }) {
     seen.current = new Set(list.map(o => o.id));
     setOrders(list);
   }, []);
+  const acceptRef = useRef<boolean | null>(null);
+  const selfToggle = useRef(false);
   const loadMenu = useCallback(async () => {
     const [i, s, p] = await Promise.all([
       supabase.from("items").select("*").order("sort"),
       supabase.from("settings").select("*").eq("id", 1).single(),
       supabase.from("promos").select("*").order("created_at", { ascending: false }),
     ]);
-    setItems((i.data || []) as Item[]); if (s.data) setSettings(s.data as Settings); setPromos((p.data || []) as Promo[]);
+    setItems((i.data || []) as Item[]); setPromos((p.data || []) as Promo[]);
+    if (s.data) {
+      const st = s.data as Settings;
+      // comenzile online au pornit / s-au oprit (după program sau de pe alt ecran): sunet separat + anunț
+      const was = acceptRef.current;
+      if (was !== null && was !== !!st.accepting_orders && !selfToggle.current) {
+        if (soundRef.current && started.current) (st.accepting_orders ? openChime : closeChime)();
+        flashRef.current(st.accepting_orders ? "Comenzile online au PORNIT (program deschis)." : "Comenzile online s-au OPRIT (program încheiat).", !st.accepting_orders);
+      }
+      selfToggle.current = false;
+      acceptRef.current = !!st.accepting_orders;
+      setSettings(st);
+    }
   }, []);
 
   useEffect(() => {
@@ -233,13 +266,16 @@ function Console({ email }: { email: string }) {
       .on("postgres_changes", { event: "*", schema: "public", table: "settings" }, () => loadMenu())
       .subscribe();
     const tick = setInterval(() => setNow(Date.now()), 1000);
-    const poll = setInterval(loadOrders, 4000);                // new orders show up within 4 s even if the live connection drops
-    const ring = setInterval(() => { if (soundRef.current && document.querySelector(".incoming, .pre-remind")) chime(); }, 4000);
+    const poll = setInterval(loadOrders, 4000);
+    // pornire / oprire după program (rezervă dacă pg_cron nu rulează)
+    const auto = () => supabase.rpc("auto_open_tick").then(() => {});
+    auto(); const autoT = setInterval(auto, 30000);                // new orders show up within 4 s even if the live connection drops
+    const ring = setInterval(() => { if (soundRef.current && document.querySelector(".incoming, .pre-remind")) remindChime(); }, 4000);
     const wake = () => { if (document.visibilityState === "visible" && started.current) keepAwake(); };
     document.addEventListener("visibilitychange", wake);
     const unlock = () => unlockAudio();
     document.addEventListener("pointerdown", unlock);
-    return () => { supabase.removeChannel(ch); clearInterval(tick); clearInterval(poll); clearInterval(ring); document.removeEventListener("pointerdown", unlock); document.removeEventListener("visibilitychange", wake); wakeLock?.release().catch(() => {}); };
+    return () => { supabase.removeChannel(ch); clearInterval(tick); clearInterval(poll); clearInterval(autoT); clearInterval(ring); document.removeEventListener("pointerdown", unlock); document.removeEventListener("visibilitychange", wake); wakeLock?.release().catch(() => {}); };
   }, [loadOrders, loadMenu]);
 
   const incoming = orders.filter(o => o.status === "new" && !o.offered_at);
@@ -332,12 +368,13 @@ function Console({ email }: { email: string }) {
         <div className="rb"><Wordmark small /><small>Recepție</small></div>
         <button className="rnav" aria-current={tab === "orders"} onClick={() => setTab("orders")}><Icon name="orders" />Comenzi{incoming.length > 0 && <span className="n">{incoming.length}</span>}</button>
         {couriersOn && <button className="rnav" aria-current={tab === "couriers"} onClick={() => setTab("couriers")}><Icon name="bike" />Livratori{unassigned.length > 0 && <span className="n">{unassigned.length}</span>}</button>}
+        <button className="rnav" aria-current={tab === "income"} onClick={() => setTab("income")}><Icon name="tag" />Încasări</button>
         <button className="rnav" aria-current={tab === "menu"} onClick={() => setTab("menu")}><Icon name="dish" />Meniu & stoc</button>
         <button className="rnav" aria-current={tab === "promos"} onClick={() => setTab("promos")}><Icon name="send" />Promoții</button>
         <div className="openbox">
           <div className="row-btw"><b>{settings?.accepting_orders ? "Preiau comenzi" : "Închis online"}</b>
             <button className="switch" role="switch" aria-checked={!!settings?.accepting_orders} aria-label="Preiau comenzi online"
-              onClick={async () => { await supabase.from("settings").update({ accepting_orders: !settings?.accepting_orders }).eq("id", 1); loadMenu(); }} /></div>
+              onClick={async () => { selfToggle.current = true; await supabase.from("settings").update({ accepting_orders: !settings?.accepting_orders }).eq("id", 1); loadMenu(); }} /></div>
           <span className="muted" style={{ fontSize: 11.5 }}>{email}</span>
           <button className="rbtn" onClick={logout}><Icon name="logout" size={15} />Ieși</button>
         </div>
@@ -345,11 +382,12 @@ function Console({ email }: { email: string }) {
 
       <main className="rx-main">
         <div className="rx-top">
-          <h2>{tab === "orders" ? "Comenzi" : tab === "couriers" ? "Livratori" : tab === "menu" ? "Meniu & stoc" : "Promoții"}</h2>
+          <h2>{tab === "orders" ? "Comenzi" : tab === "couriers" ? "Livratori" : tab === "menu" ? "Meniu & stoc" : tab === "income" ? "Încasări" : "Promoții"}</h2>
           <span className="clock num">{new Date(now).toLocaleTimeString("ro-RO")}</span>
           <button className={`rbtn ${sound ? "on" : ""}`} onClick={() => { unlockAudio(); if (!sound) chime(); setSound(!sound); }}><Icon name={sound ? "sound" : "mute"} size={16} />{sound ? "Sunet pornit" : "Sunet oprit"}</button>
         </div>
 
+        {tab === "income" && <div className="rx-body"><Suspense fallback={<p className="muted">Se încarcă…</p>}><IncomeTab /></Suspense></div>}
         {tab === "orders" && <div className="rx-body">
           <div className="kpis">
             <div className="kpi"><small>Comenzi azi</small><b className="num">{kpi.count}</b></div>
@@ -375,7 +413,7 @@ function Console({ email }: { email: string }) {
                 <span className="age num">acum {mmss(now - new Date(cur.created_at).getTime())}</span></div>
               <Ticket o={cur} />
               <div className="decide">
-                <div className="who"><b>{cur.name}</b><a className="who-tel num" href={`tel:${cur.phone.replace(/\s/g, "")}`}><Icon name="phone" size={22} />{cur.phone}</a><small>{cur.address}</small>{cur.source && cur.source !== "site" && <small> · sursa: {cur.source}</small>}</div>
+                <div className="who"><b>{cur.name}</b><a className="who-tel num" href={`tel:${cur.phone.replace(/\s/g, "")}`}><Icon name="phone" size={22} />{cur.phone}</a><p className="rx-addr">{cur.mode === "livrare" ? cur.address : "Ridicare din restaurant"}</p>{cur.source && cur.source !== "site" && <small> · sursa: {cur.source}</small>}</div>
                 {cur.scheduled_for ? <>
                   <div className="sched-box"><Icon name="clock" size={22} /><div><small>PRECOMANDĂ · {cur.mode === "livrare" ? "livrare" : "ridicare"}</small><b>{whenLabel(cur.scheduled_for, undefined, now)}</b></div></div>
                   <button className="accept" onClick={() => { acceptLater(cur); setSel(0); }}><Icon name="check" size={20} />Acceptă precomanda · {slotRange(cur.scheduled_for)}</button>
@@ -424,9 +462,10 @@ function Console({ email }: { email: string }) {
               return <div key={o.id} className="wt">
                 <div className="h"><b>#{o.number}</b><span className={`tag ${o.mode === "livrare" ? "" : "green"}`}>{o.mode}</span><span>{o.name}</span>
                   <span className="tm num" title="timp rămas pentru răspuns">{left > 0 ? mmss(left) : "0:00"}</span></div>
+                {o.mode === "livrare" && <p className="rx-addr">{o.address}</p>}
                 <small className="muted">Propus: <b>{o.offer_eta} min</b> · {left > 0 ? (settings?.offer_timeout === "cancel" ? "fără răspuns se anulează" : "fără răspuns se confirmă singură") : "se închide…"}</small>
                 <div className="acts">
-                  <a href={`tel:${o.phone.replace(/\s/g, "")}`}><Icon name="phone" size={13} /> {o.phone}</a>
+                  <a className="rx-tel" href={`tel:${o.phone.replace(/\s/g, "")}`}><Icon name="phone" size={16} /> {o.phone}</a>
                   <button className="ok" onClick={() => phoneOk(o)}>Confirmat la telefon</button>
                   <button onClick={() => setDrawer(o.id)}>Detalii</button>
                   <button className="no" onClick={() => setStatus(o, "rejected", { reject_reason: "Anulată la cererea clientului", cancelled_by: "client" }, "Comanda a fost anulată la cererea ta.")}>Clientul anulează</button>
@@ -503,7 +542,7 @@ function Console({ email }: { email: string }) {
         <div className="drawer-veil" onClick={() => setDrawer(null)} />
         <aside className="drawer" role="dialog" aria-modal="true">
           <div className="row-btw"><h3>Comanda #{drawerOrder.number}</h3><button className="mini" onClick={() => setDrawer(null)} aria-label="Închide">×</button></div>
-          <p className="muted">{drawerOrder.name} · {drawerOrder.phone}<br />{drawerOrder.address}</p>
+          <p className="rx-contact"><b>{drawerOrder.name}</b><a className="rx-tel num" href={`tel:${drawerOrder.phone.replace(/\s/g, "")}`}>{drawerOrder.phone}</a><span className="rx-addr">{drawerOrder.mode === "livrare" ? drawerOrder.address : "Ridicare din restaurant"}</span></p>
           <Ticket o={drawerOrder} />
           {couriersOn && ["prep", "road"].includes(drawerOrder.status) && drawerOrder.mode === "livrare" && couriers.length > 0 && <>
             <p className="lbl">Livrator {drawerOrder.courier_name && <CourierChip o={drawerOrder} now={now} />}</p>
@@ -584,23 +623,52 @@ function Ticket({ o }: { o: Order }) {
       <div className="tno"><b>#{o.number}</b><span>{hm(o.created_at)} · {o.mode === "livrare" ? `LIVRARE${o.zone_name ? " · " + o.zone_name.toUpperCase() : ""}` : "RIDICARE"}</span></div>
       {o.scheduled_for && <div className="sched-tk">PRECOMANDĂ · {whenLabel(o.scheduled_for).toUpperCase()}</div>}
       {o.allergies.length > 0 && <div className="alert">ALERGIE CLIENT: {o.allergies.map(a => ALLERGENS[a]?.[0].toUpperCase()).join(", ")}{flagged.length > 0 && ` · verifică: ${flagged.map(l => l.name).join(", ")}`}</div>}
-      {o.items.map((l, i) => (
+      {o.items.map((l, i) => {
+        const off = officialUnit(l);
+        return (
         <div key={i} className="tl"><span className="q">{l.qty}×</span>
           <div><b>{l.name}</b>{l.variant && <span className="x">{l.variant}</span>}{l.extras.map(e => <span key={e.id} className="x">+ {e.name}</span>)}
-            {l.note && <span className="x">„{l.note}”</span>}{l.gift && <span className="x">DESERT CADOU · LYRA REWARDS</span>}{l.promo && <span className="x">ofertă: {l.promo}</span>}
-            <small>{l.grams}{l.hot ? " · tigaie fierbinte" : ""}</small></div>
-          <span>{l.unit === 0 ? "0.00" : (l.unit * l.qty).toFixed(2)}</span></div>
-      ))}
-      {o.note && <div className="tn"><b>Mențiune:</b> {o.note}</div>}
+            {l.note && <span className="tk-opt">„{l.note}”</span>}{l.gift && <span className="x">DESERT CADOU · LYRA REWARDS</span>}{l.promo && <span className="x">ofertă: {l.promo}</span>}
+            <small>{l.grams}{l.hot ? " · tigaie fierbinte" : ""}</small>
+            {off > l.unit && <small className="tk-disc">preț oficial {(off * l.qty).toFixed(2)} · −{l.disc_pct}% = −{((off - l.unit) * l.qty).toFixed(2)}</small>}</div>
+          <span>{off > l.unit && <s className="tk-old">{(off * l.qty).toFixed(2)}</s>}{l.unit === 0 ? "0.00" : (l.unit * l.qty).toFixed(2)}</span></div>
+        );
+      })}
+      {o.note && <div className="tn tk-opt-box"><b>Mențiune:</b> {o.note}</div>}
       {Number(o.packaging) > 0 && <div className="tl"><span className="q" /><div><b>Ambalaj</b></div><span>{Number(o.packaging).toFixed(2)}</span></div>}
       {Number(o.sgr) > 0 && <div className="tl"><span className="q" /><div><b>Garanție SGR</b></div><span>{Number(o.sgr).toFixed(2)}</span></div>}
       {Number(o.delivery_fee) > 0 && <div className="tl"><span className="q" /><div><b>Livrare</b></div><span>{Number(o.delivery_fee).toFixed(2)}</span></div>}
       <div className="tot"><span>TOTAL · {o.payment === "cash" ? "numerar" : o.payment === "online" ? "plătit online" : "card la livrare"}</span><b>{lei(Number(o.total))}</b></div>
+      <PriceBox o={o} />
       {Number(o.discount) > 0 && <small>{o.discount_label}: −{lei(Number(o.discount))}</small>}
       {Number(o.points_value) > 0 && <small>Puncte Lyra Rewards ({o.points_used}): −{lei(Number(o.points_value))}</small>}
       {Number(o.welcome_value) > 0 && <small>Bonus de bun venit (cont nou): −{lei(Number(o.welcome_value))}</small>}
     </div>
   );
+}
+
+/** prețul oficial pe bucată (înainte de reducerea de livrare / ridicare), cu extra incluse */
+function officialUnit(l: Order["items"][number]) {
+  return l.old_unit != null ? Number(l.old_unit) + l.extras.reduce((a, e) => a + Number(e.price || 0), 0) : Number(l.unit);
+}
+/** pentru recepție: preț oficial, reduceri pe produse și pe bon, preț final */
+function PriceBox({ o }: { o: Order }) {
+  const official = o.items.reduce((a, l) => a + officialUnit(l) * l.qty, 0);
+  const paid = o.items.reduce((a, l) => a + Number(l.unit) * l.qty, 0);
+  const prodDisc = Math.max(0, official - paid);
+  const billDisc = Number(o.discount || 0) + Number(o.points_value || 0) + Number(o.welcome_value || 0);
+  const extra = Number(o.packaging || 0) + Number(o.sgr || 0) + Number(o.delivery_fee || 0);
+  if (prodDisc + billDisc <= 0) return null;
+  const pct = official > 0 ? Math.round((prodDisc + billDisc) / official * 100) : 0;
+  return <div className="tk-price">
+    <div><span>Produse la preț oficial</span><b>{official.toFixed(2)}</b></div>
+    {prodDisc > 0 && <div className="neg"><span>Reducere pe produse{o.items.find(l => l.disc_pct) ? ` (−${o.items.find(l => l.disc_pct)!.disc_pct}% ${o.mode})` : ""}</span><b>−{prodDisc.toFixed(2)}</b></div>}
+    {Number(o.discount) > 0 && <div className="neg"><span>{o.discount_label || "Cod promoțional"}</span><b>−{Number(o.discount).toFixed(2)}</b></div>}
+    {Number(o.points_value) > 0 && <div className="neg"><span>Puncte Lyra Rewards ({o.points_used})</span><b>−{Number(o.points_value).toFixed(2)}</b></div>}
+    {Number(o.welcome_value) > 0 && <div className="neg"><span>Bonus de bun venit</span><b>−{Number(o.welcome_value).toFixed(2)}</b></div>}
+    {extra > 0 && <div><span>Ambalaj, SGR, livrare</span><b>+{extra.toFixed(2)}</b></div>}
+    <div className="sum"><span>Preț oficial bon {(official + extra).toFixed(2)} · reducere totală −{(prodDisc + billDisc).toFixed(2)} ({pct}%)</span><b>{lei(Number(o.total))}</b></div>
+  </div>;
 }
 
 function OrderCard({ o, now, onOpen, onAdvance }: { o: Order; now: number; onOpen: () => void; onAdvance: () => void }) {
@@ -618,6 +686,7 @@ function OrderCard({ o, now, onOpen, onAdvance }: { o: Order; now: number; onOpe
         {o.scheduled_for && <span className="tag blue">{slotRange(o.scheduled_for)}</span>}
         {active && due ? <span className={`tm ${cls} num`}>{rem < 0 ? "întârziere " + mmss(rem) : mmss(rem)}</span> : o.done_at ? <span className="tm ok num">{hm(o.done_at)}</span> : null}</div>
       <div style={{ fontWeight: 700, fontSize: 13 }}>{o.name}{o.courier_name && <> <CourierChip o={o} now={now} /></>}</div>
+      <div className="oc-contact"><a className="rx-tel num" href={`tel:${o.phone.replace(/\s/g, "")}`} onClick={e => e.stopPropagation()}>{o.phone}</a>{o.mode === "livrare" && <span className="rx-addr">{o.address}</span>}</div>
       <div className="its">{o.items.map(l => `${l.qty}× ${l.name}`).join(" · ")}</div>
       {active && due > 0 && <div className="bar"><i style={{ width: `${Math.min(100, Math.max(2, frac * 100))}%`, background: `var(--${cls})` }} /></div>}
       <div className="ft"><b className="num" style={{ color: "var(--gold-2)" }}>{lei(Number(o.total))}</b>{o.rating && <span style={{ color: "var(--gold)" }}>{"★".repeat(o.rating)}</span>}

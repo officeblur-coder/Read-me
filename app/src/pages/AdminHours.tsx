@@ -9,10 +9,10 @@ const t5 = (t?: string) => (t || "").slice(0, 5);
 export function HoursTab({ flash }: { flash: (m: string) => void }) {
   const [h, setH] = useState<Hours | null>(null);
   const [busy, setBusy] = useState(false);
-  const [c, setC] = useState<{ confirm_eta: boolean; offer_window_sec: number; offer_timeout: "accept" | "cancel"; online_pay_on: boolean; couriers_on: boolean } | null>(null);
+  const [c, setC] = useState<{ confirm_eta: boolean; offer_window_sec: number; offer_timeout: "accept" | "cancel"; online_pay_on: boolean; couriers_on: boolean; auto_open: boolean } | null>(null);
   useEffect(() => {
-    supabase.from("settings").select("confirm_eta,offer_window_sec,offer_timeout,online_pay_on,couriers_on").eq("id", 1).single()
-      .then(({ data }) => data && setC({ confirm_eta: data.confirm_eta !== false, offer_window_sec: data.offer_window_sec ?? 30, offer_timeout: data.offer_timeout === "cancel" ? "cancel" : "accept", online_pay_on: !!data.online_pay_on, couriers_on: !!data.couriers_on }));
+    supabase.from("settings").select("confirm_eta,offer_window_sec,offer_timeout,online_pay_on,couriers_on,auto_open").eq("id", 1).single()
+      .then(({ data }) => data && setC({ confirm_eta: data.confirm_eta !== false, offer_window_sec: data.offer_window_sec ?? 30, offer_timeout: data.offer_timeout === "cancel" ? "cancel" : "accept", online_pay_on: !!data.online_pay_on, couriers_on: !!data.couriers_on, auto_open: data.auto_open !== false }));
     supabase.from("settings").select("open_time,close_time,open_days,preorder_on,preorder_from,preorder_days,preorder_lead_min,preorder_until,tz").eq("id", 1).single()
       .then(({ data }) => data && setH({ ...(data as Hours), open_time: t5(data.open_time), close_time: t5(data.close_time), preorder_from: t5(data.preorder_from), preorder_until: t5(data.preorder_until || "21:00") }));
   }, []);
@@ -27,7 +27,7 @@ export function HoursTab({ flash }: { flash: (m: string) => void }) {
     const { error } = await supabase.from("settings").update({
       open_time: h.open_time, close_time: h.close_time, open_days: [...days].sort(), preorder_on: h.preorder_on,
       preorder_from: h.preorder_from, preorder_until: h.preorder_until || "21:00", preorder_days: Math.min(14, Math.max(0, Number(h.preorder_days) || 0)), preorder_lead_min: Math.min(600, Math.max(0, Number(h.preorder_lead_min) || 0)),
-      ...(c ? { confirm_eta: c.confirm_eta, offer_window_sec: Math.min(1800, Math.max(15, Number(c.offer_window_sec) || 30)), offer_timeout: c.offer_timeout, online_pay_on: c.online_pay_on, couriers_on: c.couriers_on } : {}),
+      ...(c ? { confirm_eta: c.confirm_eta, offer_window_sec: Math.min(1800, Math.max(15, Number(c.offer_window_sec) || 30)), offer_timeout: c.offer_timeout, online_pay_on: c.online_pay_on, couriers_on: c.couriers_on, auto_open: c.auto_open } : {}),
     }).eq("id", 1);
     setBusy(false);
     flash(error ? "Nu s-a salvat: " + error.message : "Programul a fost salvat.");
@@ -45,6 +45,7 @@ export function HoursTab({ flash }: { flash: (m: string) => void }) {
           </div>
           <div className="hours-days">{DAYS.map((d, i) => <button key={d} aria-pressed={days.includes(i + 1)}
             onClick={() => setH({ ...h, open_days: days.includes(i + 1) ? days.filter(x => x !== i + 1) : [...days, i + 1] })}>{d}</button>)}</div>
+          {c && <label className="adm-sw" style={{ marginTop: 12 }}><button className="switch" role="switch" aria-checked={c.auto_open} onClick={() => setC({ ...c, auto_open: !c.auto_open })} /><span>{c.auto_open ? "Comenzile online pornesc și se opresc singure după program (recepția aude un sunet)" : "Pornire / oprire doar de mână, din recepție"}</span></label>}
         </section>
         <section className="hours-card">
           <h3>Precomenzi</h3>

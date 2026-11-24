@@ -25,3 +25,6 @@ update public.items set packaging = 2, sgr = 0 where category_id in ('cocktail',
 
 -- 3) Precomenzi: 12:00–21:00, pe intervale de o oră
 update public.settings set preorder_from = '12:00', preorder_until = '21:00' where id = 1;   -- precomenzi 12–21, intervale de o oră
+
+-- Program zilnic: comenzile online pornesc singure la 11:00 și se opresc la 21:30
+update public.settings set open_time = '11:00', close_time = '21:30', open_days = '{1,2,3,4,5,6,7}', auto_open = true where id = 1;

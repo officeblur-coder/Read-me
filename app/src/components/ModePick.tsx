@@ -12,6 +12,8 @@ export default function ModePick({ current, livPct, ridPct, onPick, onClose }: {
       <div className="mp-veil" onClick={onClose} />
       <div className="mp-sheet">
         {onClose && <button className="x-btn mp-x" onClick={onClose} aria-label="Închide">×</button>}
+        <p className="mp-hello">Bun venit la <b>Lyra's Delivery</b>! 👋</p>
+        <p className="mp-hello-sub">Ne bucurăm că ești aici. Gătim cu drag, din 1999.</p>
         <h2>Cum vrei să comanzi?</h2>
         <p className="mp-sub">Alege acum. Prețurile din meniu se calculează după alegerea ta.</p>
         <div className="mp-opts">

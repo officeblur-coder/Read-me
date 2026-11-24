@@ -2757,7 +2757,7 @@ update public.items set desc_ro = 'Cel mai gustos cadou: o masă la Restaurant L
 -- Livratori (Istvan, Pipe, Liviu, Zoli), fiecare cu contul lui, cu aplicația pe telefon (lyrasdelivery.ro/curier)
 -- • Recepția atribuie comanda unui livrator (oricând, oricâte comenzi, chiar dacă e pe traseu).
 -- • Livratorul primește alarmă / notificare până apasă „Confirm”; recepția vede confirmarea.
--- • „Predat clientului” e disponibil tot timpul; după ora promisă, la fiecare 5 minute vine o reamintire
+-- • „Predat clientului” e disponibil tot timpul; după ora promisă, la fiecare 7 minute vine o reamintire
 --   cu „Am predat” / „Sunt în întârziere”.
 -- • Poziția GPS a livratorului (cât aplicația e deschisă) apare pe harta din recepție.
 -- Conturile: Supabase → Authentication → Add user: istvan@, pipe@, liviu@, zoli@lyrasdelivery.ro (fiecare cu parola lui),
@@ -2980,7 +2980,7 @@ begin
   insert into public.order_messages(order_id, body) values (o.id, 'Comanda a fost livrată. Poftă bună!');
 end $$;
 
--- livratorul: „Sunt în întârziere” (recepția vede; reamintirea revine peste 5 minute)
+-- livratorul: „Sunt în întârziere” (recepția vede; reamintirea revine peste 7 minute)
 create or replace function public.courier_late(p_order uuid) returns void
 language plpgsql security definer set search_path = public as $$
 begin
@@ -2991,7 +2991,7 @@ begin
 end $$;
 grant execute on function public.courier_ack(uuid), public.courier_delivered(uuid), public.courier_late(uuid) to authenticated;
 
--- la fiecare minut (pg_cron): notificări repetate cât timp livratorul n-a confirmat; după ora promisă, la 5 minute
+-- la fiecare minut (pg_cron): notificări repetate cât timp livratorul n-a confirmat; după ora promisă, la 7 minute
 create or replace function public.courier_tick() returns int
 language plpgsql security definer set search_path = public as $$
 declare o public.orders; n int := 0; s public.settings; due timestamptz;
@@ -3003,7 +3003,7 @@ begin
     if o.courier_ack_at is null and (o.courier_pinged_at is null or o.courier_pinged_at < now() - interval '55 seconds') then
       perform public.courier_push(o.courier_id, format('Comandă nouă #%s · confirmă', o.number), format('%s · %s', o.address, o.name), 'cr-' || o.id);
       update public.orders set courier_pinged_at = now() where id = o.id; n := n + 1;
-    elsif due is not null and due < now() and (o.courier_pinged_at is null or o.courier_pinged_at < now() - interval '295 seconds') then
+    elsif due is not null and due < now() and (o.courier_pinged_at is null or o.courier_pinged_at < now() - interval '415 seconds') then
       perform public.courier_push(o.courier_id, format('#%s trebuia livrată la %s', o.number, to_char(due at time zone s.tz, 'HH24:MI')),
         'Apasă „Am predat” sau „Sunt în întârziere”.', 'cr-late-' || o.id);
       update public.orders set courier_pinged_at = now() where id = o.id; n := n + 1;
@@ -3285,6 +3285,37 @@ insert into public.platter_products(name, price, sort) values
 on conflict (name) do update set price = excluded.price, sort = excluded.sort, active = true;
 -- denumirile vechi nu mai apar la introducere (comenzile deja salvate rămân neschimbate)
 update public.platter_products set active = false where name in ('Vinete cu maioneză (500 g)', 'Ciorbă de burtă (120 g / 300 ml)');
+
+
+-- =====================================================================
+-- Pornire / oprire automată a comenzilor online după program (zilnic 11:00–21:30 implicit)
+--  * la ora de deschidere „Preiau comenzi” se pornește singur, la ora de închidere se oprește
+--  * între timp recepția îl poate opri / porni de mână; schimbarea automată vine doar la următoarea oră din program
+--  * recepția aude un sunet separat la deschidere și la închidere (Reception.tsx)
+-- =====================================================================
+alter table public.settings add column if not exists auto_open boolean not null default true;   -- admin → Program
+alter table public.settings add column if not exists auto_state boolean;                         -- ultima stare pusă automat
+
+create or replace function public.auto_open_tick() returns boolean
+language plpgsql security definer set search_path = public as $$
+declare s public.settings; want boolean;
+begin
+  select * into s from public.settings where id = 1;
+  if not coalesce(s.auto_open, false) then return null; end if;
+  want := public.is_open_at(now());
+  if s.auto_state is distinct from want then
+    update public.settings set accepting_orders = want, auto_state = want where id = 1;
+  end if;
+  return want;
+end $$;
+-- poate fi apelată și din recepție (rezervă dacă pg_cron nu rulează); face doar ce scrie în program
+grant execute on function public.auto_open_tick() to authenticated;
+
+do $$ begin
+  begin perform cron.unschedule('lyra-auto-open'); exception when others then null; end;
+  begin perform cron.schedule('lyra-auto-open', '* * * * *', 'select public.auto_open_tick()');
+  exception when others then raise notice 'pg_cron indisponibil: pornirea automată se face când recepția e deschisă.'; end;
+end $$;
 
 
 -- Meniul Lyra (generat automat din lyra/data/menu.js). Nu suprascrie modificările făcute în admin.

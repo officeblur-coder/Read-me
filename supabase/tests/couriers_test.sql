@@ -81,9 +81,12 @@ begin
   perform public.courier_assign(o2, b);
   perform pg_temp.ok((select courier_name from public.orders where id = o2) = 'Pipe' and (select courier_ack_at from public.orders where id = o2) is null, 'reatribuită lui Pipe');
 
-  -- întârziere: după ora promisă, reamintire la 5 minute
+  -- întârziere: după ora promisă, reamintire la 7 minute (la 6 minute încă nu)
   update public.orders set accepted_at = now() - interval '40 minutes', courier_pinged_at = now() - interval '6 minutes' where id = o1;
   n0 := pg_temp.pushes('trebuia livrată');
+  perform public.courier_tick();
+  perform pg_temp.ok(pg_temp.pushes('trebuia livrată') = n0, 'la 6 minute: încă nicio reamintire');
+  update public.orders set courier_pinged_at = now() - interval '8 minutes' where id = o1;
   perform public.courier_tick();
   perform pg_temp.ok(pg_temp.pushes('trebuia livrată') = n0 + 1, 'după ora promisă: reamintire');
   perform public.courier_tick();

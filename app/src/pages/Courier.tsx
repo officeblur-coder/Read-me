@@ -1,7 +1,7 @@
 // Aplicația livratorului (lyrasdelivery.ro/curier), instalată pe telefonul de serviciu.
 // • Comenzile atribuite de recepție; alarmă (sunet + vibrație) până apasă „Confirm”.
 // • Ora de livrare, clientul (apel), produsele, adresa cu Google Maps, plata.
-// • „Predat clientului” oricând; după ora promisă, alarmă la fiecare 5 minute: „Am predat” / „Sunt în întârziere”.
+// • „Predat clientului” oricând; după ora promisă, alarmă la fiecare 7 minute: „Am predat” / „Sunt în întârziere”.
 // • GPS cât aplicația e deschisă (ecranul rămâne aprins), pentru harta din recepție.
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
@@ -81,7 +81,7 @@ const mapsUrl = (a: string, lat?: number | null, lng?: number | null) =>
 const payText = (o: Order) => o.payment === "online" ? "Plătit online · nu încasezi nimic" : `De încasat ${lei(Number(o.total))} · ${o.payment === "cash" ? "numerar" : "card (POS)"}`;
 // precomandă: sfârșitul intervalului ales (13:00–14:00 → 14:00)
 const dueOf = (o: Order) => o.scheduled_for ? new Date(o.scheduled_for).getTime() + 60 * 60000 : o.accepted_at && o.eta_min ? new Date(o.accepted_at).getTime() + o.eta_min * 60000 : 0;
-const LATE_EVERY = 5 * 60000;
+const LATE_EVERY = 7 * 60000;
 
 type Alarm = { o: Order; kind: "new" | "late" };
 
@@ -93,7 +93,7 @@ function CourierApp({ me }: { me: Me }) {
   const [started, setStarted] = useState(false);
   const [gps, setGps] = useState<{ ok: boolean; at?: number; acc?: number; err?: string }>({ ok: false });
   const [push, setPush] = useState<"" | "on" | "off">("");
-  // „Sunt în întârziere” / deschiderea reamintirii: următoarea vine peste 5 minute
+  // „Sunt în întârziere” / deschiderea reamintirii: următoarea vine peste 7 minute
   const lateSeen = useRef<Record<string, number>>({});
   const flash = (m: string) => { setToast(m); setTimeout(() => setToast(""), 3000); };
 
@@ -163,7 +163,7 @@ function CourierApp({ me }: { me: Me }) {
 
   const active = orders.filter(o => o.status === "prep" || o.status === "road").sort((a, b) => (dueOf(a) || 9e15) - (dueOf(b) || 9e15));
   const doneToday = orders.filter(o => o.status === "done");
-  // alarma: comenzi neconfirmate, apoi întârzieri (la 5 minute)
+  // alarma: comenzi neconfirmate, apoi întârzieri (la 7 minute)
   const alarms: Alarm[] = [
     ...active.filter(o => !o.courier_ack_at).map(o => ({ o, kind: "new" as const })),
     ...active.filter(o => o.courier_ack_at && dueOf(o) && now > dueOf(o) && now - (lateSeen.current[o.id] || 0) >= LATE_EVERY).map(o => ({ o, kind: "late" as const })),
@@ -186,7 +186,7 @@ function CourierApp({ me }: { me: Me }) {
   }
   const confirm = (o: Order) => call("courier_ack", o, `Ai confirmat comanda #${o.number}.`);
   const delivered = (o: Order) => { lateSeen.current[o.id] = Date.now(); return call("courier_delivered", o, `#${o.number} predată. Mulțumim!`); };
-  const late = (o: Order) => { lateSeen.current[o.id] = Date.now(); return call("courier_late", o, "Recepția vede că întârzii. Te reamintim peste 5 minute."); };
+  const late = (o: Order) => { lateSeen.current[o.id] = Date.now(); return call("courier_late", o, "Recepția vede că întârzii. Te reamintim peste 7 minute."); };
 
   if (!started) return (
     <div className="cr cr-start">

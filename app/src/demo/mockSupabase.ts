@@ -194,6 +194,8 @@ class Query {
   or(expr: string) { this.filters.push(parseOr(expr)); return this; }
   order(c: string, o?: { ascending?: boolean }) { this.sorts.push([c, o?.ascending !== false]); return this; }
   limit(n: number) { this.lim = n; return this; }
+  off = 0;
+  range(a: number, b: number) { this.off = a; this.lim = b - a + 1; return this; }
   single() { this.one = "single"; return this; }
   maybeSingle() { this.one = "maybe"; return this; }
   then<A, B>(ok: (v: { data: any; error: any }) => A, bad?: (e: any) => B) {
@@ -219,7 +221,7 @@ class Query {
     } else {
       out = t.filter(match);
       for (const [c, asc] of [...this.sorts].reverse()) out = [...out].sort((a, b) => (a[c] > b[c] ? 1 : a[c] < b[c] ? -1 : 0) * (asc ? 1 : -1));
-      if (this.lim) out = out.slice(0, this.lim);
+      if (this.lim) out = out.slice(this.off, this.off + this.lim);
     }
     if (this.op !== "select") save();
     const data = structuredClone(out);
@@ -389,6 +391,7 @@ function rpc(fn: string, args: Row = {}): Promise<{ data: any; error: any }> {
           return res({ data: null, error: null });
         }
         case "courier_ping": return res({ data: null, error: null });
+        case "auto_open_tick": return res({ data: null, error: null });
         case "preorder_ack": { const o = db.orders.find(x => x.id === args.p_order); if (o) { o.pre_reminder_ack_at = iso(); save(); } return res({ data: null, error: null }); }
         case "admin_push_overview": return res({ data: { subscribers: 214, with_account: 87, configured: true, recent: [{ title: "Smash Week: -20% la burgeri", body: "", url: "/", sent_to: 209, test: false, created_at: iso(Date.now() - 2 * 864e5) }] }, error: null });
         case "admin_push_send": return res({ data: { sent_to: args.p_test ? 1 : 214 }, error: null });

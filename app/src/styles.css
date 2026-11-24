@@ -1745,3 +1745,45 @@ body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area
 .pl-wine{margin:10px 0 0;color:var(--gold);font-weight:700;font-size:13.5px}
 .pl-row .pl-wine-s{color:var(--gold)}
 .pl-need{margin:6px 0 0;font-weight:700;font-size:13.5px}
+
+/* recepție: telefon + adresă mari, roșii; mențiunile clientului vizibile; prețuri cu reducere */
+.who-tel,.rx-tel{color:#e5322d!important}
+.rx-tel{display:inline-flex;align-items:center;gap:6px;font:800 18px/1.2 var(--f-body);text-decoration:none}
+.rx-addr{display:block;margin:2px 0 0;color:#e5322d;font-weight:800;font-size:17px;line-height:1.3;white-space:normal;overflow:visible;overflow-wrap:anywhere}
+.rx-contact{display:grid;gap:2px;margin:0 0 10px}.rx-contact b{font-size:16px}
+.oc-contact{display:grid;gap:1px;margin:4px 0}
+.oc-contact .rx-tel{font-size:16px}.oc-contact .rx-addr{font-size:16px}
+.as-row small{white-space:normal}
+.as-addr{color:#e5322d;overflow-wrap:anywhere}
+.ticket .tl .tk-opt{display:block;color:#d0211b;font-weight:800;font-size:15px;font-family:var(--f-body)}
+.ticket .tk-opt-box{color:#d0211b;font-weight:800;font-size:15px}
+.ticket .tk-disc{color:#a0491d!important}
+.ticket .tk-old{display:block;color:#8a8a8a;font-size:12px;text-align:right}
+.tk-price{margin-top:10px;padding:8px 10px;border-radius:8px;background:rgba(19,36,26,.06);font-family:var(--f-body);font-size:13px}
+.tk-price div{display:flex;justify-content:space-between;gap:10px;padding:2px 0}
+.tk-price .neg b{color:#b4231d}
+.tk-price .sum{border-top:1px dashed rgba(19,36,26,.35);margin-top:4px;padding-top:6px;font-weight:700}
+.mp-hello{margin:0 0 2px;font:800 21px/1.25 var(--f-display);color:var(--gold-2)}
+.mp-hello b{color:var(--brand)}
+.mp-hello-sub{margin:0 0 14px;color:var(--muted);font-size:13.5px}
+
+/* recepție → Încasări */
+.inc-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.inc-bar button{padding:9px 14px;border-radius:999px;border:1px solid var(--line-2);font-weight:700;font-size:13.5px;color:var(--muted)}
+.inc-bar button[aria-pressed="true"]{background:var(--text);color:var(--bg);border-color:var(--text)}
+.inc-dates{display:flex;flex-wrap:wrap;gap:8px}
+.inc-dates label{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.inc-dates input{padding:8px 10px;border-radius:10px;border:1px solid var(--line-2);background:var(--surface-2);color:var(--text)}
+.inc-range{margin:10px 0 14px;font-size:13px}
+.inc-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.inc-card{padding:16px;border-radius:var(--r);background:var(--surface);border:1px solid var(--line)}
+.inc-card small{display:block;color:var(--muted);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.inc-card b{display:block;font:800 28px/1.2 var(--f-display);margin:6px 0 2px}
+.inc-card span{color:var(--muted);font-size:13px}
+.inc-card.cash{border-color:#3fbf7f66}.inc-card.card{border-color:#5aa0ff66}.inc-card.online{border-color:#b07cff66}
+.inc-card.total{background:var(--surface-2);border-color:var(--brand)}
+.inc-mode{display:flex;flex-wrap:wrap;gap:6px 20px;margin:14px 0;font-size:14px;color:var(--muted)}.inc-mode b{color:var(--text)}
+.inc-table{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--surface)}
+.inc-row{display:grid;grid-template-columns:110px repeat(4,minmax(0,1fr)) 80px;gap:8px;padding:10px 14px;border-top:1px solid var(--line);font-size:14px}
+.inc-row.head{border-top:0;background:var(--surface-2);font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
+@media (max-width:700px){.inc-row{grid-template-columns:80px repeat(4,minmax(0,1fr));font-size:12.5px}.inc-row>span:last-child{display:none}}
