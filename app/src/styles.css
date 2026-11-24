@@ -1787,3 +1787,11 @@ body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area
 .inc-row{display:grid;grid-template-columns:110px repeat(4,minmax(0,1fr)) 80px;gap:8px;padding:10px 14px;border-top:1px solid var(--line);font-size:14px}
 .inc-row.head{border-top:0;background:var(--surface-2);font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
 @media (max-width:700px){.inc-row{grid-template-columns:80px repeat(4,minmax(0,1fr));font-size:12.5px}.inc-row>span:last-child{display:none}}
+.pl-pm{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.pl-pm button{display:grid;gap:2px;text-align:left;padding:10px 12px;border-radius:12px;border:1px solid var(--line-2);background:var(--surface-2);color:var(--text)}
+.pl-pm button[aria-pressed="true"]{border-color:var(--brand);background:rgba(255,122,26,.14)}
+.pl-pm button:disabled{opacity:.4}
+.pl-pm small{color:var(--muted);font-size:12px}
+.pl-new.ok{background:var(--ok);color:#fff}
+.pl-acts button.paid{background:var(--ok);color:#fff;border-color:transparent}
+@media (max-width:640px){.pl-pm{grid-template-columns:minmax(0,1fr)}}

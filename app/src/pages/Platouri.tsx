@@ -15,12 +15,15 @@ type Line = { name: string; qty: number; price: number };
 type PO = {
   id: string; number: number; name: string; phone: string; address: string; email: string | null; lines: Line[]; qty: number; total: number;
   dispatcher: string; order_date: string; delivery_date: string; delivery_time: string; note: string;
+  pay_method: PM; paid_by: string | null;
   pay_status: "none" | "sent" | "paid"; pay_sent_at: string | null; pay_sent_count: number; paid_at: string | null;
   verified_at: string | null; verified_by: string | null; cancelled: boolean; created_by: string | null; created_at: string;
 };
+type PM = "online" | "cash" | "tichete";
+const PM_LABEL: Record<PM, string> = { online: "Online (link pe email)", cash: "Cash la recepție", tichete: "Tichete de vacanță" };
 type Product = { id: number; name: string; price: number };
 type Me = { role: "editor" | "checker"; name: string };
-type Draft = Omit<PO, "id" | "number" | "qty" | "total" | "lines" | "pay_status" | "pay_sent_at" | "pay_sent_count" | "paid_at" | "verified_at" | "verified_by" | "cancelled" | "created_by" | "created_at" | "email"> & {
+type Draft = Omit<PO, "id" | "number" | "qty" | "total" | "lines" | "pay_status" | "pay_sent_at" | "pay_sent_count" | "paid_at" | "verified_at" | "verified_by" | "cancelled" | "created_by" | "created_at" | "email" | "paid_by"> & {
   id?: string; email: string; lines: { name: string; qty: string; price: string }[];
 };
 
@@ -30,7 +33,7 @@ const dmy = (iso: string) => { const [y, m, d] = iso.split("-"); return `${d}.${
 const WD = ["duminică", "luni", "marți", "miercuri", "joi", "vineri", "sâmbătă"];
 const dayName = (iso: string) => WD[new Date(iso + "T12:00:00").getDay()];
 const at = (iso: string | null) => iso ? new Date(iso).toLocaleString("ro-RO", { timeZone: TZ, day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "";
-const empty = (): Draft => ({ name: "", phone: "", address: "", email: "", dispatcher: "", order_date: today(), delivery_date: "", delivery_time: "", note: "", lines: [{ name: "", qty: "1", price: "" }] });
+const empty = (): Draft => ({ name: "", phone: "", address: "", email: "", dispatcher: "", order_date: today(), delivery_date: "", delivery_time: "", note: "", pay_method: "online", lines: [{ name: "", qty: "1", price: "" }] });
 const num = (s: string) => Number(String(s).replace(",", ".")) || 0;
 // o sticlă de vin din partea casei la fiecare Platou Festiv
 const wineOf = (lines: { name: string; qty: number | string }[]) => lines.reduce((a, l) => a + (/^platou festiv/i.test(l.name.trim()) ? num(String(l.qty)) : 0), 0);
@@ -118,14 +121,15 @@ function Register({ me }: { me: Me }) {
       (filter !== "unverified" || !o.verified_at) &&
       (!s || `${o.number} ${o.name} ${o.phone} ${o.email || ""} ${o.address} ${o.dispatcher} ${o.lines.map(l => l.name).join(" ")}`.toLowerCase().includes(s)));
   }, [orders, filter, q, t0]);
-  const sum = (list: PO[]) => ({ n: list.length, qty: list.reduce((a, o) => a + o.qty, 0), total: list.reduce((a, o) => a + Number(o.total), 0), paid: list.filter(o => o.pay_status === "paid").reduce((a, o) => a + Number(o.total), 0) });
+  const sum = (list: PO[]) => ({ n: list.length, qty: list.reduce((a, o) => a + o.qty, 0), total: list.reduce((a, o) => a + Number(o.total), 0), paid: list.filter(o => o.pay_status === "paid").reduce((a, o) => a + Number(o.total), 0),
+    by: (m: PM) => list.filter(o => o.pay_status === "paid" && (o.pay_method || "online") === m).reduce((a, o) => a + Number(o.total), 0) });
   const tot = sum(shown);
 
   const dTotal = draft ? draft.lines.reduce((a, l) => a + (l.name.trim() ? num(l.qty) * num(l.price) : 0), 0) : 0;
   const dQty = draft ? draft.lines.reduce((a, l) => a + (l.name.trim() ? num(l.qty) : 0), 0) : 0;
   const editing = draft?.id ? orders.find(o => o.id === draft.id) : undefined;
 
-  async function save(thenPay = false) {
+  async function save(thenPay = false, thenPaid = false) {
     if (!draft) return;
     const changedDate = !draft.id || orders.find(o => o.id === draft.id)?.delivery_date !== draft.delivery_date;
     const warn = termWarnings(draft.delivery_date, changedDate);
@@ -134,7 +138,11 @@ function Register({ me }: { me: Me }) {
     const { data, error } = await supabase.rpc("platter_save", { p: { ...draft, lines: draft.lines.map(l => ({ name: l.name, qty: num(l.qty), price: num(l.price) })) } });
     if (error) { setBusy(false); setErr(error.message); return; }
     const o = data as PO;
-    if (thenPay) {
+    if (thenPaid) {
+      const r = await supabase.rpc("platter_mark_manual", { p_id: o.id, p_paid: true });
+      if (r.error) { setBusy(false); setErr(`Comanda #${o.number} e salvată, dar nu s-a bifat achitată: ${r.error.message}`); setDraft({ ...draft, id: o.id }); load(); return; }
+      flash(`#${o.number} salvată și achitată (${o.pay_method === "cash" ? "cash" : "tichete de vacanță"}).`);
+    } else if (thenPay) {
       const r = await supabase.rpc("platter_send_pay", { p_id: o.id });
       if (r.error) { setBusy(false); setErr(`Comanda #${o.number} e salvată, dar emailul nu s-a trimis: ${r.error.message}`); setDraft({ ...draft, id: o.id }); load(); return; }
       flash(`#${o.number} salvată · cererea de plată trimisă la ${o.email}`);
@@ -146,6 +154,11 @@ function Register({ me }: { me: Me }) {
     const { error } = await supabase.rpc("platter_send_pay", { p_id: o.id });
     if (error) flash(error.message, true); else { flash(`Cererea de plată a fost trimisă la ${o.email}.`); load(); }
   }
+  async function markPaid(o: PO, paid: boolean) {
+    if (!window.confirm(paid ? `Confirmi că ai primit ${lei(Number(o.total))} ${o.pay_method === "cash" ? "cash" : "în tichete de vacanță"} pentru #${o.number} (${o.name})?` : `Scoți bifa „achitat” de la #${o.number}?`)) return;
+    const { error } = await supabase.rpc("platter_mark_manual", { p_id: o.id, p_paid: paid });
+    if (error) flash(error.message, true); else { flash(paid ? `#${o.number} bifată achitată.` : `#${o.number} nu mai e bifată achitată.`); load(); }
+  }
   async function verify(o: PO) {
     const { error } = await supabase.rpc("platter_verify", { p_id: o.id, p_ok: !o.verified_at });
     if (error) flash(error.message, true); else load();
@@ -155,7 +168,7 @@ function Register({ me }: { me: Me }) {
     const { error } = await supabase.rpc("platter_cancel", { p_id: o.id, p_cancel: !o.cancelled });
     if (error) flash(error.message, true); else { flash(o.cancelled ? "Comanda a fost reactivată." : "Comanda a fost anulată."); setDraft(null); load(); }
   }
-  const edit = (o: PO) => { setErr(""); setDraft({ id: o.id, name: o.name, phone: o.phone, address: o.address, email: o.email || "", dispatcher: o.dispatcher, order_date: o.order_date, delivery_date: o.delivery_date, delivery_time: o.delivery_time, note: o.note, lines: o.lines.map(l => ({ name: l.name, qty: String(l.qty), price: String(l.price) })) }); };
+  const edit = (o: PO) => { setErr(""); setDraft({ id: o.id, name: o.name, phone: o.phone, address: o.address, email: o.email || "", dispatcher: o.dispatcher, order_date: o.order_date, delivery_date: o.delivery_date, delivery_time: o.delivery_time, note: o.note, pay_method: o.pay_method || "online", lines: o.lines.map(l => ({ name: l.name, qty: String(l.qty), price: String(l.price) })) }); };
   const setLine = (i: number, k: "name" | "qty" | "price", v: string) => {
     if (!draft) return;
     const lines = draft.lines.map((l, j) => j !== i ? l : { ...l, [k]: v });
@@ -186,7 +199,7 @@ function Register({ me }: { me: Me }) {
             <button key={k} aria-pressed={filter === k} onClick={() => setFilter(k)}>{l}</button>)}</div>
           <input className="pl-search" placeholder="Caută nume, telefon, produs…" value={q} onChange={e => setQ(e.target.value)} />
         </div>
-        <div className="pl-sum"><span><b>{tot.n}</b> comenzi</span><span><b>{tot.qty}</b> bucăți</span><span>Total <b>{lei(tot.total)}</b></span><span>Încasat online <b>{lei(tot.paid)}</b></span></div>
+        <div className="pl-sum"><span><b>{tot.n}</b> comenzi</span><span><b>{tot.qty}</b> bucăți</span><span>Total <b>{lei(tot.total)}</b></span><span>Încasat <b>{lei(tot.paid)}</b> (online {lei(tot.by("online"))} · cash {lei(tot.by("cash"))} · tichete {lei(tot.by("tichete"))})</span></div>
 
         <div className="pl-table">
           <div className="pl-row pl-head"><span>Nr</span><span>Client</span><span>Livrare</span><span>Ce a comandat</span><span className="r">Buc</span><span className="r">Total</span><span>Plată</span><span>Verificat</span><span /></div>
@@ -203,7 +216,8 @@ function Register({ me }: { me: Me }) {
               <Icon name="check" size={16} />{o.verified_at ? o.verified_by || "Verificat" : "Verifică"}</button></span>
             <span className="pl-acts">
               {editor && !o.cancelled && <button onClick={() => edit(o)}>Editează</button>}
-              {editor && !o.cancelled && o.pay_status !== "paid" && <button className="pay" disabled={!o.email} title={o.email ? "" : "Lipsește emailul clientului"} onClick={() => sendPay(o)}><Icon name="send" size={14} />{o.pay_status === "sent" ? "Retrimite plata" : "Cere plata"}</button>}
+              {editor && !o.cancelled && o.pay_status !== "paid" && o.pay_method !== "online" && <button className="paid" onClick={() => markPaid(o, true)}><Icon name="check" size={14} />Bifează achitat</button>}
+              {editor && !o.cancelled && o.pay_status !== "paid" && o.pay_method === "online" && <button className="pay" disabled={!o.email} title={o.email ? "" : "Lipsește emailul clientului"} onClick={() => sendPay(o)}><Icon name="send" size={14} />{o.pay_status === "sent" ? "Retrimite plata" : "Cere plata"}</button>}
               <button onClick={() => setPrinting([o])}>Print</button>
               {editor && o.cancelled && <button onClick={() => cancel(o)}>Reactivează</button>}
             </span>
@@ -219,7 +233,7 @@ function Register({ me }: { me: Me }) {
             <label className="fl"><span>Nume *</span><input value={draft.name} onChange={e => setDraft({ ...draft, name: e.target.value })} /></label>
             <label className="fl"><span>Telefon *</span><input inputMode="tel" value={draft.phone} onChange={e => setDraft({ ...draft, phone: e.target.value })} /></label>
             <label className="fl wide"><span>Adresa</span><input value={draft.address} onChange={e => setDraft({ ...draft, address: e.target.value })} /></label>
-            <label className="fl"><span>Email (pentru plata online)</span><input type="email" inputMode="email" value={draft.email} onChange={e => setDraft({ ...draft, email: e.target.value })} /></label>
+            <label className="fl"><span>Email{draft.pay_method === "online" ? " (obligatoriu pentru plata online)" : ""}</span><input type="email" inputMode="email" value={draft.email} onChange={e => setDraft({ ...draft, email: e.target.value })} /></label>
             <label className="fl"><span>Dispecer</span><input value={draft.dispatcher} onChange={e => setDraft({ ...draft, dispatcher: e.target.value })} /></label>
             <label className="fl"><span>Data comenzii</span><input type="date" value={draft.order_date} onChange={e => setDraft({ ...draft, order_date: e.target.value })} /></label>
             <label className="fl"><span>Data livrării *</span><input type="date" value={draft.delivery_date} onChange={e => setDraft({ ...draft, delivery_date: e.target.value })} /></label>
@@ -250,6 +264,9 @@ function Register({ me }: { me: Me }) {
             </div>)}
             {!paidLocked && <button className="rbtn" onClick={() => setDraft({ ...draft, lines: [...draft.lines, { name: "", qty: "1", price: "" }] })}>+ Încă un produs</button>}
           </div>
+          <p className="cp-lbl" style={{ marginTop: 14 }}>Plata</p>
+          <div className="pl-pm">{(["online", "cash", "tichete"] as PM[]).map(m => <button key={m} aria-pressed={draft.pay_method === m} disabled={paidLocked && draft.pay_method !== m}
+            onClick={() => setDraft({ ...draft, pay_method: m })}><b>{PM_LABEL[m]}</b><small>{m === "online" ? "clientul primește linkul pe email, plata se confirmă singură" : "recepția bifează „achitat” când primește banii"}</small></button>)}</div>
           <label className="fl wide" style={{ marginTop: 10 }}><span>Mențiuni</span><input value={draft.note} onChange={e => setDraft({ ...draft, note: e.target.value })} /></label>
           {draft && wineOf(draft.lines) > 0 && <p className="pl-wine">+ {wineOf(draft.lines)} {wineOf(draft.lines) === 1 ? "sticlă" : "sticle"} de vin din partea casei (câte una la fiecare Platou Festiv)</p>}
           <div className="pl-total"><span>{dQty} bucăți</span><b>Total {lei(dTotal)}</b></div>
@@ -258,8 +275,11 @@ function Register({ me }: { me: Me }) {
             {editing && <button className="rbtn danger" onClick={() => cancel(editing)}>Anulează comanda</button>}
             <span style={{ flex: 1 }} />
             <button className="rbtn" disabled={busy} onClick={() => save(false)}>Salvează</button>
-            {!paidLocked && <button className="pl-new" disabled={busy || !draft.email.trim()} title={draft.email.trim() ? "" : "Completează emailul clientului"} onClick={() => save(true)}>
+            {editing && editing.pay_status === "paid" && editing.pay_method !== "online" && <button className="rbtn" onClick={() => markPaid(editing, false)}>Scoate bifa „achitat”</button>}
+            {!paidLocked && draft.pay_method === "online" && <button className="pl-new" disabled={busy || !draft.email.trim()} title={draft.email.trim() ? "" : "Completează emailul clientului"} onClick={() => save(true)}>
               <Icon name="send" size={16} />Salvează și trimite cererea de plată</button>}
+            {!paidLocked && draft.pay_method !== "online" && <button className="pl-new ok" disabled={busy} onClick={() => save(false, true)}>
+              <Icon name="check" size={16} />Salvează · achitat acum ({draft.pay_method === "cash" ? "cash" : "tichete"})</button>}
           </div>
         </div>
       </div>}
@@ -271,9 +291,12 @@ function Register({ me }: { me: Me }) {
 }
 
 function PayTag({ o }: { o: PO }) {
-  if (o.pay_status === "paid") return <span className="tag green" title={at(o.paid_at)}>Plătit ✓ {at(o.paid_at)}</span>;
+  const m = o.pay_method || "online";
+  if (o.pay_status === "paid") return <span className="tag green" title={o.paid_by ? `bifat de ${o.paid_by}` : ""}>{m === "online" ? "Plătit online" : m === "cash" ? "Achitat cash" : "Achitat tichete"} ✓ {at(o.paid_at)}</span>;
+  if (m === "cash") return <span className="tag">Cash la recepție · neachitat</span>;
+  if (m === "tichete") return <span className="tag">Tichete de vacanță · neachitat</span>;
   if (o.pay_status === "sent") return <span className="tag gold" title={`trimis de ${o.pay_sent_count} ori`}>Cerere trimisă {at(o.pay_sent_at)}</span>;
-  return <span className="tag">Neplătit</span>;
+  return <span className="tag">Online · neplătit</span>;
 }
 
 function Due({ title, list, hot, onOpen, canEdit, onPrint }: { title: string; list: PO[]; hot?: boolean; onOpen: (o: PO) => void; canEdit: boolean; onPrint: (l: PO[]) => void }) {
@@ -286,7 +309,7 @@ function Due({ title, list, hot, onOpen, canEdit, onPrint }: { title: string; li
     <div className="pl-due-list">{[...list].sort((a, b) => a.delivery_time.localeCompare(b.delivery_time)).map(o =>
       <button key={o.id} disabled={!canEdit} onClick={() => onOpen(o)}>
         <b className="num">{o.delivery_time || "—"}</b><span>#{o.number} · {o.name}</span><small>{o.lines.map(l => `${l.qty}× ${l.name}`).join(", ")}{wineOf(o.lines) ? ` + ${wineOf(o.lines)}× vin` : ""}</small>
-        <em className={o.pay_status === "paid" ? "ok" : "no"}>{o.pay_status === "paid" ? "plătit" : "neplătit"}</em></button>)}</div>
+        <em className={o.pay_status === "paid" ? "ok" : "no"}>{o.pay_status === "paid" ? "achitat" : o.pay_method === "cash" ? "cash" : o.pay_method === "tichete" ? "tichete" : "neplătit"}</em></button>)}</div>
   </section>;
 }
 
@@ -304,7 +327,7 @@ function PrintSheet({ list }: { list: PO[] }) {
       {wineOf(o.lines) > 0 && <tr><td>Vin din partea casei (cadou)</td><td>{wineOf(o.lines)}</td><td>0.00 lei</td><td>0.00 lei</td></tr>}
       <tr className="t"><td>Total</td><td>{o.qty}</td><td /><td>{lei(Number(o.total))}</td></tr>
     </tbody></table>
-    <p>Plată: <b>{o.pay_status === "paid" ? `PLĂTIT ONLINE (${at(o.paid_at)})` : o.pay_status === "sent" ? "cerere de plată trimisă, neplătit încă" : "NEPLĂTIT"}</b>
+    <p>Plată: <b>{PM_LABEL[o.pay_method || "online"]} · {o.pay_status === "paid" ? `ACHITAT (${at(o.paid_at)}${o.paid_by ? `, ${o.paid_by}` : ""})` : o.pay_status === "sent" ? "cerere de plată trimisă, neachitat încă" : "NEACHITAT"}</b>
       {" · "}Verificat: <b>{o.verified_at ? `${o.verified_by} (${at(o.verified_at)})` : "nu"}</b></p>
     {o.note && <p>Mențiuni: {o.note}</p>}
   </div>)}</div>;

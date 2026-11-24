@@ -63,6 +63,11 @@ create table if not exists public.platter_orders (
   updated_at      timestamptz not null default now()
 );
 alter table public.platter_orders enable row level security;   -- fără politici: doar funcțiile de mai jos
+-- modul de plată: online (link pe email), cash la recepție, tichete de vacanță; la cash / tichete recepția bifează „achitat”
+alter table public.platter_orders add column if not exists pay_method text not null default 'online';
+alter table public.platter_orders drop constraint if exists platter_orders_pay_method_check;
+alter table public.platter_orders add constraint platter_orders_pay_method_check check (pay_method in ('online', 'cash', 'tichete'));
+alter table public.platter_orders add column if not exists paid_by text;
 create index if not exists platter_orders_delivery on public.platter_orders(delivery_date);
 
 -- cine sunt: 'editor' | 'checker' | null (administratorul și recepția sunt „editor”)
@@ -94,7 +99,7 @@ grant execute on function public.platter_list() to authenticated;
 create or replace function public.platter_save(p jsonb) returns jsonb
 language plpgsql security definer set search_path = public as $$
 declare r public.platter_orders; old public.platter_orders; l jsonb; ln jsonb := '[]'; q int := 0; t numeric := 0; lq int; lp numeric;
-        who text := (public.platter_me())->>'name';
+        who text := (public.platter_me())->>'name'; pm text := coalesce(nullif(p->>'pay_method', ''), 'online');
 begin
   if public.platter_role() is distinct from 'editor' then raise exception 'Doar recepția introduce comenzi de platouri.' using errcode = 'P0001'; end if;
   if coalesce(trim(p->>'name'), '') = '' or coalesce(trim(p->>'phone'), '') = '' then raise exception 'Completează numele și telefonul.' using errcode = 'P0001'; end if;
@@ -109,19 +114,22 @@ begin
     q := q + lq; t := t + lq * round(lp, 2);
   end loop;
   if jsonb_array_length(ln) = 0 then raise exception 'Adaugă cel puțin un produs.' using errcode = 'P0001'; end if;
+  if pm not in ('online', 'cash', 'tichete') then raise exception 'Alege modul de plată.' using errcode = 'P0001'; end if;
 
   if nullif(p->>'id', '') is null then
-    insert into public.platter_orders(name, phone, address, email, lines, qty, total, dispatcher, order_date, delivery_date, delivery_time, note, created_by)
+    insert into public.platter_orders(name, phone, address, email, lines, qty, total, dispatcher, order_date, delivery_date, delivery_time, note, created_by, pay_method)
     values (trim(p->>'name'), trim(p->>'phone'), coalesce(trim(p->>'address'), ''), nullif(lower(trim(p->>'email')), ''), ln, q, t,
             coalesce(trim(p->>'dispatcher'), ''), coalesce(nullif(p->>'order_date', '')::date, (now() at time zone 'Europe/Bucharest')::date),
-            (p->>'delivery_date')::date, coalesce(trim(p->>'delivery_time'), ''), coalesce(trim(p->>'note'), ''), who)
+            (p->>'delivery_date')::date, coalesce(trim(p->>'delivery_time'), ''), coalesce(trim(p->>'note'), ''), who, pm)
     returning * into r;
   else
     select * into old from public.platter_orders where id = (p->>'id')::uuid for update;
     if not found then raise exception 'Comanda nu mai există.' using errcode = 'P0001'; end if;
     if old.pay_status = 'paid' and t <> old.total then
       raise exception 'Comanda e deja plătită (% lei): produsele și prețul nu se mai pot schimba.', to_char(old.total, 'FM999990.00') using errcode = 'P0001'; end if;
-    update public.platter_orders set name = trim(p->>'name'), phone = trim(p->>'phone'), address = coalesce(trim(p->>'address'), ''),
+    if old.pay_status = 'paid' and pm <> old.pay_method then
+      raise exception 'Comanda e deja achitată: modul de plată nu se mai schimbă.' using errcode = 'P0001'; end if;
+    update public.platter_orders set name = trim(p->>'name'), phone = trim(p->>'phone'), address = coalesce(trim(p->>'address'), ''), pay_method = pm,
       email = nullif(lower(trim(p->>'email')), ''), lines = ln, qty = q, total = t, dispatcher = coalesce(trim(p->>'dispatcher'), ''),
       order_date = coalesce(nullif(p->>'order_date', '')::date, old.order_date), delivery_date = (p->>'delivery_date')::date,
       delivery_time = coalesce(trim(p->>'delivery_time'), ''), note = coalesce(trim(p->>'note'), ''), updated_at = now(),
@@ -138,8 +146,10 @@ create or replace function public.platter_cancel(p_id uuid, p_cancel boolean) re
 language plpgsql security definer set search_path = public as $$
 begin
   if public.platter_role() is distinct from 'editor' then raise exception 'Doar recepția anulează comenzi.' using errcode = 'P0001'; end if;
-  if p_cancel and exists (select 1 from public.platter_orders where id = p_id and pay_status = 'paid') then
+  if p_cancel and exists (select 1 from public.platter_orders where id = p_id and pay_status = 'paid' and pay_method = 'online') then
     raise exception 'Comanda e plătită. Fă întâi rambursarea din Stripe, apoi o poți anula.' using errcode = 'P0001'; end if;
+  if p_cancel and exists (select 1 from public.platter_orders where id = p_id and pay_status = 'paid') then
+    raise exception 'Comanda e bifată „achitat”. Dă banii înapoi și debifează întâi „achitat”, apoi o poți anula.' using errcode = 'P0001'; end if;
   update public.platter_orders set cancelled = p_cancel, updated_at = now() where id = p_id;
 end $$;
 
@@ -168,6 +178,7 @@ begin
   if not found then raise exception 'Comanda nu mai există.' using errcode = 'P0001'; end if;
   if o.cancelled then raise exception 'Comanda e anulată.' using errcode = 'P0001'; end if;
   if o.pay_status = 'paid' then raise exception 'Comanda e deja plătită.' using errcode = 'P0001'; end if;
+  if o.pay_method <> 'online' then raise exception 'Comanda e cu plata % la recepție. Schimbă modul de plată în „online” ca să trimiți linkul.', case when o.pay_method = 'cash' then 'cash' else 'cu tichete de vacanță' end using errcode = 'P0001'; end if;
   if o.email is null then raise exception 'Completează emailul clientului.' using errcode = 'P0001'; end if;
   if o.total <= 0 then raise exception 'Totalul trebuie să fie mai mare de 0.' using errcode = 'P0001'; end if;
   select * into s from public.settings where id = 1;
@@ -248,3 +259,18 @@ insert into public.platter_products(name, price, sort) values
 on conflict (name) do update set price = excluded.price, sort = excluded.sort, active = true;
 -- denumirile vechi nu mai apar la introducere (comenzile deja salvate rămân neschimbate)
 update public.platter_products set active = false where name in ('Vinete cu maioneză (500 g)', 'Ciorbă de burtă (120 g / 300 ml)');
+
+-- cash / tichete de vacanță: recepția bifează „achitat” când primește banii (sau debifează dacă a greșit)
+create or replace function public.platter_mark_manual(p_id uuid, p_paid boolean) returns void
+language plpgsql security definer set search_path = public as $$
+declare o public.platter_orders;
+begin
+  if public.platter_role() is distinct from 'editor' then raise exception 'Doar recepția bifează plata.' using errcode = 'P0001'; end if;
+  select * into o from public.platter_orders where id = p_id for update;
+  if not found then raise exception 'Comanda nu mai există.' using errcode = 'P0001'; end if;
+  if o.pay_method = 'online' then raise exception 'Plata online se confirmă singură, după plata cu cardul.' using errcode = 'P0001'; end if;
+  if o.cancelled then raise exception 'Comanda e anulată.' using errcode = 'P0001'; end if;
+  update public.platter_orders set pay_status = case when p_paid then 'paid' else 'none' end,
+    paid_at = case when p_paid then now() end, paid_by = case when p_paid then (public.platter_me())->>'name' end where id = o.id;
+end $$;
+grant execute on function public.platter_mark_manual(uuid, boolean) to authenticated;

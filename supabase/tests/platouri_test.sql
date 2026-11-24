@@ -77,6 +77,24 @@ begin
   perform pg_temp.ok(pg_temp.err(format('select public.platter_cancel(%L, true)', pid)) like '%plătită%', 'plătită: nu se anulează de aici');
   perform pg_temp.as_user('00000000-0000-4000-8000-0000000000e3');
   perform pg_temp.ok(pg_temp.err(format('select public.platter_verify(%L, false)', pid)) like 'Fără acces%', 'clientul nu atinge registrul');
+  -- cash / tichete de vacanță: recepția bifează achitat
+  perform pg_temp.as_user('00000000-0000-4000-8000-0000000000e1');
+  r := public.platter_save(jsonb_build_object('name', 'Dan', 'phone', '0700', 'pay_method', 'tichete', 'delivery_date', '2026-12-24',
+        'lines', jsonb_build_array(jsonb_build_object('name', 'Platou Festiv Signature Lyra (1,8 kg)', 'qty', 1, 'price', 255))));
+  pid := (r->>'id')::uuid;
+  perform pg_temp.ok(r->>'pay_method' = 'tichete' and r->>'pay_status' = 'none', 'comandă cu tichete de vacanță, neachitată');
+  perform pg_temp.ok(pg_temp.err(format('select public.platter_send_pay(%L)', pid)) like '%tichete de vacanță%', 'la tichete nu se trimite link de plată');
+  perform pg_temp.as_user('00000000-0000-4000-8000-0000000000e2');
+  perform pg_temp.ok(pg_temp.err(format('select public.platter_mark_manual(%L, true)', pid)) like 'Doar recepția%', 'Simona nu bifează plata');
+  perform pg_temp.as_user('00000000-0000-4000-8000-0000000000e1');
+  perform public.platter_mark_manual(pid, true);
+  perform pg_temp.ok((select pay_status = 'paid' and paid_by = 'Recepție platouri' from public.platter_orders where platter_orders.id = pid), 'recepția bifează achitat');
+  e := pg_temp.err(format($q$select public.platter_save('{"id":"%s","name":"Dan","phone":"07","pay_method":"cash","delivery_date":"2026-12-24","lines":[{"name":"Platou Festiv Signature Lyra (1,8 kg)","qty":1,"price":255}]}')$q$, pid));
+  perform pg_temp.ok(e like '%modul de plată nu se mai schimbă%', 'achitată: modul de plată nu se schimbă');
+  perform pg_temp.ok(pg_temp.err(format('select public.platter_cancel(%L, true)', pid)) like '%debifează%', 'achitată cash/tichete: întâi se debifează, apoi se anulează');
+  perform public.platter_mark_manual(pid, false);
+  perform pg_temp.ok((select pay_status = 'none' and paid_at is null from public.platter_orders where platter_orders.id = pid), 'bifa se poate scoate');
+  perform pg_temp.ok(pg_temp.err(format('select public.platter_mark_manual(%L, true)', (select id from public.platter_orders where pay_method = 'online' limit 1))) like 'Plata online se confirmă singură%', 'online nu se bifează de mână');
 end $$;
 rollback;
 \echo 'Toate testele pentru registrul de platouri au trecut.'

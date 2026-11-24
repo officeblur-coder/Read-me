@@ -335,12 +335,12 @@ function rpc(fn: string, args: Row = {}): Promise<{ data: any; error: any }> {
         case "platter_list": {
           if (!db.platters) {
             const d = (n: number) => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10);
-            const mkp = (n: number, o: Row) => ({ id: uid(), number: n, address: "", email: null, dispatcher: "Maria", order_date: d(-3), delivery_time: "", note: "", pay_status: "none", pay_sent_at: null, pay_sent_count: 0, paid_at: null, verified_at: null, verified_by: null, cancelled: false, created_by: "Recepție platouri", created_at: iso(), token: uid(), ...o,
+            const mkp = (n: number, o: Row) => ({ id: uid(), number: n, pay_method: "online", paid_by: null, address: "", email: null, dispatcher: "Maria", order_date: d(-3), delivery_time: "", note: "", pay_status: "none", pay_sent_at: null, pay_sent_count: 0, paid_at: null, verified_at: null, verified_by: null, cancelled: false, created_by: "Recepție platouri", created_at: iso(), token: uid(), ...o,
               qty: o.lines.reduce((a: number, l: Row) => a + l.qty, 0), total: o.lines.reduce((a: number, l: Row) => a + l.qty * l.price, 0) });
             db.platters = [
               mkp(1, { name: "Ana Pop", phone: "0745 111 222", address: "Str. Lungă 3", email: "ana@exemplu.ro", delivery_date: d(1), delivery_time: "12:00", lines: [{ name: "Platou Festiv Signature Lyra (1,8 kg)", qty: 2, price: 255 }], pay_status: "paid", paid_at: iso(Date.now() - 864e5), verified_at: iso(), verified_by: "Simona" }),
               mkp(2, { name: "Mihai Ionescu", phone: "0722 333 444", address: "Bd. 1 Decembrie 18", email: "mihai@exemplu.ro", delivery_date: d(1), delivery_time: "17:30", lines: [{ name: "Platou Festiv Signature Lyra (1,8 kg)", qty: 1, price: 255 }, { name: "Ciolan cu varză călită (500/200/100 g)", qty: 2, price: 72 }], pay_status: "sent", pay_sent_at: iso(Date.now() - 3600e3), pay_sent_count: 1 }),
-              mkp(3, { name: "Kovács Éva", phone: "0740 555 666", delivery_date: d(5), delivery_time: "11:00", dispatcher: "Andrei", lines: [{ name: "Ciorbă de burtă (400 g burtă / 1200 g ciorbă · 4–5 persoane)", qty: 1, price: 100 }, { name: "Vinete cu maioneză (500 g · 4–5 persoane)", qty: 1, price: 40 }] }),
+              mkp(3, { name: "Kovács Éva", phone: "0740 555 666", pay_method: "tichete", delivery_date: d(5), delivery_time: "11:00", dispatcher: "Andrei", lines: [{ name: "Ciorbă de burtă (400 g burtă / 1200 g ciorbă · 4–5 persoane)", qty: 1, price: 100 }, { name: "Vinete cu maioneză (500 g · 4–5 persoane)", qty: 1, price: 40 }] }),
             ];
           }
           return res({ data: { orders: structuredClone(db.platters).map((o: Row) => { delete o.token; return o; }), products: [{ id: 1, name: "Platou Festiv Signature Lyra (1,8 kg)", price: 255 }, { id: 2, name: "Ciolan cu varză călită (500/200/100 g)", price: 72 }, { id: 3, name: "Vinete cu maioneză (500 g · 4–5 persoane)", price: 40 }, { id: 4, name: "Ciorbă de burtă (400 g burtă / 1200 g ciorbă · 4–5 persoane)", price: 100 }] }, error: null });
@@ -353,6 +353,7 @@ function rpc(fn: string, args: Row = {}): Promise<{ data: any; error: any }> {
           save(); return res({ data: structuredClone(o), error: null });
         }
         case "platter_send_pay": { const o = db.platters.find((x: Row) => x.id === args.p_id)!; o.pay_status = "sent"; o.pay_sent_at = iso(); o.pay_sent_count++; save(); return res({ data: { email: o.email }, error: null }); }
+        case "platter_mark_manual": { const o = db.platters.find((x: Row) => x.id === args.p_id)!; o.pay_status = args.p_paid ? "paid" : "none"; o.paid_at = args.p_paid ? iso() : null; o.paid_by = args.p_paid ? "Recepție platouri" : null; save(); return res({ data: null, error: null }); }
         case "platter_verify": { const o = db.platters.find((x: Row) => x.id === args.p_id)!; o.verified_at = args.p_ok ? iso() : null; o.verified_by = args.p_ok ? "Simona" : null; save(); return res({ data: null, error: null }); }
         case "platter_cancel": { const o = db.platters.find((x: Row) => x.id === args.p_id)!; o.cancelled = args.p_cancel; save(); return res({ data: null, error: null }); }
         case "check_code": {
