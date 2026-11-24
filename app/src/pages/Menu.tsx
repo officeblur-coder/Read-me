@@ -437,13 +437,15 @@ export default function Menu({ source }: { source?: string }) {
   const query = q.trim().toLowerCase();
   useEffect(() => { if (query.length < 3) return; const t = setTimeout(() => track("search", query), 1500); return () => clearTimeout(t); }, [query]);
   const match = (it: Item) => !query || `${it.name_ro} ${it.name_hu} ${it.desc_ro}`.toLowerCase().includes(query);
-  const visibleCats = cats.filter(c => items.some(i => i.category_id === c.id));
+  const holItems = items.filter(i => i.kind === "holiday" && i.active !== false);
+  const holOn = holItems.length > 0 && (!settings?.holiday_until || new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Bucharest" }).format(clock) <= settings.holiday_until);
+  // cu headerul de sărbători afișat, produsele de sărbători nu mai apar și ca o categorie separată (doar la căutare)
+  const holCat = (id: string) => holOn && !query && items.some(i => i.category_id === id) && items.filter(i => i.category_id === id).every(i => i.kind === "holiday");
+  const visibleCats = cats.filter(c => items.some(i => i.category_id === c.id) && !holCat(c.id));
   // "Cele mai comandate": dishes tagged "top" in admin, otherwise the default picks
   const tagged = items.filter(it => it.tags.includes("top") && it.image);
   const popular = (tagged.length ? tagged : POPULAR.map(id => byId[id]).filter(it => it && it.image)).slice(0, 8);
   const catOf = (id: string | null) => cats.find(c => c.id === id);
-  const holItems = items.filter(i => i.kind === "holiday" && i.active !== false);
-  const holOn = holItems.length > 0 && (!settings?.holiday_until || new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Bucharest" }).format(clock) <= settings.holiday_until);
   const holDays = settings?.holiday_days_label || "3–22 decembrie, 24 decembrie și 27–31 decembrie";
 
   if (loadErr) return <div className="m-page"><p className="closed">{loadErr}</p></div>;
@@ -682,7 +684,7 @@ export default function Menu({ source }: { source?: string }) {
                 <div className="xm-body"><button className="pc-name" onClick={() => openItem(it)}><h3>{nm(it)}</h3></button><small>{it.grams}</small>{buyRow(it)}</div>
               </article>)}</div>
               <div className="xm-wine-box"><img src="/img/sarbatori-vin.jpg" alt="" loading="lazy" /><div><b>{L ? "Minden tálhoz egy üveg bor, a ház ajándéka" : "O sticlă de vin la fiecare Platou Festiv, din partea casei"}</b><small>Pirovano Chardonnay · {L ? "ingyen, automatikusan a kosárban" : "gratuit, apare automat la comandă"}</small></div>
-                <button className="h2-cta" onClick={() => jump("sarbatori")}>{L ? "Ünnepi rendelés" : "Comandă pentru sărbători"}<Icon name="arrow" size={18} /></button></div>
+                <button className="h2-cta" onClick={() => { const pf = byId["platou-festiv"] || holItems[0]; if (pf) openItem(pf); }}>{L ? "Ünnepi tál rendelése" : "Comandă Platoul Festiv"}<Icon name="arrow" size={18} /></button></div>
             </section>}
 
             {/* ---------- hero: banners from admin ---------- */}
@@ -746,7 +748,7 @@ export default function Menu({ source }: { source?: string }) {
           {!loaded && <div className="grid">{Array.from({ length: 6 }, (_, i) => <div key={i} className="pc skel"><div className="pc-img" /><div className="pc-body"><i /><i /><i /></div></div>)}</div>}
           {cats.map(c => {
             const list = items.filter(i => i.category_id === c.id && match(i));
-            if (!list.length) return null;
+            if (!list.length || holCat(c.id)) return null;
             const note = L ? c.note_hu : c.note_ro;
             if (list.every(i => i.kind === "gift")) return (
               <section key={c.id} className="sec gift-sec" id={"sec-" + c.id} data-sec={c.id}>
