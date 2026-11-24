@@ -13,6 +13,7 @@ import { isNativeApp, startNativeGps, startNativePush } from "../lib/native";
 import Icon from "../components/Icon";
 import Wordmark from "../components/Wordmark";
 import { Login, chime, keepAwake, unlockAudio } from "./Reception";
+import { slotEnd } from "../lib/schedule";
 
 type Me = { id: string; name: string; role: string };
 const COURIERS = ["Istvan", "Pipe", "Liviu", "Zoli"];   // contul = numele@lyrasdelivery.ro
@@ -80,7 +81,7 @@ const mapsUrl = (a: string, lat?: number | null, lng?: number | null) =>
   "https://www.google.com/maps/dir/?api=1&travelmode=driving&destination=" + encodeURIComponent(lat != null && lng != null ? `${lat},${lng}` : a);
 const payText = (o: Order) => o.payment === "online" ? "Plătit online · nu încasezi nimic" : `De încasat ${lei(Number(o.total))} · ${o.payment === "cash" ? "numerar" : "card (POS)"}`;
 // precomandă: sfârșitul intervalului ales (13:00–14:00 → 14:00)
-const dueOf = (o: Order) => o.scheduled_for ? new Date(o.scheduled_for).getTime() + 60 * 60000 : o.accepted_at && o.eta_min ? new Date(o.accepted_at).getTime() + o.eta_min * 60000 : 0;
+const dueOf = (o: Order) => o.scheduled_for ? slotEnd(o.scheduled_for) : o.accepted_at && o.eta_min ? new Date(o.accepted_at).getTime() + o.eta_min * 60000 : 0;
 const LATE_EVERY = 7 * 60000;
 
 type Alarm = { o: Order; kind: "new" | "late" };

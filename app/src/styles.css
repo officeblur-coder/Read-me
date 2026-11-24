@@ -1821,3 +1821,9 @@ body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area
 .cl-wine .cl-txt span{color:var(--ok)}
 .hol-note{margin:10px 2px;padding:10px 12px;border-radius:12px;background:rgba(31,74,53,.18);border:1px solid rgba(46,125,80,.45);font-size:13px;line-height:1.45}
 .pl-row .pl-app{color:var(--brand);font-weight:700;white-space:normal}
+.mix-sheet{max-width:520px}
+.mix-ic{display:block;font-size:40px;margin-bottom:6px}
+.mix-sheet h2{font-size:21px}
+.mix-btns{display:grid;gap:8px;margin-top:16px}
+.mix-btns .later{padding:12px;border-radius:14px;border:1px solid var(--line-2);font-weight:700;color:var(--muted)}
+.sched-full{margin:8px 0 0;padding:10px 12px;border-radius:12px;background:rgba(31,74,53,.18);border:1px solid rgba(46,125,80,.45);font-size:14px}

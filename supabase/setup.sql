@@ -353,6 +353,10 @@ begin
   select * into s from public.settings where id = 1;
   select * into cfg from public.rewards_settings where id = 1;
   select exists (select 1 from jsonb_array_elements(coalesce(p->'items', '[]')) x join public.items i on i.id = x->>'id' where i.kind = 'holiday') into hol;
+  if hol and exists (select 1 from jsonb_array_elements(coalesce(p->'items', '[]')) x left join public.items i on i.id = x->>'id' where i.kind is distinct from 'holiday') then
+    raise exception 'Produsele de sărbători se comandă separat. Programează întâi comanda de sărbători, iar celelalte produse le comanzi printr-o comandă nouă.' using errcode = 'P0001'; end if;
+  if hol and nullif(p->>'voucher_id', '') is not null then
+    raise exception 'Desertul cadou se folosește la o comandă obișnuită, nu la comanda de sărbători.' using errcode = 'P0001'; end if;
   if hol and v_sched is null then
     raise exception 'Produsele de sărbători se comandă cu precomandă: alege ziua și intervalul livrării (minimum 24 de ore înainte).' using errcode = 'P0001'; end if;
   if v_sched is null then
@@ -3376,9 +3380,18 @@ alter table public.settings add column if not exists holiday_days date[];
 alter table public.settings add column if not exists holiday_days_label text;
 -- ultima zi de comandă pentru anumite zile de livrare: Crăciun (24) până pe 22, Revelion (31) până pe 29
 alter table public.settings add column if not exists holiday_deadlines jsonb;
+-- zile cu livrare „pe parcursul zilei”, fără oră aleasă (Crăciun, Revelion); comanda se salvează la ora 10:00, marcajul pentru „toată ziua”
+alter table public.settings add column if not exists holiday_fullday date[];
 update public.settings set holiday_days = '{2026-12-03,2026-12-04,2026-12-05,2026-12-06,2026-12-07,2026-12-08,2026-12-09,2026-12-10,2026-12-11,2026-12-12,2026-12-13,2026-12-14,2026-12-15,2026-12-16,2026-12-17,2026-12-18,2026-12-19,2026-12-20,2026-12-21,2026-12-22,2026-12-24,2026-12-27,2026-12-28,2026-12-29,2026-12-30,2026-12-31}'::date[],
   holiday_days_label = '3–22 decembrie, 24 decembrie și 27–31 decembrie',
-  holiday_deadlines = '{"2026-12-24": "2026-12-22", "2026-12-31": "2026-12-29"}', holiday_until = '2026-12-31' where id = 1;
+  holiday_deadlines = '{"2026-12-24": "2026-12-22", "2026-12-31": "2026-12-29"}', holiday_fullday = '{2026-12-24,2026-12-31}', holiday_until = '2026-12-31' where id = 1;
+
+-- „pe parcursul zilei”: precomanda salvată la 10:00 (ora României), înainte de programul obișnuit de precomenzi
+create or replace function public.is_fullday(p_at timestamptz) returns boolean language sql stable set search_path = public as $$
+  select coalesce(((p_at at time zone s.tz)::date = any(s.holiday_fullday)) and (p_at at time zone s.tz)::time = '10:00', false)
+  from public.settings s where s.id = 1;
+$$;
+grant execute on function public.is_fullday(timestamptz) to anon, authenticated;
 
 -- null = ziua și ora alese sunt bune pentru produsele de sărbători; altfel motivul
 create or replace function public.holiday_error(p_at timestamptz) returns text
@@ -3400,6 +3413,11 @@ begin
   if s.holiday_deadlines ? l::date::text and (now() at time zone s.tz)::date > (s.holiday_deadlines->>(l::date::text))::date then
     return format('Comenzile pentru %s se primesc până pe %s. Poți alege altă zi.', to_char(l::date, 'DD.MM'), to_char((s.holiday_deadlines->>(l::date::text))::date, 'DD.MM')); end if;
   if not (extract(isodow from l)::int = any(s.open_days)) then return 'În ziua aleasă restaurantul este închis.'; end if;
+  -- Crăciun / Revelion: livrare pe parcursul zilei, fără oră
+  if l::date = any(coalesce(s.holiday_fullday, '{}')) then
+    if l::time <> '10:00' then return format('Pe %s livrăm pe parcursul zilei, fără oră aleasă.', to_char(l::date, 'DD.MM')); end if;
+    return null;
+  end if;
   if extract(minute from l) <> 0 or extract(second from l) <> 0 or l::time < t0 or l::time + interval '1 hour' > t1 then
     return format('Poți programa între %s și %s, pe intervale de o oră.', to_char(t0, 'HH24:MI'), to_char(t1, 'HH24:MI')); end if;
   return null;
@@ -3496,7 +3514,8 @@ begin
     values (new.name, new.phone, case when new.mode = 'livrare' then new.address else 'Ridicare din restaurant' end, new.email, ln, q, new.total,
       'Comandă online', (new.created_at at time zone tz)::date,
       coalesce((new.scheduled_for at time zone tz)::date, (now() at time zone tz)::date),
-      coalesce(to_char(new.scheduled_for at time zone tz, 'HH24:MI') || '–' || to_char((new.scheduled_for + interval '1 hour') at time zone tz, 'HH24:MI'), ''),
+      case when public.is_fullday(new.scheduled_for) then 'pe parcursul zilei'
+           else coalesce(to_char(new.scheduled_for at time zone tz, 'HH24:MI') || '–' || to_char((new.scheduled_for + interval '1 hour') at time zone tz, 'HH24:MI'), '') end,
       trim(both ' ·' from concat_ws(' · ', case when new.mode = 'ridicare' then 'RIDICARE' else 'LIVRARE' end, nullif(new.note, ''),
         case when coalesce(new.discount, 0) > 0 then new.discount_label end)),
       'online', 'paid', coalesce(new.paid_at, now()), 'Aplicație', new.id, new.number, new.stripe_session, new.stripe_payment);
@@ -3511,6 +3530,15 @@ begin
 end $$;
 drop trigger if exists orders_to_platters on public.orders;
 create trigger orders_to_platters after insert or update of pay_status, status on public.orders for each row execute function public.orders_to_platters();
+
+-- livrarea „pe parcursul zilei” e datorată la închidere (alarmele livratorului nu sună de la 11:00)
+create or replace function public.order_due(o public.orders) returns timestamptz
+language sql stable set search_path = public as $$
+  select case when o.scheduled_for is not null and public.is_fullday(o.scheduled_for)
+              then (((o.scheduled_for at time zone s.tz)::date + s.close_time) at time zone s.tz)
+              else coalesce(o.scheduled_for + interval '1 hour', o.accepted_at + make_interval(mins => coalesce(o.eta_min, 0))) end
+  from public.settings s where s.id = 1;
+$$;
 
 
 -- Meniul Lyra (generat automat din lyra/data/menu.js). Nu suprascrie modificările făcute în admin.

@@ -5,7 +5,7 @@ import type { Item, Order, OrderStatus, Promo, Settings } from "../lib/types";
 import { ALLERGENS, hm, imgUrl, lei, mmss } from "../lib/format";
 import Icon from "../components/Icon";
 import Wordmark from "../components/Wordmark";
-import { slotDay, slotRange, whenLabel } from "../lib/schedule";
+import { slotDay, slotEnd, slotRange, whenLabel } from "../lib/schedule";
 import { ago, courierColor, type CourierInfo, type CourierLoc } from "../lib/couriers";
 const CourierMap = lazy(() => import("../components/CourierMap"));
 const IncomeTab = lazy(() => import("../components/IncomeTab"));
@@ -436,7 +436,7 @@ function Console({ email }: { email: string }) {
           {unassigned.length > 0 && couriersOn && <section className="assign" aria-live="polite">
             <h3 className="as-title"><Icon name="bike" size={26} />Atribuie livratorului<span className="num">{unassigned.length}</span></h3>
             <div className="assign-list">{unassigned.map(o => {
-              const due = o.scheduled_for ? new Date(o.scheduled_for).getTime() + 60 * 60000 : o.accepted_at && o.eta_min ? new Date(o.accepted_at).getTime() + o.eta_min * 60000 : 0;
+              const due = o.scheduled_for ? slotEnd(o.scheduled_for, settings?.close_time) : o.accepted_at && o.eta_min ? new Date(o.accepted_at).getTime() + o.eta_min * 60000 : 0;
               return <div key={o.id} className="as-row">
                 <div className="as-info">
                   <b className="num">#{o.number}</b>

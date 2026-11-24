@@ -7,7 +7,7 @@ import { useCustomer } from "../lib/auth";
 import { TIER_CLS, bonusOf, nextTierInfo, planRedeem, redeemCap, tierName, useRewards, vppOf } from "../lib/rewards";
 import { flyToCart, haptic } from "../lib/fx";
 import { LOCALITIES, geocodeAddress, useZones, zoneFor, type LatLng } from "../lib/zones";
-import { holidaySlotDays, hoursLabel, isOpenNow, slotDays, whenLabel } from "../lib/schedule";
+import { holidaySlotDays, hoursLabel, isFullDay, isOpenNow, slotDays, whenLabel } from "../lib/schedule";
 import { cut, menuPct, useDiscounts } from "../lib/discounts";
 import ModePick from "../components/ModePick";
 import GiftCard from "../components/GiftCard";
@@ -239,6 +239,9 @@ export default function Menu({ source }: { source?: string }) {
   const canOrder = canAsap || days.length > 0;
   const whenEff = canAsap ? when : "later";
   const day = days.find(d => d.key === schedDay) || days[0];
+  // Crăciun / Revelion: o singură variantă, „pe parcursul zilei” — se alege singură
+  const fullDay = !!day && day.slots.length === 1 && isFullDay(day.slots[0].iso);
+  useEffect(() => { if (fullDay && day && schedAt !== day.slots[0].iso) setSchedAt(day.slots[0].iso); }, [fullDay, day?.key]);
   const slot = day?.slots.find(x => x.iso === schedAt);
   const schedOk = whenEff === "asap" || !!slot;
   // delivery: the zone drawn in admin where the pin falls; without zones, the general fee from settings
@@ -281,12 +284,18 @@ export default function Menu({ source }: { source?: string }) {
   const count = validCart.reduce((s, l) => s + l.qty, 0);
   const qtyOf = (id: string) => validCart.filter(l => l.id === id && !l.promo).reduce((s, l) => s + l.qty, 0);
 
-  function addLine(line: Omit<CartLine, "key">, from?: Element | null) {
+  // produsele de sărbători se comandă separat (au altă dată de livrare): nu se amestecă în același coș
+  const [mixWarn, setMixWarn] = useState<{ hol: boolean; line: Omit<CartLine, "key"> } | null>(null);
+  function addLine(line: Omit<CartLine, "key">, from?: Element | null, force = false) {
+    const addHol = byId[line.id]?.kind === "holiday";
+    if (!force && cart.some(l => byId[l.id] && (byId[l.id].kind === "holiday") !== addHol)) { setMixWarn({ hol: addHol, line }); return; }
     track("add_cart", line.id);
     const key = [line.id, line.vi ?? "", [...line.extras].sort().join(","), line.note, line.promo ?? ""].join("|");
     setCart(c => {
-      const ex = c.find(l => l.key === key);
-      return ex ? c.map(l => (l.key === key ? { ...l, qty: l.qty + line.qty } : l)) : [...c, { ...line, key }];
+      // „golește coșul și adaugă”: rămân doar produsele de același fel
+      const base = force ? c.filter(l => (byId[l.id]?.kind === "holiday") === addHol) : c;
+      const ex = base.find(l => l.key === key);
+      return ex ? base.map(l => (l.key === key ? { ...l, qty: l.qty + line.qty } : l)) : [...base, { ...line, key }];
     });
     haptic(); flyToCart(from || null);
   }
@@ -379,7 +388,7 @@ export default function Menu({ source }: { source?: string }) {
         scheduled_for: whenEff === "later" && slot ? slot.iso : null,
         use_welcome: welc > 0,
         note: orderNote, code: code?.code || "", redeem_points: plan.points,
-        voucher_id: voucherPick ? voucher!.id : null, voucher_item: voucherPick || null,
+        voucher_id: voucherPick && !hasHol ? voucher!.id : null, voucher_item: (!hasHol && voucherPick) || null,
         source: source || new URLSearchParams(rloc.search).get("s") || "site",
         items: validCart.map(l => ({ id: l.id, qty: l.qty, vi: l.vi, extras: l.extras, note: l.note, promo: l.promo })),
       },
@@ -495,7 +504,7 @@ export default function Menu({ source }: { source?: string }) {
           ? <div className="freebar"><span>Încă <b className="num">{lei(freeOver - sub)}</b> și livrarea e gratuită</span><div className="prog"><i style={{ width: `${Math.min(100, (sub / freeOver) * 100)}%` }} /></div></div>
           : <div className="freebar ok"><Icon name="check" size={16} /> Livrarea e gratuită</div>)}
         {(() => {
-          const ups = UPSELL.filter(id => byId[id] && byId[id].available && !validCart.some(l => l.id === id)).slice(0, 6);
+          const ups = hasHol ? [] : UPSELL.filter(id => byId[id] && byId[id].available && !validCart.some(l => l.id === id)).slice(0, 6);
           return ups.length > 0 && <div className="ups-wrap"><p className="cp-lbl">Merge perfect alături</p><div className="ups">{ups.map(id => {
             const it = byId[id], img = imgUrl(it.image);
             return <button key={id} className="up" onClick={() => addLine({ id: it.id, qty: 1, extras: [], note: "" })}>{img ? <img src={img} alt="" /> : <span className="up-ph">{nm(it).slice(0, 1)}</span>}<span className="up-n">{nm(it)}</span><em className="num">+{lei(baseOf(it))}</em></button>;
@@ -525,7 +534,7 @@ export default function Menu({ source }: { source?: string }) {
         {!canAsap && !hasHol && settings && <p className="sched-note">{openNow ? "Restaurantul nu preia comenzi pentru acum." : `Acum suntem închiși · program ${hoursLabel(settings)}.`}{days.length ? " Poți programa comanda pentru mai târziu." : ""}</p>}
         {whenEff === "later" && day && <div className="sched">
           <div className="sched-days">{days.map(d => <button key={d.key} aria-pressed={d.key === day.key} onClick={() => { setSchedDay(d.key); setSchedAt(""); }}>{d.label}</button>)}</div>
-          <div className="sched-slots">{day.slots.map(x => <button key={x.iso} aria-pressed={x.iso === schedAt} onClick={() => setSchedAt(x.iso)}>{x.label}</button>)}</div>
+          {fullDay ? <p className="sched-full">🎄 Livrare <b>pe parcursul zilei</b>, fără oră aleasă.</p> : <div className="sched-slots">{day.slots.map(x => <button key={x.iso} aria-pressed={x.iso === schedAt} onClick={() => setSchedAt(x.iso)}>{x.label}</button>)}</div>}
           <p className="sched-note">{slot ? <>Comanda ta {mode === "livrare" ? "ajunge" : "e gata de ridicat"} <b>{whenLabel(slot.iso)}</b>.</> : `Alege intervalul ${mode === "livrare" ? "livrării" : "ridicării"}.`}</p>
         </div>}
         <p className="cp-lbl">Datele tale</p>
@@ -569,7 +578,7 @@ export default function Menu({ source }: { source?: string }) {
             <div className="rw-val"><span className="num">{plan.points} puncte</span><b className="num">−{lei(plan.value)}</b></div>
           </>}
         </div>}
-        {voucher && desserts.length > 0 && <div className="rw-voucher">
+        {voucher && desserts.length > 0 && !hasHol && <div className="rw-voucher">
           <div className="rw-head"><div><b>🍰 Desert cadou Lyra {tierName(rw.cfg, voucher.tier)}</b>
             <small>Alege unul, e din partea casei. Valabil până pe {new Date(voucher.expires_at).toLocaleDateString("ro-RO", { day: "numeric", month: "long" })}.</small></div></div>
           <div className="rw-desserts">
@@ -836,6 +845,22 @@ export default function Menu({ source }: { source?: string }) {
       })()}
 
       {/* ---------- promo popup ---------- */}
+      {mixWarn && <div className="mp-wrap" role="dialog" aria-modal="true" aria-label="Comandă separată">
+        <div className="mp-veil" onClick={() => setMixWarn(null)} />
+        <div className="mp-sheet mix-sheet">
+          <span className="mix-ic">🎄</span>
+          <h2>{mixWarn.hol ? "Produsele de sărbători se comandă separat" : "Ai în coș o comandă de sărbători"}</h2>
+          <p className="mp-sub">{mixWarn.hol
+            ? "Produsele de sărbători se livrează cu precomandă, la data aleasă de tine. Trimite întâi comanda din coș, apoi fă o comandă nouă pentru sărbători. Sau golește coșul și începe direct comanda de sărbători."
+            : "Produsele de sărbători se livrează la data programată, iar celelalte produse nu pot fi livrate atunci. Programează și trimite întâi comanda de sărbători, apoi comanzi restul printr-o comandă nouă."}</p>
+          <div className="mix-btns">
+            {mixWarn.hol
+              ? <button className="cta" onClick={() => { const l = mixWarn.line; setMixWarn(null); addLine(l, null, true); }}>Golește coșul și adaugă</button>
+              : <button className="cta" onClick={() => { setMixWarn(null); setCartOpen(true); }}>Mergi la comanda de sărbători</button>}
+            <button className="later" onClick={() => setMixWarn(null)}>Am înțeles</button>
+          </div>
+        </div>
+      </div>}
       {modePick && <ModePick current={mode} livPct={menuPct(dsc.list, "livrare")} ridPct={menuPct(dsc.list, "ridicare")} onPick={pickMode}
         onClose={(() => { try { return sessionStorage.getItem("lyra-mode-ok") ? () => setModePick(false) : undefined; } catch { return undefined; } })()} />}
       {!modePick && !cartOpen && !sheet && !popup && <OffersAsk />}

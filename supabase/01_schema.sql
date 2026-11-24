@@ -351,6 +351,10 @@ begin
   select * into s from public.settings where id = 1;
   select * into cfg from public.rewards_settings where id = 1;
   select exists (select 1 from jsonb_array_elements(coalesce(p->'items', '[]')) x join public.items i on i.id = x->>'id' where i.kind = 'holiday') into hol;
+  if hol and exists (select 1 from jsonb_array_elements(coalesce(p->'items', '[]')) x left join public.items i on i.id = x->>'id' where i.kind is distinct from 'holiday') then
+    raise exception 'Produsele de sărbători se comandă separat. Programează întâi comanda de sărbători, iar celelalte produse le comanzi printr-o comandă nouă.' using errcode = 'P0001'; end if;
+  if hol and nullif(p->>'voucher_id', '') is not null then
+    raise exception 'Desertul cadou se folosește la o comandă obișnuită, nu la comanda de sărbători.' using errcode = 'P0001'; end if;
   if hol and v_sched is null then
     raise exception 'Produsele de sărbători se comandă cu precomandă: alege ziua și intervalul livrării (minimum 24 de ore înainte).' using errcode = 'P0001'; end if;
   if v_sched is null then

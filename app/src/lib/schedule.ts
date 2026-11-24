@@ -2,7 +2,7 @@
 export type Hours = {
   open_time?: string; close_time?: string; open_days?: number[];
   preorder_on?: boolean; preorder_from?: string; preorder_days?: number; preorder_lead_min?: number; preorder_until?: string; tz?: string;
-  holiday_from?: string; holiday_until?: string; holiday_lead_hours?: number; holiday_days?: string[] | null; holiday_deadlines?: Record<string, string> | null;   // produse de sărbători (19_sarbatori.sql)
+  holiday_from?: string; holiday_until?: string; holiday_lead_hours?: number; holiday_days?: string[] | null; holiday_deadlines?: Record<string, string> | null; holiday_fullday?: string[] | null;   // produse de sărbători (19_sarbatori.sql)
 };
 
 const TZ = (h: Hours) => h.tz || "Europe/Bucharest";
@@ -74,7 +74,11 @@ export function holidaySlotDays(h: Hours, now = Date.now()): SlotDay[] {
     if (h.holiday_days?.length && !h.holiday_days.includes(key)) continue;   // zilele de pauză (23, 25, 26 decembrie)
     if (h.holiday_deadlines?.[key] && todayKey > h.holiday_deadlines[key]) continue;   // Crăciun: comenzi până pe 22, Revelion: până pe 29
     const slots: SlotDay["slots"] = [];
-    for (let m = Math.ceil(from / 60) * 60; m + 60 <= to; m += 60) {
+    if (h.holiday_fullday?.includes(key)) {
+      // Crăciun / Revelion: livrare pe parcursul zilei, fără oră (salvată la 10:00, ca în baza de date)
+      const t = zoned(p.y, p.mo, p.d, FULLDAY_MIN, tz);
+      if (t >= now + lead) slots.push({ iso: new Date(t).toISOString(), label: "Pe parcursul zilei" });
+    } else for (let m = Math.ceil(from / 60) * 60; m + 60 <= to; m += 60) {
       const t = zoned(p.y, p.mo, p.d, m, tz);
       if (t >= now + lead) slots.push({ iso: new Date(t).toISOString(), label: `${hhmm(m)}–${hhmm(m + 60)}` });
     }
@@ -84,9 +88,20 @@ export function holidaySlotDays(h: Hours, now = Date.now()): SlotDay[] {
   return out;
 }
 
-/** "13:00–14:00": the one-hour interval that starts at iso */
+/** livrare „pe parcursul zilei” (Crăciun, Revelion): precomanda e salvată la 10:00, oră pe care nu o au intervalele obișnuite */
+const FULLDAY_MIN = 600;
+export const isFullDay = (iso: string, tz = "Europe/Bucharest") => parts(new Date(iso).getTime(), tz).min === FULLDAY_MIN;
+/** până când trebuie livrată o precomandă: sfârșitul intervalului, sau ora de închidere pentru „pe parcursul zilei” */
+export function slotEnd(iso: string, close = "21:30", tz = "Europe/Bucharest") {
+  const t = new Date(iso).getTime();
+  if (!isFullDay(iso, tz)) return t + 3600000;
+  const p = parts(t, tz);
+  return zoned(p.y, p.mo, p.d, mins(close, 1290), tz);
+}
+/** "13:00–14:00": the one-hour interval that starts at iso; „pe parcursul zilei” la Crăciun / Revelion */
 export function slotRange(iso: string, tz = "Europe/Bucharest") {
   const m = parts(new Date(iso).getTime(), tz).min;
+  if (m === FULLDAY_MIN) return "pe parcursul zilei";
   return `${hhmm(m)}–${hhmm((m + 60) % 1440)}`;
 }
 /** "azi", "mâine", "joi 5 nov." */
