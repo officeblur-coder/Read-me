@@ -2,7 +2,7 @@
 export type Hours = {
   open_time?: string; close_time?: string; open_days?: number[];
   preorder_on?: boolean; preorder_from?: string; preorder_days?: number; preorder_lead_min?: number; preorder_until?: string; tz?: string;
-  holiday_from?: string; holiday_until?: string; holiday_lead_hours?: number;   // produse de sărbători (19_sarbatori.sql)
+  holiday_from?: string; holiday_until?: string; holiday_lead_hours?: number; holiday_days?: string[] | null;   // produse de sărbători (19_sarbatori.sql)
 };
 
 const TZ = (h: Hours) => h.tz || "Europe/Bucharest";
@@ -62,7 +62,7 @@ export function slotDays(h: Hours, now = Date.now()): SlotDay[] {
 export function holidaySlotDays(h: Hours, now = Date.now()): SlotDay[] {
   const tz = TZ(h), lead = (h.holiday_lead_hours ?? 24) * 3600000;
   const from = Math.max(mins(h.preorder_from, 720), mins(h.open_time, 660)), to = Math.min(mins(h.close_time, 1320), mins(h.preorder_until, 1260), 1440);
-  const first = h.holiday_from || "2026-12-03", last = h.holiday_until || "2026-12-31";
+  const first = h.holiday_from || "2026-12-03", last = h.holiday_until || "2026-12-29";
   const today = parts(now, tz), out: SlotDay[] = [];
   for (let i = 0; i <= 45; i++) {
     const noon = zoned(today.y, today.mo, today.d, 720, tz) + i * 864e5;
@@ -70,6 +70,7 @@ export function holidaySlotDays(h: Hours, now = Date.now()): SlotDay[] {
     const key = `${p.y}-${String(p.mo).padStart(2, "0")}-${String(p.d).padStart(2, "0")}`;
     if (key > last) break;
     if (key < first || !(h.open_days || [1, 2, 3, 4, 5, 6, 7]).includes(p.dow)) continue;
+    if (h.holiday_days?.length && !h.holiday_days.includes(key)) continue;   // zilele de pauză (ex. 23–26 decembrie)
     const slots: SlotDay["slots"] = [];
     for (let m = Math.ceil(from / 60) * 60; m + 60 <= to; m += 60) {
       const t = zoned(p.y, p.mo, p.d, m, tz);

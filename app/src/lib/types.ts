@@ -41,7 +41,7 @@ export type Settings = import("./schedule").Hours & {
   auto_open?: boolean;                         // pornire / oprire automată după program
   confirm_eta?: boolean;
   online_pay_on?: boolean;
-  holiday_from?: string; holiday_until?: string; holiday_lead_hours?: number;
+  holiday_from?: string; holiday_until?: string; holiday_lead_hours?: number; holiday_days?: string[] | null; holiday_days_label?: string;
   couriers_on?: boolean;                       // livratorii (atribuire, aplicație, hartă) porniți din admin                     // plata online cu cardul (Stripe) e configurată și pornită                       // clientul confirmă timpul propus de recepție
   offer_window_min?: number;                   // vechi (minute)
   offer_window_sec?: number;                   // secunde pentru răspunsul clientului

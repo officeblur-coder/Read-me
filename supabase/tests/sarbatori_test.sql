@@ -20,7 +20,7 @@ create function pg_temp.at(days int, hhmm text) returns text language sql as $$
   select ((((now() at time zone 'Europe/Bucharest')::date + days) + hhmm::time) at time zone 'Europe/Bucharest')::text $$;
 update public.settings set accepting_orders = true, min_order = 0, open_days = '{1,2,3,4,5,6,7}', open_time = '11:00', close_time = '21:30',
   preorder_on = true, preorder_from = '12:00', preorder_until = '21:00', preorder_days = 2, online_pay_on = true,
-  holiday_from = (now() at time zone 'Europe/Bucharest')::date + 2, holiday_until = (now() at time zone 'Europe/Bucharest')::date + 30 where id = 1;
+  holiday_from = (now() at time zone 'Europe/Bucharest')::date + 2, holiday_until = (now() at time zone 'Europe/Bucharest')::date + 30, holiday_days = '{}' where id = 1;
 delete from public.item_discounts;
 insert into public.item_discounts(name, percent, all_items, mode) values ('Ridicare', 15, true, 'ridicare'), ('Livrare', 10, true, 'livrare');
 delete from public.delivery_zones;
@@ -41,6 +41,11 @@ begin
   e := pg_temp.err(jsonb_build_object('items', '[{"id":"platou-festiv","qty":1}]'::jsonb, 'scheduled_for', pg_temp.at(5, '13:00'), 'use_welcome', true));
   perform pg_temp.ok(e like 'Bonusul de bun venit nu mai este disponibil%', 'bonusul de bun venit nu se mai poate folosi');
 
+  -- zilele de pauză (aici: ziua de peste 12 zile scoasă din listă)
+  update public.settings set holiday_days = array(select d::date from generate_series((now() at time zone 'Europe/Bucharest')::date + 2, (now() at time zone 'Europe/Bucharest')::date + 30, interval '1 day') d
+    where d::date <> (now() at time zone 'Europe/Bucharest')::date + 12), holiday_days_label = 'test' where id = 1;
+  e := pg_temp.err(jsonb_build_object('items', '[{"id":"platou-festiv","qty":1}]'::jsonb, 'scheduled_for', pg_temp.at(12, '13:00')));
+  perform pg_temp.ok(e like 'În ziua aleasă nu livrăm produse de sărbători%', 'zi de pauză: refuzată');
   -- comandă bună: peste 10 zile, ridicare (−15%), 2 platouri + ciorbă
   o := pg_temp.place(jsonb_build_object('items', '[{"id":"platou-festiv","qty":2},{"id":"ciorba-burta-sarbatori","qty":1}]'::jsonb, 'scheduled_for', pg_temp.at(10, '13:00')));
   perform pg_temp.ok(o.pay_status = 'pending' and o.payment = 'online', 'precomanda așteaptă plata online');

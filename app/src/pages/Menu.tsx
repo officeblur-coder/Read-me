@@ -433,7 +433,7 @@ export default function Menu({ source }: { source?: string }) {
   const catOf = (id: string | null) => cats.find(c => c.id === id);
   const holItems = items.filter(i => i.kind === "holiday" && i.active !== false);
   const holOn = holItems.length > 0 && (!settings?.holiday_until || new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Bucharest" }).format(clock) <= settings.holiday_until);
-  const holFrom = settings?.holiday_from ? new Date(settings.holiday_from + "T12:00:00").toLocaleDateString("ro-RO", { day: "numeric", month: "long" }) : "3 decembrie";
+  const holDays = settings?.holiday_days_label || "3–22 decembrie și 27–29 decembrie";
 
   if (loadErr) return <div className="m-page"><p className="closed">{loadErr}</p></div>;
 
@@ -490,7 +490,7 @@ export default function Menu({ source }: { source?: string }) {
           })}
           {wineN > 0 && <div className="cl cl-wine"><img src="/img/sarbatori-vin.jpg" alt="" /><div className="cl-txt"><b>Vin din partea casei 🍷</b><small>Pirovano Chardonnay · câte o sticlă la fiecare Platou Festiv</small><span className="num">cadou</span></div><span className="qty"><b className="num">{wineN}×</b></span></div>}
         </div>
-        {hasHol && <p className="hol-note">🎄 <b>Comandă de sărbători:</b> se livrează cu precomandă de minimum 24 de ore (din {holFrom}), iar plata se face exclusiv online, cu cardul. Alegi ziua și intervalul la pasul următor.</p>}
+        {hasHol && <p className="hol-note">🎄 <b>Comandă de sărbători:</b> se livrează cu precomandă de minimum 24 de ore, în zilele {holDays}, iar plata se face exclusiv online, cu cardul. Alegi ziua și intervalul la pasul următor.</p>}
         {mode === "livrare" && feeKnown && freeOver !== Infinity && (sub < freeOver
           ? <div className="freebar"><span>Încă <b className="num">{lei(freeOver - sub)}</b> și livrarea e gratuită</span><div className="prog"><i style={{ width: `${Math.min(100, (sub / freeOver) * 100)}%` }} /></div></div>
           : <div className="freebar ok"><Icon name="check" size={16} /> Livrarea e gratuită</div>)}
@@ -521,7 +521,7 @@ export default function Menu({ source }: { source?: string }) {
           <button aria-pressed={whenEff === "asap"} disabled={!canAsap} onClick={() => setWhen("asap")}><Icon name="bolt" size={18} />{canAsap ? "Cât mai curând" : hasHol ? "Doar precomandă" : "Închis acum"}</button>
           <button aria-pressed={whenEff === "later"} disabled={!days.length} onClick={() => { setWhen("later"); if (!schedDay && days[0]) setSchedDay(days[0].key); }}><Icon name="clock" size={18} />Programează</button>
         </div>
-        {hasHol && <p className="sched-note">Produsele de sărbători se livrează cu precomandă de minimum 24 de ore, din {holFrom}. {days.length ? "Alege ziua și intervalul:" : "Momentan nu se pot programa (plata online e oprită)."}</p>}
+        {hasHol && <p className="sched-note">Produsele de sărbători se livrează cu precomandă de minimum 24 de ore, în zilele {holDays}. {days.length ? "Alege ziua și intervalul:" : "Momentan nu se pot programa (plata online e oprită)."}</p>}
         {!canAsap && !hasHol && settings && <p className="sched-note">{openNow ? "Restaurantul nu preia comenzi pentru acum." : `Acum suntem închiși · program ${hoursLabel(settings)}.`}{days.length ? " Poți programa comanda pentru mai târziu." : ""}</p>}
         {whenEff === "later" && day && <div className="sched">
           <div className="sched-days">{days.map(d => <button key={d.key} aria-pressed={d.key === day.key} onClick={() => { setSchedDay(d.key); setSchedAt(""); }}>{d.label}</button>)}</div>
@@ -662,7 +662,7 @@ export default function Menu({ source }: { source?: string }) {
               <div className="xm-head">
                 <span className="xm-kick">{L ? "KARÁCSONY & SZILVESZTER A LYRÁTÓL" : "CRĂCIUN & REVELION DE LA LYRA"}</span>
                 <h2>{L ? "Ünnepi asztal, házhoz szállítva" : "Masa de sărbători, livrată de Lyra"}</h2>
-                <p>{L ? `Rendelés az ünnepekre és egész decemberre · első szállítás: ${holFrom}` : `Comenzi pentru sărbători și pentru toată luna decembrie · prima livrare pe ${holFrom}`}</p>
+                <p>{L ? `Rendelés az ünnepekre és decemberre · szállítás: december 3–22. és 27–29.` : `Comenzi pentru sărbători și pentru luna decembrie · livrăm ${holDays}`}</p>
                 <div className="xm-rules"><span>⏱ {L ? "Előrendelés min. 24 órával" : "Precomandă minimum 24 de ore"}</span><span>💳 {L ? "Csak online fizetés" : "Plată exclusiv online"}</span><span>−10% {L ? "szállítás" : "livrare"} · −15% {L ? "elvitel" : "ridicare"}</span></div>
               </div>
               <div className="xm-rail">{holItems.map(it => <article key={it.id} className="xm-card" data-card>
