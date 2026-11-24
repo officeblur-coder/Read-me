@@ -11,13 +11,16 @@ alter table public.items drop constraint if exists items_kind_check;
 alter table public.items add constraint items_kind_check check (kind in ('dish', 'gift', 'holiday'));
 
 alter table public.settings add column if not exists holiday_from date not null default '2026-12-03';    -- prima zi de livrare
-alter table public.settings add column if not exists holiday_until date not null default '2026-12-29';   -- ultima zi de livrare
+alter table public.settings add column if not exists holiday_until date not null default '2026-12-31';   -- ultima zi de livrare
 alter table public.settings add column if not exists holiday_lead_hours int not null default 24;         -- precomandă minimă
--- zilele în care se pot livra produsele de sărbători: 3–22 decembrie, pauză, apoi 27, 28, 29 decembrie
-alter table public.settings add column if not exists holiday_days date[] not null default
-  '{2026-12-03,2026-12-04,2026-12-05,2026-12-06,2026-12-07,2026-12-08,2026-12-09,2026-12-10,2026-12-11,2026-12-12,2026-12-13,2026-12-14,2026-12-15,2026-12-16,2026-12-17,2026-12-18,2026-12-19,2026-12-20,2026-12-21,2026-12-22,2026-12-27,2026-12-28,2026-12-29}'::date[];
-alter table public.settings add column if not exists holiday_days_label text not null default '3–22 decembrie și 27–29 decembrie';
-update public.settings set holiday_until = '2026-12-29' where id = 1 and holiday_until = '2026-12-31';   -- ultima zi din listă
+-- zilele în care se pot livra produsele de sărbători: 3–22 decembrie, 24 (Crăciun), 27–31 decembrie (fără 23, 25, 26)
+alter table public.settings add column if not exists holiday_days date[];
+alter table public.settings add column if not exists holiday_days_label text;
+-- ultima zi de comandă pentru anumite zile de livrare: Crăciun (24) până pe 22, Revelion (31) până pe 29
+alter table public.settings add column if not exists holiday_deadlines jsonb;
+update public.settings set holiday_days = '{2026-12-03,2026-12-04,2026-12-05,2026-12-06,2026-12-07,2026-12-08,2026-12-09,2026-12-10,2026-12-11,2026-12-12,2026-12-13,2026-12-14,2026-12-15,2026-12-16,2026-12-17,2026-12-18,2026-12-19,2026-12-20,2026-12-21,2026-12-22,2026-12-24,2026-12-27,2026-12-28,2026-12-29,2026-12-30,2026-12-31}'::date[],
+  holiday_days_label = '3–22 decembrie, 24 decembrie și 27–31 decembrie',
+  holiday_deadlines = '{"2026-12-24": "2026-12-22", "2026-12-31": "2026-12-29"}', holiday_until = '2026-12-31' where id = 1;
 
 -- null = ziua și ora alese sunt bune pentru produsele de sărbători; altfel motivul
 create or replace function public.holiday_error(p_at timestamptz) returns text
@@ -35,6 +38,9 @@ begin
     return format('Produsele de sărbători se livrează până pe %s.', to_char(s.holiday_until, 'DD.MM.YYYY')); end if;
   if s.holiday_days is not null and cardinality(s.holiday_days) > 0 and not (l::date = any(s.holiday_days)) then
     return format('În ziua aleasă nu livrăm produse de sărbători. Zile disponibile: %s.', s.holiday_days_label); end if;
+  -- termen de comandă pentru Crăciun / Revelion
+  if s.holiday_deadlines ? l::date::text and (now() at time zone s.tz)::date > (s.holiday_deadlines->>(l::date::text))::date then
+    return format('Comenzile pentru %s se primesc până pe %s. Poți alege altă zi.', to_char(l::date, 'DD.MM'), to_char((s.holiday_deadlines->>(l::date::text))::date, 'DD.MM')); end if;
   if not (extract(isodow from l)::int = any(s.open_days)) then return 'În ziua aleasă restaurantul este închis.'; end if;
   if extract(minute from l) <> 0 or extract(second from l) <> 0 or l::time < t0 or l::time + interval '1 hour' > t1 then
     return format('Poți programa între %s și %s, pe intervale de o oră.', to_char(t0, 'HH24:MI'), to_char(t1, 'HH24:MI')); end if;

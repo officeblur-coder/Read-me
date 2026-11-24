@@ -433,7 +433,7 @@ export default function Menu({ source }: { source?: string }) {
   const catOf = (id: string | null) => cats.find(c => c.id === id);
   const holItems = items.filter(i => i.kind === "holiday" && i.active !== false);
   const holOn = holItems.length > 0 && (!settings?.holiday_until || new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Bucharest" }).format(clock) <= settings.holiday_until);
-  const holDays = settings?.holiday_days_label || "3–22 decembrie și 27–29 decembrie";
+  const holDays = settings?.holiday_days_label || "3–22 decembrie, 24 decembrie și 27–31 decembrie";
 
   if (loadErr) return <div className="m-page"><p className="closed">{loadErr}</p></div>;
 
@@ -662,8 +662,8 @@ export default function Menu({ source }: { source?: string }) {
               <div className="xm-head">
                 <span className="xm-kick">{L ? "KARÁCSONY & SZILVESZTER A LYRÁTÓL" : "CRĂCIUN & REVELION DE LA LYRA"}</span>
                 <h2>{L ? "Ünnepi asztal, házhoz szállítva" : "Masa de sărbători, livrată de Lyra"}</h2>
-                <p>{L ? `Rendelés az ünnepekre és decemberre · szállítás: december 3–22. és 27–29.` : `Comenzi pentru sărbători și pentru luna decembrie · livrăm ${holDays}`}</p>
-                <div className="xm-rules"><span>⏱ {L ? "Előrendelés min. 24 órával" : "Precomandă minimum 24 de ore"}</span><span>💳 {L ? "Csak online fizetés" : "Plată exclusiv online"}</span><span>−10% {L ? "szállítás" : "livrare"} · −15% {L ? "elvitel" : "ridicare"}</span></div>
+                <p>{L ? `Rendelés az ünnepekre és decemberre · szállítás: december 3–22., 24. és 27–31.` : `Comenzi pentru sărbători și pentru luna decembrie · livrăm ${holDays}`}</p>
+                <div className="xm-rules"><span>🎄 {L ? "Karácsony (24.): rendelés dec. 22-ig" : "Crăciun (24 dec.): comenzi până pe 22"}</span><span>🥂 {L ? "Szilveszter (31.): rendelés dec. 29-ig" : "Revelion (31 dec.): comenzi până pe 29"}</span><span>⏱ {L ? "Előrendelés min. 24 órával" : "Precomandă minimum 24 de ore"}</span><span>💳 {L ? "Csak online fizetés" : "Plată exclusiv online"}</span><span>−10% {L ? "szállítás" : "livrare"} · −15% {L ? "elvitel" : "ridicare"}</span></div>
               </div>
               <div className="xm-rail">{holItems.map(it => <article key={it.id} className="xm-card" data-card>
                 <button className="xm-img" onClick={() => openItem(it)} aria-label={nm(it)}><img src={imgUrl(it.image)!} alt="" loading="lazy" />
