@@ -530,7 +530,7 @@ export default function Menu({ source }: { source?: string }) {
           : <Link to="/cont" className="club-strip guest"><Icon name="star" size={18} fill /><div><b>Ai cont Lyra Rewards?</b><small>Intră ca să folosești punctele și să-ți salvăm adresa.</small></div><span>→</span></Link>)}
         <div className="mode-fixed"><Icon name={mode === "livrare" ? "bike" : "bag"} size={18} />
           <b>{mode === "livrare" ? "Livrare la domiciliu" : "Ridicare din restaurant"}</b>
-          {menuPct(dsc.list, mode) > 0 && <span className="b b-off">−{menuPct(dsc.list, mode)}% la tot meniul</span>}</div>
+          {menuPct(dsc.list, mode) > 0 && !hasHol && <span className="b b-off">−{menuPct(dsc.list, mode)}% la tot meniul</span>}{hasHol && <span className="b b-magic">✨ preț întreg de sărbători</span>}</div>
         <p className="cp-lbl">Când o vrei?</p>
         <div className="seg big2">
           <button aria-pressed={whenEff === "asap"} disabled={!canAsap} onClick={() => setWhen("asap")}><Icon name="bolt" size={18} />{canAsap ? "Cât mai curând" : hasHol ? "Doar precomandă" : "Închis acum"}</button>
@@ -869,7 +869,7 @@ export default function Menu({ source }: { source?: string }) {
           </div>
         </div>
       </div>}
-      {modePick && <ModePick current={mode} livPct={menuPct(dsc.list, "livrare")} ridPct={menuPct(dsc.list, "ridicare")} onPick={pickMode}
+      {modePick && <ModePick current={mode} livPct={hasHol ? 0 : menuPct(dsc.list, "livrare")} ridPct={hasHol ? 0 : menuPct(dsc.list, "ridicare")} onPick={pickMode}
         onClose={(() => { try { return sessionStorage.getItem("lyra-mode-ok") ? () => setModePick(false) : undefined; } catch { return undefined; } })()} />}
       {!modePick && !cartOpen && !sheet && !popup && <OffersAsk />}
       {installOpen && !modePick && !cartOpen && !sheet && <InstallSheet hasAccount={!!customer} onClose={() => setInstallOpen(false)} />}
