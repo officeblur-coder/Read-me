@@ -869,7 +869,7 @@ export default function Menu({ source }: { source?: string }) {
           </div>
         </div>
       </div>}
-      {modePick && <ModePick current={mode} livPct={hasHol ? 0 : menuPct(dsc.list, "livrare")} ridPct={hasHol ? 0 : menuPct(dsc.list, "ridicare")} onPick={pickMode}
+      {modePick && <ModePick current={mode} livPct={menuPct(dsc.list, "livrare")} ridPct={menuPct(dsc.list, "ridicare")} holNote={hasHol} onPick={pickMode}
         onClose={(() => { try { return sessionStorage.getItem("lyra-mode-ok") ? () => setModePick(false) : undefined; } catch { return undefined; } })()} />}
       {!modePick && !cartOpen && !sheet && !popup && <OffersAsk />}
       {installOpen && !modePick && !cartOpen && !sheet && <InstallSheet hasAccount={!!customer} onClose={() => setInstallOpen(false)} />}

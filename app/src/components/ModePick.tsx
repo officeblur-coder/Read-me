@@ -4,8 +4,8 @@ import Icon from "./Icon";
 
 type Mode = "livrare" | "ridicare";
 
-export default function ModePick({ current, livPct, ridPct, onPick, onClose }: {
-  current: Mode | null; livPct: number; ridPct: number; onPick: (m: Mode) => void; onClose?: () => void;
+export default function ModePick({ current, livPct, ridPct, onPick, onClose, holNote }: {
+  current: Mode | null; livPct: number; ridPct: number; onPick: (m: Mode) => void; onClose?: () => void; holNote?: boolean;
 }) {
   return (
     <div className="mp-wrap" role="dialog" aria-modal="true" aria-label="Livrare sau ridicare">
@@ -16,6 +16,7 @@ export default function ModePick({ current, livPct, ridPct, onPick, onClose }: {
         <p className="mp-hello-sub">Ne bucurăm că ești aici. Gătim cu drag, din 1999.</p>
         <h2>Cum vrei să comanzi?</h2>
         <p className="mp-sub">Alege acum. Prețurile din meniu se calculează după alegerea ta.</p>
+        {holNote && (livPct > 0 || ridPct > 0) && <p className="mp-hol">✨ Produsele de sărbători din coș rămân la preț întreg.</p>}
         <div className="mp-opts">
           <button className={`mp-opt pick ${current === "ridicare" ? "on" : ""}`} onClick={() => onPick("ridicare")}>
             {ridPct > 0 && <span className="mp-badge num">−{ridPct}%</span>}
