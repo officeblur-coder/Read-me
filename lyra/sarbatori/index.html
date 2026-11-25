@@ -124,9 +124,17 @@ body{font-variant-numeric:lining-nums;-webkit-print-color-adjust:exact;print-col
 .disc em{font-style:normal;font-family:var(--serif);font-weight:700;font-size:19pt;line-height:1;color:var(--gold2)}
 .disc span{font-size:6pt;line-height:1.25;color:var(--text)}
 .online .t p{font-size:5.6pt;color:var(--muted);margin-top:1.4mm}
+
+/* ?a4 : the same two pages as an A4 menu insert, trim 210 x 297 mm + 15 mm bleed = 240 x 327 mm.
+   The A5 layout is zoomed by 297/210 so every size scales; the bleed becomes 15 mm and the
+   content keeps ~11 mm from the trim. Used only for the flattened (raster) print PDF. */
+html.a4 .sheet{zoom:1.41429;width:169.70mm;height:231.21mm;margin:0 auto 6mm}
+html.a4 .frame{left:14.6mm;right:14.6mm;top:14.6mm;bottom:14.6mm}
+html.a4 .inner{left:18.6mm;right:18.6mm;top:18.6mm;bottom:18.6mm}
 </style>
 </head>
 <body>
+<script>if (/[?&]a4\b/.test(location.search)) document.documentElement.classList.add("a4");</script>
 
 <!-- ======================= FAȚĂ ======================= -->
 <section class="sheet front">
