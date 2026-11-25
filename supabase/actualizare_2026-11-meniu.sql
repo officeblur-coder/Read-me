@@ -1903,8 +1903,8 @@ begin
         select coalesce(device, '?') as device, count(*) as visits, count(*) filter (where ordered) as orders from s group by 1) x), '[]'),
     'items', coalesce((select jsonb_agg(x order by x.views desc, x.carts desc) from (
         select e.detail as id, coalesce(i.name_ro, e.detail) as name,
-          count(*) filter (where kind = 'view_item') as views, count(*) filter (where kind = 'add_cart') as carts
-        from e left join public.items i on i.id = e.detail where kind in ('view_item', 'add_cart') and e.detail is not null
+          count(*) filter (where e.kind = 'view_item') as views, count(*) filter (where e.kind = 'add_cart') as carts
+        from e left join public.items i on i.id = e.detail where e.kind in ('view_item', 'add_cart') and e.detail is not null
         group by e.detail, i.name_ro order by 3 desc, 4 desc limit 30) x), '[]'),
     'searches', coalesce((select jsonb_agg(x order by x.n desc) from (
         select lower(detail) as term, count(*) as n from e where kind = 'search' and detail is not null group by 1 order by 2 desc limit 20) x), '[]'),

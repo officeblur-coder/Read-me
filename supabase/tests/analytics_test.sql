@@ -39,8 +39,10 @@ set local role anon;
 do $$ begin
   begin insert into public.site_events(sid, kind) values (gen_random_uuid(), 'visit'); raise exception 'TEST EȘUAT: insert direct permis';
   exception when insufficient_privilege then raise notice 'ok  scriere directă blocată (doar prin track)'; end;
-  perform 1 from public.site_events limit 1;
-  raise notice 'ok  anonimii nu citesc evenimentele (0 rânduri vizibile)';
+  begin perform 1 from public.site_events limit 1;
+    if found then raise exception 'TEST EȘUAT: anonimii văd evenimente'; end if;
+  exception when insufficient_privilege then null; end;
+  raise notice 'ok  anonimii nu citesc evenimentele';
 end $$;
 reset role;
 rollback;
