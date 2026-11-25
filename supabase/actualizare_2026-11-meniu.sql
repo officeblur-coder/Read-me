@@ -412,7 +412,8 @@ begin
       end loop;
     else
       -- reducere procentuală din admin (07_discounts.sql), după livrare / ridicare: doar pe prețul produsului, nu pe extra
-      dpct := public.item_discount_pct(it.id, v_mode);
+      -- produsele de sărbători (kind = 'holiday') sunt mereu la preț întreg
+      dpct := case when it.kind = 'holiday' then 0 else public.item_discount_pct(it.id, v_mode) end;
       if dpct > 0 then old_unit := unit; unit := round(unit * (100 - dpct) / 100.0, 2); end if;
       for ex_id in select jsonb_array_elements_text(coalesce(line->'extras','[]')) loop
         select * into ex from public.items where id = ex_id and active and available;
@@ -432,7 +433,8 @@ begin
       'grams', grams, 'hot', it.hot, 'allergens', to_jsonb(it.allergens), 'category', it.category_id,
       'extras', ex_arr, 'note', left(coalesce(line->>'note',''), 200), 'pack', lpack, 'sgr', lsgr,
       'promo', case when is_promo then pr.title end,
-      'disc_pct', case when dpct > 0 then dpct end, 'old_unit', old_unit, 'giftcard', case when is_gc then true end);
+      'disc_pct', case when dpct > 0 then dpct end, 'old_unit', old_unit, 'giftcard', case when is_gc then true end,
+      'holiday', case when it.kind = 'holiday' then true end);
   end loop;
   fsub := sub - gc_sum;
   -- vinul din partea casei: o sticlă la fiecare Platou Festiv, gratuit
@@ -453,10 +455,10 @@ begin
       -- codul nu se cumulează cu reducerile pe produse: se aplică doar produselor fără reducere
       if pc.category_id is null then
         select round(coalesce(sum((l->>'unit')::numeric * (l->>'qty')::int), 0) * pc.percent / 100.0, 2) into disc
-          from jsonb_array_elements(lines) l where l->>'disc_pct' is null and l->>'giftcard' is null;
+          from jsonb_array_elements(lines) l where l->>'disc_pct' is null and l->>'giftcard' is null and l->>'holiday' is null;
       else
         select round(coalesce(sum((l->>'unit')::numeric * (l->>'qty')::int), 0) * pc.percent / 100.0, 2) into disc
-          from jsonb_array_elements(lines) l where l->>'category' = pc.category_id and l->>'promo' is null and l->>'disc_pct' is null;
+          from jsonb_array_elements(lines) l where l->>'category' = pc.category_id and l->>'promo' is null and l->>'disc_pct' is null and l->>'holiday' is null;
       end if;
       disc_lbl := pc.label;
     end if;

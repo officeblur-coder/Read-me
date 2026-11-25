@@ -57,9 +57,9 @@ begin
   -- comandă bună: peste 10 zile, ridicare (−15%), 2 platouri + ciorbă
   o := pg_temp.place(jsonb_build_object('items', '[{"id":"platou-festiv","qty":2},{"id":"ciorba-burta-sarbatori","qty":1}]'::jsonb, 'scheduled_for', pg_temp.at(10, '13:00')));
   perform pg_temp.ok(o.pay_status = 'pending' and o.payment = 'online', 'precomanda așteaptă plata online');
-  perform pg_temp.ok((select (l->>'unit')::numeric from jsonb_array_elements(o.items) l where l->>'id' = 'platou-festiv') = 216.75, 'reducerea de ridicare −15%: 255 → 216,75');
+  perform pg_temp.ok((select (l->>'unit')::numeric from jsonb_array_elements(o.items) l where l->>'id' = 'platou-festiv') = 255, 'fără reducere: Platoul Festiv rămâne 255 lei și la ridicare');
   perform pg_temp.ok((select (l->>'qty')::int = 2 and (l->>'unit')::numeric = 0 from jsonb_array_elements(o.items) l where l->>'id' = 'vin-casa'), 'două sticle de vin din partea casei, gratuit');
-  perform pg_temp.ok(o.total = 216.75 * 2 + 85 and o.packaging = 0, 'totalul (prețurile includ ambalajul)');
+  perform pg_temp.ok(o.total = 255 * 2 + 100 and o.packaging = 0, 'totalul la preț întreg (prețurile includ ambalajul)');
   perform pg_temp.ok(not exists (select 1 from public.platter_orders where order_id = o.id), 'neplătită: nu e încă în registru');
 
   -- plata confirmată de Stripe → apare în registru
@@ -73,6 +73,10 @@ begin
   -- refuzată în recepție → anulată în registru
   update public.orders set status = 'rejected' where id = o.id;
   perform pg_temp.ok((select cancelled from public.platter_orders where order_id = o.id), 'refuzată: apare anulată în registru');
+  -- codurile promoționale nu se aplică produselor de sărbători
+  insert into public.promo_codes(code, percent, label, active) values ('CRACIUN10', 10, 'Cod test', true) on conflict do nothing;
+  o := pg_temp.place(jsonb_build_object('items', '[{"id":"vinete-sarbatori","qty":1}]'::jsonb, 'scheduled_for', pg_temp.at(7, '13:00'), 'code', 'CRACIUN10', 'mode', 'livrare', 'address', 'Str. Test 1'));
+  perform pg_temp.ok(coalesce(o.discount, 0) = 0 and (select (l->>'unit')::numeric from jsonb_array_elements(o.items) l where l->>'id' = 'vinete-sarbatori') = 40, 'livrare + cod promo: tot preț întreg (40 lei)');
   -- nu se amestecă produse de sărbători cu altele
   e := pg_temp.err(jsonb_build_object('items', '[{"id":"platou-festiv","qty":1},{"id":"smash","qty":1}]'::jsonb, 'scheduled_for', pg_temp.at(5, '13:00')));
   perform pg_temp.ok(e like 'Produsele de sărbători se comandă separat%', 'sărbători + alt produs în aceeași comandă: refuzat');

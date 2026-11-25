@@ -209,7 +209,9 @@ export default function Menu({ source }: { source?: string }) {
   const fullOf = (it: Item, vi?: number) => (it.variants?.length ? it.variants[vi ?? 0].p : it.price);
   // voucherul cadou nu are reduceri (nici de livrare, nici de ridicare)
   const isGift = (id: string) => byId[id]?.kind === "gift";
-  const pctOf = (id: string) => (isGift(id) ? 0 : dsc.pct[id] || 0);
+  // cardul cadou și produsele de sărbători sunt mereu la preț întreg
+  const isHolId = (id: string) => byId[id]?.kind === "holiday";
+  const pctOf = (id: string) => (isGift(id) || isHolId(id) ? 0 : dsc.pct[id] || 0);
   // reducerea din admin se aplică doar prețului produsului (nu și extra), exact ca în baza de date
   const baseOf = (it: Item, vi?: number) => cut(fullOf(it, vi), pctOf(it.id));
   const unitOf = (l: CartLine) => {
@@ -222,8 +224,8 @@ export default function Menu({ source }: { source?: string }) {
   const sub = validCart.reduce((s, l) => s + unitOf(l) * l.qty, 0);
   const disc = code
     ? Math.round((code.category_id
-        ? validCart.filter(l => byId[l.id].category_id === code.category_id && l.promoPrice == null && !lineOff(l)).reduce((s, l) => s + unitOf(l) * l.qty, 0)
-        : validCart.filter(l => !lineOff(l) && !isGift(l.id)).reduce((s, l) => s + unitOf(l) * l.qty, 0)) * code.percent) / 100
+        ? validCart.filter(l => byId[l.id].category_id === code.category_id && l.promoPrice == null && !lineOff(l) && !isHolId(l.id)).reduce((s, l) => s + unitOf(l) * l.qty, 0)
+        : validCart.filter(l => !lineOff(l) && !isGift(l.id) && !isHolId(l.id)).reduce((s, l) => s + unitOf(l) * l.qty, 0)) * code.percent) / 100
     : 0;
   // cardul cadou (fizic): fără livrare gratuită, comandă minimă, puncte sau bonus pe el (ca în place_order)
   const gcSum = validCart.filter(l => isGift(l.id)).reduce((s, l) => s + unitOf(l) * l.qty, 0);
@@ -676,10 +678,11 @@ export default function Menu({ source }: { source?: string }) {
                 <span className="xm-kick">{L ? "KARÁCSONY & SZILVESZTER A LYRÁTÓL" : "CRĂCIUN & REVELION DE LA LYRA"}</span>
                 <h2>{L ? "Ünnepi asztal, házhoz szállítva" : "Masa de sărbători, livrată de Lyra"}</h2>
                 <p>{L ? `Rendelés az ünnepekre és decemberre · szállítás: december 3–22., 24. és 27–31.` : `Comenzi pentru sărbători și pentru luna decembrie · livrăm ${holDays}`}</p>
-                <div className="xm-rules"><span>🎄 {L ? "Karácsony (24.): rendelés dec. 22-ig" : "Crăciun (24 dec.): comenzi până pe 22"}</span><span>🥂 {L ? "Szilveszter (31.): rendelés dec. 29-ig" : "Revelion (31 dec.): comenzi până pe 29"}</span><span>⏱ {L ? "Előrendelés min. 24 órával" : "Precomandă minimum 24 de ore"}</span><span>💳 {L ? "Csak online fizetés" : "Plată exclusiv online"}</span><span>−10% {L ? "szállítás" : "livrare"} · −15% {L ? "elvitel" : "ridicare"}</span></div>
+                <div className="xm-rules"><span>🎄 {L ? "Karácsony (24.): rendelés dec. 22-ig" : "Crăciun (24 dec.): comenzi până pe 22"}</span><span>🥂 {L ? "Szilveszter (31.): rendelés dec. 29-ig" : "Revelion (31 dec.): comenzi până pe 29"}</span><span>⏱ {L ? "Előrendelés min. 24 órával" : "Precomandă minimum 24 de ore"}</span><span>💳 {L ? "Csak online fizetés" : "Plată exclusiv online"}</span></div>
               </div>
               <div className="xm-rail">{holItems.map(it => <article key={it.id} className="xm-card" data-card>
                 <button className="xm-img" onClick={() => openItem(it)} aria-label={nm(it)}><img src={imgUrl(it.image)!} alt="" loading="lazy" />
+                  <span className="xm-magic">✨ {L ? "Ünnepi varázs" : "Magia sărbătorilor"}</span><span className="xm-new">{L ? "ÚJ" : "NOU"}</span>
                   {it.id === "platou-festiv" && <span className="xm-wine">🍷 {L ? "+ bor ajándékba" : "+ vin din partea casei"}</span>}</button>
                 <div className="xm-body"><button className="pc-name" onClick={() => openItem(it)}><h3>{nm(it)}</h3></button><small>{it.grams}</small>{buyRow(it)}</div>
               </article>)}</div>
@@ -767,7 +770,8 @@ export default function Menu({ source }: { source?: string }) {
                           <img src={img} alt="" loading="lazy" />
                           <span className="pc-badges">
                             {pctOf(it.id) > 0 && <span className="b b-off"><Icon name="tag" size={12} />−{pctOf(it.id)}%</span>}
-                            {it.kind === "holiday" && <span className="b b-new">{L ? "Előrendelés 24h" : "Precomandă 24 h"}</span>}
+                            {it.kind === "holiday" && <span className="b b-magic">✨ {L ? "Ünnepi varázs" : "Magia sărbătorilor"}</span>}
+                            {it.kind === "holiday" && <span className="b b-new">{L ? "Új" : "Nou"}</span>}
                             {it.id === "platou-festiv" && <span className="b b-hot">🍷 {L ? "+ bor ajándék" : "+ vin cadou"}</span>}
                             {it.tags.includes("new") && <span className="b b-new">{L ? "Új" : "Nou"}</span>}
                             {it.hot && <span className="b b-hot"><Icon name="flame" size={12} fill />{t.hot}</span>}
