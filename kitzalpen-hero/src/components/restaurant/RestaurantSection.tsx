@@ -3,7 +3,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
 import type { Lang } from '../../content/hero';
-import { MENU_PDF, REST_COPY, REST_PHOTOS } from '../../content/restaurant';
+import { REST_COPY, REST_PHOTOS } from '../../content/restaurant';
 import { useFinePointer, useReducedMotion } from '../../lib/hooks';
 import { RestaurantGallery } from './RestaurantGallery';
 import { RestaurantHighlights } from './RestaurantHighlights';
@@ -61,7 +61,7 @@ export function RestaurantSection({ lang }: { lang: Lang }) {
             </h2>
             <p className="js-re-sub mx-auto mt-4 max-w-[42ch] text-[15.5px] leading-[1.7] text-ink/75 md:mt-6 md:text-[18px] lg:mx-0">{copy.sub}</p>
             <div className="js-re-cta mt-8 hidden lg:block">
-              <a href={MENU_PDF} target="_blank" rel="noopener noreferrer" className="btn-pine inline-flex min-h-[54px] items-center gap-3 rounded-full px-9 text-[16px] font-semibold">
+              <a href="#menu" className="btn-pine inline-flex min-h-[54px] items-center gap-3 rounded-full px-9 text-[16px] font-semibold">
                 {copy.cta} <span className="text-[11px] font-semibold tracking-[.14em] text-gold">{copy.ctaNote}</span> <span className="arrow" aria-hidden>→</span>
               </a>
             </div>
@@ -74,7 +74,7 @@ export function RestaurantSection({ lang }: { lang: Lang }) {
         <div className="js-re-bottom mt-10 flex flex-col gap-6 md:mt-14 md:gap-10">
           <RestaurantHighlights items={copy.highlights} />
           <RestaurantOpeningHours copy={copy} lang={lang} />
-          <a href={MENU_PDF} target="_blank" rel="noopener noreferrer" className="js-re-cta btn-pine flex min-h-[54px] w-full items-center justify-center gap-3 whitespace-nowrap rounded-full px-5 text-[15px] font-semibold min-[360px]:text-[16px] lg:hidden">
+          <a href="#menu" className="js-re-cta btn-pine flex min-h-[54px] w-full items-center justify-center gap-3 whitespace-nowrap rounded-full px-5 text-[15px] font-semibold min-[360px]:text-[16px] lg:hidden">
             {copy.cta} <span className="text-[11px] font-semibold tracking-[.14em] text-gold">{copy.ctaNote}</span> <span className="arrow" aria-hidden>→</span>
           </a>
         </div>

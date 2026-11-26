@@ -10,6 +10,7 @@ import { Header } from './components/Header';
 import { SkiPage } from './components/ski/SkiPage';
 import { ArrivalPage } from './components/arrival/ArrivalPage';
 import { FaqPage } from './components/faq/FaqPage';
+import { MenuPage } from './components/menu/MenuPage';
 import { TopPage, TopTeaser } from './components/top/TopPage';
 import { PlacesPage, ToursPage } from './components/tours/ToursPage';
 import { ExplorePage } from './components/ExplorePage';
@@ -194,6 +195,8 @@ export default function App() {
         <main id="main"><PlacesPage lang={lang} /></main>
       ) : page === 'experiences' ? (
         <main id="main"><TopPage lang={lang} /></main>
+      ) : page === 'menu' ? (
+        <main id="main"><MenuPage lang={lang} /></main>
       ) : page === 'faq' ? (
         <main id="main"><FaqPage lang={lang} /></main>
       ) : page === 'arrival' ? (

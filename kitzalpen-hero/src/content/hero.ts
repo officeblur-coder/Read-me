@@ -28,12 +28,12 @@ export const NAV: Record<Lang, NavItem[]> = {
 export const FOOTER_NAV: Record<Lang, NavItem[]> = {
   de: [
     { label: 'Pension', href: '#pension' }, { label: 'Chalet', href: '#chalet' }, { label: 'Zimmer', href: '#all-rooms' },
-    { label: 'Restaurant', href: '#restaurant' }, { label: 'Aktivitäten', href: '#activities-winter' }, // preview – live: /activities/
+    { label: 'Restaurant', href: '#restaurant' }, { label: 'Speisekarte', href: '#menu' }, { label: 'Aktivitäten', href: '#activities-winter' }, // preview – live: /activities/
     { label: 'Gruppen', href: '#groups' }, { label: 'Bergerlebnis', href: '#mountain' }, { label: 'Top 15 Erlebnisse', href: '#experiences' }, { label: 'Touren-Explorer', href: '#tours' }, { label: 'Orte-Guide', href: '#places' }, { label: 'Skigebiete & Skipässe', href: '#ski' }, { label: 'Anreise & Mobilität', href: '#arrival' }, { label: 'Häufige Fragen', href: '#faq' }, { label: 'Kontakt', href: '#contact' },
   ],
   en: [
     { label: 'Guesthouse', href: '#pension' }, { label: 'Chalet', href: '#chalet' }, { label: 'Rooms', href: '#all-rooms' },
-    { label: 'Restaurant', href: '#restaurant' }, { label: 'Activities', href: '#activities-winter' }, // preview – live: /en/activities/
+    { label: 'Restaurant', href: '#restaurant' }, { label: 'Menu', href: '#menu' }, { label: 'Activities', href: '#activities-winter' }, // preview – live: /en/activities/
     { label: 'Groups', href: '#groups' }, { label: 'Mountain guide', href: '#mountain' }, { label: 'Top 15 experiences', href: '#experiences' }, { label: 'Tour explorer', href: '#tours' }, { label: 'Places guide', href: '#places' }, { label: 'Ski areas & passes', href: '#ski' }, { label: 'Arrival & mobility', href: '#arrival' }, { label: 'FAQ', href: '#faq' }, { label: 'Contact', href: '#contact' },
   ],
 };

@@ -8,7 +8,7 @@ SRC = {  # share name -> (source photo, vertical focus)
     'chalet': ('chalet/winter.jpg', 0.5), 'restaurant': ('restaurant/hall.jpg', 0.5), 'groups': ('groups/grossglockner.webp', 0.5),
     'mountain': ('real/kitzski-gondola-couple.webp', 0.5), 'ski': ('real/ski-panorama.webp', 0.5), 'summer': ('real/panoramabahn-summer.webp', 0.5),
     'explore': ('real/kitzsteinhorn-aerial.webp', 0.5), 'tours': ('real/winter-walk.webp', 0.5), 'places': ('winter/town-kitzbuehel.webp', 0.5),
-    'arrival': ('winter/town-mittersill.webp', 0.5),
+    'arrival': ('winter/town-mittersill.webp', 0.5), 'menu': ('menu/ch03.webp', 0.55),
 }
 os.makedirs(PUB + 'og', exist_ok=True)
 for name, (src, fy) in SRC.items():

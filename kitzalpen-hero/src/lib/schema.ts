@@ -1,5 +1,6 @@
 import { ROOMS } from '../content/rooms';
 import { FAQ } from '../content/faq';
+import { MENU } from '../content/menuCard';
 import { TOP } from '../content/topExperiences';
 import { SKI_AREAS } from '../content/skiAreas';
 import { PLACES, TOURS } from '../content/tours';
@@ -16,13 +17,13 @@ import { SITE, pathFor, type Route } from './routes';
 const IMG: Partial<Record<Route, string>> = {
   home: 'home', pension: 'pension', 'all-rooms': 'rooms', 'room-double': 'room-double', 'room-triple': 'room-triple', 'room-family': 'room-family', 'room-quad': 'room-quad',
   chalet: 'chalet', restaurant: 'restaurant', groups: 'groups', contact: 'home', mountain: 'mountain', winter: 'ski', summer: 'summer',
-  explore: 'explore', experiences: 'explore', ski: 'ski', tours: 'tours', places: 'places', arrival: 'arrival', faq: 'home',
+  explore: 'explore', experiences: 'explore', ski: 'ski', tours: 'tours', places: 'places', arrival: 'arrival', faq: 'home', menu: 'menu',
 };
 export const shareImage = (r: Route) => `${SITE}/images/og/${IMG[r] ?? 'home'}.jpg`;
 
 const PARENT: Partial<Record<Route, Route>> = {
   'room-double': 'all-rooms', 'room-triple': 'all-rooms', 'room-family': 'all-rooms', 'room-quad': 'all-rooms', 'all-rooms': 'pension',
-  experiences: 'explore', ski: 'explore', tours: 'explore', places: 'explore', winter: 'explore', summer: 'explore', arrival: 'explore',
+  menu: 'restaurant', experiences: 'explore', ski: 'explore', tours: 'explore', places: 'explore', winter: 'explore', summer: 'explore', arrival: 'explore',
 };
 const BUSINESS = `${SITE}/#lodging`;
 
@@ -63,7 +64,7 @@ export function pageSchema(route: Route, lang: SiteLang, name: string, descripti
   }
   if (route === 'restaurant') {
     graph.push({
-      '@type': 'Restaurant', name: 'KitzAlpen Restaurant & Bar', url, image: shareImage(route), containedInPlace: { '@id': BUSINESS },
+      '@type': 'Restaurant', name: 'KitzAlpen Restaurant & Bar', url, hasMenu: SITE + pathFor('menu', lang), image: shareImage(route), containedInPlace: { '@id': BUSINESS },
       address: { '@type': 'PostalAddress', streetAddress: 'Reitlehen 42', postalCode: '5731', addressLocality: 'Hollersbach im Pinzgau', addressCountry: 'AT' },
       telephone: '+43 664 2376571',
       openingHoursSpecification: [
@@ -78,6 +79,19 @@ export function pageSchema(route: Route, lang: SiteLang, name: string, descripti
     graph.push({
       '@type': 'FAQPage', '@id': `${url}#faq`, url, inLanguage: lang,
       mainEntity: FAQ.flatMap((g) => g.items).map((f) => ({ '@type': 'Question', name: tr(f.q[L]), acceptedAnswer: { '@type': 'Answer', text: tr(f.a[L]) } })),
+    });
+  }
+  if (route === 'menu') {
+    graph.push({
+      '@type': 'Menu', '@id': `${url}#menu`, name, url, inLanguage: lang,
+      hasMenuSection: MENU.map((c) => ({
+        '@type': 'MenuSection', name: c.title[L], image: `${SITE}/images/menu/${c.img}.webp`,
+        hasMenuItem: c.dishes.map((d) => ({
+          '@type': 'MenuItem', name: d.name[L], ...(d.desc ? { description: d.desc[L] } : {}), ...(d.img ? { image: `${SITE}/images/menu/${d.img}.webp` } : {}),
+          ...(d.tag === 'veggie' ? { suitableForDiet: 'https://schema.org/VegetarianDiet' } : {}),
+          offers: { '@type': 'Offer', price: d.price.toFixed(2), priceCurrency: 'EUR' },
+        })),
+      })),
     });
   }
   if (route === 'experiences') list(TOP[season].map((e) => ({ '@type': 'TouristAttraction', name: L === 'en' && e.nameEn ? e.nameEn : e.name, description: tr(e.text[L]), url: e.url, geo: geo(e.lat, e.lon), address: { '@type': 'PostalAddress', addressLocality: e.town, addressCountry: 'AT' } })));

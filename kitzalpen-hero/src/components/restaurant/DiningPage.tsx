@@ -4,7 +4,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
 import type { Lang } from '../../content/hero';
 import { DINING, DISHES, MEALS, MEALS_COPY, dimg, rimg } from '../../content/diningPage';
-import { MENU_PDF, REST_COPY, REST_PHOTOS } from '../../content/restaurant';
+import { REST_COPY, REST_PHOTOS } from '../../content/restaurant';
 import { useFinePointer, useReducedMotion } from '../../lib/hooks';
 import { RestaurantHighlights } from './RestaurantHighlights';
 import { RestaurantOpeningHours } from './RestaurantOpeningHours';
@@ -77,7 +77,7 @@ export function DiningPage({ lang }: { lang: Lang }) {
             </h1>
             <p className="js-d-in mt-5 max-w-[520px] text-[16px] leading-relaxed text-cream/90 md:text-[18px]">{t.sub}</p>
             <div className="js-d-in mt-8 flex flex-col gap-3 sm:flex-row sm:gap-4">
-              <a href={MENU_PDF} target="_blank" rel="noopener noreferrer" className="ph-primary inline-flex min-h-[54px] items-center justify-center gap-3 rounded-full px-8 text-[15.5px] font-semibold">
+              <a href="#menu" className="ph-primary inline-flex min-h-[54px] items-center justify-center gap-3 rounded-full px-8 text-[15.5px] font-semibold">
                 {rc.cta} <span className="text-[11px] tracking-[.14em] opacity-70">PDF</span> <span className="arrow" aria-hidden>→</span>
               </a>
               <a href="#d-day" onClick={(e) => { e.preventDefault(); document.getElementById('d-day')?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' }); }} className="ph-secondary inline-flex min-h-[54px] items-center justify-center rounded-full px-8 text-[15.5px] font-semibold">{rc.hoursTitle}</a>
@@ -128,7 +128,7 @@ export function DiningPage({ lang }: { lang: Lang }) {
         <div className="mx-auto max-w-[1360px] px-5 sm:px-6 md:px-10 lg:px-14">
           <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
             {head(t.kitchenEyebrow, t.kitchenTitle, 'd-kitchen')}
-            <a href={MENU_PDF} target="_blank" rel="noopener noreferrer" className="js-d-rev btn-pine inline-flex min-h-[52px] shrink-0 items-center gap-3 self-start rounded-full px-7 text-[15px] font-semibold md:self-auto">
+            <a href="#menu" className="js-d-rev btn-pine inline-flex min-h-[52px] shrink-0 items-center gap-3 self-start rounded-full px-7 text-[15px] font-semibold md:self-auto">
               {rc.cta} <span className="text-[11px] font-semibold tracking-[.14em] text-gold">PDF</span> <span className="arrow" aria-hidden>→</span>
             </a>
           </div>
