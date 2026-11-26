@@ -1,0 +1,24 @@
+{
+  "_source": "Coordinates geocoded with OpenStreetMap Nominatim on 2026-11-03 and checked on the map. 'pos' = where the marker sits, 'nav' = the real access point (valley station / car park) used for directions. Hollersbachtal has no mapped car park, so directions use its name.",
+  "home": [47.27268, 12.42573],
+  "points": [
+    { "id": "panoramabahn-w", "season": "winter", "cat": "ski", "pos": [47.28068, 12.40538], "nav": [47.28068, 12.40538], "photo": "kitzski-kitzbuheler-alpen" },
+    { "id": "wildkogel-w", "season": "winter", "cat": "ski", "pos": [47.25438, 12.28077], "nav": [47.25438, 12.28077], "photo": "wildkogel-arena" },
+    { "id": "zillertal", "season": "winter", "cat": "ski", "pos": [47.25131, 12.12322], "nav": [47.25131, 12.12322] },
+    { "id": "schmitten", "season": "winter", "cat": "ski", "pos": [47.32629, 12.77236], "nav": [47.32629, 12.77236], "photo": "schmittenhohe-zell-am-see" },
+    { "id": "kitzsteinhorn", "season": "winter", "cat": "ski", "pos": [47.22897, 12.72597], "nav": [47.22897, 12.72597], "photo": "kitzsteinhorn-kaprun" },
+    { "id": "rodel", "season": "winter", "cat": "adventure", "pos": [47.27254, 12.34061], "nav": [47.27254, 12.34061] },
+    { "id": "npz-w", "season": "winter", "cat": "adventure", "pos": [47.27865, 12.4765], "nav": [47.27865, 12.4765] },
+
+    { "id": "badesee", "season": "summer", "cat": "lakes", "pos": [47.27632, 12.41335], "nav": [47.27632, 12.41335] },
+    { "id": "hintersee", "season": "summer", "cat": "lakes", "pos": [47.19212, 12.47511], "nav": [47.1945, 12.47657] },
+    { "id": "krimml", "season": "summer", "cat": "hiking", "pos": [47.20837, 12.17022], "nav": [47.21079, 12.16819], "photo": "krimml-waterfalls" },
+    { "id": "hollersbachtal", "season": "summer", "cat": "hiking", "pos": [47.21132, 12.41654], "navName": "Hollersbachtal, 5731 Hollersbach im Pinzgau" },
+    { "id": "npz-s", "season": "summer", "cat": "family", "pos": [47.27865, 12.4765], "nav": [47.27865, 12.4765] },
+    { "id": "panoramabahn-s", "season": "summer", "cat": "cable", "pos": [47.28068, 12.40538], "nav": [47.28068, 12.40538], "photo": "kitzski-kitzbuheler-alpen" },
+    { "id": "resterkogel", "season": "summer", "cat": "cable", "pos": [47.30743, 12.38245], "nav": [47.28068, 12.40538] },
+    { "id": "weisssee", "season": "summer", "cat": "cable", "pos": [47.13536, 12.62589], "nav": [47.17051, 12.62727] },
+    { "id": "stauseen", "season": "summer", "cat": "family", "pos": [47.15959, 12.71579], "nav": [47.21637, 12.72602] },
+    { "id": "wildkogel-s", "season": "summer", "cat": "cable", "pos": [47.27254, 12.34061], "nav": [47.27254, 12.34061], "photo": "wildkogel-mountain-biking" }
+  ]
+}

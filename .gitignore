@@ -1,2 +1,4 @@
 __pycache__/
 *.pyc
+kitzalpen-hero/node_modules/
+kitzalpen-hero/dist/
