@@ -186,6 +186,8 @@ export const MENU_COPY = {
     pdf: 'Speisekarte als PDF', back: 'Zum Restaurant', book: 'Tisch anfragen', end: 'Guten Appetit', endSub: 'Wir hoffen, es gefällt Ihnen bei uns.',
     review: 'Bewerten Sie uns auf Google', none: 'Keine Gerichte für diesen Filter in diesem Kapitel.', noAl: 'ohne', dinner: 'Abendessen Di – So, 17 – 21 Uhr',
     prev: 'Vorheriges Gericht', next: 'Nächstes Gericht', filterLabel: 'Was möchten Sie essen?',
+    search: 'Gericht suchen', diet: 'Ernährung', free: 'Ohne Allergene', reset: 'Filter zurücksetzen', results: (n: number) => `${n} Gerichte`, contents: 'Inhalt',
+    filtersBtn: 'Filter & Suche', noResults: 'Keine Gerichte gefunden.', toMenu: 'Zur Karte', done: 'Fertig',
   },
   en: {
     eyebrow: 'Kitzalpen kitchen · 2027 · 2028', title: 'Menu', sub: 'Alpine cooking, classics and homemade dishes – for lunch, dinner and at the bar. The card in German and English.',
@@ -194,6 +196,8 @@ export const MENU_COPY = {
     pdf: 'Menu as PDF', back: 'Back to the restaurant', book: 'Ask for a table', end: 'Enjoy your meal', endSub: 'We hope you enjoy your time with us.',
     review: 'Rate us on Google', none: 'No dishes for this filter in this chapter.', noAl: 'without', dinner: 'Dinner Tue – Sun, 5 – 9 pm',
     prev: 'Previous dish', next: 'Next dish', filterLabel: 'What would you like?',
+    search: 'Search dishes', diet: 'Diet', free: 'Free from', reset: 'Reset filters', results: (n: number) => `${n} dishes`, contents: 'Contents',
+    filtersBtn: 'Filter & search', noResults: 'No dishes found.', toMenu: 'To the menu', done: 'Done',
   },
 };
 export const eur = (n: number) => n.toLocaleString('de-AT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
